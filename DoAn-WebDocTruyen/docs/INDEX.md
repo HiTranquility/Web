@@ -6,6 +6,7 @@ Bản đồ tài liệu của đồ án. Mở file này khi không nhớ nên tr
 docs/
 ├── INDEX.md                          ← bạn đang ở đây
 ├── cau-truc.md                       bản đồ 59 file · 13 thư mục · 4 layout
+├── so-do.md                          ERD · luồng MVC · kiến trúc — 7 sơ đồ Mermaid
 ├── giai-thich.md                     VÌ SAO nó chạy như vậy — 7 khu, giảng từ đầu
 ├── CHECKLIST.md                      danh sách tick trước khi nộp bài
 │
@@ -23,6 +24,7 @@ docs/
 | Câu hỏi trong đầu | Mở file |
 |-------------------|---------|
 | "File này bỏ vào thư mục nào?" | [cau-truc.md](cau-truc.md) |
+| **"Cho tôi xem sơ đồ / ERD / luồng MVC"** | **[so-do.md](so-do.md)** |
 | **"Cái này chạy kiểu gì? Sao lại thế?"** | **[giai-thich.md](giai-thich.md)** |
 | "scope là gì, 4 cái khác nhau sao?" | [giai-thich.md](giai-thich.md) khu 1 |
 | "layout lắp trang kiểu gì?" | [giai-thich.md](giai-thich.md) khu 2 |

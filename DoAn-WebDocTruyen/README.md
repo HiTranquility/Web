@@ -12,7 +12,7 @@ Làm tuần tự, mỗi case chạy được rồi mới sang case sau.
 | CASE | Nội dung | Chạm vào | Xong |
 |------|----------|----------|:----:|
 | **00** | **Khung dự án + layout + trang chủ** | schema, CSS, header/footer, HomeServlet | ✅ |
-| 01 | Đăng ký / Đăng nhập / Đăng xuất | `AuthServlet`, `AuthFilter`, session, băm mật khẩu | ☐ |
+| 01 | Đăng ký / Đăng nhập / Đăng xuất | `AuthServlet`, `AuthFilter`, session, băm mật khẩu | ⚠️ |
 | 02 | Kho truyện — danh sách + phân trang | `StoryServlet?action=list` | ☐ |
 | 03 | Tag + lọc truyện theo thể loại | `TagDAO`, lọc nhiều tag | ☐ |
 | 04 | Chi tiết truyện | `StoryServlet?action=detail` | ☐ |
@@ -23,6 +23,10 @@ Làm tuần tự, mỗi case chạy được rồi mới sang case sau.
 | 09 | Tải truyện `.txt` | `DownloadServlet` — không trả HTML | ☐ |
 | 10 | Trang quản trị — gỡ truyện, ban tài khoản | `admin/*`, `AdminFilter` | ☐ |
 | 11 | Hướng dẫn sử dụng + Nội quy | `PageServlet`, checkbox đồng ý lúc đăng ký | ☐ |
+
+⚠️ **CASE 01 — code xong, CHƯA test được đầy đủ.** Trang đăng nhập/đăng ký hiện
+đúng, `AuthFilter` chặn đúng (đã kiểm bằng curl). Nhưng luồng đăng nhập thật cần
+database — chạy 3 bước ở mục Cài đặt rồi thử lại thì mới tick được ✅.
 
 Nếu thiếu thời gian, cắt theo thứ tự: CASE 09 → CASE 08 → ảnh bìa.
 **Đừng cắt CASE 03 và CASE 10** — tag/lọc và phân quyền là hai thứ được nhìn vào đầu tiên.
@@ -151,6 +155,7 @@ trong code gốc của sách.
 
 | File | Khi nào mở |
 |------|-----------|
+| [docs/so-do.md](docs/so-do.md) | **ERD, luồng MVC, kiến trúc** — 7 sơ đồ Mermaid |
 | [docs/giai-thich.md](docs/giai-thich.md) | **"cái này chạy kiểu gì, sao lại thế?"** — giảng từ đầu, 7 khu |
 | [docs/cau-truc.md](docs/cau-truc.md) | "file này bỏ vào thư mục nào?" |
 | [docs/standards/01-CODING_CONVENTIONS.md](docs/standards/01-CODING_CONVENTIONS.md) | đặt tên Java, contract 4 tầng, bảng tra URL |

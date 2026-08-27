@@ -125,3 +125,22 @@ main.shell { padding-top: 32px; padding-bottom: 80px; min-height: 60vh; }
     * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     html { scroll-behavior: auto; }
 }
+
+/* ---- CASE 01: chip người dùng trên thanh menu ---- */
+.user-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 99px;
+    background: var(--ink-800);
+    border: 1px solid var(--ink-700);
+    font-size: .86rem; font-weight: 500;
+    max-width: 14em;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.user-avatar {
+    width: 26px; height: 26px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
+    color: #1a0f06; font-weight: 700; font-size: .82rem;
+}

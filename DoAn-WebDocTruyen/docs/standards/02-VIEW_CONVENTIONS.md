@@ -96,6 +96,9 @@ tra bảng này. Có tên rồi thì dùng lại, đừng đẻ tên mới.
 | `tags` | `List<Tag>` | request | `TagServlet` | danh sách thể loại |
 | `comments` | `List<Comment>` | request | `CommentServlet` | bình luận của truyện |
 | `bookmarks` | `List<Bookmark>` | request | `BookmarkServlet` | truyện đã đánh dấu |
+| `latest` | `List<Story>` | request | `HomeServlet` | truyện mới cập nhật (trang chủ) |
+| `popular` | `List<Story>` | request | `HomeServlet` | truyện xem nhiều (trang chủ) |
+| `totalStories` | int | request | `HomeServlet` | tổng số truyện đã công khai |
 | `dbError` | String | request | `HomeServlet` | database chưa sẵn sàng |
 
 ### Luật đặt tên

@@ -60,3 +60,22 @@
 }
 .auth-foot a { color: var(--text-dim); }
 .auth-foot a:hover { color: var(--ember); }
+
+/* ---- CASE 01: thông báo lỗi và ô tick đồng ý ---- */
+.form-error {
+    background: rgba(229,87,111,.12);
+    border: 1px solid var(--rose);
+    color: #ffc9d3;
+    border-radius: var(--r-sm);
+    padding: 10px 13px;
+    font-size: .88rem;
+    margin-bottom: 16px;
+}
+.auth-card label.check {
+    display: flex; align-items: flex-start; gap: 9px;
+    width: auto; margin: 4px 0 18px;
+    font-size: .84rem; line-height: 1.45;
+    color: var(--text-dim); cursor: pointer;
+}
+.auth-card label.check input { width: auto; margin: 2px 0 0; flex: none; }
+.auth-card label.check a { color: var(--ember); }
