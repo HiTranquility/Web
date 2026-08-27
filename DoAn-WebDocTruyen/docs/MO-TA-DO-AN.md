@@ -144,7 +144,7 @@ Yêu cầu: **JDK 11+**, **MySQL 8**, **Apache Tomcat 9** (không dùng Tomcat 1
 **Cách nhanh — một lệnh cài toàn bộ database:**
 
 ```bash
-powershell -ExecutionPolicy Bypass -File setup-db.ps1
+powershell -ExecutionPolicy Bypass -File scripts\setup-db.ps1
 ```
 
 Script tạo database, tạo tài khoản MySQL cho ứng dụng, nạp dữ liệu mẫu và
@@ -153,7 +153,7 @@ sinh file cấu hình. Bạn chỉ cần gõ mật khẩu MySQL root khi đượ
 **Rồi chạy web:**
 
 ```bash
-powershell -ExecutionPolicy Bypass -File run.ps1
+powershell -ExecutionPolicy Bypass -File scriptsun.ps1
 ```
 
 Truy cập: <http://localhost:8080/>

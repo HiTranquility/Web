@@ -18,7 +18,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-Set-Location $PSScriptRoot
+# Script nam trong scripts/ -> lui ve thu muc goc du an
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $ProjectRoot
 
 # ---- Tim mysql.exe ---------------------------------------------------------
 $mysql = (Get-Command mysql -ErrorAction SilentlyContinue).Source
@@ -51,7 +53,17 @@ Write-Host ''
 # ---- 1. Schema -------------------------------------------------------------
 Write-Host '[1/4] Tao database va 7 bang...' -ForegroundColor Yellow
 & $mysql -u $MysqlUser -p --default-character-set=utf8mb4 -e "source database/schema.sql"
-if ($LASTEXITCODE -ne 0) { Write-Host 'That bai o buoc 1.' -ForegroundColor Red; exit 1 }
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ''
+    Write-Host '  That bai o buoc 1 — tao database.' -ForegroundColor Red
+    Write-Host '  Nguyen nhan thuong gap:' -ForegroundColor Yellow
+    Write-Host '    - Go sai mat khau root'
+    Write-Host '    - Dich vu MySQL chua chay (kiem tra: Get-Service MySQL80)'
+    Write-Host '    - Chay script tu terminal khong go duoc ban phim'
+    Write-Host '      (script CAN ban tu go mat khau — khong chay tu dong duoc)'
+    Write-Host ''
+    exit 1
+}
 
 # ---- 2. Tai khoan ung dung -------------------------------------------------
 # Sinh cau lenh tai cho, khong sua file setup_user.sql — de mat khau khong
@@ -67,7 +79,7 @@ $tmp = Join-Path $env:TEMP "grant_$(Get-Random).sql"
 try {
     Set-Content -LiteralPath $tmp -Value $grantSql -Encoding UTF8
     & $mysql -u $MysqlUser -p --default-character-set=utf8mb4 -e "source $tmp"
-    if ($LASTEXITCODE -ne 0) { Write-Host 'That bai o buoc 2.' -ForegroundColor Red; exit 1 }
+    if ($LASTEXITCODE -ne 0) { Write-Host '  That bai o buoc 2 — tao tai khoan MySQL.' -ForegroundColor Red; exit 1 }
 } finally {
     # Xoa ngay file tam — no chua mat khau cua tai khoan ung dung
     Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
@@ -76,7 +88,7 @@ try {
 # ---- 3. Du lieu mau --------------------------------------------------------
 Write-Host '[3/4] Nap du lieu mau...' -ForegroundColor Yellow
 & $mysql -u $MysqlUser -p --default-character-set=utf8mb4 webdoctruyen -e "source database/sample_data.sql"
-if ($LASTEXITCODE -ne 0) { Write-Host 'That bai o buoc 3.' -ForegroundColor Red; exit 1 }
+if ($LASTEXITCODE -ne 0) { Write-Host '  That bai o buoc 3 — nap du lieu mau.' -ForegroundColor Red; exit 1 }
 
 # ---- 4. db.properties ------------------------------------------------------
 Write-Host '[4/4] Ghi file db.properties...' -ForegroundColor Yellow

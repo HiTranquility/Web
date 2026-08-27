@@ -74,7 +74,7 @@ mysql -u root -p webdoctruyen < database/sample_data.sql
 ### 5. Chạy
 
 ```bash
-powershell -ExecutionPolicy Bypass -File run.ps1
+powershell -ExecutionPolicy Bypass -File scriptsun.ps1
 ```
 
 → <http://localhost:8080/>

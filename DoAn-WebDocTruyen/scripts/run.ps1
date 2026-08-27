@@ -6,10 +6,12 @@
 param([int]$Port = 8080)
 
 $ErrorActionPreference = 'Stop'
-Set-Location $PSScriptRoot
+# Script nam trong scripts/ -> lui ve thu muc goc du an
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $ProjectRoot
 
-$libs     = Join-Path $PSScriptRoot '.libs'
-$build    = Join-Path $PSScriptRoot 'build'
+$libs     = Join-Path $ProjectRoot '.libs'
+$build    = Join-Path $ProjectRoot 'build'
 $classes  = Join-Path $build 'classes'
 $toolsOut = Join-Path $build 'tools'
 $repo     = 'https://repo1.maven.org/maven2'
@@ -59,8 +61,8 @@ if (Test-Path 'src\main\resources') {
 }
 if (-not (Test-Path (Join-Path $classes 'db.properties'))) {
     Write-Host ''
-    Write-Host '  [!] Chua co src/main/resources/db.properties' -ForegroundColor Yellow
-    Write-Host '      Web van chay duoc, trang chu se hien huong dan cai dat.' -ForegroundColor Yellow
+    Write-Host '  [!] Chua co db.properties — web chay nhung KHONG CO DU LIEU.' -ForegroundColor Yellow
+    Write-Host '      Chay truoc:  powershell -File scripts\setup-db.ps1' -ForegroundColor Yellow
     Write-Host ''
 }
 
