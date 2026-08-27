@@ -1,0 +1,65 @@
+/* ============================================================================
+   layout-reader.css — trang đọc chương                          (CASE 06)
+   ============================================================================
+   Mục tiêu: đọc lâu không mỏi mắt. Mọi lựa chọn dưới đây đều phục vụ điều đó.
+   ========================================================================= */
+
+.reader-body { background: var(--ink-950); }
+
+/* Thanh trên tối giản, dính lại khi cuộn — để lúc nào cũng quay lại được */
+.reader-bar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 12px 24px;
+    background: rgba(16,18,25,.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--ink-700);
+    font-size: .86rem;
+}
+.reader-back { color: var(--text-dim); font-weight: 500;
+               transition: color .16s var(--ease); }
+.reader-back:hover { color: var(--ember); }
+.reader-meta { color: var(--text-mut); flex: none; }
+
+/* ---- Vùng đọc ----
+   max-width 38em ≈ 70 ký tự mỗi dòng. Đây là con số nghiên cứu về khả năng
+   đọc: dài hơn thì mắt khó tìm đầu dòng kế tiếp, ngắn hơn thì phải xuống
+   dòng quá thường xuyên. */
+.reader-wrap {
+    max-width: 38em;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+}
+
+.reader-wrap h1 {
+    font-size: 1.5rem; font-weight: 700; line-height: 1.3;
+    margin-bottom: 8px;
+}
+.reader-sub { color: var(--text-mut); font-size: .88rem; margin-bottom: 36px; }
+
+/* ---- Nội dung truyện ----
+   Serif cho đoạn văn dài — đây là quyết định quan trọng nhất của cả file.
+   Chân chữ (serif) dẫn mắt chạy ngang dòng, đọc vài nghìn chữ đỡ mỏi hơn sans.
+   Giao diện vẫn dùng sans; chỉ RUỘT TRUYỆN mới đổi font. */
+.chapter-content {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.12rem;
+    line-height: 1.95;        /* thoáng hơn hẳn mức 1.55 của giao diện */
+    color: #d9dde6;           /* hơi dịu hơn trắng thuần, đỡ chói */
+}
+.chapter-content p { margin-bottom: 1.4em; }
+
+/* ---- Điều hướng chương ---- */
+.reader-nav {
+    display: flex; justify-content: space-between; gap: 12px;
+    margin-top: 56px; padding-top: 24px;
+    border-top: 1px solid var(--ink-700);
+}
+.reader-nav .btn { flex: 1; justify-content: center; }
+.reader-nav .spacer { flex: 1; }
+
+@media (max-width: 560px) {
+    .reader-wrap { padding: 28px 18px 80px; }
+    .chapter-content { font-size: 1.05rem; }
+    .reader-meta { display: none; }
+}

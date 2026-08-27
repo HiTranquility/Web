@@ -11,22 +11,26 @@ Làm tuần tự, mỗi case chạy được rồi mới sang case sau.
 
 | CASE | Nội dung | Chạm vào | Xong |
 |------|----------|----------|:----:|
-| **00** | **Khung dự án + layout + trang chủ** | schema, CSS, header/footer, HomeServlet | ✅ |
-| 01 | Đăng ký / Đăng nhập / Đăng xuất | `AuthServlet`, `AuthFilter`, session, băm mật khẩu | ⚠️ |
-| 02 | Kho truyện — danh sách + phân trang | `StoryServlet?action=list` | ☐ |
-| 03 | Tag + lọc truyện theo thể loại | `TagDAO`, lọc nhiều tag | ☐ |
-| 04 | Chi tiết truyện | `StoryServlet?action=detail` | ☐ |
-| 05 | Đăng / sửa truyện | `action=create\|edit`, **kiểm tra quyền sở hữu** | ☐ |
-| 06 | Chương — đọc, thêm, sửa | `ChapterServlet`, giao diện đọc | ☐ |
-| 07 | Bình luận | `CommentServlet` | ☐ |
-| 08 | Đánh dấu (bookmark) | `BookmarkServlet` | ☐ |
-| 09 | Tải truyện `.txt` | `DownloadServlet` — không trả HTML | ☐ |
-| 10 | Trang quản trị — gỡ truyện, ban tài khoản | `admin/*`, `AdminFilter` | ☐ |
-| 11 | Hướng dẫn sử dụng + Nội quy | `PageServlet`, checkbox đồng ý lúc đăng ký | ☐ |
+| **00** | Khung dự án + layout + trang chủ | schema, CSS, HomeServlet | ✅ |
+| **01** | Đăng ký / Đăng nhập / Đăng xuất | `AuthServlet`, `AuthFilter`, PBKDF2 | ⚠️ |
+| **02** | Kho truyện — danh sách + phân trang | `StoryServlet?action=list` | ⚠️ |
+| **03** | Tag + lọc truyện + tìm kiếm | `TagDAO`, lọc theo slug | ⚠️ |
+| **04** | Chi tiết truyện + mục lục chương | `action=detail` | ⚠️ |
+| **05** | Đăng / sửa truyện | `action=create\|edit`, **kiểm quyền sở hữu** | ⚠️ |
+| **06** | Chương — đọc, thêm, sửa, xoá | `ChapterServlet`, `layout/reader.jsp` | ⚠️ |
+| **07** | Bình luận | `CommentServlet` | ⚠️ |
+| **08** | Đánh dấu + tự nhớ vị trí đọc | `BookmarkServlet` | ⚠️ |
+| **09** | Tải truyện `.txt` | `DownloadServlet` — không trả HTML | ⚠️ |
+| **10** | Quản trị — gỡ truyện, khoá tài khoản | `admin/*`, `AdminFilter`, `layout/admin.jsp` | ⚠️ |
+| **11** | Hướng dẫn sử dụng + Nội quy | `PageServlet` + checkbox đồng ý | ⚠️ |
 
-⚠️ **CASE 01 — code xong, CHƯA test được đầy đủ.** Trang đăng nhập/đăng ký hiện
-đúng, `AuthFilter` chặn đúng (đã kiểm bằng curl). Nhưng luồng đăng nhập thật cần
-database — chạy 3 bước ở mục Cài đặt rồi thử lại thì mới tick được ✅.
+⚠️ **Code đã xong cả 11 CASE và biên dịch sạch (27 file Java).**
+Đã kiểm bằng curl: mọi URL công khai trả 200, `AuthFilter` và `AdminFilter`
+chặn đúng (302), chặn được path traversal.
+
+**Nhưng luồng có dữ liệu thật thì CHƯA test được — vì database chưa được tạo.**
+Chạy 3 bước ở mục Cài đặt bên dưới rồi thử theo `docs/CHECKLIST.md` mục 3,
+tick hết thì đổi ⚠️ thành ✅.
 
 Nếu thiếu thời gian, cắt theo thứ tự: CASE 09 → CASE 08 → ảnh bìa.
 **Đừng cắt CASE 03 và CASE 10** — tag/lọc và phân quyền là hai thứ được nhìn vào đầu tiên.
