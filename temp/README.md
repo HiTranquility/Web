@@ -14,8 +14,8 @@ Downloads/Web/
 │                              build riêng, docs riêng, database riêng
 │
 ├── temp/                   ← BẠN ĐANG Ở ĐÂY — code học, demo tạm
-│   ├── ch06-demo/             project chương 6, chạy độc lập
-│   └── docs/                  ghi chú + bảng ánh xạ slide
+│   ├── ch06-demo/             project chương 6, chạy độc lập (code + script)
+│   └── docs/                  TẤT CẢ tài liệu gom ở đây
 │
 └── Week 1/                 ← code các chương trước + file slide gốc
     ├── ch02email/
@@ -43,12 +43,16 @@ powershell -ExecutionPolicy Bypass -File demo.ps1
 
 Rồi mở <http://localhost:8080/temp/>
 
+**Toàn bộ tài liệu gom trong [`docs/`](docs/):**
+
 | File | Nội dung |
 |------|----------|
-| [`ch06-demo/DEMO.md`](ch06-demo/DEMO.md) | **Kịch bản demo 6 bước** — bấm gì, thấy gì, nói gì |
-| [`ch06-demo/README.md`](ch06-demo/README.md) | Cấu trúc project, các lỗi đã vá |
-| [`docs/chapter06-mapping.md`](docs/chapter06-mapping.md) | Bảng ánh xạ **35 slide → code nào** |
-| `docs/Chapter 06 slides.pptx` | File slide gốc |
+| [`docs/chapter06-demo.md`](docs/chapter06-demo.md) | **Kịch bản demo 6 bước** — bấm gì, thấy gì, nói gì |
+| [`docs/chapter06-mapping.md`](docs/chapter06-mapping.md) | Ánh xạ **35 slide → file nào, dòng nào** |
+| [`docs/chapter06-project.md`](docs/chapter06-project.md) | Cấu trúc project, các lỗi đã vá |
+| `ch06-demo/verify-mapping.ps1` | Kiểm tra số dòng trong bảng còn đúng không |
+
+File slide gốc: `../Week 1/Chapter 06 slides.pptx`
 
 ---
 
@@ -84,4 +88,4 @@ Trước khi nộp bài chương 6, nên dọn hai thứ trong `ch06-demo`:
 2. Xoá khối "Chi tiết kỹ thuật" trong `error_500.jsp` — nó phơi tên lớp và thông
    điệp lỗi cho người dùng xem
 
-Chi tiết ở cuối [`ch06-demo/DEMO.md`](ch06-demo/DEMO.md).
+Chi tiết ở cuối [`docs/chapter06-demo.md`](docs/chapter06-demo.md).

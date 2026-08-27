@@ -1,8 +1,8 @@
 # Chapter 6 — How to develop JSPs · Bảng ánh xạ slide → code
 
 Nguồn: `Chapter 06 slides.pptx` (Murach's Java Servlets/JSP, 3rd Ed.) — **35 slide**.
-Code chạy được nằm ở [`../ch06jsp/`](../ch06jsp/).
-Muốn trình bày cho cô: xem [kịch bản demo từng bước](../ch06jsp/DEMO.md).
+Code chạy được nằm ở [`../ch06-demo/`](../ch06-demo/).
+Muốn trình bày cho cô: xem [kịch bản demo từng bước](chapter06-demo.md).
 
 **Cách đọc bảng:** cột *Code?* cho biết slide đó có code cần viết hay không.
 Slide chỉ là bảng tra, khái niệm, hay ảnh chụp màn hình thì ghi **—**.
@@ -24,45 +24,56 @@ Slide chỉ là bảng tra, khái niệm, hay ảnh chụp màn hình thì ghi *
 
 ---
 
-## Bảng ánh xạ đầy đủ
+## Bảng ánh xạ đầy đủ — kèm ĐƯỜNG DẪN và SỐ DÒNG
 
-| Slide | Nội dung | Code? | File trong dự án |
-|:-----:|----------|:-----:|------------------|
+Mọi đường dẫn tính từ `temp/ch06-demo/`.
+Cột **Ở đâu** ghi rõ file và dòng, mở ra là thấy ngay.
+
+| Slide | Nội dung | Code? | Ở đâu |
+|:-----:|----------|:-----:|-------|
 | 1 | Tiêu đề chương | — | |
-| 2 | Mục tiêu — Applied (4 mục) | — | |
-| 3 | Mục tiêu — Knowledge (6 mục) | — | |
-| **4** | Lớp User bean (phần 1) | ✅ | `murach/business/User.java` |
-| **5** | Lớp User bean (phần 2 — get/set) | ✅ | `murach/business/User.java` |
-| 6 | 3 quy tắc định nghĩa JavaBean | — | *(khái niệm — xem chú thích trong `User.java`)* |
-| **7** | Hiển thị attribute `${currentYear}` | ✅ | `EmailListServlet.java` + `index.jsp` |
-| **8** | Hiển thị property `${user.firstName}` | ✅ | `EmailListServlet.java` + `index.jsp` |
-| 9 | Bảng 4 scope EL tìm qua | — | *(bảng tra — chép lại bên dưới)* |
+| 2 | Mục tiêu — Applied | — | |
+| 3 | Mục tiêu — Knowledge | — | |
+| **4** | Lớp User bean (phần 1) | ✅ | `src/main/java/murach/business/User.java`<br>**dòng 32** `class User implements Serializable`<br>**36–38** 3 field · **45** constructor rỗng · **52** constructor 3 tham số |
+| **5** | Lớp User bean (get/set) | ✅ | cùng file, **dòng 65–87**<br>`getFirstName` 65 · `setFirstName` 69 · `getLastName` 73<br>`setLastName` 77 · `getEmail` 81 · `setEmail` 85 |
+| 6 | 3 quy tắc JavaBean | — | *khái niệm* — chú thích trong `User.java` **dòng 5–30** |
+| **7** | Hiển thị attribute | ✅ | `src/main/java/murach/email/EmailListServlet.java`<br>**dòng 81–83** `new GregorianCalendar()` → `setAttribute("currentYear", …)` |
+| **8** | Hiển thị property | ✅ | cùng file, **dòng 50** `new User(...)` · **dòng 75** `setAttribute("user", user)` |
+| 9 | Bảng 4 scope | — | *bảng tra* — chép lại bên dưới |
 | 10 | Khái niệm EL | — | |
-| **11** | Khai báo taglib JSTL | ✅ | dòng đầu `index.jsp`, `thanks.jsp` |
-| **12** | Thẻ `<c:if>` hiện thông báo lỗi | ✅ | `index.jsp` |
-| 13 | Khái niệm JSTL, cách thêm thư viện | — | *(dự án dùng `run.ps1` tự tải jar)* |
-| 14 | Bảng 5 loại thẻ JSP | — | *(bảng tra — chép lại bên dưới)* |
-| **15** | directive + scriptlet + expression | ✅ | `includes/footer.jsp` |
+| **11** | taglib directive | ✅ | `src/main/webapp/index.jsp` **dòng 2**<br>`src/main/webapp/thanks.jsp` **dòng 2** |
+| **12** | Thẻ `<c:if>` | ✅ | `src/main/webapp/index.jsp` **dòng 26–28** |
+| 13 | Khái niệm JSTL | — | jar JSTL do `run.ps1` tự tải, xem **dòng 32–33** của `run.ps1` |
+| 14 | Bảng 5 loại thẻ JSP | — | *bảng tra* — chép lại bên dưới |
+| **15** | directive + scriptlet + expression | ✅ | `src/main/webapp/WEB-INF/includes/footer.jsp`<br>**dòng 2** page import · **16–19** scriptlet · **20** `<%= currentYear %>` |
 | 16 | Khái niệm thẻ JSP | — | |
-| **17** | 3 kiểu chú thích | ✅ | dùng khắp các file `.jsp` |
-| 18 | Khái niệm chú thích | — | *(bảng so sánh bên dưới)* |
-| **19** | Đọc bean bằng scriptlet | ✅ | *(xem so sánh 3 cách bên dưới)* |
-| **20** | Đọc bean bằng thẻ JSP chuẩn | ✅ | *(xem so sánh 3 cách bên dưới)* |
-| **21** | Đọc bean bằng EL | ✅ | `index.jsp`, `thanks.jsp` ← **cách dự án dùng** |
-| 22 | So sánh ưu nhược EL vs thẻ chuẩn | — | |
-| **23** | Cú pháp `<jsp:useBean>` | ✅ | *(không dùng — dự án dùng EL)* |
-| **24** | Cú pháp `getProperty` / `setProperty` | ✅ | *(không dùng — dự án dùng EL)* |
+| **17** | 3 kiểu chú thích | ✅ | JSP comment: `index.jsp` **dòng 3–17**, `temp/index.jsp` **2–11**<br>chú thích 1 dòng: `index.jsp` **dòng 24** |
+| 18 | Khái niệm chú thích | — | *bảng so sánh* bên dưới |
+| **19** | Đọc bean bằng scriptlet | ✅ | *không dùng trong dự án* — code slide chép ở mục "Ba cách" bên dưới |
+| **20** | Đọc bean bằng thẻ JSP chuẩn | ✅ | *không dùng trong dự án* — code slide chép ở mục "Ba cách" bên dưới |
+| **21** | Đọc bean bằng EL | ✅ | **cách dự án dùng**<br>`index.jsp` **dòng 37, 40, 43** (thuộc tính `value=`)<br>`thanks.jsp` **dòng 40, 42, 44** (hiển thị) |
+| 22 | So sánh EL vs thẻ chuẩn | — | |
+| **23** | Cú pháp `<jsp:useBean>` | ✅ | *không dùng* — dự án dùng EL. Cú pháp chép bên dưới |
+| **24** | `getProperty` / `setProperty` | ✅ | *không dùng* — cú pháp chép bên dưới |
 | 25 | Khái niệm thẻ JSP chuẩn | — | |
-| 26 | Bảng escape sequence | — | *(bảng tra)* |
-| **27** | `header.html` và `footer.jsp` | ✅ | `includes/header.html`, `includes/footer.jsp` |
-| **28** | JSP dùng cả hai include | ✅ | `index.jsp` |
-| 29 | Ảnh chụp `index.jsp` trên trình duyệt | 📷 | `index.jsp` — **ảnh là bản đặc tả giao diện** |
-| 30 | Ảnh chụp `thanks.jsp` cùng header/footer | 📷 | `thanks.jsp` — **ảnh là bản đặc tả giao diện** |
-| **31** | Include lúc biên dịch `<%@ include %>` | ✅ | `error_404.jsp`, `error_403.jsp`, `error_500.jsp` |
-| **32** | Include lúc chạy `<c:import>` | ✅ | `index.jsp`, `thanks.jsp` |
-| 33 | Khái niệm include | — | |
-| 34 | Ảnh chụp trang lỗi **mặc định của Tomcat** | 📷 | *(xem phân tích bên dưới)* |
-| 35 | Lỗi JSP thường gặp: **404, 500** | — | `error_404.jsp`, `error_500.jsp`, `WEB-INF/web.xml` |
+| 26 | Bảng escape sequence | — | *bảng tra* — chép lại bên dưới |
+| **27** | `header.html` + `footer.jsp` | ✅ | `src/main/webapp/WEB-INF/includes/header.html` (18 dòng)<br>`src/main/webapp/WEB-INF/includes/footer.jsp` (23 dòng) |
+| **28** | JSP dùng cả hai include | ✅ | `src/main/webapp/index.jsp` — **dòng 18** mở, **dòng 50** đóng |
+| 29 | Ảnh chụp `index.jsp` | 📷 | `src/main/webapp/index.jsp` — **ảnh là bản đặc tả giao diện** |
+| 30 | Ảnh chụp `thanks.jsp` | 📷 | `src/main/webapp/thanks.jsp` — 4 phần bắt buộc: h1 **33**, 3 dòng info **39–44**, đoạn văn **47**, nút Return **56–59** |
+| **31** | Include lúc **biên dịch** | ✅ | `error_404.jsp` **27 / 56** · `error_403.jsp` **25 / 46**<br>`error_500.jsp` **26 / 55** · `temp/index.jsp` **12 / 48** |
+| **32** | Include lúc **chạy** | ✅ | `index.jsp` **18 / 50** · `thanks.jsp` **31 / 61** |
+| 33 | Khái niệm include | — | bảng so sánh 2 kiểu ở cuối file |
+| 34 | Ảnh chụp lỗi 500 của Tomcat | 📷 | **dựng lại ở** `src/main/webapp/temp/loi_el.jsp` **dòng 29** tạo bean, **dòng 49** gọi sai property |
+| 35 | Lỗi JSP thường gặp: **404, 500** | — | `src/main/webapp/WEB-INF/web.xml`<br>404 → **dòng 18–21** · 500 (exception) → **34–37** · 500 (mã) → **41–44** |
+
+### Ngoài slide — code thêm vào
+
+| Việc | Ở đâu |
+|------|-------|
+| Trang lỗi **403** *(không có trong slide)* | `error_403.jsp` · khai trong `web.xml` **dòng 24–27** |
+| Mở thẳng `/404` `/403` `/500` để demo | `src/main/java/murach/email/ErrorTestServlet.java`<br>**dòng 27** `@WebServlet({"/404","/403","/500"})`<br>**52** `sendError(403)` · **55** `sendError(404)` · **65** `throw` |
+| Trang demo bấm thử lỗi | `src/main/webapp/temp/index.jsp` |
 
 > ⚠️ **Slide không hề nhắc tới 403.** Slide 35 chỉ liệt kê 404 và 500.
 > File `error_403.jsp` là **thêm vào theo yêu cầu**, không có trong sách.

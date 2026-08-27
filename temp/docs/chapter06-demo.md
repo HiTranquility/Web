@@ -3,7 +3,7 @@
 Hướng dẫn bấm từng bước để trình bày đủ mọi trang. Làm theo đúng thứ tự, mất
 khoảng **5 phút**.
 
-Bảng ánh xạ slide → code: [`../docs/chapter06-mapping.md`](../docs/chapter06-mapping.md)
+Bảng ánh xạ slide → code: [`chapter06-mapping.md`](chapter06-mapping.md)
 
 ---
 

@@ -1,0 +1,26 @@
+# Kết quả build — không commit, ai clone về tự chạy run.ps1 là có
+build/
+target/
+.libs/
+*.class
+*.war
+
+# Thư viện tải về
+*.jar
+
+# Cấu hình có mật khẩu
+**/src/main/resources/db.properties
+
+# Dữ liệu do app sinh ra lúc chạy
+**/WEB-INF/EmailList.txt
+uploads/
+
+# IDE
+.idea/
+*.iml
+nbproject/private/
+.vscode/
+
+# Hệ điều hành
+Thumbs.db
+Desktop.ini
