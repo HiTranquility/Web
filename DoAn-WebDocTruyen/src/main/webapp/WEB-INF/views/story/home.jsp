@@ -73,8 +73,7 @@
             <div class="empty">
                 <div class="empty-icon">📚</div>
                 <h3>Chưa có truyện nào</h3>
-                <p>Kho truyện đang trống. Hãy là người đầu tiên đăng truyện,
-                   hoặc chạy <code>database/sample_data.sql</code> để nạp dữ liệu mẫu.</p>
+                <p>Kho truyện đang trống. Hãy là người đầu tiên đăng truyện của bạn.</p>
                 <a class="btn btn-primary"
                    href="${pageContext.request.contextPath}/story?action=create">Đăng truyện đầu tiên</a>
             </div>
