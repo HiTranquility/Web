@@ -16,6 +16,7 @@ import truyen.dao.StoryDAO;
 import truyen.dao.TagDAO;
 import truyen.model.Story;
 import truyen.model.User;
+import truyen.util.DBConnection;
 import truyen.util.SlugUtil;
 
 /**
@@ -91,7 +92,25 @@ public class StoryServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log("StoryServlet: lỗi truy vấn, action=" + action, e);
-            request.setAttribute("message", "Không tải được dữ liệu. Vui lòng thử lại.");
+
+            /*
+             * Phân biệt hai loại lỗi để báo cho đúng:
+             *   - chưa cấu hình database  -> hướng dẫn cài đặt
+             *   - lỗi truy vấn thật       -> xin lỗi chung chung
+             * Báo sai loại thì người dùng đi tìm nhầm hướng. Trang Kho truyện
+             * mà hiện "không tìm thấy truyện nào" trong khi thật ra chưa có DB
+             * là kiểu thông báo gây hiểu lầm nhất.
+             */
+            String hint = DBConnection.checkConnection();
+            request.setAttribute("message", hint != null
+                    ? "Chưa kết nối được cơ sở dữ liệu. Xem hướng dẫn cài đặt ở trang chủ."
+                    : "Không tải được dữ liệu. Vui lòng thử lại.");
+
+            request.setAttribute("stories", java.util.Collections.emptyList());
+            request.setAttribute("tags", java.util.Collections.emptyList());
+            request.setAttribute("totalStories", 0);
+            request.setAttribute("page", 1);
+            request.setAttribute("totalPages", 1);
             url = "/WEB-INF/views/story/list.jsp";
         }
 

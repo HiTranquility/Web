@@ -43,6 +43,18 @@
 <%@ include file="parts/nav.jsp" %>
 
 <main class="shell">
+
+    <%--
+      Thong bao chung — hien MOT LAN o day thay vi lap <c:if> trong tung manh.
+      Servlet nao dat "message" thi trang do tu co thong bao, khong phai sua gi.
+      Them trang moi cung duoc huong san.
+    --%>
+    <c:if test="${not empty message}">
+        <div class="panel panel-warn" style="margin-bottom:22px">
+            <c:out value="${message}"/>
+        </div>
+    </c:if>
+
     <%--
       Chỗ nội dung được chèn vào.
 
