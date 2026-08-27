@@ -6,7 +6,7 @@
   Folder /temp là chỗ để thử nghiệm và demo cho giảng viên.
   KHÔNG phải phần chính của bài — xoá cả folder này đi thì app vẫn chạy đủ.
 
-  Mở: http://localhost:8080/temp/
+  Mở: http://localhost:8080/demo/
 ================================================================================
 --%>
 <%@ include file="/WEB-INF/includes/header.html" %>

@@ -61,10 +61,10 @@ Cột **Ở đâu** ghi rõ file và dòng, mở ra là thấy ngay.
 | **28** | JSP dùng cả hai include | ✅ | `src/main/webapp/index.jsp` — **dòng 18** mở, **dòng 50** đóng |
 | 29 | Ảnh chụp `index.jsp` | 📷 | `src/main/webapp/index.jsp` — **ảnh là bản đặc tả giao diện** |
 | 30 | Ảnh chụp `thanks.jsp` | 📷 | `src/main/webapp/thanks.jsp` — 4 phần bắt buộc: h1 **33**, 3 dòng info **39–44**, đoạn văn **47**, nút Return **56–59** |
-| **31** | Include lúc **biên dịch** | ✅ | `error_404.jsp` **27 / 56** · `error_403.jsp` **25 / 46**<br>`error_500.jsp` **26 / 55** · `temp/index.jsp` **12 / 48** |
+| **31** | Include lúc **biên dịch** | ✅ | `error_404.jsp` **27 / 56** · `error_403.jsp` **25 / 46**<br>`error_500.jsp` **26 / 55** · `demo/index.jsp` **12 / 48** |
 | **32** | Include lúc **chạy** | ✅ | `index.jsp` **18 / 50** · `thanks.jsp` **31 / 61** |
 | 33 | Khái niệm include | — | bảng so sánh 2 kiểu ở cuối file |
-| 34 | Ảnh chụp lỗi 500 của Tomcat | 📷 | **dựng lại ở** `src/main/webapp/temp/loi_el.jsp` **dòng 29** tạo bean, **dòng 49** gọi sai property |
+| 34 | Ảnh chụp lỗi 500 của Tomcat | 📷 | **dựng lại ở** `src/main/webapp/demo/loi_el.jsp` **dòng 29** tạo bean, **dòng 49** gọi sai property |
 | 35 | Lỗi JSP thường gặp: **404, 500** | — | `src/main/webapp/WEB-INF/web.xml`<br>404 → **dòng 18–21** · 500 (exception) → **34–37** · 500 (mã) → **41–44** |
 
 ### Ngoài slide — code thêm vào
@@ -72,8 +72,8 @@ Cột **Ở đâu** ghi rõ file và dòng, mở ra là thấy ngay.
 | Việc | Ở đâu |
 |------|-------|
 | Trang lỗi **403** *(không có trong slide)* | `error_403.jsp` · khai trong `web.xml` **dòng 24–27** |
-| Mở thẳng `/404` `/403` `/500` để demo | `src/main/java/murach/email/ErrorTestServlet.java`<br>**dòng 27** `@WebServlet({"/404","/403","/500"})`<br>**52** `sendError(403)` · **55** `sendError(404)` · **65** `throw` |
-| Trang demo bấm thử lỗi | `src/main/webapp/temp/index.jsp` |
+| Mở thẳng `/404` `/403` `/500` để demo | `src/main/java/murach/demo/ErrorTestServlet.java`<br>**dòng 30** `@WebServlet({"/404","/403","/500"})`<br>**55** `sendError(403)` · **58** `sendError(404)` · **68** `throw` |
+| Trang demo bấm thử lỗi | `src/main/webapp/demo/index.jsp` |
 
 > ⚠️ **Slide không hề nhắc tới 403.** Slide 35 chỉ liệt kê 404 và 500.
 > File `error_403.jsp` là **thêm vào theo yêu cầu**, không có trong sách.
@@ -210,7 +210,7 @@ sập cả trang. Đó là vì sao cách 1 phải có `if (user == null)` còn c
 | Trang lỗi 500 | `error_500.jsp` + khai trong `web.xml` |
 | Trang lỗi 403 *(không có trong slide)* | `error_403.jsp` + khai trong `web.xml` |
 | Servlet điều khiển | `murach/email/EmailListServlet.java` |
-| Mở thẳng từng trang lỗi để demo | `murach/email/ErrorTestServlet.java` |
+| Mở thẳng từng trang lỗi để demo | `murach/demo/ErrorTestServlet.java` |
 
 ---
 

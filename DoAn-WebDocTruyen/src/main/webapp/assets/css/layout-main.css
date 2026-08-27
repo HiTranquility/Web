@@ -1,0 +1,127 @@
+/* ============================================================================
+   LAYOUT
+   ========================================================================= */
+.shell { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+main.shell { padding-top: 32px; padding-bottom: 80px; min-height: 60vh; }
+
+
+/* ============================================================================
+   HEADER — dính trên cùng, kính mờ
+   ========================================================================= */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    /* Glassmorphism: nền mờ + làm nhoè thứ phía sau khi cuộn qua */
+    background: rgba(16, 18, 25, .78);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border-bottom: 1px solid var(--ink-700);
+}
+
+.site-header .shell {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 66px;
+}
+
+.brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 1.14rem; letter-spacing: -.02em;
+    flex: none;
+}
+.brand-mark {
+    width: 32px; height: 32px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
+    color: var(--ink-950);
+    font-size: 1rem;
+    box-shadow: 0 3px 12px rgba(240,134,58,.4);
+}
+.brand em { color: var(--ember); font-style: normal; }
+
+.nav { display: flex; gap: 4px; flex: 1; }
+.nav a {
+    padding: 8px 14px;
+    border-radius: var(--r-sm);
+    color: var(--text-dim);
+    font-size: .92rem; font-weight: 500;
+    transition: color .18s var(--ease), background .18s var(--ease);
+}
+.nav a:hover      { color: var(--text); background: var(--ink-800); }
+.nav a.is-active  { color: var(--ember); background: var(--ember-ghost); }
+
+.header-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+
+
+/* ============================================================================
+   HERO — chỉ ở trang chủ
+   ========================================================================= */
+.hero { padding: 56px 0 40px; }
+.hero h1 {
+    font-size: clamp(2rem, 4.5vw, 3.1rem);
+    font-weight: 800; letter-spacing: -.035em; line-height: 1.1;
+    margin-bottom: 14px;
+}
+.hero h1 em {
+    font-style: normal;
+    background: linear-gradient(120deg, var(--ember-lit), var(--violet));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.hero p { color: var(--text-dim); font-size: 1.05rem; max-width: 52ch; }
+
+
+/* ============================================================================
+   FOOTER
+   ========================================================================= */
+.site-footer {
+    border-top: 1px solid var(--ink-800);
+    background: var(--ink-900);
+    padding: 40px 0 30px;
+    margin-top: 60px;
+}
+.footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px;
+    margin-bottom: 28px;
+}
+.site-footer h5 { font-size: .84rem; text-transform: uppercase;
+                  letter-spacing: .07em; color: var(--text-mut);
+                  margin-bottom: 12px; }
+.site-footer p  { color: var(--text-dim); font-size: .88rem; max-width: 42ch; }
+.site-footer ul { list-style: none; display: flex; flex-direction: column;
+                  gap: 8px; }
+.site-footer li a { color: var(--text-dim); font-size: .88rem;
+                    transition: color .16s var(--ease); }
+.site-footer li a:hover { color: var(--ember); }
+.footer-base {
+    border-top: 1px solid var(--ink-800); padding-top: 20px;
+    color: var(--text-mut); font-size: .82rem;
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+
+
+/* ============================================================================
+   RESPONSIVE
+   ========================================================================= */
+@media (max-width: 860px) {
+    .footer-grid { grid-template-columns: 1fr; gap: 26px; }
+    .nav { display: none; }        /* CASE 01 sẽ thay bằng menu hamburger */
+    .story-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                  gap: 16px; }
+}
+@media (max-width: 520px) {
+    .shell { padding: 0 16px; }
+    .hero  { padding: 36px 0 26px; }
+}
+
+/* Tôn trọng người bật "giảm chuyển động" trong hệ điều hành.
+   Đây là yêu cầu về khả năng tiếp cận, không phải tuỳ chọn. */
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    html { scroll-behavior: auto; }
+}

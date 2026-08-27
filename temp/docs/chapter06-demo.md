@@ -31,7 +31,7 @@ Lần sau chạy thẳng.
 > Nếu báo lỗi *"port 8080 already in use"*: đang có dự án khác chiếm cổng.
 > Chạy `.\demo.ps1 -Port 9090` rồi thay 8080 thành 9090 ở mọi URL bên dưới.
 
-Mở trình duyệt vào **<http://localhost:8080/temp/>** — trang demo có sẵn nút bấm
+Mở trình duyệt vào **<http://localhost:8080/demo/>** — trang demo có sẵn nút bấm
 cho mọi bước bên dưới.
 
 **Bật DevTools ngay từ đầu:** bấm **F12**, chọn tab **Network**. Cần nó ở bước 4
@@ -104,7 +104,7 @@ số ẩn `action=join`, không phải thẻ `<a>`.
 
 > Đây là phần cần **tab Network của DevTools**. Mở F12 trước khi bấm.
 
-Về **<http://localhost:8080/temp/>** rồi bấm lần lượt:
+Về **<http://localhost:8080/demo/>** rồi bấm lần lượt:
 
 | Bấm | Trang hiện ra | Cột Status trong Network |
 |-----|---------------|:------------------------:|
@@ -128,7 +128,7 @@ Cả ba khai trong `WEB-INF/web.xml` bằng thẻ `<error-page>`.
 ## Bước 5 — Lỗi EL, dựng lại đúng slide 34
 
 Bấm **"Lỗi EL sai tên property (đúng như slide 34)"**
-(hoặc mở <http://localhost:8080/temp/loi_el.jsp>)
+(hoặc mở <http://localhost:8080/demo/loi_el.jsp>)
 
 Thấy: trang **500**, phần "Chi tiết kỹ thuật" ghi:
 
@@ -151,7 +151,7 @@ Và phân biệt hai trường hợp — nhiều người nhớ nhầm là "EL k
 | Bean là `null` | EL in ra **rỗng**, không lỗi |
 | Bean có, **sai tên property** | **Ném exception → 500** |
 
-Trang `temp/loi_el.jsp` in cả ba trường hợp cạnh nhau để thấy rõ.
+Trang `demo/loi_el.jsp` in cả ba trường hợp cạnh nhau để thấy rõ.
 
 Khác sách một điểm đáng nói: slide 34 hiện trang mặc định xấu xí của Tomcat
 (phơi ra phiên bản server, tên package, số dòng), còn ở đây rơi vào
@@ -190,7 +190,7 @@ trần trụi không CSS, vì `header.html` viết `href="styles/main.css"` (tư
 - [ ] Nút Return quay về form
 - [ ] `/404` `/403` `/500` — Network hiện **đúng mã**, không phải 200
 - [ ] URL bịa cũng ra trang 404
-- [ ] `temp/loi_el.jsp` ném đúng `PropertyNotFoundException`
+- [ ] `demo/loi_el.jsp` ném đúng `PropertyNotFoundException`
 - [ ] File include trả 404 khi gõ URL trực tiếp
 - [ ] Trang 404 ở URL nhiều cấp **vẫn có CSS**
 
@@ -224,7 +224,7 @@ taskkill /F /IM java.exe
 
 Hai thứ nên dọn:
 
-1. **Xoá folder `temp/`** — chỉ dùng để demo, xoá đi app vẫn chạy đủ.
+1. **Xoá folder `demo/`** — chỉ dùng để demo, xoá đi app vẫn chạy đủ.
 2. **Xoá khối "Chi tiết kỹ thuật" trong `error_500.jsp`** — nó phơi tên lớp và
    thông điệp lỗi cho người dùng. Lúc code thì cần, lúc chạy thật thì chi tiết
    thuộc về log file.

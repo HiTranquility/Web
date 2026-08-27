@@ -1,0 +1,62 @@
+/* ============================================================================
+   layout-auth.css — khung trang Đăng nhập / Đăng ký          (dùng ở CASE 01)
+   ============================================================================
+   Nạp SAU base.css và components.css, nên ghi đè được những gì cần.
+   Trang đăng nhập KHÔNG tải file này của layout-main -> không tốn CSS cho
+   thanh menu và lưới truyện mà nó chẳng dùng tới.
+   ========================================================================= */
+
+/* Căn giữa theo cả hai chiều — đây là khác biệt lớn nhất so với layout main,
+   vốn là một cột rộng căn trên. */
+.auth-body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    padding: 24px;
+}
+
+.auth-wrap { width: 100%; max-width: 400px; }
+
+.auth-brand {
+    display: flex; justify-content: center;
+    margin-bottom: 22px;
+    font-size: 1.25rem;
+}
+
+.auth-card {
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-xl);
+    padding: 30px 28px;
+    box-shadow: var(--shadow-lg);
+}
+.auth-card h1 { font-size: 1.35rem; margin-bottom: 6px; }
+.auth-card > p { color: var(--text-dim); font-size: .92rem; margin-bottom: 20px; }
+
+/* Ô nhập chiếm hết bề ngang — form dọc thì rộng bằng nhau mới gọn */
+.auth-card label {
+    display: block; width: auto;
+    font-size: .85rem; color: var(--text-dim);
+    margin-bottom: 5px;
+}
+.auth-card input[type=text],
+.auth-card input[type=email],
+.auth-card input[type=password] {
+    width: 100%; min-width: 0;
+    margin: 0 0 16px;
+    background: var(--ink-900);
+    color: var(--text);
+    border: 1px solid var(--ink-600);
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+}
+.auth-card input:focus { border-color: var(--ember); }
+
+.auth-card .btn { width: 100%; justify-content: center; padding: 11px; }
+
+.auth-foot {
+    text-align: center; margin-top: 18px;
+    color: var(--text-mut); font-size: .85rem;
+}
+.auth-foot a { color: var(--text-dim); }
+.auth-foot a:hover { color: var(--ember); }

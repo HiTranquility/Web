@@ -8,12 +8,13 @@ Project chạy độc lập. **Không** liên quan tới đồ án.
 powershell -ExecutionPolicy Bypass -File demo.ps1
 ```
 
-Rồi mở <http://localhost:8080/temp/>
+Rồi mở <http://localhost:8080/demo/>
 
 ## Tài liệu — nằm hết ở [`../docs/`](../docs/)
 
 | File | Nội dung |
 |------|----------|
+| [chapter06-files.md](../docs/chapter06-files.md) | **Danh mục file** — tìm file nào ở đâu |
 | [chapter06-demo.md](../docs/chapter06-demo.md) | **Kịch bản demo 6 bước** — bấm gì, thấy gì, nói gì |
 | [chapter06-mapping.md](../docs/chapter06-mapping.md) | Ánh xạ **35 slide → file nào, dòng nào** |
 | [chapter06-project.md](../docs/chapter06-project.md) | Cấu trúc project, các lỗi đã vá |

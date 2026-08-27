@@ -32,19 +32,25 @@ $checks = @(
   @{f='src/main/webapp/error_404.jsp';                     n=27; want='<%@ include';                        slide='31'}
   @{f='src/main/webapp/error_403.jsp';                     n=25; want='<%@ include';                        slide='31'}
   @{f='src/main/webapp/error_500.jsp';                     n=26; want='<%@ include';                        slide='31'}
-  @{f='src/main/webapp/temp/loi_el.jsp';                   n=29; want='new User(';                          slide='34'}
-  @{f='src/main/webapp/temp/loi_el.jsp';                   n=49; want='user.emailAddress';                  slide='34'}
+  @{f='src/main/webapp/demo/loi_el.jsp';                   n=29; want='new User(';                          slide='34'}
+  @{f='src/main/webapp/demo/loi_el.jsp';                   n=49; want='user.emailAddress';                  slide='34'}
   @{f='src/main/webapp/WEB-INF/web.xml';                   n=19; want='404';                                slide='35'}
   @{f='src/main/webapp/WEB-INF/web.xml';                   n=25; want='403';                                slide='-'}
   @{f='src/main/webapp/WEB-INF/web.xml';                   n=35; want='Throwable';                          slide='35'}
   @{f='src/main/webapp/WEB-INF/web.xml';                   n=42; want='500';                                slide='35'}
-  @{f='src/main/java/murach/email/ErrorTestServlet.java';  n=27; want='@WebServlet';                        slide='-'}
-  @{f='src/main/java/murach/email/ErrorTestServlet.java';  n=52; want='SC_FORBIDDEN';                       slide='-'}
-  @{f='src/main/java/murach/email/ErrorTestServlet.java';  n=65; want='throw new';                          slide='-'}
+  @{f='src/main/java/murach/demo/ErrorTestServlet.java';  n=30; want='@WebServlet';                        slide='-'}
+  @{f='src/main/java/murach/demo/ErrorTestServlet.java';  n=55; want='SC_FORBIDDEN';                       slide='-'}
+  @{f='src/main/java/murach/demo/ErrorTestServlet.java';  n=68; want='throw new';                          slide='-'}
 )
 
 $bad = 0
 foreach ($c in $checks) {
+    if (-not (Test-Path -LiteralPath $c.f)) {
+        $bad++
+        Write-Host ("  MAT FILE  slide {0}  {1}" -f $c.slide, $c.f) -ForegroundColor Red
+        Write-Host  "            File da bi di chuyen hoac doi ten. Sua duong dan trong bang."
+        continue
+    }
     $lines = Get-Content -LiteralPath $c.f -Encoding UTF8
     $got = if ($c.n -le $lines.Count) { $lines[$c.n - 1] } else { '<qua cuoi file>' }
     if ($got -notlike "*$($c.want)*") {

@@ -1,4 +1,4 @@
-package murach.email;
+package murach.demo;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -8,6 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * KHÔNG có trong sách — lớp này mình thêm vào, nên để package riêng
+ * murach.demo thay vì murach.email (murach.email là package của sách).
+ *
  * Cho phép mở thẳng từng trang lỗi bằng URL gọn:
  *
  *     http://localhost:8080/404

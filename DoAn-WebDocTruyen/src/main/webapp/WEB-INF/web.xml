@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+================================================================================
+  web.xml — Deployment Descriptor
+================================================================================
+  Dự án này map servlet chủ yếu bằng @WebServlet (gọn, nằm cạnh code).
+  File này giữ những thứ KHÔNG có dạng annotation:
+      <context-param>   giá trị dùng chung
+      <error-page>      trang lỗi tuỳ biến
+      <session-config>  thời gian sống của phiên
+      <welcome-file>    trang mặc định
+
+  Tomcat đọc file này MỘT LẦN lúc khởi động. Sửa xong phải restart.
+================================================================================
+-->
+<web-app version="3.1"
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+        http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+
+    <display-name>Web Đọc Truyện</display-name>
+
+    <!--
+      Thư mục chứa ảnh bìa người dùng tải lên.
+
+      PHẢI NẰM NGOÀI webapp. Để trong webapp thì mỗi lần deploy lại là Tomcat
+      xoá sạch thư mục cũ và ảnh của người dùng bay theo. Đây đúng là cái bẫy
+      của getRealPath() ở chương 5.
+
+      Để ở đây thay vì viết cứng trong code: đổi máy chỉ cần sửa một dòng.
+    -->
+    <context-param>
+        <param-name>uploadDir</param-name>
+        <param-value>C:/truyen-uploads</param-value>
+    </context-param>
+
+    <!-- Số truyện mỗi trang ở kho truyện. Chỉnh mà không cần biên dịch lại. -->
+    <context-param>
+        <param-name>pageSize</param-name>
+        <param-value>24</param-value>
+    </context-param>
+
+
+    <!--
+      Trang lỗi tuỳ biến.
+      Trong lúc phát triển có thể comment lại để thấy stack trace thật.
+    -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/views/page/error404.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/WEB-INF/views/page/error500.jsp</location>
+    </error-page>
+
+
+    <!--
+      Phiên đăng nhập sống 60 phút không hoạt động.
+      CASE 01 sẽ dùng session để lưu người đang đăng nhập.
+    -->
+    <session-config>
+        <session-timeout>60</session-timeout>
+
+        <!--
+          HttpOnly: JavaScript không đọc được cookie phiên. Đây là hàng rào
+          thứ hai chống XSS — kể cả khi lọt một đoạn script vào trang, nó cũng
+          không cướp được phiên đăng nhập của người khác.
+        -->
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+    </session-config>
+
+
+    <!--
+      KHÔNG khai <welcome-file-list>.
+
+      Trang chủ do HomeServlet map vào "" phụ trách. Nếu khai welcome-file thì
+      Tomcat sẽ tìm file tĩnh trước và servlet không bao giờ chạy.
+    -->
+
+</web-app>

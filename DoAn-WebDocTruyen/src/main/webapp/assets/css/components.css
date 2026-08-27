@@ -1,0 +1,183 @@
+/* ============================================================================
+   NÚT BẤM
+   ========================================================================= */
+.btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    font-family: inherit; font-size: .9rem; font-weight: 600;
+    cursor: pointer;
+    transition: transform .16s var(--ease), box-shadow .16s var(--ease),
+                background .16s var(--ease), border-color .16s var(--ease);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember));
+    color: #1a0f06;
+    box-shadow: 0 3px 14px rgba(240,134,58,.32);
+}
+.btn-primary:hover  { transform: translateY(-1px);
+                      box-shadow: 0 7px 22px rgba(240,134,58,.45); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-ghost {
+    background: transparent; color: var(--text-dim);
+    border-color: var(--ink-600);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--ink-600);
+                   background: var(--ink-800); }
+
+.btn-sm { padding: 6px 13px; font-size: .84rem; }
+
+
+/* ============================================================================
+   TAG — dùng ở nhiều nơi
+   ========================================================================= */
+.tag {
+    display: inline-block;
+    padding: 4px 11px;
+    border-radius: 99px;
+    background: var(--ink-800);
+    border: 1px solid var(--ink-700);
+    color: var(--text-dim);
+    font-size: .77rem; font-weight: 500;
+    transition: all .16s var(--ease);
+}
+a.tag:hover { color: var(--ember); border-color: var(--ember);
+              background: var(--ember-ghost); }
+.tag.is-on  { background: var(--ember); border-color: var(--ember);
+              color: #1a0f06; font-weight: 600; }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+
+/* ============================================================================
+   LƯỚI TRUYỆN
+   ========================================================================= */
+.section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; margin: 40px 0 18px;
+}
+.section-head h2 {
+    font-size: 1.28rem; font-weight: 700; letter-spacing: -.02em;
+}
+.section-head .more { color: var(--text-mut); font-size: .88rem;
+                      transition: color .16s var(--ease); }
+.section-head .more:hover { color: var(--ember); }
+
+.story-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+    gap: 22px;
+}
+
+.story-card {
+    display: flex; flex-direction: column;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    transition: transform .22s var(--ease), border-color .22s var(--ease),
+                box-shadow .22s var(--ease);
+}
+.story-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--ember-deep);
+    box-shadow: var(--shadow-lg);
+}
+
+.story-cover {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    background: linear-gradient(150deg, var(--ink-700), var(--ink-850));
+    overflow: hidden;
+}
+.story-cover img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .4s var(--ease);
+}
+.story-card:hover .story-cover img { transform: scale(1.05); }
+
+/* Không có ảnh bìa thì lấy chữ cái đầu làm bìa — đỡ hơn hẳn một ô xám trống */
+.cover-fallback {
+    width: 100%; height: 100%;
+    display: grid; place-items: center;
+    font-size: 3rem; font-weight: 800;
+    color: var(--ink-600);
+    background: linear-gradient(150deg, var(--ink-700), var(--ink-900));
+}
+
+.badge {
+    position: absolute; top: 10px; right: 10px;
+    padding: 3px 9px; border-radius: 99px;
+    font-size: .7rem; font-weight: 700; letter-spacing: .02em;
+    backdrop-filter: blur(8px);
+}
+.badge-done  { background: rgba(43,183,137,.9);  color: #04241a; }
+.badge-going { background: rgba(240,134,58,.9);  color: #1a0f06; }
+
+.story-body { padding: 13px 15px 15px; display: flex; flex-direction: column;
+              gap: 7px; flex: 1; }
+.story-title {
+    font-size: .96rem; font-weight: 700; line-height: 1.35;
+    /* Cắt ở dòng thứ 2 để mọi thẻ cao bằng nhau, lưới không bị so le */
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color .16s var(--ease);
+}
+.story-card:hover .story-title { color: var(--ember); }
+
+.story-meta {
+    margin-top: auto;
+    display: flex; align-items: center; gap: 12px;
+    color: var(--text-mut); font-size: .78rem;
+}
+.story-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+
+/* ============================================================================
+   Ô TRỐNG — khi chưa có dữ liệu
+   ========================================================================= */
+/* Trạng thái rỗng cũng phải được thiết kế. Một trang trắng trơn trông như
+   web hỏng; một ô rỗng có thiết kế thì trông như chủ ý. */
+.empty {
+    text-align: center;
+    padding: 64px 28px;
+    border: 1px dashed var(--ink-600);
+    border-radius: var(--r-xl);
+    background: rgba(27,31,43,.4);
+}
+.empty-icon { font-size: 2.6rem; margin-bottom: 12px; opacity: .55; }
+.empty h3   { font-size: 1.05rem; margin-bottom: 6px; }
+.empty p    { color: var(--text-dim); font-size: .92rem; max-width: 46ch;
+              margin: 0 auto 18px; }
+
+
+/* ============================================================================
+   PANEL THÔNG BÁO
+   ========================================================================= */
+.panel {
+    border-radius: var(--r-lg);
+    padding: 18px 20px;
+    border: 1px solid var(--ink-700);
+    background: var(--ink-850);
+    font-size: .92rem;
+}
+.panel-warn { border-color: var(--ember-deep);
+              background: linear-gradient(180deg, var(--ember-ghost), transparent); }
+.panel h4   { margin-bottom: 8px; font-size: .98rem; }
+.panel code {
+    font-family: 'Fira Code', Consolas, monospace;
+    background: var(--ink-950); padding: 2px 7px;
+    border-radius: var(--r-sm); font-size: .86em; color: var(--ember-lit);
+}
+.panel pre {
+    font-family: 'Fira Code', Consolas, monospace;
+    background: var(--ink-950); color: var(--text-dim);
+    padding: 13px 15px; border-radius: var(--r);
+    overflow-x: auto; font-size: .82rem; margin: 10px 0;
+    border: 1px solid var(--ink-700);
+}
+
+

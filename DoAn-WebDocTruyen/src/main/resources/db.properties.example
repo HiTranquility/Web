@@ -1,0 +1,20 @@
+# =============================================================================
+#  Cấu hình kết nối database — BẢN MẪU
+# =============================================================================
+#  Chép file này thành  db.properties  (cùng thư mục) rồi điền thông tin thật.
+#
+#      cp db.properties.example db.properties
+#
+#  File db.properties đã nằm trong .gitignore nên KHÔNG bị đẩy lên GitHub.
+#  Đừng bao giờ commit mật khẩu database.
+# =============================================================================
+
+# useUnicode + characterEncoding : bắt buộc, không thì tiếng Việt vào DB thành "?"
+# serverTimezone                 : thiếu tham số này MySQL 8 báo lỗi khi kết nối
+# allowPublicKeyRetrieval        : cần cho MySQL 8 khi dùng xác thực mặc định
+db.url=jdbc:mysql://localhost:3306/webdoctruyen?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&useSSL=false
+
+# KHÔNG dùng tài khoản root cho ứng dụng.
+# Chạy database/setup_user.sql để tạo tài khoản riêng cho app.
+db.username=truyen_app
+db.password=DIEN_MAT_KHAU_BAN_DAT_O_DAY

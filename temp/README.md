@@ -41,12 +41,13 @@ cd temp\ch06-demo
 powershell -ExecutionPolicy Bypass -File demo.ps1
 ```
 
-Rồi mở <http://localhost:8080/temp/>
+Rồi mở <http://localhost:8080/demo/>
 
 **Toàn bộ tài liệu gom trong [`docs/`](docs/):**
 
 | File | Nội dung |
 |------|----------|
+| [`docs/chapter06-files.md`](docs/chapter06-files.md) | **Danh mục file** — file nào ở đâu, làm gì, xoá được không |
 | [`docs/chapter06-demo.md`](docs/chapter06-demo.md) | **Kịch bản demo 6 bước** — bấm gì, thấy gì, nói gì |
 | [`docs/chapter06-mapping.md`](docs/chapter06-mapping.md) | Ánh xạ **35 slide → file nào, dòng nào** |
 | [`docs/chapter06-project.md`](docs/chapter06-project.md) | Cấu trúc project, các lỗi đã vá |
@@ -84,7 +85,7 @@ Xong môn thì xoá cả `temp/` được — nó không ảnh hưởng gì tớ
 
 Trước khi nộp bài chương 6, nên dọn hai thứ trong `ch06-demo`:
 
-1. Xoá `src/main/webapp/temp/` (trang demo bấm thử lỗi)
+1. Xoá `src/main/webapp/demo/` (trang demo bấm thử lỗi)
 2. Xoá khối "Chi tiết kỹ thuật" trong `error_500.jsp` — nó phơi tên lớp và thông
    điệp lỗi cho người dùng xem
 

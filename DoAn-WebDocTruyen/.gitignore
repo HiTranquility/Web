@@ -1,0 +1,12 @@
+# Mật khẩu database — TUYỆT ĐỐI không commit
+src/main/resources/db.properties
+
+target/
+build/
+.libs/
+*.war
+*.class
+.idea/
+*.iml
+nbproject/private/
+uploads/
