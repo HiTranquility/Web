@@ -1,0 +1,124 @@
+/* Chapter 5 demo app - shared styles */
+
+:root {
+    --ink: #1c2530;
+    --muted: #5b6b7c;
+    --line: #dde4ea;
+    --teal: #0f766e;
+    --teal-soft: #e6f4f2;
+    --amber: #92400e;
+    --amber-soft: #fef6e7;
+    --red: #9f1239;
+    --red-soft: #fdeef1;
+    --code-bg: #1e293b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0;
+    background: #f7f9fb;
+}
+
+.wrap {
+    max-width: 60em;
+    margin: 0 auto;
+    padding: 1.5em 2em 4em;
+    background: #fff;
+    min-height: 100vh;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+}
+
+h1 { color: var(--teal); font-size: 1.7em; margin: 0 0 .2em; }
+h2 { font-size: 1.15em; margin: 2em 0 .6em; }
+h3 { font-size: 1em; margin: 1.4em 0 .4em; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-size: .78em; }
+
+a { color: var(--teal); }
+
+/* ---- top bar ---- */
+.topbar {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-bottom: .8em; margin-bottom: 1.4em; border-bottom: 1px solid var(--line);
+    font-size: .85em;
+}
+.topbar .slides { color: var(--muted); }
+
+/* ---- the problem statement ---- */
+.problem {
+    background: var(--teal-soft);
+    border-radius: 6px;
+    padding: .9em 1.1em;
+    margin: 1em 0 1.6em;
+}
+.problem strong { display: block; margin-bottom: .2em; }
+
+/* ---- code from the slides ---- */
+pre {
+    background: var(--code-bg);
+    color: #e2e8f0;
+    padding: 1em 1.2em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10pt;
+    line-height: 1.5;
+}
+pre .hl { color: #fcd34d; }
+code {
+    font-family: Consolas, "Courier New", monospace;
+    background: #eef2f6;
+    padding: .1em .35em;
+    border-radius: 3px;
+    font-size: .92em;
+}
+
+/* ---- live result ---- */
+.result {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1em 1.2em;
+    margin: 1em 0;
+}
+.result h3 { margin-top: 0; }
+
+table { border-collapse: collapse; width: 100%; margin: .6em 0; }
+th, td { text-align: left; padding: .45em .6em; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: normal; font-size: .85em; width: 16em; }
+td code { background: none; padding: 0; }
+
+.null { color: var(--muted); font-style: italic; }
+.yes { color: var(--teal); font-weight: bold; }
+.no  { color: var(--red); font-weight: bold; }
+
+.note { background: var(--amber-soft); border-radius: 6px; padding: .8em 1.1em; margin: 1.2em 0; font-size: .95em; }
+.warn { background: var(--red-soft); border-radius: 6px; padding: .8em 1.1em; margin: 1.2em 0; font-size: .95em; }
+
+/* ---- forms ---- */
+label { display: inline-block; width: 8em; }
+input[type=text], input[type=email], select {
+    padding: .35em .5em; border: 1px solid var(--line); border-radius: 4px;
+    font-size: 1em; font-family: inherit; min-width: 16em;
+}
+input[type=submit], .btn {
+    background: var(--teal); color: #fff; border: 0; border-radius: 4px;
+    padding: .5em 1.1em; font-size: .95em; cursor: pointer; text-decoration: none;
+    display: inline-block; margin: .2em .3em .2em 0;
+}
+.btn.ghost { background: #fff; color: var(--teal); border: 1px solid var(--teal); }
+form.stack p { margin: .5em 0; }
+
+/* ---- the case index ---- */
+ol.cases { list-style: none; padding: 0; margin: 1em 0; }
+ol.cases li { border-bottom: 1px solid var(--line); }
+ol.cases a { display: flex; gap: 1em; padding: .7em .4em; text-decoration: none; align-items: baseline; }
+ol.cases a:hover { background: var(--teal-soft); }
+ol.cases .num { color: var(--muted); font-family: Consolas, monospace; font-size: .85em; width: 3.2em; flex: none; }
+ol.cases .title { font-weight: bold; color: var(--teal); flex: none; width: 17em; }
+ol.cases .what { color: var(--muted); font-size: .9em; }
+
+.footnav { margin-top: 2.5em; padding-top: 1em; border-top: 1px solid var(--line); font-size: .9em; }

@@ -1,0 +1,77 @@
+<%--
+================================================================================
+  header.jspf — phần đầu trang dùng chung cho 15 trang case
+================================================================================
+
+  ĐUÔI .jspf LÀ GÌ
+    "JSP fragment" — mảnh JSP, không phải trang hoàn chỉnh. Nó không tự chạy
+    được (thiếu <html>, thiếu </body>), chỉ để file khác nhúng vào. Đuôi này
+    là quy ước, không bắt buộc, nhưng đặt vậy thì nhìn tên là biết ngay.
+
+  TẠI SAO ĐỂ TRONG WEB-INF
+    Tomcat không bao giờ phục vụ file nằm trong WEB-INF cho trình duyệt. Nhờ
+    vậy không ai gõ URL vào xem được mảnh HTML dở dang này. Cùng lý do với
+    việc để EmailList.txt trong đó (CASE 07).
+
+  NHÚNG BẰNG CÁCH NÀO — VÀ VÌ SAO CHỌN CÁCH ĐÓ
+    Mỗi trang case mở đầu bằng:
+        <%@ include file="/WEB-INF/jspf/header.jspf" %>
+
+    Có hai kiểu include trong JSP, khác nhau ở THỜI ĐIỂM:
+
+      <%@ include %>        include TĨNH — dán nội dung file này vào trang cha
+      (directive)           TRƯỚC khi biên dịch. Kết quả là MỘT servlet duy
+                            nhất. Nhờ vậy biến của trang cha (như caseTitle)
+                            nhìn thấy được ở đây. Đây là kiểu đang dùng.
+
+      <jsp:include>         include ĐỘNG — gọi sang trang kia lúc CHẠY, như
+      (action)              một request con riêng biệt. Chậm hơn, và không
+                            chia sẻ biến cục bộ. Hợp khi nội dung nhúng thay
+                            đổi theo từng lần chạy.
+
+    LƯU Ý: sửa file .jspf này xong, có server không nhận ra trang cha cần biên
+    dịch lại (vì bản thân file cha không đổi). Không thấy thay đổi thì restart.
+    Đây là nhược điểm cố hữu của include tĩnh.
+
+  BIẾN caseNumber / caseTitle / caseSlides ĐẾN TỪ ĐÂU
+    Mỗi trang case đặt chúng ở dòng đầu, TRƯỚC khi include file này:
+        <% request.setAttribute("caseTitle", "..."); %>
+    Rồi ở đây đọc lại bằng EL. Thứ tự bắt buộc phải vậy — đặt sau khi include
+    thì lúc render tới đây biến chưa tồn tại và EL in ra rỗng.
+================================================================================
+--%>
+
+<%--
+  page directive — khai báo thuộc tính của cả trang.
+
+  contentType : header HTTP Content-Type gửi cho trình duyệt. KHÔNG khai thì
+                mặc định là ISO-8859-1 và tiếng Việt ra dấu hỏi hết, dù thẻ
+                <meta charset="utf-8"> bên dưới có ghi utf-8 — vì header HTTP
+                luôn thắng thẻ meta.
+  pageEncoding: charset dùng để ĐỌC chính file .jsp này lúc biên dịch. Hai thứ
+                khác nhau: một cái cho lúc gửi đi, một cái cho lúc đọc vào.
+                Chữ tiếng Việt gõ thẳng trong file cần cái này mới đúng.
+--%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${caseTitle} - Chapter 5</title>
+
+    <%--
+      ${pageContext.request.contextPath} trả về "/ch05email".
+
+      Vì sao không viết thẳng href="/ch05email/styles/main.css": tên context
+      phụ thuộc lúc deploy. Đổi tên file .war là mọi link tuyệt đối gãy hết.
+      pageContext là object ngầm định của JSP, luôn có sẵn, không cần khai báo.
+    --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/styles/main.css" type="text/css"/>
+</head>
+<body>
+<div class="wrap">
+    <div class="topbar">
+        <a href="${pageContext.request.contextPath}/">&larr; All 16 cases</a>
+        <span class="slides">${caseSlides}</span>
+    </div>
+    <h1>${caseNumber}. ${caseTitle}</h1>

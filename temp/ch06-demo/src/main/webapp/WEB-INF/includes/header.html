@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Murach's Java Servlets and JSP</title>
+    <!--
+      CSS phai la duong dan TUYET DOI (co dau / o dau).
+      Viet "styles/main.css" (tuong doi) thi o URL nhieu cap nhu
+      /truyen/khong-co, trinh duyet se tim /truyen/styles/main.css -> 404,
+      va trang loi hien ra khong co dinh dang nao.
+      Duong dan "/styles/main.css" luon dung vi app deploy o root.
+      (Neu deploy kem ten ung dung thi phai doi file nay thanh .jsp va dung
+       ${pageContext.request.contextPath} - file .html khong chay duoc EL.)
+    -->
+    <link rel="stylesheet" href="/styles/main.css" type="text/css"/>
+</head>
+<body>
+<div class="wrap">

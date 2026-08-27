@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+================================================================================
+  web.xml — DEPLOYMENT DESCRIPTOR (DD)                       slide 32-34, 41-44
+================================================================================
+
+  NÓ LÀ GÌ
+    File mô tả cách ứng dụng web được cấu hình khi deploy. Bắt buộc nằm trong
+    thư mục WEB-INF. Tomcat đọc nó MỘT LẦN lúc khởi động.
+
+  BA HỆ QUẢ CỦA CÂU "ĐỌC MỘT LẦN LÚC KHỞI ĐỘNG" (slide 34)
+    1. Sửa file này xong thì phải redeploy hoặc restart, không thì không có gì
+       thay đổi cả. Khác hẳn file .jsp - sửa là thấy ngay khi F5.
+    2. Lồng thẻ sai thì ứng dụng KHÔNG khởi động nổi. Tomcat báo lỗi thay vì
+       chạy app. Nghe thì phiền, nhưng sai sớm còn hơn sai âm thầm.
+    3. Thứ tự các thẻ trong file này phải theo đúng schema. Đặt <servlet> sau
+       <servlet-mapping> là lỗi, dù nội dung hoàn toàn đúng.
+
+  TẠI SAO KHÔNG DỜI HẾT SANG ANNOTATION
+    Nhiều thứ ở đây không có annotation tương ứng: <context-param>,
+    <error-page>, <session-config>, <welcome-file-list>. Và với những giá trị
+    cần đổi lúc deploy mà không biên dịch lại (xem CASE 12) thì để ở file text
+    này mới đúng chỗ.
+
+  ỨNG DỤNG NÀY CỐ Ý DÙNG CẢ HAI CÁCH MAP SERVLET
+    web.xml     -> servlet có init-param, và servlet mà CASE 02 đang nói về
+    @WebServlet -> các servlet demo còn lại
+    Hai cơ chế chạy song song hoàn toàn bình thường.
+
+  version="3.1" nghĩa là gì
+    Servlet API 3.1 = Tomcat 8/9, dùng package javax.servlet. Tomcat 10 trở lên
+    đổi sang jakarta.servlet và sẽ KHÔNG chạy code này.
+    Không đặt metadata-complete="true" - đặt vào là Tomcat bỏ qua bước quét
+    annotation và toàn bộ servlet map bằng @WebServlet biến mất khỏi ứng dụng.
+================================================================================
+-->
+<web-app version="3.1"
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+        http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+
+    <!--
+      ======================================================================
+      CASE 12 - context-param: tham số dùng chung cho MỌI servlet  (slide 35)
+      ======================================================================
+      Đọc bằng: getServletContext().getInitParameter("custServEmail")
+
+      Hợp cho giá trị cả ứng dụng cùng cần. Đổi địa chỉ hỗ trợ thì sửa đúng
+      một dòng ở đây, không phải đi tìm trong từng file .java.
+    -->
+    <context-param>
+        <param-name>custServEmail</param-name>
+        <param-value>custserv@murach.com</param-value>
+    </context-param>
+
+
+    <!--
+      ======================================================================
+      ĐỊNH NGHĨA SERVLET                                          (slide 7)
+      ======================================================================
+      Khối <servlet> chỉ ĐẶT TÊN cho một lớp. Nó chưa gắn URL nào cả - việc
+      đó là của <servlet-mapping> ở phía dưới.
+
+      Tách làm hai khối vì quan hệ là một-nhiều: MỘT servlet có thể nhận
+      NHIỀU url-pattern. <servlet-name> là chất keo nối hai khối, và cái tên
+      đó chỉ có ý nghĩa bên trong file này.
+    -->
+
+    <!-- CASE 11 - servlet chính của chương -->
+    <servlet>
+        <servlet-name>EmailListServlet</servlet-name>
+        <servlet-class>murach.email.EmailListServlet</servlet-class>
+
+        <!--
+          CASE 12 - init-param: chỉ RIÊNG servlet này thấy       (slide 35)
+          Đọc bằng: getServletConfig().getInitParameter("relativePathToFile")
+
+          Nhờ dòng này mà EmailListServlet không viết cứng đường dẫn file.
+          Muốn đổi chỗ lưu email list thì sửa ở đây, không đụng vào code.
+
+          BẪY: đọc bằng getServletContext() thay vì getServletConfig() thì
+          biên dịch vẫn qua nhưng nhận về null. Xem CASE 12.
+        -->
+        <init-param>
+            <param-name>relativePathToFile</param-name>
+            <param-value>/WEB-INF/EmailList.txt</param-value>
+        </init-param>
+    </servlet>
+
+    <!-- CASE 01 - servlet tự sinh HTML -->
+    <servlet>
+        <servlet-name>TestServlet</servlet-name>
+        <servlet-class>murach.email.TestServlet</servlet-class>
+    </servlet>
+
+    <!-- CASE 02 - servlet để minh hoạ url-pattern -->
+    <servlet>
+        <servlet-name>MappingServlet</servlet-name>
+        <servlet-class>murach.demo.MappingServlet</servlet-class>
+    </servlet>
+
+    <!-- CASE 12 - servlet minh hoạ init parameter -->
+    <servlet>
+        <servlet-name>InitParamServlet</servlet-name>
+        <servlet-class>murach.demo.InitParamServlet</servlet-class>
+        <!-- Cùng tên tham số với EmailListServlet ở trên, nhưng là bản SAO
+             riêng của servlet này. Hai init-param cùng tên ở hai servlet khác
+             nhau hoàn toàn độc lập - đó chính là ý nghĩa của chữ "riêng". -->
+        <init-param>
+            <param-name>relativePathToFile</param-name>
+            <param-value>/WEB-INF/EmailList.txt</param-value>
+        </init-param>
+    </servlet>
+
+
+    <!--
+      ======================================================================
+      GẮN SERVLET VÀO URL                                       (slide 7-9)
+      ======================================================================
+      BA KIỂU PATTERN (slide 9)
+        /emailList   khớp đúng một URL duy nhất
+        /email/*     khớp mọi URL bắt đầu bằng /email/ - phần đuôi vào getPathInfo()
+        *.do         khớp theo phần mở rộng
+
+      Nhiều pattern cùng khớp thì Tomcat chọn cái CỤ THỂ nhất, không phải cái
+      viết trước. Có cả /email/add và /email/* thì URL /email/add chạy vào
+      pattern đầu.
+
+      Đường dẫn luôn tính từ gốc ứng dụng, KHÔNG kèm context path. Viết
+      /ch05email/emailList là sai.
+    -->
+
+    <servlet-mapping>
+        <servlet-name>EmailListServlet</servlet-name>
+        <url-pattern>/emailList</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>TestServlet</servlet-name>
+        <url-pattern>/test</url-pattern>
+    </servlet-mapping>
+
+    <!--
+      CASE 02 - MỘT servlet, HAI pattern khác loại.
+      Cố ý map hai lần để so sánh trực tiếp trên cùng một servlet:
+        /mapping   -> khớp chính xác  -> getPathInfo() trả về null
+        /email/*   -> khớp theo đường -> getPathInfo() trả về phần dấu * nuốt
+    -->
+    <servlet-mapping>
+        <servlet-name>MappingServlet</servlet-name>
+        <url-pattern>/mapping</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MappingServlet</servlet-name>
+        <url-pattern>/email/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>InitParamServlet</servlet-name>
+        <url-pattern>/initParams</url-pattern>
+    </servlet-mapping>
+
+
+    <!--
+      ======================================================================
+      CASE 13 - XỬ LÝ LỖI TUỲ BIẾN                          (slide 41-44)
+      ======================================================================
+      Không có dạng annotation cho phần này - bắt buộc khai ở đây.
+
+      GHI CHÚ CỦA SLIDE 33: lúc đang phát triển thì nên comment hai khối này
+      lại. Lý do: khi dev, stack trace CHÍNH LÀ thứ bạn cần nhìn; một trang
+      lỗi lịch sự chỉ che mất nó. Bật lên khi lên production.
+    -->
+
+    <!-- Bắt theo MÃ TRẠNG THÁI HTTP (slide 42).
+         Kích hoạt khi URL không tồn tại, hoặc khi code gọi
+         response.sendError(404). Lưu ý setStatus(404) thì KHÔNG kích hoạt. -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error_404.jsp</location>
+    </error-page>
+
+    <!-- Bắt theo LOẠI EXCEPTION (slide 44).
+         Dùng java.lang.Throwable vì mọi exception đều kế thừa từ nó, nên MỘT
+         khai báo bắt được tất cả. Muốn xử lý riêng vài loại thì thêm
+         <error-page> cụ thể hơn - Tomcat chọn cái khớp sát nhất, giống catch
+         nhiều tầng.
+         Trang đích BẮT BUỘC có isErrorPage="true", không thì
+         pageContext.exception là null và trang trông như hỏng. -->
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/error_java.jsp</location>
+    </error-page>
+
+
+    <!--
+      Thời gian sống của session, tính bằng PHÚT.
+      Chương 5 chưa dùng session (đó là chương 7), nhưng thẻ này có mặt trong
+      file web.xml đầy đủ ở slide 33 nên giữ lại cho khớp.
+    -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+
+    <!--
+      Trang mặc định khi URL trỏ vào một thư mục (ví dụ /ch05email/).
+      Tomcat thử lần lượt từ trên xuống, lấy file đầu tiên tìm thấy.
+
+      Slide 33 liệt kê index.html rồi mới index.jsp. Ở đây chỉ có index.jsp
+      vì ứng dụng này không có index.html - trang chủ là mục lục 16 case, viết
+      bằng JSP.
+    -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+</web-app>

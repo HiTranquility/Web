@@ -1,0 +1,10 @@
+target/
+build/
+.libs/
+*.war
+*.class
+.idea/
+*.iml
+nbproject/private/
+
+src/main/webapp/WEB-INF/EmailList.txt

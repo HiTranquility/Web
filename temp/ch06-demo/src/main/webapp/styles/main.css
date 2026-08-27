@@ -1,0 +1,75 @@
+/* Chương 6 — CSS cơ bản, giữ gần với sách.
+   Thêm .pad_top và .margin_left vì slide 28 có dùng hai lớp này. */
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1c2530;
+    background: #f4f6f8;
+    margin: 0;
+}
+
+.wrap {
+    max-width: 44em;
+    margin: 0 auto;
+    padding: 1.5em 2.5em 3em;
+    background: #fff;
+    min-height: 100vh;
+    border-left: 1px solid #dde4ea;
+    border-right: 1px solid #dde4ea;
+}
+
+h1 { color: teal; font-size: 1.6em; }
+h2 { font-size: 1.1em; margin-top: 1.8em; }
+
+a { color: teal; }
+
+label {
+    float: left;
+    width: 6em;
+    margin-bottom: 0.5em;
+}
+.pad_top { padding-top: 0.3em; }
+
+input[type="text"], input[type="email"] {
+    width: 15em;
+    margin-left: 0.5em;
+    margin-bottom: 0.5em;
+}
+.margin_left { margin-left: 0.5em; }
+
+br { clear: both; }
+
+pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1em 1.2em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10pt;
+}
+code {
+    font-family: Consolas, "Courier New", monospace;
+    background: #eef2f6;
+    padding: .1em .35em;
+    border-radius: 3px;
+}
+
+table { border-collapse: collapse; width: 100%; margin: .8em 0; }
+th, td { text-align: left; padding: .45em .6em; border-bottom: 1px solid #dde4ea;
+         vertical-align: top; }
+th { color: #5b6b7c; font-weight: normal; font-size: .9em; }
+
+.note { background: #fef6e7; border-radius: 6px; padding: .8em 1.1em; margin: 1.2em 0; }
+.err  { background: #fdeef1; border-radius: 6px; padding: .8em 1.1em; margin: 1.2em 0; }
+
+.footer { margin-top: 3em; padding-top: 1em; border-top: 1px solid #dde4ea;
+          color: #5b6b7c; font-size: .9em; }
+
+.menu { list-style: none; padding: 0; }
+.menu li { border-bottom: 1px solid #dde4ea; }
+.menu a { display: block; padding: .6em .3em; text-decoration: none; }
+.menu a:hover { background: #e6f4f2; }
+.menu .no-code { color: #9aa3b5; font-size: .85em; }

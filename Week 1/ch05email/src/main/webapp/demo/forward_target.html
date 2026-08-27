@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Forward target - Chapter 5</title>
+    <link rel="stylesheet" href="../styles/main.css" type="text/css"/>
+</head>
+<body>
+<div class="wrap">
+    <div class="topbar">
+        <a href="../">&larr; All 16 cases</a>
+        <span class="slides">slide 24</span>
+    </div>
+    <h1>Forwarded to a plain HTML page</h1>
+    <div class="problem">
+        <strong>Look at the address bar</strong>
+        It still says <code>/forward?target=html</code>. You are reading
+        <code>/demo/forward_target.html</code>, and the browser has no idea.
+    </div>
+    <p>This file is ordinary static HTML &mdash; no JSP, no EL, no Java. That is why
+       it cannot show you the request attribute the servlet set: a plain
+       <code>.html</code> file is served as bytes, nothing evaluates anything inside it.
+       Forward to a <code>.jsp</code> when the target needs to read what the servlet
+       put in the request.</p>
+    <div class="footnav"><a href="case09.jsp">&larr; Back to case 09</a></div>
+</div>
+</body>
+</html>

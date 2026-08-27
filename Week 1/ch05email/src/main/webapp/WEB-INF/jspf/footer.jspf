@@ -1,0 +1,17 @@
+<%--
+  footer.jspf — phần cuối trang dùng chung.
+
+  Nhiệm vụ duy nhất: đóng lại đúng những thẻ mà header.jspf đã mở
+  (<div class="wrap">, <body>, <html>).
+
+  ĐÂY LÀ ĐIỂM YẾU CỦA CÁCH TÁCH HEADER/FOOTER: thẻ mở ở file này, thẻ đóng ở
+  file kia, nên IDE không kiểm tra cân bằng thẻ giúp bạn được. Quên một </div>
+  là layout vỡ mà chẳng có lỗi nào báo. Chương 9 giới thiệu JSTL và custom tag
+  để giải quyết chuyện này gọn hơn.
+--%>
+    <div class="footnav">
+        <a href="${pageContext.request.contextPath}/">&larr; Back to the case index</a>
+    </div>
+</div>
+</body>
+</html>
