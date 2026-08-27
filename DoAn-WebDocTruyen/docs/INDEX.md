@@ -5,6 +5,7 @@ Bản đồ tài liệu của đồ án. Mở file này khi không nhớ nên tr
 ```text
 docs/
 ├── INDEX.md                          ← bạn đang ở đây
+├── MO-TA-DO-AN.md                    BẢN MÔ TẢ GỬI GIẢNG VIÊN — tên đề tài, 16 chức năng
 ├── cau-truc.md                       bản đồ 59 file · 13 thư mục · 4 layout
 ├── so-do.md                          ERD · luồng MVC · kiến trúc — 7 sơ đồ Mermaid
 ├── giai-thich.md                     VÌ SAO nó chạy như vậy — 7 khu, giảng từ đầu
@@ -23,6 +24,7 @@ docs/
 
 | Câu hỏi trong đầu | Mở file |
 |-------------------|---------|
+| **"Gửi cô bản mô tả đồ án"** | **[MO-TA-DO-AN.md](MO-TA-DO-AN.md)** |
 | "File này bỏ vào thư mục nào?" | [cau-truc.md](cau-truc.md) |
 | **"Cho tôi xem sơ đồ / ERD / luồng MVC"** | **[so-do.md](so-do.md)** |
 | **"Cái này chạy kiểu gì? Sao lại thế?"** | **[giai-thich.md](giai-thich.md)** |
