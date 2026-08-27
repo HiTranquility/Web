@@ -77,7 +77,7 @@ mysql -u root -p webdoctruyen < database/sample_data.sql
 powershell -ExecutionPolicy Bypass -File run.ps1
 ```
 
-→ <http://localhost:8080/webdoctruyen/>
+→ <http://localhost:8080/>
 
 Chưa làm bước 1–3 web vẫn chạy: trang chủ sẽ hiện hướng dẫn cài đặt thay vì báo lỗi.
 

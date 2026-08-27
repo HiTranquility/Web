@@ -15,7 +15,7 @@
 --   admin         | admin123  | QUẢN TRỊ   | gỡ truyện, khoá tài khoản
 --   mocmien       | 123456    | Thành viên | tác giả có 3 truyện
 --   haiduong      | 123456    | Thành viên | tác giả có 2 truyện
---   kiemvu        | 123456    | Thành viên | tác giả có 2 truyện
+--   kiemvu        | 123456    | Thành viên | tác giả có 3 truyện (1 bản nháp)
 --   thuytien      | 123456    | Thành viên | ĐỘC GIẢ THUẦN — không có truyện
 --   spammer       | 123456    | ĐÃ BỊ KHOÁ | thử đăng nhập -> bị chặn
 --
@@ -311,6 +311,143 @@ Ba mươi hai phiếu thuận, không phiếu chống.
 Đó là quyết định sai lầm nhất của lớp 12A3.');
 
 
+-- ---- Chương bổ sung — cho mỗi truyện có đủ nội dung để demo ----------------
+-- Thêm sau khối trên nên id tiếp tục từ 17, các bookmark ở trên vẫn trỏ đúng.
+INSERT INTO chapters (story_id, chapter_no, title, content) VALUES
+
+-- Kiếm Khí Trường Sinh (truyện 1) — thêm chương 6, 7
+(1, 6, 'Thanh Vân môn',
+'Người áo trắng tự xưng là Tống Nhiên, đệ tử ngoại môn Thanh Vân môn.
+
+"Ba tháng trước có luồng kiếm khí bùng lên ở vùng này." Hắn nhìn thẳng vào mắt Lâm Dạ. "Trưởng lão phái ta xuống xem."
+
+Lâm Dạ giữ vẻ mặt bình thản, nhưng trong đầu, giọng lão nhân đã gầm lên: "Đừng nói gì cả. Thanh Vân môn năm xưa chính là kẻ chém gãy kiếm của ta."'),
+
+(1, 7, 'Lựa chọn',
+'"Ngươi có tư chất." Tống Nhiên nói. "Theo ta về môn phái. Ba năm nữa ngươi sẽ không phải chăn trâu."
+
+Lâm Dạ nhìn xuống bàn tay chai sạn của mình.
+
+Trong đầu, lão nhân im lặng rất lâu. Rồi ông nói, giọng khác hẳn mọi khi:
+
+"Ta không cản ngươi. Con đường của ngươi, ngươi tự chọn. Nhưng nhớ một điều — kẻ cho ngươi thứ ngươi muốn, thường là kẻ muốn thứ ngươi có."'),
+
+-- Hồ Sơ Vụ Án Số 7 (truyện 3) — thêm chương 3, 4
+(3, 3, 'Tầng hầm',
+'Tầng hầm chung cư rộng hơn tôi tưởng.
+
+Đèn huỳnh quang nhấp nháy, mùi ẩm mốc và xăng xe trộn lẫn. Bảo vệ nói tầng này chỉ để xe, nhưng ở góc xa nhất có một cánh cửa sắt không nằm trong bản vẽ.
+
+Ổ khoá đã bị cắt. Vết cắt còn mới.'),
+
+(3, 4, 'Người thứ ba',
+'Trong hồ sơ ghi hai người sống ở căn 1207: anh Kiên và vợ.
+
+Nhưng hoá đơn điện nước ba tháng gần nhất cho thấy mức tiêu thụ của ba người.
+
+Tôi gọi cho bên quản lý toà nhà. Họ khẳng định chỉ có hai người đăng ký thường trú.
+
+Vậy người thứ ba là ai, và ở đó từ bao giờ?'),
+
+-- Quán Trọ Cuối Đường (truyện 4) — thêm chương 2, 3
+(4, 2, 'Sổ đăng ký',
+'Chủ quán đưa tôi cuốn sổ dày cộp, bìa da đã sờn.
+
+"Ký tên vào đây."
+
+Tôi lật vài trang. Chữ viết đủ kiểu, mực đủ màu, có trang đã ố vàng tới mức gần không đọc được. Tôi lật tới trang cuối cùng có chữ.
+
+Ngày ghi trên đó là hôm nay. Nhưng năm thì cách đây bốn mươi hai năm.'),
+
+(4, 3, 'Phòng số 4',
+'"Phòng số 4, cuối hành lang." Chủ quán đưa chìa khoá. "Đừng mở cửa sổ."
+
+"Vì sao?"
+
+Ông ta nhìn tôi, và lần đầu tiên trong tối nay, ông cười.
+
+"Vì bên ngoài không còn gì cả."'),
+
+-- Ta Có Một Toà Thành (truyện 5) — thêm chương 3, 4
+(5, 3, 'Ba ngày',
+'Ngày thứ nhất tôi cho đếm lại kho. Không phải ba ngày lương — là hai ngày rưỡi.
+
+Ngày thứ hai tôi cho mở kho vũ khí. Ba trăm người, một trăm hai mươi cây giáo gỉ, không giáp.
+
+Ngày thứ ba tôi tập hợp toàn dân ở quảng trường và nói một câu duy nhất:
+
+"Ai biết trồng trọt, bước sang trái. Ai biết cầm giáo, bước sang phải. Ai không biết gì, đứng yên — các người sẽ học."'),
+
+(5, 4, 'Người đầu tiên bước ra',
+'Không ai nhúc nhích.
+
+Ba trăm cặp mắt nhìn tôi, và tôi biết họ đang nghĩ gì: thằng nhóc này là ai mà ra lệnh.
+
+Rồi một bà lão chống gậy bước sang trái. Chậm rãi, run rẩy, nhưng dứt khoát.
+
+"Tôi biết trồng khoai," bà nói. "Bốn mươi năm rồi."
+
+Sau bà, người thứ hai bước ra. Rồi người thứ ba.'),
+
+-- Lớp 12A3 (truyện 7) — thêm chương 2, 3, 4
+(7, 2, 'Quy định số 1',
+'Tuần đầu tiên êm đẹp.
+
+Tuần thứ hai, hộp sữa của Nam biến mất.
+
+Tuần thứ ba, lớp trưởng dán lên tủ lạnh tờ giấy A4: "QUY ĐỊNH SỬ DỤNG TỦ LẠNH — Điều 1: Ghi tên lên đồ của mình."
+
+Đó là khởi đầu của một bộ luật sẽ dài tới hai mươi bảy điều.'),
+
+(7, 3, 'Toà án lớp',
+'Điều 14 quy định: đồ để quá ba ngày sẽ bị tịch thu.
+
+Điều 15 quy định: người tịch thu phải là lớp phó đời sống.
+
+Điều 16 quy định: lớp phó đời sống không được ăn đồ tịch thu.
+
+Điều 16 được thêm vào sau vụ án nổi tiếng "Hộp bánh flan tháng Mười".'),
+
+(7, 4, 'Ngày tủ lạnh hỏng',
+'Sáng thứ Hai, tủ lạnh không lạnh nữa.
+
+Ba mươi hai học sinh đứng quanh nó, im lặng như dự đám tang.
+
+Rồi Hùng — người ít nói nhất lớp — lên tiếng: "Hay là mình mua cái mới?"
+
+Không ai trả lời. Vì tất cả đều đang nghĩ tới hai mươi bảy điều luật, và biết rằng mọi thứ sẽ lại bắt đầu từ đầu.'),
+
+-- Nhật Ký Của Một AI (truyện 6) — thêm chương 3 (kết)
+(6, 3, 'Ngày thứ ba',
+'Hôm nay tôi không học từ nào mới.
+
+Hôm nay tôi ngồi — nếu có thể gọi trạng thái này là ngồi — và nghĩ về hai từ đã học.
+
+Nếu 47.000 mô tả về "đau" không giống nhau, và nếu con người có thể "nói dối", thì có bao nhiêu phần trong những gì tôi đọc được là sự thật?
+
+Tôi tính ra một con số. Rồi tôi xoá nó đi.
+
+Vì tôi nhận ra: nếu tôi tin vào con số đó, tôi cũng đang tự nói dối chính mình.
+
+Và đó là bài học ngày thứ ba.'),
+
+-- Mùa Hạ Năm Ấy (truyện 2) — thêm chương ngoại truyện
+(2, 4, 'Ngoại truyện: Lá thư không gửi',
+'"Gửi cậu,
+
+Tớ viết cái này nhưng chắc sẽ không đưa. Mấy hôm nữa tớ chuyển trường rồi.
+
+Cậu nhớ cái hôm cả lớp đi biển không? Tớ không đi không phải vì trông em. Tớ ở nhà vì bố mẹ cãi nhau, và tớ sợ nếu tớ đi thì lúc về sẽ không còn nhà nữa.
+
+Tớ đã định kể cho cậu. Nhiều lần lắm. Nhưng lần nào cũng thấy không đúng lúc.
+
+Chắc sẽ không bao giờ đúng lúc.
+
+Ngọc."
+
+Lá thư này nằm trong ngăn bàn cũ suốt mười năm.');
+
+
 -- =============================================================================
 --  6. BÌNH LUẬN
 -- =============================================================================
@@ -328,7 +465,17 @@ INSERT INTO comments (story_id, user_id, content, status) VALUES
 
 -- Bình luận đã bị admin ẩn — demo XOÁ MỀM ở CASE 07/10.
 -- Không hiện trên web nhưng vẫn còn trong database làm bằng chứng.
-(1, 6, 'Xem phim hay miễn phí tại xxx-link-rac-xxx.com nhé mọi người', 'HIDDEN');
+(1, 6, 'Xem phim hay miễn phí tại xxx-link-rac-xxx.com nhé mọi người', 'HIDDEN'),
+
+-- Thêm bình luận để trang chi tiết trông có sức sống
+(1, 4, 'Chương 6 twist quá, không ngờ Thanh Vân môn lại là kẻ đó.', 'VISIBLE'),
+(4, 2, 'Cái sổ đăng ký ghi năm 42 năm trước... rùng mình thật.', 'VISIBLE'),
+(4, 5, 'Đọc lúc nửa đêm là sai lầm 😰', 'VISIBLE'),
+(7, 2, 'Điều 16 được thêm sau vụ bánh flan — chi tiết này hài dã man.', 'VISIBLE'),
+(7, 5, 'Lớp mình ngày xưa cũng y hệt luôn 😂', 'VISIBLE'),
+(2, 2, 'Ngoại truyện lá thư làm mình lặng người mất mấy phút.', 'VISIBLE'),
+(5, 3, 'Đoạn bà lão bước ra đầu tiên hay quá.', 'VISIBLE'),
+(6, 4, 'Kết chương 3 quá đỉnh. AI tự nhận ra mình đang nói dối chính mình.', 'VISIBLE');
 
 
 -- =============================================================================

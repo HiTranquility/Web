@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.StoryDAO;
 import truyen.model.Story;
-import truyen.util.DBConnection;
 
 /**
  * Trang chủ.
@@ -55,22 +54,6 @@ public class HomeServlet extends HttpServlet {
         request.setAttribute("pageTitle", "ĐọcTruyện — Kho truyện cộng đồng");
         request.setAttribute("activeNav", "home");
 
-        /*
-         * Kiểm tra database TRƯỚC khi truy vấn.
-         *
-         * Ở giai đoạn này của đồ án, database có thể chưa được tạo. Thay vì để
-         * người dùng nhận một trang lỗi 500 khó hiểu, trang chủ sẽ hiện hướng
-         * dẫn cài đặt. Khối này sẽ được gỡ khi mọi thứ đã chạy ổn định.
-         */
-        String dbError = DBConnection.checkConnection();
-        if (dbError != null) {
-            request.setAttribute("dbError", dbError);
-            request.setAttribute("latest", Collections.<Story>emptyList());
-            request.setAttribute("popular", Collections.<Story>emptyList());
-            forward(request, response);
-            return;   // return để KHÔNG chạy tiếp xuống forward lần hai
-        }
-
         try {
             List<Story> latest = storyDAO.findLatest(12);
             List<Story> popular = storyDAO.findPopular(6);
@@ -87,7 +70,8 @@ public class HomeServlet extends HttpServlet {
              * Người dùng chỉ thấy thông báo tử tế, chi tiết kỹ thuật vào log.
              */
             log("Không tải được danh sách truyện ở trang chủ", e);
-            request.setAttribute("dbError", e.getMessage());
+            request.setAttribute("message",
+                    "Không tải được danh sách truyện. Vui lòng thử lại sau.");
             request.setAttribute("latest", Collections.<Story>emptyList());
             request.setAttribute("popular", Collections.<Story>emptyList());
         }

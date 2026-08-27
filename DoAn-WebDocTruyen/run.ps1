@@ -1,6 +1,6 @@
 # =============================================================================
 #  Build + chay Web Doc Truyen tren embedded Tomcat 9.
-#  Usage:  .\run.ps1            -> http://localhost:8080/webdoctruyen/
+#  Usage:  .\run.ps1            -> http://localhost:8080/
 #          .\run.ps1 -Port 9090
 # =============================================================================
 param([int]$Port = 8080)

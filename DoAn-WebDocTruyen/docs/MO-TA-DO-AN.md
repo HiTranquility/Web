@@ -133,7 +133,7 @@ xoá khỏi cơ sở dữ liệu — khôi phục được và giữ dữ liệu
 | `thuytien` | `123456` | Thành viên | Độc giả, có 4 truyện đã lưu |
 | `spammer` | `123456` | *Đã bị khoá* | Thử đăng nhập để xem cơ chế chặn |
 
-Dữ liệu mẫu gồm **9 truyện · 16 chương · 10 thể loại · 11 bình luận · 8 lượt đánh dấu**.
+Dữ liệu mẫu gồm **9 truyện · 29 chương · 10 thể loại · 19 bình luận · 8 lượt đánh dấu**.
 
 ---
 
@@ -141,23 +141,19 @@ Dữ liệu mẫu gồm **9 truyện · 16 chương · 10 thể loại · 11 bì
 
 Yêu cầu: **JDK 11+**, **MySQL 8**, **Apache Tomcat 9** (không dùng Tomcat 10 trở lên).
 
+**Cách nhanh — một lệnh cài toàn bộ database:**
+
 ```bash
-# 1. Tạo cơ sở dữ liệu
-mysql -u root -p < database/schema.sql
+powershell -ExecutionPolicy Bypass -File setup-db.ps1
+```
 
-# 2. Tạo tài khoản MySQL riêng cho ứng dụng
-#    (mở file sửa mật khẩu ở dòng IDENTIFIED BY trước khi chạy)
-mysql -u root -p < database/setup_user.sql
+Script tạo database, tạo tài khoản MySQL cho ứng dụng, nạp dữ liệu mẫu và
+sinh file cấu hình. Bạn chỉ cần gõ mật khẩu MySQL root khi được hỏi.
 
-# 3. Khai báo kết nối
-cp src/main/resources/db.properties.example src/main/resources/db.properties
-#    rồi mở db.properties điền mật khẩu vừa đặt
+**Rồi chạy web:**
 
-# 4. Nạp dữ liệu mẫu
-mysql -u root -p webdoctruyen < database/sample_data.sql
-
-# 5. Chạy
+```bash
 powershell -ExecutionPolicy Bypass -File run.ps1
 ```
 
-Truy cập: <http://localhost:8080/webdoctruyen/>
+Truy cập: <http://localhost:8080/>

@@ -16,7 +16,7 @@ public class DevServer {
 
     public static void main(String[] args) throws Exception {
         int port = Integer.parseInt(System.getProperty("port", "8080"));
-        String contextPath = System.getProperty("contextPath", "/webdoctruyen");
+        String contextPath = System.getProperty("contextPath", "");
 
         File webapp = new File("src/main/webapp").getAbsoluteFile();
         File classes = new File("build/classes").getAbsoluteFile();

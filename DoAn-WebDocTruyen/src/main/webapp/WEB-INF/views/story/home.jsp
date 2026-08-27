@@ -37,26 +37,6 @@
            đánh dấu để đọc tiếp, hoặc tự đăng truyện của riêng mình.</p>
     </section>
 
-    <%-- ---- Database chưa sẵn sàng: hướng dẫn thay vì trang lỗi ---------- --%>
-    <c:if test="${not empty dbError}">
-        <div class="panel panel-warn">
-            <h4>⚙️ Chưa kết nối được cơ sở dữ liệu</h4>
-            <p style="color:var(--text-dim);margin-bottom:10px">
-                Giao diện vẫn chạy bình thường — chỉ thiếu dữ liệu. Làm 3 bước sau:
-            </p>
-            <p><b>1.</b> Tạo database và các bảng:</p>
-<pre>mysql -u root -p &lt; database/schema.sql</pre>
-            <p><b>2.</b> Tạo tài khoản riêng cho app (mở file sửa mật khẩu trước):</p>
-<pre>mysql -u root -p &lt; database/setup_user.sql</pre>
-            <p><b>3.</b> Chép <code>db.properties.example</code> thành
-               <code>db.properties</code> trong <code>src/main/resources/</code>
-               rồi điền mật khẩu vừa đặt.</p>
-            <p style="color:var(--text-mut);font-size:.85rem;margin-top:12px">
-                Lỗi hiện tại: <c:out value="${dbError}"/>
-            </p>
-        </div>
-    </c:if>
-
     <%-- ---- Truyện xem nhiều -------------------------------------------- --%>
     <c:if test="${not empty popular}">
         <div class="section-head">
