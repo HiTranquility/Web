@@ -153,7 +153,7 @@ sinh file cấu hình. Bạn chỉ cần gõ mật khẩu MySQL root khi đượ
 **Rồi chạy web:**
 
 ```bash
-powershell -ExecutionPolicy Bypass -File scriptsun.ps1
+powershell -ExecutionPolicy Bypass -File scripts\run.ps1
 ```
 
 Truy cập: <http://localhost:8080/>
