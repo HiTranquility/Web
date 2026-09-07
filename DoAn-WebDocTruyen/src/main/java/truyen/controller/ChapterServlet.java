@@ -66,7 +66,15 @@ public class ChapterServlet extends HttpServlet {
             action = "read";
         }
 
-        // Mỗi action tự chọn layout của mình — đây là chỗ khác StoryServlet
+        /*
+         * Mỗi action tự chọn layout của mình — đây là chỗ khác StoryServlet.
+         *
+         * Servlet này một mình dùng BA layout khác nhau, và đó là lý do khối
+         * chọn layout nằm ngay trong switch chứ không đặt cứng ở cuối:
+         *     đọc chương    -> reader  (không nav, không footer, chữ to)
+         *     soạn chương   -> editor  (không footer, cột hẹp, ô soạn cao)
+         *     xoá / còn lại -> main
+         */
         String url;
         String layout = "/WEB-INF/views/layout/main.jsp";
 
@@ -74,9 +82,11 @@ public class ChapterServlet extends HttpServlet {
             switch (action) {
                 case "create":
                     url = createOrEdit(request, response, true);
+                    layout = "/WEB-INF/views/layout/editor.jsp";   // khung soạn thảo
                     break;
                 case "edit":
                     url = createOrEdit(request, response, false);
+                    layout = "/WEB-INF/views/layout/editor.jsp";
                     break;
                 case "delete":
                     url = delete(request, response);
@@ -184,6 +194,8 @@ public class ChapterServlet extends HttpServlet {
             request.setAttribute("chapter", chapter);
             request.setAttribute("story", story);
             request.setAttribute("pageTitle", isCreate ? "Thêm chương" : "Sửa chương");
+            request.setAttribute("editorBack",
+                    "/story?action=detail&id=" + story.getId());
             return "/WEB-INF/views/chapter/form.jsp";
         }
 

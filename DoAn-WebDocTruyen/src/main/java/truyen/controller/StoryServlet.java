@@ -228,6 +228,14 @@ public class StoryServlet extends HttpServlet {
             request.setAttribute("following",
                     followDAO.isFollowing(me.getId(), story.getAuthorId()));
         }
+        // Gợi ý 4 truyện cùng thể loại. Hỏng thì bỏ qua — khối gợi ý biến
+        // mất, trang chi tiết vẫn đọc được bình thường.
+        try {
+            request.setAttribute("similar", storyDAO.findSimilar(id, 4));
+        } catch (SQLException e) {
+            log("Không lấy được truyện tương tự cho truyện " + id, e);
+        }
+
         request.setAttribute("pageTitle", story.getTitle());
         request.setAttribute("activeNav", "browse");
         return "/WEB-INF/views/story/detail.jsp";

@@ -54,7 +54,17 @@ public final class DemoData {
     private DemoData() { }
 
     /** Mốc thời gian cố định để mỗi lần khởi động không ra ngày khác nhau. */
-    private static final LocalDateTime T0 = LocalDateTime.of(2026, 8, 1, 9, 0);
+    /**
+     * Mốc thời gian.
+     *
+     * Trước đây là một ngày CỐ ĐỊNH (1/8/2026) để mỗi lần khởi động ra đúng
+     * số cũ. Nhưng nhãn "Mới" so ngày đăng với HÔM NAY, nên mốc cố định làm
+     * mọi truyện vĩnh viễn cũ và nhãn đó không bao giờ hiện.
+     *
+     * Đổi sang "bây giờ": ngày tháng hiển thị vẫn nhất quán trong một lần
+     * chạy, và truyện mới nhất luôn nằm trong 14 ngày gần đây.
+     */
+    private static final LocalDateTime T0 = LocalDateTime.now();
 
     // ========================================================================
     //  NGƯỜI DÙNG
@@ -237,7 +247,7 @@ public final class DemoData {
                   1, 5),
 
             story(3, "Cà phê tầng bốn", "ca-phe-tang-bon", 2, "Mộc Miên",
-                  "ONGOING", 4210, 9, 40,
+                  "ONGOING", 4210, 9, 5,
                   "Quán cà phê nằm trên tầng bốn không thang máy. Ít khách, nhưng ai lên "
                   + "được tới nơi đều có một câu chuyện.",
                   1, 5, 7),
@@ -261,7 +271,7 @@ public final class DemoData {
                   3),
 
             story(7, "Trấn yêu lục", "tran-yeu-luc", 4, "Kiếm Vũ",
-                  "ONGOING", 12480, 18, 70,
+                  "ONGOING", 12480, 18, 11,
                   "Ghi chép của một người canh giữ ranh giới giữa hai cõi, viết trong "
                   + "ba mươi năm không ai đọc.",
                   3, 4, 6),
@@ -281,10 +291,53 @@ public final class DemoData {
             list.sort((a, b) -> b.getChapterCount() - a.getChapterCount());
         } else if ("newest".equals(by)) {
             list.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        } else if ("rating".equals(by)) {
+            // Cung nguong 3 luot nhu StoryDAO.findTop, de hai che do xem
+            // ra cung thu tu.
+            list.sort((a, b) -> {
+                boolean qa = a.getRatingCount() >= 3, qb = b.getRatingCount() >= 3;
+                if (qa != qb) return qb ? 1 : -1;
+                return Double.compare(b.getRatingAvg(), a.getRatingAvg());
+            });
         } else {
             list.sort((a, b) -> b.getViewCount() - a.getViewCount());
         }
         return slice(list, 0, limit);
+    }
+
+    /**
+     * Xếp hạng theo giai đoạn — bản giả lập của StoryDAO.findTopByPeriod().
+     *
+     * VÌ SAO KHÔNG TRẢ VỀ NGUYÊN top("views")
+     *   Trả về y hệt thì bấm tab "Tuần này" ra đúng danh sách của "Xem nhiều
+     *   nhất", và người xem sẽ kết luận rằng tính năng hỏng. Dữ liệu giả sai
+     *   kiểu đó còn tệ hơn không có dữ liệu.
+     *
+     *   Ở đây sinh một con số "lượt xem gần đây" riêng cho từng truyện. Nó
+     *   KHÔNG tỉ lệ với tổng lượt xem — đúng như đời thật: truyện cũ đông
+     *   tổng lượt nhưng tuần này có thể chẳng ai đọc, truyện mới thì ngược lại.
+     *
+     *   Công thức dựa trên id nên mỗi lần chạy ra cùng kết quả, không nhảy
+     *   lung tung giữa các lần tải trang.
+     */
+    public static List<Story> topByPeriod(int days, int limit) {
+        List<Story> list = stories();
+        list.sort((a, b) -> recentHits(b.getId(), days) - recentHits(a.getId(), days));
+
+        // Truyện không có lượt nào trong giai đoạn thì không lên bảng —
+        // giống hệt câu SQL thật, vì nó JOIN với view_logs.
+        List<Story> out = new ArrayList<>();
+        for (Story s : list) {
+            if (recentHits(s.getId(), days) > 0) out.add(s);
+        }
+        return slice(out, 0, limit);
+    }
+
+    /** Số lượt xem giả lập trong `days` ngày gần nhất. */
+    private static int recentHits(int storyId, int days) {
+        // Trộn id với một số nguyên tố để thứ tự khác hẳn thứ tự view_count.
+        int base = (storyId * 37 + 11) % 23;
+        return base * days / 7;
     }
 
     public static User userByUsername(String username) {
@@ -369,6 +422,41 @@ public final class DemoData {
             list.sort((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()));
         }
         return list;
+    }
+
+    /** Truyện tương tự — đếm số thể loại trùng, giống StoryDAO.findSimilar. */
+    public static List<Story> similar(int storyId, int limit) {
+        Story me = story(storyId);
+        if (me == null) return new ArrayList<>();
+
+        List<Story> out = new ArrayList<>();
+        for (Story s : stories()) {
+            if (s.getId() == storyId) continue;
+            int shared = 0;
+            for (Tag a : me.getTags()) {
+                for (Tag b : s.getTags()) {
+                    if (a.getId() == b.getId()) shared++;
+                }
+            }
+            if (shared > 0) out.add(s);
+        }
+        // Nhiều thể loại trùng trước; hoà thì truyện đọc nhiều hơn trước.
+        out.sort((a, b) -> {
+            int sa = sharedTags(me, a), sb = sharedTags(me, b);
+            if (sa != sb) return sb - sa;
+            return b.getViewCount() - a.getViewCount();
+        });
+        return slice(out, 0, limit);
+    }
+
+    private static int sharedTags(Story x, Story y) {
+        int n = 0;
+        for (Tag a : x.getTags()) {
+            for (Tag b : y.getTags()) {
+                if (a.getId() == b.getId()) n++;
+            }
+        }
+        return n;
     }
 
     /** Cắt một trang từ danh sách, an toàn với chỉ số vượt biên. */

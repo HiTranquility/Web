@@ -900,3 +900,36 @@ a.notif:hover { border-color: var(--ember-deep); }
     .kv dd { margin-bottom: 10px; }
     .filter-bar { gap: 14px; }
 }
+
+/* ---- Nhãn "Mới" trên thẻ truyện ----
+   Xếp chồng dọc cùng cột với hai nhãn kia. Truyện vừa Mới vừa Hot thì nhãn
+   này rơi xuống hàng thứ ba — hiếm, nhưng phải có chỗ chứ không đè lên nhau. */
+.badge-new {
+    top: 76px;
+    background: linear-gradient(135deg, var(--violet), #6d5ce0);
+    color: #fff;
+}
+
+/* ---- Trang "Truyện của tôi": hàng ngang + hàng nút ----
+   _story-row lo phần thông tin, khối này lo phần thao tác. Tách vậy để mảnh
+   dùng chung không phải biết trang nào cần nút gì. */
+.story-rows { display: flex; flex-direction: column; gap: 10px; }
+.mine-row {
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+/* Hàng bên trong đã có viền riêng — bỏ đi để không thành viền đôi */
+.mine-row .story-row {
+    border: 0; background: transparent; margin: 0; border-radius: 0;
+}
+.mine-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 0 15px 13px;
+}
+
+@media (max-width: 620px) {
+    .story-row { flex-wrap: wrap; }
+    .story-row-side { width: 100%; }
+}

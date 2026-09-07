@@ -554,6 +554,19 @@ public class StoryDAO {
             orderBy = "chapter_count DESC";
         } else if ("newest".equals(by)) {
             orderBy = "s.created_at DESC";
+        } else if ("rating".equals(by)) {
+            /*
+             * NGUONG 3 LUOT CHAM.
+             * Truyen mot nguoi cham 5 sao KHONG duoc dung tren truyen 200
+             * nguoi cham 4.8 — mot phieu khong noi len dieu gi. Dua dieu kien
+             * (rating_count >= 3) len dau ORDER BY: MySQL coi bieu thuc dung
+             * la 1, sai la 0, nen DESC day het nhom du 3 luot len tren.
+             *
+             * NULLIF chan chia cho 0 voi truyen chua ai cham.
+             */
+            orderBy = "(s.rating_count >= 3) DESC, "
+                    + "s.rating_sum / NULLIF(s.rating_count, 0) DESC, "
+                    + "s.rating_count DESC";
         } else {
             orderBy = "s.view_count DESC";
         }
@@ -583,6 +596,50 @@ public class StoryDAO {
      * chắn sẽ sót một chỗ nếu không tách.
      */
     /**
+     * Truyen TUONG TU — cung the loai, khac chinh no.
+     *
+     * CACH DO "GIONG NHAU": DEM SO THE LOAI TRUNG NHAU.
+     *   Truyen A co {Ngon tinh, Hoc duong}, truyen B co {Ngon tinh, Hoc duong,
+     *   Doi thuong} -> trung 2. Truyen C chi co {Ngon tinh} -> trung 1.
+     *   B duoc xep truoc C. Cach nay tho nhung de giai thich va khong can gi
+     *   ngoai hai bang da co.
+     *
+     *   Cach "dung" hon la loc cong tac (nguoi doc truyen nay con doc gi nua)
+     *   — chinh xac hon nhieu, nhung can lich su doc cua hang nghin nguoi.
+     *   Kho truyen dang co tam chuc truyen thi cach do khong the chay.
+     *
+     * VI SAO CO CA rating_count TRONG ORDER BY
+     *   Cung so the loai trung nhau thi uu tien truyen duoc doc nhieu hon.
+     *   Goi y mot truyen chua ai doc va chua ai cham diem la goi y vo ich.
+     *
+     * @param storyId truyen dang xem — LOAI TRU khoi ket qua
+     */
+    public List<Story> findSimilar(int storyId, int limit) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.similar(storyId, limit);
+
+        String sql = SELECT_BASE
+                   + "JOIN story_tags st ON st.story_id = s.id "
+                   + "WHERE s.status = 'PUBLISHED' "
+                   + "  AND s.id <> ? "
+                   + "  AND st.tag_id IN (SELECT tag_id FROM story_tags WHERE story_id = ?) "
+                   + "GROUP BY s.id "
+                   + "ORDER BY COUNT(*) DESC, s.view_count DESC "
+                   + "LIMIT ?";
+
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            ps.setInt(2, storyId);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /**
      * Bang xep hang THEO KHOANG THOI GIAN — trang 5.
      *
      * VI SAO KHONG DUNG stories.view_count DUOC
@@ -598,7 +655,7 @@ public class StoryDAO {
      * @param days 7 = tuan nay, 30 = thang nay
      */
     public List<Story> findTopByPeriod(int days, int limit) throws SQLException {
-        if (!DBConnection.isReady()) return DemoData.top("views", limit);
+        if (!DBConnection.isReady()) return DemoData.topByPeriod(days, limit);
 
         String sql = SELECT_BASE
                    + "JOIN ( "

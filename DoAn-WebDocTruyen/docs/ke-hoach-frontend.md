@@ -151,7 +151,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | 2 | Kho truyện | `/story?action=list` | Duyệt, phân trang, lọc thể loại, tìm kiếm | ✅ |
 | 3 | Chi tiết truyện | `/story?action=detail&id=` | Thông tin, mục lục, bình luận, đánh giá | ✅ |
 | 4 | Trang tác giả | `/user?action=profile&id=` | Hồ sơ công khai, danh sách truyện | ✅ *(chưa có nút theo dõi)* |
-| 5 | Bảng xếp hạng | `/rank?by=views\|chapters\|newest` | Top 20 theo lượt xem / số chương / mới đăng | ✅ *(chưa có theo tuần-tháng, thiếu bảng `view_logs`)* |
+| 5 | Bảng xếp hạng | `/rank?by=week\|month\|views\|rating\|chapters\|newest` | Top 20, **6 tiêu chí** — tuần/tháng đếm trên `view_logs` | ✅ |
 | 6 | Hướng dẫn sử dụng | `/page?name=guide` | Hướng dẫn từng chức năng | ✅ |
 | 7 | Nội quy cộng đồng | `/page?name=rules` | Quy định nội dung và ứng xử | ✅ |
 | 8 | Lỗi 404 | *(container gọi)* | Không tìm thấy trang | ✅ |
@@ -167,7 +167,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | # | Trang | URL | Chức năng phục vụ | Xong |
 |:-:|-------|-----|-------------------|:----:|
 | 11 | Truyện đã lưu | `/bookmark?action=list` | Danh sách đánh dấu + tiến độ đọc | ✅ |
-| 12 | Truyện của tôi | `/story?action=mine` | Danh sách truyện đã đăng, cả nháp | ✅ |
+| 12 | Truyện của tôi | `/story?action=mine` | Danh sách truyện đã đăng, cả nháp — dạng hàng ngang để so sánh nhanh | ✅ |
 | 13 | Đăng / sửa truyện | `/story?action=create\|edit` | Form thông tin truyện + chọn thể loại | ✅ |
 | 14 | Hồ sơ của tôi | `/user?action=me` | Xem thông tin cá nhân | ✅ |
 | 15 | Sửa hồ sơ | `/user?action=edit` | Đổi tên, avatar, bio, mật khẩu | ✅ |
@@ -194,7 +194,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 
 | # | Trang | URL | Chức năng phục vụ | Xong |
 |:-:|-------|-----|-------------------|:----:|
-| 24 | Thêm / sửa chương | `/chapter?action=create\|edit` | Soạn nội dung chương | ✅ |
+| 24 | Thêm / sửa chương | `/chapter?action=create\|edit` | Soạn nội dung chương — dùng layout `editor` | ✅ |
 
 ### F. Trang quản trị — layout `admin` (6 trang)
 

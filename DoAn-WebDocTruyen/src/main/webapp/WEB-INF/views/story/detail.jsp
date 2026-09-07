@@ -205,6 +205,32 @@
 </c:if>
 
 <%--
+  ---- Gợi ý truyện tương tự ----
+
+  Đặt SAU phần bình luận, không đặt trên.
+
+  Người đã cuộn tới đây là người đã đọc xong mô tả và xem hết mục lục — họ
+  đang ở đúng thời điểm cần câu hỏi "đọc gì tiếp". Đặt khối gợi ý ngay dưới
+  mô tả thì nó tranh chỗ với chính truyện mà người ta vừa bấm vào.
+
+  Cách đo "tương tự" là đếm số thể loại trùng nhau — xem ghi chú trong
+  StoryDAO.findSimilar(). Không có truyện nào trùng thì khối này biến mất
+  hẳn, không hiện ô rỗng.
+--%>
+<c:if test="${not empty similar}">
+    <div class="section-head" style="margin-top:44px">
+        <h2>Có thể bạn cũng thích</h2>
+        <span class="more">cùng thể loại</span>
+    </div>
+
+    <div class="story-grid">
+        <c:forEach var="story" items="${similar}">
+            <%@ include file="/WEB-INF/views/story/_card.jsp" %>
+        </c:forEach>
+    </div>
+</c:if>
+
+<%--
   ĐÁNH DẤU CHƯƠNG ĐÃ ĐỌC.
 
   Danh sách chương đã đọc do trang đọc ghi vào localStorage (xem

@@ -20,20 +20,16 @@ import truyen.model.Story;
  *
  * URL: /rank?by=views | chapters | newest
  *
- * ⚠️ GIỚI HẠN ĐÃ BIẾT — nói trước để không ai hiểu nhầm
- *   Bản đăng ký đề tài ghi "Bảng xếp hạng theo tuần / tháng". Trang này CHƯA
- *   làm được điều đó, và lý do nằm ở cấu trúc dữ liệu:
+ * SÁU KIỂU XẾP HẠNG, HAI NGUỒN DỮ LIỆU
+ *   week, month   đếm trên bảng view_logs (mỗi dòng một lượt xem có thời điểm)
+ *   views         đọc stories.view_count — số cộng dồn từ ngày đăng
+ *   rating        điểm trung bình, có ngưỡng tối thiểu 3 lượt chấm
+ *   chapters      số chương
+ *   newest        mới đăng
  *
- *   Bảng `stories` chỉ có MỘT con số `view_count` cộng dồn từ đầu. Nó không
- *   biết lượt xem nào xảy ra tuần này, lượt nào từ năm ngoái. Muốn xếp hạng
- *   theo tuần thì phải có bảng ghi TỪNG lượt xem kèm thời điểm:
- *
- *       view_logs(story_id, user_id, viewed_at)
- *
- *   rồi đếm `WHERE viewed_at >= NOW() - INTERVAL 7 DAY`.
- *
- *   Bảng đó chưa có, nên hiện xếp hạng theo tổng tích luỹ. Xem
- *   docs/ke-hoach-database.md để biết khi nào thêm.
+ *   Trước đây trang này KHÔNG làm được tuần/tháng, vì `stories` chỉ có một
+ *   con số cộng dồn — nó không nhớ lượt xem nào xảy ra khi nào. Bảng
+ *   view_logs sinh ra để trả lời đúng câu hỏi đó.
  */
 @WebServlet("/rank")
 public class RankServlet extends HttpServlet {
@@ -48,7 +44,8 @@ public class RankServlet extends HttpServlet {
      * Hai lớp cho một lỗ hổng nghe thừa, nhưng lớp trong không phụ thuộc lớp
      * ngoài — ai đó gọi findTop() từ chỗ khác vẫn an toàn.
      */
-    private static final List<String> ALLOWED = Arrays.asList("views", "chapters", "newest");
+    private static final List<String> ALLOWED =
+            Arrays.asList("views", "week", "month", "chapters", "newest", "rating");
 
     private StoryDAO storyDAO;
 
@@ -69,7 +66,23 @@ public class RankServlet extends HttpServlet {
         }
 
         try {
-            List<Story> stories = storyDAO.findTop(by, 20);
+            /*
+             * Hai nhánh xếp hạng, hai nguồn dữ liệu khác nhau:
+             *
+             *   week / month -> đếm trên view_logs, biết lượt xem xảy ra KHI NÀO
+             *   còn lại      -> đọc thẳng số cộng dồn trên stories, nhanh hơn
+             *
+             * Không gộp làm một được: view_count là một con số duy nhất, nó
+             * không nhớ thời điểm. Đó chính là lý do bảng view_logs tồn tại.
+             */
+            List<Story> stories;
+            if ("week".equals(by)) {
+                stories = storyDAO.findTopByPeriod(7, 20);
+            } else if ("month".equals(by)) {
+                stories = storyDAO.findTopByPeriod(30, 20);
+            } else {
+                stories = storyDAO.findTop(by, 20);
+            }
             request.setAttribute("stories", stories);
             request.setAttribute("by", by);
 

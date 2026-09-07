@@ -7,7 +7,7 @@
 ================================================================================
   TẦNG: views/
 
-  Nhận: stories (List<Story>) · by (String: views | chapters | newest)
+  Nhận: stories (List<Story>) · by (views | week | month | rating | chapters | newest)
 ================================================================================
 --%>
 <div class="section-head">
@@ -16,18 +16,49 @@
 </div>
 
 <%--
-  Tab chọn kiểu xếp hạng — là thẻ <a> chứ không phải nút JavaScript.
+  Sáu tab, mỗi tab là một thẻ <a> chứ không phải nút JavaScript.
   Nhờ vậy mỗi bảng có URL riêng: chia sẻ được, bookmark được, nút Back của
-  trình duyệt hoạt động đúng. Đây là ưu điểm của server-rendered.
+  trình duyệt hoạt động đúng. Đây là ưu điểm của trang dựng ở máy chủ.
+
+  Hai tab đầu (tuần / tháng) đọc từ bảng view_logs — nguồn dữ liệu KHÁC hẳn
+  bốn tab còn lại, vì chỉ nhật ký mới biết lượt xem xảy ra khi nào.
 --%>
-<div class="tag-row" style="margin-bottom:22px">
-    <a class="tag ${by eq 'views' ? 'is-on' : ''}"
+<div class="tag-row" style="margin-bottom:10px">
+    <a class="tag ${by eq 'week' ? 'is-on' : ''}"
+       href="${pageContext.request.contextPath}/rank?by=week">📅 Tuần này</a>
+    <a class="tag ${by eq 'month' ? 'is-on' : ''}"
+       href="${pageContext.request.contextPath}/rank?by=month">🗓️ Tháng này</a>
+    <a class="tag ${empty by or by eq 'views' ? 'is-on' : ''}"
        href="${pageContext.request.contextPath}/rank?by=views">👁️ Xem nhiều nhất</a>
+    <a class="tag ${by eq 'rating' ? 'is-on' : ''}"
+       href="${pageContext.request.contextPath}/rank?by=rating">⭐ Điểm cao</a>
     <a class="tag ${by eq 'chapters' ? 'is-on' : ''}"
-       href="${pageContext.request.contextPath}/rank?by=chapters">📄 Nhiều chương nhất</a>
+       href="${pageContext.request.contextPath}/rank?by=chapters">📄 Nhiều chương</a>
     <a class="tag ${by eq 'newest' ? 'is-on' : ''}"
        href="${pageContext.request.contextPath}/rank?by=newest">✨ Mới đăng</a>
 </div>
+
+<%-- Giải thích cách tính cho tab đang xem. Bảng xếp hạng mà không nói rõ
+     xếp theo cái gì thì người đọc chỉ đoán, và thường đoán sai. --%>
+<p class="muted-note" style="margin-bottom:22px">
+    <c:choose>
+        <c:when test="${by eq 'week'}">
+            Đếm lượt xem thật trong <b>7 ngày</b> gần nhất, từ nhật ký
+            <code>view_logs</code> — không phải tổng tích luỹ.
+        </c:when>
+        <c:when test="${by eq 'month'}">
+            Đếm lượt xem thật trong <b>30 ngày</b> gần nhất.
+        </c:when>
+        <c:when test="${by eq 'rating'}">
+            Điểm trung bình. Truyện phải có <b>ít nhất 3 lượt chấm</b> mới vào
+            nhóm trên — một người chấm 5 sao không nói lên điều gì.
+        </c:when>
+        <c:otherwise>
+            Tổng tích luỹ từ ngày đăng. Muốn xem giai đoạn gần đây thì chọn
+            <b>Tuần này</b> hoặc <b>Tháng này</b>.
+        </c:otherwise>
+    </c:choose>
+</p>
 
 <c:choose>
     <c:when test="${not empty stories}">
@@ -61,6 +92,9 @@
                                 <c:out value="${story.authorName}"/></a>
                             &middot; ${story.chapterCount} chương
                             &middot; <fmt:formatNumber pattern="#,##0" value="${story.viewCount}"/> lượt xem
+                            <c:if test="${story.rated}">
+                                &middot; ★ ${story.ratingAvg}
+                            </c:if>
                         </p>
                     </div>
 
@@ -70,21 +104,28 @@
                 </li>
             </c:forEach>
         </ol>
-
-        <div class="note" style="margin-top:26px">
-            <b>Về cách xếp hạng.</b> Hiện xếp theo tổng tích luỹ từ trước tới nay,
-            chưa có "theo tuần / theo tháng". Muốn làm được cần một bảng ghi từng
-            lượt xem kèm thời điểm — chi tiết ở
-            <code>docs/ke-hoach-database.md</code>.
-        </div>
     </c:when>
 
     <c:otherwise>
-        <c:set var="emIcon"  value="🏆"/>
-        <c:set var="emTitle" value="Chưa có truyện nào để xếp hạng"/>
-        <c:set var="emText"  value="Kho truyện đang trống."/>
-        <c:set var="emUrl"   value="/story?action=list"/>
-        <c:set var="emBtn"   value="Xem kho truyện"/>
+        <%-- Bảng tuần/tháng rỗng có nghĩa KHÁC hẳn kho truyện rỗng: kho vẫn
+             đầy truyện, chỉ là chưa ai đọc trong giai đoạn đó. Nói rõ ra,
+             không để người dùng tưởng trang hỏng. --%>
+        <c:choose>
+            <c:when test="${by eq 'week' or by eq 'month'}">
+                <c:set var="emIcon"  value="📅"/>
+                <c:set var="emTitle" value="Chưa có lượt xem nào trong giai đoạn này"/>
+                <c:set var="emText"  value="Kho truyện vẫn còn nguyên — chỉ là chưa ai mở truyện nào gần đây. Thử xem bảng tổng tích luỹ."/>
+                <c:set var="emUrl"   value="/rank?by=views"/>
+                <c:set var="emBtn"   value="Xem nhiều nhất mọi thời"/>
+            </c:when>
+            <c:otherwise>
+                <c:set var="emIcon"  value="🏆"/>
+                <c:set var="emTitle" value="Chưa có truyện nào để xếp hạng"/>
+                <c:set var="emText"  value="Kho truyện đang trống."/>
+                <c:set var="emUrl"   value="/story?action=list"/>
+                <c:set var="emBtn"   value="Xem kho truyện"/>
+            </c:otherwise>
+        </c:choose>
         <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
     </c:otherwise>
 </c:choose>

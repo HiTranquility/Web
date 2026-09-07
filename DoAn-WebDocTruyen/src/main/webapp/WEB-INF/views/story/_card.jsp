@@ -57,6 +57,24 @@
         <c:if test="${story.viewCount ge 10000}">
             <span class="badge badge-hot">🔥 Hot</span>
         </c:if>
+
+        <%--
+          NHÃN "MỚI" — truyện đăng trong 14 ngày gần đây.
+
+          isNew() tính trong model chứ không tính ở đây. EL không có phép trừ
+          ngày tháng: so sánh LocalDateTime trong JSP sẽ phải viết một chuỗi
+          biểu thức dài và không ai đọc nổi. Model có sẵn java.time thì để
+          model làm.
+
+          Một truyện có thể vừa Mới vừa Hot — hiếm, nhưng nếu xảy ra thì đó
+          đúng là truyện đáng chú ý nhất, cho hiện cả hai.
+
+          Getter tên isRecent() chứ không phải isNew(): `new` là từ khoá của
+          EL, ${story.new} làm cả trang lỗi 500. Xem ghi chú ở model/Story.java.
+        --%>
+        <c:if test="${story.recent}">
+            <span class="badge badge-new">✨ Mới</span>
+        </c:if>
     </div>
 
     <div class="story-body">
