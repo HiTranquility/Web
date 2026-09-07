@@ -8,6 +8,8 @@ docs/
 ├── DANG-KY-DE-TAI.md                 BẢN ĐĂNG KÝ ĐỀ TÀI — danh sách chức năng đề xuất
 ├── MO-TA-DO-AN.md                    BẢN MÔ TẢ GỬI GIẢNG VIÊN — tên đề tài, 16 chức năng
 ├── cau-truc.md                       bản đồ 59 file · 13 thư mục · 4 layout
+├── ke-hoach-frontend.md              5 LAYOUT · 30 TRANG · 9 mảnh tái dùng
+├── ke-hoach-database.md              13 BẢNG · chuẩn hoá + phi chuẩn hoá
 ├── so-do.md                          ERD · luồng MVC · kiến trúc — 7 sơ đồ Mermaid
 ├── giai-thich.md                     VÌ SAO nó chạy như vậy — 7 khu, giảng từ đầu
 ├── CHECKLIST.md                      danh sách tick trước khi nộp bài
@@ -28,6 +30,8 @@ docs/
 | **"Nộp bản đăng ký đề tài"** | **[DANG-KY-DE-TAI.md](DANG-KY-DE-TAI.md)** |
 | **"Gửi cô bản mô tả đồ án"** | **[MO-TA-DO-AN.md](MO-TA-DO-AN.md)** |
 | "File này bỏ vào thư mục nào?" | [cau-truc.md](cau-truc.md) |
+| **"Cần bao nhiêu layout, bao nhiêu trang?"** | **[ke-hoach-frontend.md](ke-hoach-frontend.md)** |
+| **"Thiết kế bảng thế nào, chuẩn hoá ra sao?"** | **[ke-hoach-database.md](ke-hoach-database.md)** |
 | **"Cho tôi xem sơ đồ / ERD / luồng MVC"** | **[so-do.md](so-do.md)** |
 | **"Cái này chạy kiểu gì? Sao lại thế?"** | **[giai-thich.md](giai-thich.md)** |
 | "scope là gì, 4 cái khác nhau sao?" | [giai-thich.md](giai-thich.md) khu 1 |

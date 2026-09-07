@@ -161,6 +161,8 @@ trong code gốc của sách.
 |------|-----------|
 | [docs/DANG-KY-DE-TAI.md](docs/DANG-KY-DE-TAI.md) | **bản đăng ký đề tài** — danh sách chức năng đề xuất theo mẫu của cô |
 | [docs/MO-TA-DO-AN.md](docs/MO-TA-DO-AN.md) | **bản mô tả gửi giảng viên** — tên đề tài, 16 chức năng, tài khoản demo |
+| [docs/ke-hoach-frontend.md](docs/ke-hoach-frontend.md) | **5 layout · 30 trang · 9 mảnh** — bản đồ giao diện |
+| [docs/ke-hoach-database.md](docs/ke-hoach-database.md) | **13 bảng** — chuẩn hoá, phi chuẩn hoá, index |
 | [docs/so-do.md](docs/so-do.md) | **ERD, luồng MVC, kiến trúc** — 7 sơ đồ Mermaid |
 | [docs/giai-thich.md](docs/giai-thich.md) | **"cái này chạy kiểu gì, sao lại thế?"** — giảng từ đầu, 7 khu |
 | [docs/cau-truc.md](docs/cau-truc.md) | "file này bỏ vào thư mục nào?" |
