@@ -43,22 +43,21 @@
                 <c:when test="${not empty currentUser}">
 
                     <%--
-                      Chuông thông báo.
+                      Chuông thông báo — CHỈ LÀ LINK, cố ý không có chấm đỏ.
 
-                      GIỚI HẠN ĐÃ BIẾT: chấm đỏ chỉ hiện ở trang nào có đặt
-                      unreadCount vào request. Muốn chấm đỏ xuất hiện trên MỌI
-                      trang thì phải đếm ở một chỗ chạy trước mọi servlet —
-                      đúng việc của một filter. Chưa làm; hiện chuông luôn dẫn
-                      đúng tới /notification, chỉ là không báo số.
+                      Bản trước có chấm đỏ đếm số chưa đọc. Nhưng ${unreadCount}
+                      không trang nào đặt cả, nên điều kiện luôn sai và chấm đỏ
+                      KHÔNG BAO GIỜ hiện — một khối markup chết, đọc code thì
+                      tưởng có tính năng.
+
+                      Muốn chấm đỏ chạy thật thì phải đếm ở một chỗ chạy TRƯỚC
+                      mọi servlet, tức là thêm một filter mới trên "/*". Chưa
+                      làm, nên gỡ luôn phần markup chết đi: số chưa đọc vẫn
+                      thấy được ngay trong trang /notification.
                     --%>
-                    <a class="bell ${unreadCount gt 0 ? 'bell-on' : ''}"
+                    <a class="bell"
                        href="${pageContext.request.contextPath}/notification"
-                       title="Thông báo">
-                        🔔
-                        <c:if test="${unreadCount gt 0}">
-                            <span class="bell-badge">${unreadCount gt 9 ? '9+' : unreadCount}</span>
-                        </c:if>
-                    </a>
+                       title="Thông báo">🔔</a>
 
                     <%-- Chỉ hiện với admin. isAdmin() trong model -> ${...admin} --%>
                     <c:if test="${currentUser.admin}">

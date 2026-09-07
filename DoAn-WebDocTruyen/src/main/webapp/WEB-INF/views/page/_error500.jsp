@@ -9,11 +9,14 @@
     <a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a>
 </div>
 
-<%-- XOÁ KHỐI NÀY TRƯỚC KHI NỘP: nó phơi tên lớp cho người dùng xem. --%>
-<c:if test="${not empty errType}">
-    <div class="panel" style="margin-top:24px">
-        <h4>Chi tiết kỹ thuật (chỉ dùng lúc phát triển)</h4>
-        <p style="color:var(--text-dim)">Loại: <code>${errType}</code></p>
-        <p style="color:var(--text-dim)">Thông điệp: <c:out value="${errMsg}"/></p>
-    </div>
-</c:if>
+<%--
+  ĐÃ GỠ KHỐI "chi tiết kỹ thuật".
+
+  Trước đây chỗ này in ra tên lớp ngoại lệ và thông điệp lỗi. Tiện lúc làm,
+  nhưng đó là RÒ RỈ THÔNG TIN: tên lớp cho biết dự án dùng thư viện gì phiên
+  bản nào, thông điệp của SQLException còn lộ cả tên bảng và tên cột.
+
+  Người dùng thật không làm gì được với hai dòng đó; người muốn tấn công thì
+  có. Lỗi vẫn được ghi đầy đủ vào log máy chủ qua log() trong servlet — đúng
+  chỗ của nó.
+--%>

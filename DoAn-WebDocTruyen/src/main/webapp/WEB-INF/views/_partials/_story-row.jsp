@@ -7,7 +7,14 @@
 ================================================================================
   TẦNG: views/
 
-  DÙNG Ở: trang 11 (đã lưu), 16 (thống kê), 17 (theo dõi), 26 (quản trị truyện)
+  DÙNG Ở: trang 12 (truyện của tôi)
+
+          Ghi chú cũ ở đây liệt kê trang 11, 16, 17, 26 — SAI, đó là danh sách
+          dự kiến chứ không phải thực tế. Ba trang kia không dùng được mảnh
+          này vì dữ liệu của chúng không phải object Story:
+            trang 11 nhận Bookmark  (có tiến độ đọc, không có lượt xem)
+            trang 17 nhận Follow    (là tác giả, không phải truyện)
+            trang 26 là bảng quản trị, cần cột trạng thái và nút gỡ
 
   KHÁC GÌ _card.jsp
     _card là ô đứng trong lưới — dùng khi muốn KHOE bìa truyện, người dùng

@@ -6,7 +6,11 @@
 ================================================================================
   TẦNG: views/
 
-  DÙNG Ở: story/detail.jsp · admin/comments.jsp
+  DÙNG Ở: story/detail.jsp
+
+          KHÔNG dùng ở admin/comments.jsp (ghi chú cũ ghi sai). Trang quản trị
+          cần dạng BẢNG có cột truyện, cột trạng thái, nút ẩn — khác hẳn khối
+          hội thoại ở đây.
 
   BIẾN CẦN CÓ:
       cm          Comment  bình luận cần hiện (thường từ <c:forEach var="cm">)

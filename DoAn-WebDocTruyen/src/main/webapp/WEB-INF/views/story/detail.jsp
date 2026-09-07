@@ -169,7 +169,20 @@
 
 <%-- ---- Bình luận ---- --%>
 <div class="section-head" id="comments">
-    <h2>Bình luận (${fn:length(comments)})</h2>
+    <%--
+      ĐẾM CẢ TRẢ LỜI, không chỉ bình luận gốc.
+
+      fn:length(comments) chỉ đếm phần tử ở cấp một — mà từ khi có trả lời
+      lồng nhau, mỗi phần tử còn mang theo một danh sách con. Truyện có 3 bình
+      luận gốc và 2 trả lời sẽ hiện "Bình luận (3)" trong khi trên màn hình
+      đếm được 5 khối. Con số sai kiểu này không gây lỗi, chỉ làm người đọc
+      nghi ngờ mọi con số khác trên trang.
+    --%>
+    <c:set var="nCmt" value="0"/>
+    <c:forEach var="x" items="${comments}">
+        <c:set var="nCmt" value="${nCmt + 1 + x.replyCount}"/>
+    </c:forEach>
+    <h2>Bình luận (${nCmt})</h2>
 </div>
 
 <c:choose>

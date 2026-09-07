@@ -823,14 +823,8 @@ a.notif:hover { border-color: var(--ember-deep); }
     transition: background .16s var(--ease);
 }
 .bell:hover { background: var(--ink-800); }
-.bell-badge {
-    position: absolute; top: -2px; right: -2px;
-    min-width: 16px; height: 16px; padding: 0 4px;
-    display: grid; place-items: center;
-    border-radius: 99px;
-    background: var(--rose); color: #fff;
-    font-size: .66rem; font-weight: 700;
-}
+/* .bell-badge da go cung markup: chấm đỏ khong bao gio hien vi khong
+   trang nao dat unreadCount. Xem ghi chu trong layout/parts/nav.jsp. */
 
 /* ---- Báo cáo vi phạm ---- */
 .report-box { display: inline-block; }
