@@ -159,6 +159,7 @@ trong code gốc của sách.
 
 | File | Khi nào mở |
 |------|-----------|
+| [docs/DANG-KY-DE-TAI.md](docs/DANG-KY-DE-TAI.md) | **bản đăng ký đề tài** — danh sách chức năng đề xuất theo mẫu của cô |
 | [docs/MO-TA-DO-AN.md](docs/MO-TA-DO-AN.md) | **bản mô tả gửi giảng viên** — tên đề tài, 16 chức năng, tài khoản demo |
 | [docs/so-do.md](docs/so-do.md) | **ERD, luồng MVC, kiến trúc** — 7 sơ đồ Mermaid |
 | [docs/giai-thich.md](docs/giai-thich.md) | **"cái này chạy kiểu gì, sao lại thế?"** — giảng từ đầu, 7 khu |
