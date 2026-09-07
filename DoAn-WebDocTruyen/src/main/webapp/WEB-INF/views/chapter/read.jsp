@@ -3,14 +3,24 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%--
 ================================================================================
-  chapter/read.jsp — MẢNH nội dung, dùng khung layout/reader.jsp     CASE 06
+  chapter/read.jsp — MẢNH nội dung, dùng khung layout/reader.jsp   TRANG 23
 ================================================================================
+  TẦNG: views/
+
   Nhận: chapter · story · prev · next
 
   Đây là trang duy nhất dùng layout `reader` — bỏ hết nav và footer, chữ to,
   cột hẹp, font serif. Mọi thứ để đọc lâu không mỏi mắt.
 ================================================================================
 --%>
+
+<%--
+  Hai thuộc tính data-* này là chỗ duy nhất JavaScript trong reader.jsp lấy
+  được id chương và id truyện. Đặt trên một thẻ vô hình thay vì nhúng số vào
+  giữa mã JS: giữ đúng ranh giới — JSP lo dữ liệu, JS lo hành vi, không trộn.
+--%>
+<span hidden data-chapter-id="${chapter.id}" data-story-id="${story.id}"></span>
+
 <h1><c:out value="${chapter.title}"/></h1>
 <p class="reader-sub">
     Chương ${chapter.chapterNo} &middot; <c:out value="${story.title}"/>
@@ -65,3 +75,14 @@
         <c:otherwise><span class="spacer"></span></c:otherwise>
     </c:choose>
 </div>
+
+<%--
+  Ghi chú về "tự động ghi nhớ vị trí đọc".
+
+  Chỗ này KHÔNG có nút "Lưu vị trí" — cố ý. ChapterServlet đã gọi
+  BookmarkDAO.updateProgress() ngay khi trang được mở, với điều kiện người đọc
+  đã đăng nhập và đã lưu truyện. Người đọc không phải bấm gì cả.
+
+  Ngoài ra JavaScript ở reader.jsp còn ghi id chương vào localStorage để mục
+  lục làm mờ chương đã đọc — cái đó chạy cho cả khách chưa đăng nhập.
+--%>

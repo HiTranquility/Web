@@ -75,13 +75,14 @@
         </div>
     </c:when>
     <c:otherwise>
-        <div class="empty">
-            <div class="empty-icon">🔖</div>
-            <h3>Chưa lưu truyện nào</h3>
-            <p>Bấm <b>☆ Lưu truyện</b> ở trang truyện để lưu lại đọc sau.
-               Hệ thống cũng tự nhớ bạn đang đọc tới chương mấy.</p>
-            <a class="btn btn-primary"
-               href="${pageContext.request.contextPath}/story?action=list">Tìm truyện để đọc</a>
-        </div>
+        <%-- MẢNH: trạng thái rỗng. Trước đây khối này viết thẳng tại chỗ —
+             đã thay bằng mảnh chung để sáu trang danh sách trông giống nhau. --%>
+        <c:set var="emIcon"  value="🔖"/>
+        <c:set var="emTitle" value="Chưa lưu truyện nào"/>
+        <c:set var="emText"
+               value="Bấm ☆ Lưu truyện ở trang truyện để đọc sau. Hệ thống tự nhớ bạn đang đọc tới chương mấy."/>
+        <c:set var="emUrl"   value="/story?action=list"/>
+        <c:set var="emBtn"   value="Tìm truyện để đọc"/>
+        <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
     </c:otherwise>
 </c:choose>

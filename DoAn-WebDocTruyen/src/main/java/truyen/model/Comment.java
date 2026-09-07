@@ -31,6 +31,9 @@ public class Comment implements Serializable {
     private String username;
     private String displayName;
 
+    /** Ten truyen — lay kem khi JOIN, chi trang quan tri dung. */
+    private String storyTitle;
+
     public Comment() { }
 
     public int getId() { return id; }
@@ -56,6 +59,11 @@ public class Comment implements Serializable {
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getStoryTitle() { return storyTitle; }
+    public void setStoryTitle(String storyTitle) { this.storyTitle = storyTitle; }
+
+    public boolean isHidden() { return "HIDDEN".equals(status); }
 
     /** Tên để hiện. Chưa đặt displayName thì lấy username. */
     public String getName() {

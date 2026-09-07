@@ -86,6 +86,93 @@ public class TagDAO {
     }
 
     /**
+     * Them the loai moi — trang 28.
+     *
+     * slug do SlugUtil sinh tu ten, khong de nguoi dung tu go. Go tay thi som
+     * muon co ai do dat slug "Ngon Tinh" co dau cach va chu hoa, roi duong dan
+     * /story?action=list&tag=Ngon%20Tinh trong rat xau va de go sai.
+     */
+    public void insert(Tag tag) throws SQLException {
+        if (!DBConnection.isReady()) return;
+
+        String sql = "INSERT INTO tags (name, slug) VALUES (?, ?)";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, tag.getName());
+            ps.setString(2, tag.getSlug());
+            ps.executeUpdate();
+        }
+    }
+
+    /** Doi ten the loai. */
+    public void update(Tag tag) throws SQLException {
+        if (!DBConnection.isReady()) return;
+
+        String sql = "UPDATE tags SET name = ?, slug = ? WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, tag.getName());
+            ps.setString(2, tag.getSlug());
+            ps.setInt(3, tag.getId());
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Xoa the loai — XOA THAT, khong phai xoa mem.
+     *
+     * VI SAO O DAY XOA THAT TRONG KHI TRUYEN VA TAI KHOAN CHI XOA MEM
+     *   Truyen bi go van con nguoi dang doc do, tai khoan bi khoa van con
+     *   binh luan mang ten ho — xoa han la mat du lieu cua NGUOI KHAC.
+     *   The loai thi khong: no chi la mot cai nhan. Xoa "Kinh di" di thi cac
+     *   truyen do mat mot nhan, khong mat gi khac.
+     *
+     *   story_tags co ON DELETE CASCADE nen cac dong noi tu bien mat theo.
+     *
+     * VI SAO CHAN KHI CON TRUYEN DUNG
+     *   CASCADE se lang le go nhan khoi hang tram truyen ma admin khong biet
+     *   minh vua lam gi. Bat kiem tra truoc de nguoi bam phai co y thuc: muon
+     *   xoa that thi go nhan khoi cac truyen do truoc da.
+     */
+    public void delete(int id) throws SQLException {
+        if (!DBConnection.isReady()) return;
+
+        try (Connection con = DBConnection.get()) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT COUNT(*) FROM story_tags WHERE tag_id = ?")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        throw new SQLException(
+                                "The loai nay dang duoc " + rs.getInt(1)
+                              + " truyen su dung. Go nhan khoi cac truyen do truoc.");
+                    }
+                }
+            }
+            try (PreparedStatement ps = con.prepareStatement(
+                    "DELETE FROM tags WHERE id = ?")) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    /** Kiem tra trung slug truoc khi them/sua. exceptId = 0 khi them moi. */
+    public boolean slugExists(String slug, int exceptId) throws SQLException {
+        if (!DBConnection.isReady()) return false;
+
+        String sql = "SELECT 1 FROM tags WHERE slug = ? AND id <> ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, slug);
+            ps.setInt(2, exceptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
      * Gán lại toàn bộ thể loại cho một truyện: xoá hết rồi thêm mới.
      *
      * VÌ SAO XOÁ HẾT RỒI THÊM LẠI, không so sánh cái nào thêm cái nào bớt:

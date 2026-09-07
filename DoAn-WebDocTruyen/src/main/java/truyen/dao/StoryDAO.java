@@ -45,8 +45,10 @@ public class StoryDAO {
     private static final String SELECT_BASE =
         "SELECT s.id, s.title, s.slug, s.description, s.cover_url, "
       + "       s.author_id, s.status, s.progress, s.view_count, "
+      + "       s.rating_sum, s.rating_count, "
       + "       s.created_at, s.updated_at, "
-      + "       u.username AS author_name, "
+      // COALESCE: chua dat ten hien thi thi lay tam ten dang nhap, khong de trong.
+      + "       COALESCE(u.display_name, u.username) AS author_name, "
       + "       (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) AS chapter_count "
       + "FROM stories s "
       + "JOIN users u ON u.id = s.author_id ";
@@ -156,9 +158,14 @@ public class StoryDAO {
      * @param offset  bo qua bao nhieu dong dau (trang 2 voi 24/trang -> 24)
      */
     public List<Story> findPage(String tagSlug, String keyword, String sort,
-                                int offset, int limit) throws SQLException {
+                                String progress, int offset, int limit)
+            throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
-        if (!DBConnection.isReady()) return DemoData.slice(DemoData.filter(tagSlug, keyword), offset, limit);
+        if (!DBConnection.isReady()) {
+            return DemoData.slice(
+                    DemoData.sort(DemoData.filter(tagSlug, keyword, progress), sort),
+                    offset, limit);
+        }
 
         StringBuilder sql = new StringBuilder(SELECT_BASE);
         List<Object> params = new ArrayList<>();
@@ -174,14 +181,46 @@ public class StoryDAO {
             params.add(tagSlug);
         }
         if (keyword != null && !keyword.isEmpty()) {
-            sql.append("AND s.title LIKE ? ");
+            /*
+             * Tim theo TEN TRUYEN hoac TEN TAC GIA.
+             *
+             * Nguoi doc go "Moc Mien" la ho dang tim tac gia, khong ai nghi
+             * phai sang trang khac de tim. Mot o tim kiem lo ca hai la dung
+             * ky vong hon.
+             *
+             * Ba dau ? nhan CUNG mot gia tri nhung van phai them ba lan vao
+             * danh sach tham so: PreparedStatement dem theo vi tri dau ?,
+             * no khong biet ba cho do la cung mot chuoi.
+             */
+            sql.append("AND (s.title LIKE ? OR u.display_name LIKE ? OR u.username LIKE ?) ");
             // Dau % nam trong GIA TRI, khong nam trong cau lenh -> van an toan
-            params.add("%" + keyword + "%");
+            String like = "%" + keyword + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if ("ongoing".equals(progress)) {
+            sql.append("AND s.progress = 'ONGOING' ");
+        } else if ("completed".equals(progress)) {
+            sql.append("AND s.progress = 'COMPLETED' ");
         }
 
-        sql.append("popular".equals(sort)
-                ? "ORDER BY s.view_count DESC "
-                : "ORDER BY s.updated_at DESC ");
+        /*
+         * ORDER BY khong nhan dau ? — ten cot khong phai gia tri. Nen o day
+         * so sanh voi chuoi HANG SO trong code, khong bao gio ghep tham so
+         * nguoi dung vao. Gia tri la roi vao nhanh mac dinh.
+         */
+        if ("popular".equals(sort)) {
+            sql.append("ORDER BY s.view_count DESC ");
+        } else if ("rating".equals(sort)) {
+            // Truyen 1 nguoi cham 5 sao KHONG duoc dung tren truyen 200 nguoi
+            // cham 4.8. Doi it nhat 3 luot moi cho vao bang xep theo diem.
+            sql.append("ORDER BY (s.rating_count >= 3) DESC, ")
+               .append("s.rating_sum / NULLIF(s.rating_count, 0) DESC, ")
+               .append("s.rating_count DESC ");
+        } else {
+            sql.append("ORDER BY s.updated_at DESC ");
+        }
         sql.append("LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
@@ -200,10 +239,22 @@ public class StoryDAO {
     }
 
     /** Tong so truyen khop bo loc — de tinh so trang. */
-    public int countPage(String tagSlug, String keyword) throws SQLException {
+    public int countPage(String tagSlug, String keyword, String progress)
+            throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
-        if (!DBConnection.isReady()) return DemoData.filter(tagSlug, keyword).size();
-        StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT s.id) FROM stories s ");
+        if (!DBConnection.isReady()) {
+            return DemoData.filter(tagSlug, keyword, progress).size();
+        }
+
+        /*
+         * PHAI JOIN users O DAY DU KHONG LAY COT NAO CUA users.
+         * Menh de WHERE ben duoi so sanh u.display_name khi co tu khoa. Bo
+         * JOIN di thi cau dem va cau lay du lieu loc khac nhau -> so trang
+         * hien ra khong khop so truyen thuc su co.
+         */
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(DISTINCT s.id) FROM stories s "
+              + "JOIN users u ON u.id = s.author_id ");
         List<Object> params = new ArrayList<>();
 
         if (tagSlug != null && !tagSlug.isEmpty()) {
@@ -216,8 +267,16 @@ public class StoryDAO {
             params.add(tagSlug);
         }
         if (keyword != null && !keyword.isEmpty()) {
-            sql.append("AND s.title LIKE ? ");
-            params.add("%" + keyword + "%");
+            sql.append("AND (s.title LIKE ? OR u.display_name LIKE ? OR u.username LIKE ?) ");
+            String like = "%" + keyword + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if ("ongoing".equals(progress)) {
+            sql.append("AND s.progress = 'ONGOING' ");
+        } else if ("completed".equals(progress)) {
+            sql.append("AND s.progress = 'COMPLETED' ");
         }
 
         try (Connection con = DBConnection.get();
@@ -523,6 +582,149 @@ public class StoryDAO {
      * mới thì sửa đúng một chỗ này, thay vì đi sửa từng vòng lặp — và chắc
      * chắn sẽ sót một chỗ nếu không tách.
      */
+    /**
+     * Bang xep hang THEO KHOANG THOI GIAN — trang 5.
+     *
+     * VI SAO KHONG DUNG stories.view_count DUOC
+     *   view_count la mot so cong don tu ngay dang. No khong nho luot xem nao
+     *   xay ra khi nao, nen khong tra loi duoc "tuan nay truyen nao hot".
+     *   Cau nay dem tren view_logs — bang ghi TUNG luot xem kem thoi diem.
+     *
+     * VI SAO JOIN VOI MOT BANG CON THAY VI JOIN THANG view_logs
+     *   JOIN thang roi GROUP BY se phai gom theo toan bo cot cua stories.
+     *   Gom truoc trong bang con (chi hai cot story_id va so luot) roi moi
+     *   noi sang stories thi MySQL chi phai xu ly danh sach ngan.
+     *
+     * @param days 7 = tuan nay, 30 = thang nay
+     */
+    public List<Story> findTopByPeriod(int days, int limit) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.top("views", limit);
+
+        String sql = SELECT_BASE
+                   + "JOIN ( "
+                   + "   SELECT story_id, COUNT(*) AS hits "
+                   + "   FROM view_logs "
+                   + "   WHERE viewed_at >= DATE_SUB(NOW(), INTERVAL ? DAY) "
+                   + "   GROUP BY story_id "
+                   + ") v ON v.story_id = s.id "
+                   + "WHERE s.status = 'PUBLISHED' "
+                   + "ORDER BY v.hits DESC "
+                   + "LIMIT ?";
+
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, days);
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Ghi mot luot xem vao nhat ky.
+     *
+     * Goi NGAY SAU increaseView(). Hai thao tac tach roi co chu y: bo dem
+     * view_count phai luon dung vi no hien tren moi the truyen, con nhat ky
+     * co the thieu vai dong ma khong ai chet — bang xep hang tuan lech mot
+     * luot thi khong sao.
+     *
+     * userId = 0 nghia la khach chua dang nhap -> ghi NULL.
+     */
+    public void logView(int storyId, int userId) throws SQLException {
+        if (!DBConnection.isReady()) return;
+
+        String sql = "INSERT INTO view_logs (story_id, user_id) VALUES (?, ?)";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            if (userId > 0) {
+                ps.setInt(2, userId);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Thong ke cho MOT truyen — trang 16 (thong ke truyen cua toi).
+     *
+     * Tra ve mot mang 3 phan tu: [luot xem, so nguoi danh dau, so binh luan].
+     *
+     * VI SAO GOM BA CON SO VAO MOT CAU
+     *   Ba cau rieng la ba lan di lai voi MySQL. Ba subquery trong mot cau chi
+     *   mot lan. Voi trang thong ke liet ke 20 truyen thi khac biet la 60 lan
+     *   di lai so voi 20.
+     *
+     * VI SAO TRA VE int[] MA KHONG PHAI MOT LOP RIENG
+     *   Chi mot trang duy nhat dung. Tao lop StoryStats cho ba con so la them
+     *   mot file de doc mot lan. Neu co trang thu hai can thi tach ngay.
+     */
+    public int[] statsOf(int storyId) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.statsOf(storyId);
+
+        String sql =
+            "SELECT s.view_count, "
+          + "       (SELECT COUNT(*) FROM bookmarks b WHERE b.story_id = s.id) AS saves, "
+          + "       (SELECT COUNT(*) FROM comments  c WHERE c.story_id = s.id "
+          + "        AND c.status = 'VISIBLE') AS comments "
+          + "FROM stories s WHERE s.id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return new int[]{0, 0, 0};
+                return new int[]{
+                        rs.getInt("view_count"),
+                        rs.getInt("saves"),
+                        rs.getInt("comments")
+                };
+            }
+        }
+    }
+
+    /**
+     * So lieu tong quan cho bang dieu khien quan tri — trang 25.
+     *
+     * Tra ve [so truyen, so chuong, so tai khoan, tong luot xem].
+     *
+     * DUNG MOT CAU SELECT KHONG CO FROM, boc bon subquery. Cach nay tranh
+     * duoc bon lan mo dong ket noi, va doc ra thi rat ro rang: moi dong la
+     * mot con so tren bang dieu khien.
+     */
+    public int[] adminOverview() throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.adminOverview();
+
+        /*
+         * SAU subquery trong MOT cau, khong phai sau cau rieng.
+         *
+         * Trang bang dieu khien chi hien sau con so. Goi sau lan la sau lan
+         * di lai voi MySQL cho mot man hinh tinh. Gop lai thi mot lan di,
+         * sau con so ve.
+         *
+         * COALESCE cho SUM: bang rong thi SUM tra ve NULL chu khong phai 0,
+         * va getInt(NULL) tra ve 0 nhung wasNull() moi biet — COALESCE xu ly
+         * ngay trong SQL, gon hon.
+         */
+        String sql =
+            "SELECT (SELECT COUNT(*) FROM stories WHERE status = 'PUBLISHED'), "
+          + "       (SELECT COUNT(*) FROM chapters), "
+          + "       (SELECT COUNT(*) FROM users), "
+          + "       (SELECT COALESCE(SUM(view_count), 0) FROM stories), "
+          + "       (SELECT COUNT(*) FROM comments WHERE status = 'VISIBLE'), "
+          + "       (SELECT COUNT(*) FROM stories WHERE status = 'DELETED')";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) return new int[]{0, 0, 0, 0, 0, 0};
+            return new int[]{rs.getInt(1), rs.getInt(2), rs.getInt(3),
+                             rs.getInt(4), rs.getInt(5), rs.getInt(6)};
+        }
+    }
+
     private Story mapRow(ResultSet rs) throws SQLException {
         Story s = new Story();
         s.setId(rs.getInt("id"));
@@ -536,6 +738,17 @@ public class StoryDAO {
         s.setProgress(rs.getString("progress"));
         s.setViewCount(rs.getInt("view_count"));
         s.setChapterCount(rs.getInt("chapter_count"));
+
+        /*
+         * Hai cot diem danh gia chi co trong cac cau dung SELECT_BASE.
+         * Cau viet tay (vi du findAllForAdmin) khong co -> getInt se nem
+         * SQLException. Bat va bo qua de mot cau thieu cot khong lam hong ca
+         * trang; gia tri mac dinh 0 nghia la "chua ai cham".
+         */
+        try {
+            s.setRatingSum(rs.getInt("rating_sum"));
+            s.setRatingCount(rs.getInt("rating_count"));
+        } catch (SQLException ignore) { }
 
         // getTimestamp trả về null nếu cột NULL, nên phải kiểm tra trước khi
         // gọi toLocalDateTime() — không thì NullPointerException.

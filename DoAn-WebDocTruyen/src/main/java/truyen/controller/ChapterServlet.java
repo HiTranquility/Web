@@ -2,6 +2,7 @@ package truyen.controller;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -10,6 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.BookmarkDAO;
 import truyen.dao.ChapterDAO;
+import truyen.dao.FollowDAO;
+import truyen.dao.NotificationDAO;
 import truyen.dao.StoryDAO;
 import truyen.model.Chapter;
 import truyen.model.Story;
@@ -27,12 +30,16 @@ import truyen.model.User;
 public class ChapterServlet extends HttpServlet {
 
     private ChapterDAO chapterDAO;
+    private FollowDAO followDAO;
+    private NotificationDAO notificationDAO;
     private StoryDAO storyDAO;
     private BookmarkDAO bookmarkDAO;
 
     @Override
     public void init() throws ServletException {
         chapterDAO = new ChapterDAO();
+        followDAO = new FollowDAO();
+        notificationDAO = new NotificationDAO();
         storyDAO = new StoryDAO();
         bookmarkDAO = new BookmarkDAO();
     }
@@ -198,8 +205,12 @@ public class ChapterServlet extends HttpServlet {
 
         if (isCreate) {
             chapterDAO.insert(chapter);
+            notifyFollowers(story, chapter);
         } else {
             chapterDAO.update(chapter);
+            // Sửa chương KHÔNG gửi thông báo. Tác giả sửa lỗi chính tả ba lần
+            // mà người theo dõi nhận ba thông báo "có chương mới" là cách
+            // nhanh nhất khiến họ tắt thông báo vĩnh viễn.
         }
 
         response.sendRedirect(request.getContextPath()
@@ -237,6 +248,39 @@ public class ChapterServlet extends HttpServlet {
         return request.getSession(false) == null
                 ? null
                 : (User) request.getSession(false).getAttribute("currentUser");
+    }
+
+
+    /**
+     * Báo cho những người đang theo dõi tác giả rằng có chương mới.
+     *
+     * VÌ SAO BỌC TRONG try-catch RIÊNG VÀ NUỐT LỖI
+     *   Chương ĐÃ được lưu ở dòng trên. Nếu bảng notifications trục trặc mà
+     *   để ngoại lệ bay lên, tác giả sẽ thấy trang lỗi 500 và tưởng chương
+     *   chưa lưu — rồi bấm đăng lại, thành hai chương trùng.
+     *
+     *   Thông báo là việc phụ. Việc phụ hỏng thì không được kéo việc chính
+     *   xuống theo. Ghi log để người bảo trì biết, nhưng người dùng không cần
+     *   biết và cũng không làm gì được.
+     *
+     * VÌ SAO CÂU THÔNG BÁO ĐƯỢC GHÉP SẴN Ở ĐÂY
+     *   Tên truyện hôm nay có thể đổi ngày mai. Thông báo là ảnh chụp một
+     *   thời điểm nên phải giữ nguyên câu chữ lúc gửi — xem ghi chú trong
+     *   model/Notification.java.
+     */
+    private void notifyFollowers(Story story, Chapter chapter) {
+        try {
+            List<Integer> followers = followDAO.findFollowerIds(story.getAuthorId());
+            if (followers.isEmpty()) {
+                return;   // không ai theo dõi thì khỏi mở kết nối
+            }
+            String message = story.getAuthorName() + " vừa đăng chương "
+                           + chapter.getChapterNo() + " của \"" + story.getTitle() + "\"";
+            notificationDAO.notifyFollowers(followers, story.getId(),
+                                            chapter.getId(), message);
+        } catch (SQLException e) {
+            log("Không gửi được thông báo chương mới cho truyện " + story.getId(), e);
+        }
     }
 
     private int parseIntOr(String s, int fallback) {

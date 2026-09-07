@@ -3,8 +3,18 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%--
-  story/detail.jsp — MẢNH nội dung. Chi tiết truyện.        CASE 04 + 07 + 08
-  Nhận: story · tags · chapters · comments · canEdit · bookmarked
+================================================================================
+  story/detail.jsp — MẢNH NỘI DUNG: Chi tiết truyện               TRANG 3
+================================================================================
+  TẦNG: views/
+
+  Nhận: story · tags · chapters · comments · canEdit
+        bookmarked · myRating · following
+
+  Trang đông đặc nhất dự án: mô tả, mục lục, chấm sao, theo dõi tác giả, lưu
+  truyện, tải .txt, chia sẻ, báo cáo, bình luận. Vì vậy nó dùng lại nhiều mảnh
+  nhất — _rating-stars, _chapter-list, _comment, _empty.
+================================================================================
 --%>
 <div class="story-detail">
     <div class="detail-cover">
@@ -23,9 +33,27 @@
         <h1><c:out value="${story.title}"/></h1>
 
         <p class="detail-author">
-            ✍️ <c:out value="${story.authorName}"/>
+            ✍️
+            <%-- Tên tác giả là LINK sang hồ sơ (trang 4). Trước đây chỉ là
+                 chữ — đọc xong một truyện hay mà không có đường tìm truyện
+                 khác của cùng người viết là bỏ phí. --%>
+            <a href="${pageContext.request.contextPath}/user?action=profile&amp;id=${story.authorId}">
+                <c:out value="${story.authorName}"/></a>
+
             <c:if test="${story.status eq 'DRAFT'}">
                 <span class="pill pill-warn" style="margin-left:8px">Bản nháp</span>
+            </c:if>
+
+            <%-- Nút theo dõi tác giả. Không hiện trên hồ sơ của chính mình. --%>
+            <c:if test="${not empty currentUser and currentUser.id ne story.authorId}">
+                <form method="post" style="display:inline;margin-left:10px"
+                      action="${pageContext.request.contextPath}/follow">
+                    <input type="hidden" name="do" value="${following ? 'unfollow' : 'follow'}">
+                    <input type="hidden" name="authorId" value="${story.authorId}">
+                    <button type="submit" class="btn btn-ghost btn-sm">
+                        ${following ? '✓ Đang theo dõi' : '+ Theo dõi'}
+                    </button>
+                </form>
             </c:if>
         </p>
 
@@ -43,6 +71,12 @@
             <span class="${story.completed ? 'yes' : ''}">
                 ${story.completed ? '✓ Hoàn thành' : '⏳ Đang ra'}</span>
         </div>
+
+        <%-- MẢNH: sao đánh giá, bản CÓ chấm được (rsForm) --%>
+        <c:set var="rsStory" value="${story}"/>
+        <c:set var="rsForm"  value="${true}"/>
+        <c:set var="rsMine"  value="${myRating}"/>
+        <%@ include file="/WEB-INF/views/_partials/_rating-stars.jsp" %>
 
         <p class="detail-desc"><c:out value="${story.description}"/></p>
 
@@ -78,34 +112,60 @@
                    href="${pageContext.request.contextPath}/chapter?action=create&amp;storyId=${story.id}">+ Thêm chương</a>
             </c:if>
         </div>
+
+        <%--
+          CHIA SẺ — ba mạng phổ biến, dựng bằng link thuần.
+
+          Không nhúng nút chính chủ của Facebook/X. Nút của họ kéo theo mã
+          JavaScript của bên thứ ba và theo dõi mọi người mở trang, kể cả
+          người không bấm chia sẻ. Một thẻ <a> tới URL chia sẻ của họ làm đúng
+          việc cần làm mà không gửi gì đi trước khi người dùng chủ động bấm.
+
+          rel="noopener" bắt buộc khi có target="_blank": thiếu nó, trang mới
+          mở ra có thể điều khiển ngược trang này qua window.opener.
+        --%>
+        <div class="share-row">
+            <span class="share-label">Chia sẻ:</span>
+            <c:set var="shareUrl"
+                   value="${pageContext.request.scheme}://${pageContext.request.serverName}:${pageContext.request.serverPort}${pageContext.request.contextPath}/story?action=detail&id=${story.id}"/>
+            <a class="share-btn" target="_blank" rel="noopener"
+               href="https://www.facebook.com/sharer/sharer.php?u=${fn:escapeXml(shareUrl)}">Facebook</a>
+            <a class="share-btn" target="_blank" rel="noopener"
+               href="https://twitter.com/intent/tweet?url=${fn:escapeXml(shareUrl)}&amp;text=${fn:escapeXml(story.title)}">X</a>
+            <a class="share-btn" target="_blank" rel="noopener"
+               href="https://t.me/share/url?url=${fn:escapeXml(shareUrl)}">Telegram</a>
+
+            <%-- Báo cáo truyện vi phạm. Form gọn nằm ngay đây, không bắt
+                 chuyển trang — bắt đổi trang để tố cáo là cách chắc chắn
+                 khiến không ai buồn báo cáo. --%>
+            <c:if test="${not empty currentUser}">
+                <details class="report-box">
+                    <summary class="share-btn">⚠ Báo cáo</summary>
+                    <form method="post" action="${pageContext.request.contextPath}/report">
+                        <input type="hidden" name="targetType" value="STORY">
+                        <input type="hidden" name="targetId" value="${story.id}">
+                        <input type="hidden" name="storyId" value="${story.id}">
+                        <input type="text" name="reason" maxlength="500"
+                               class="inline-input"
+                               placeholder="Lý do: spam, nội dung cấm, đạo văn…">
+                        <button type="submit" class="btn btn-danger btn-sm">Gửi</button>
+                    </form>
+                </details>
+            </c:if>
+        </div>
     </div>
 </div>
 
-<%-- ---- Mục lục chương ---- --%>
-<div class="section-head"><h2>Danh sách chương</h2></div>
-<c:choose>
-    <c:when test="${not empty chapters}">
-        <ol class="chapter-list">
-            <c:forEach var="ch" items="${chapters}">
-                <li>
-                    <a href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${ch.id}">
-                        <span class="ch-no">Chương ${ch.chapterNo}</span>
-                        <span class="ch-title"><c:out value="${ch.title}"/></span>
-                    </a>
-                    <c:if test="${canEdit}">
-                        <a class="ch-edit"
-                           href="${pageContext.request.contextPath}/chapter?action=edit&amp;id=${ch.id}">sửa</a>
-                    </c:if>
-                </li>
-            </c:forEach>
-        </ol>
-    </c:when>
-    <c:otherwise>
-        <div class="empty" style="padding:36px">
-            <p>Truyện chưa có chương nào.</p>
-        </div>
-    </c:otherwise>
-</c:choose>
+<%-- ---- Mục lục chương — MẢNH _chapter-list ---- --%>
+<div class="section-head">
+    <h2>Danh sách chương</h2>
+    <span class="more">${story.chapterCount} chương</span>
+</div>
+
+<c:set var="clChapters" value="${chapters}"/>
+<c:set var="clStoryId"  value="${story.id}"/>
+<c:set var="clCanEdit"  value="${canEdit}"/>
+<%@ include file="/WEB-INF/views/_partials/_chapter-list.jsp" %>
 
 <%-- ---- Bình luận ---- --%>
 <div class="section-head" id="comments">
@@ -143,3 +203,30 @@
     <c:set var="emText"  value="Hãy là người đầu tiên chia sẻ cảm nhận về truyện này."/>
     <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
 </c:if>
+
+<%--
+  ĐÁNH DẤU CHƯƠNG ĐÃ ĐỌC.
+
+  Danh sách chương đã đọc do trang đọc ghi vào localStorage (xem
+  layout/reader.jsp). Ở đây chỉ đọc lại và làm mờ những hàng tương ứng.
+
+  Chạy được cho cả khách chưa đăng nhập — đó là ưu điểm so với lưu vào CSDL,
+  và cũng là hạn chế: đổi máy là mất. Vị trí đọc "chính thức" vẫn nằm ở bảng
+  bookmarks cho người đã đăng nhập.
+--%>
+<script>
+(function () {
+    try {
+        var done = JSON.parse(localStorage.getItem('read.${story.id}') || '[]');
+        if (!done.length) return;
+        document.querySelectorAll('.chapter-item').forEach(function (row) {
+            var a = row.querySelector('.chapter-link');
+            if (!a) return;
+            var m = a.getAttribute('href').match(/id=(\d+)/);
+            if (m && done.indexOf(m[1]) !== -1) {
+                row.classList.add('chapter-read');
+            }
+        });
+    } catch (e) { /* trình duyệt chặn lưu trữ — mục lục vẫn dùng bình thường */ }
+})();
+</script>

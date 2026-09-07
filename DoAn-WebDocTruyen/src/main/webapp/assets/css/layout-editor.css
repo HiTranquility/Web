@@ -1,0 +1,45 @@
+/* ============================================================================
+   layout-editor.css — khung soạn chương                        LAYOUT 5 / 5
+   ============================================================================
+   Nguyên tắc: mọi thứ không phải ô soạn thảo đều phải lùi lại.
+   ========================================================================= */
+
+.editor-body { background: var(--ink-950); }
+
+/* Thanh trên KHÔNG dính (không sticky) — khác hẳn ba layout kia.
+   Cuộn xuống là nó biến mất, trả toàn bộ màn hình cho việc viết. */
+.editor-bar {
+    display: flex; align-items: center; gap: 18px;
+    padding: 14px 26px;
+    border-bottom: 1px solid var(--ink-800);
+    font-size: .88rem;
+}
+.editor-back {
+    color: var(--text-dim); font-weight: 600;
+    transition: color .16s var(--ease);
+}
+.editor-back:hover { color: var(--ember); }
+.editor-title { color: var(--text); font-weight: 600; }
+.editor-hint  { color: var(--text-mut); margin-left: auto; font-size: .82rem; }
+
+/* 860px — hẹp hơn main (1200) vì đây là một cột chữ, không phải lưới thẻ */
+.editor-shell {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px 90px;
+}
+
+/* Ô soạn nội dung chương: cao hẳn, font serif giống lúc đọc.
+   Viết bằng đúng font sẽ đọc là cách rẻ nhất để tác giả thấy trước thành phẩm. */
+.editor-shell textarea[name="content"] {
+    min-height: 60vh;
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1.05rem;
+    line-height: 1.85;
+}
+
+@media (max-width: 560px) {
+    .editor-bar { padding: 12px 16px; gap: 12px; }
+    .editor-hint { display: none; }
+    .editor-shell { padding: 22px 16px 70px; }
+}

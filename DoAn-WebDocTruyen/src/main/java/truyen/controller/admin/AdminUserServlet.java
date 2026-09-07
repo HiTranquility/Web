@@ -1,13 +1,7 @@
 package truyen.controller.admin;
 
-import truyen.util.DemoData;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,12 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.UserDAO;
 import truyen.model.User;
-import truyen.util.DBConnection;
 
 /**
- * CASE 10 — Quản trị tài khoản: ban và bỏ ban.
+ * TRANG 27 — Quản trị tài khoản: khoá, mở khoá, đổi vai trò.
  *
- * URL: /admin/user?action=list | ban | unban
+ * TẦNG: controller/
+ *
+ * URL: /admin/user?action=list | ban | unban | role
  *
  * Quyền admin do AdminFilter lo ở /admin/* — không kiểm lại ở đây.
  */
@@ -75,6 +70,23 @@ public class AdminUserServlet extends HttpServlet {
                 } else {
                     userDAO.updateStatus(id, "ACTIVE", null);
                 }
+            } else if ("role".equals(action)) {
+                int id = parseIntOr(request.getParameter("id"), 0);
+                User me = (User) request.getSession().getAttribute("currentUser");
+
+                /*
+                 * KHÔNG cho admin tự hạ quyền chính mình — cùng lý do với ban:
+                 * admin cuối cùng tự hạ quyền là khoá cửa rồi vứt chìa vào
+                 * trong. Muốn rời ghế thì nhờ một admin khác hạ giúp.
+                 */
+                if (me != null && me.getId() == id) {
+                    request.setAttribute("message",
+                            "Bạn không thể tự đổi vai trò của chính mình.");
+                } else {
+                    String role = "ADMIN".equals(request.getParameter("role"))
+                                ? "ADMIN" : "USER";
+                    userDAO.updateRole(id, role);
+                }
 
                 /*
                  * Ban xong thì TRUYỆN CỦA HỌ VẪN CÒN trên web — quyết định
@@ -84,7 +96,7 @@ public class AdminUserServlet extends HttpServlet {
                  */
             }
 
-            request.setAttribute("users", findAllUsers());
+            request.setAttribute("users", userDAO.findAllWithStoryCount());
 
         } catch (SQLException e) {
             log("AdminUserServlet: lỗi truy vấn, action=" + action, e);
@@ -98,55 +110,6 @@ public class AdminUserServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/admin.jsp")
                 .forward(request, response);
-    }
-
-    /**
-     * Danh sách tài khoản kèm số truyện mỗi người.
-     *
-     * GHI CHÚ VỀ VIỆC ĐẶT SQL Ở ĐÂY: truy vấn này chỉ trang quản trị dùng, nên
-     * để tạm trong servlet cho gọn. Đúng chuẩn thì nó thuộc về UserDAO —
-     * standards §2 nói controller không viết SQL. Nếu có thêm một chỗ nữa cần
-     * dữ liệu này thì phải chuyển xuống DAO ngay.
-     */
-    private List<User> findAllUsers() throws SQLException {
-        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
-        if (!DBConnection.isReady()) return DemoData.users();
-        String sql =
-            "SELECT u.id, u.username, u.email, u.display_name, u.role, u.status, "
-          + "       u.ban_reason, u.created_at, "
-          + "       (SELECT COUNT(*) FROM stories s "
-          + "        WHERE s.author_id = u.id AND s.status != 'DELETED') AS story_count "
-          + "FROM users u ORDER BY u.created_at DESC LIMIT 200";
-
-        List<User> list = new ArrayList<>();
-        try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                User u = new User();
-                u.setId(rs.getInt("id"));
-                u.setUsername(rs.getString("username"));
-                u.setEmail(rs.getString("email"));
-                u.setDisplayName(rs.getString("display_name"));
-                u.setRole(rs.getString("role"));
-                u.setStatus(rs.getString("status"));
-                u.setBanReason(rs.getString("ban_reason"));
-                // Mượn cột bio để chở số truyện sang JSP — xem ghi chú dưới
-                u.setBio(String.valueOf(rs.getInt("story_count")));
-                if (rs.getTimestamp("created_at") != null) {
-                    u.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                }
-                list.add(u);
-            }
-        }
-        return list;
-        /*
-         * Mượn cột bio để chở story_count là cách làm TẮT, không đẹp.
-         * Đúng ra nên tạo một lớp riêng (AdminUserRow) hoặc thêm field
-         * storyCount vào User. Ở quy mô đồ án thì chấp nhận được, nhưng ghi
-         * chú lại để người đọc biết đây là chỗ nợ kỹ thuật, không phải mẫu
-         * để bắt chước.
-         */
     }
 
     private int parseIntOr(String s, int fallback) {

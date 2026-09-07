@@ -2,7 +2,9 @@ package truyen.controller;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -13,6 +15,8 @@ import truyen.dao.BookmarkDAO;
 import truyen.dao.ChapterDAO;
 import truyen.dao.CommentDAO;
 import truyen.dao.StoryDAO;
+import truyen.dao.FollowDAO;
+import truyen.dao.RatingDAO;
 import truyen.dao.TagDAO;
 import truyen.model.Story;
 import truyen.model.User;
@@ -33,6 +37,8 @@ public class StoryServlet extends HttpServlet {
 
     private StoryDAO storyDAO;
     private TagDAO tagDAO;
+    private RatingDAO ratingDAO;
+    private FollowDAO followDAO;
     private ChapterDAO chapterDAO;
     private CommentDAO commentDAO;
     private BookmarkDAO bookmarkDAO;
@@ -44,6 +50,8 @@ public class StoryServlet extends HttpServlet {
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
         tagDAO = new TagDAO();
+        ratingDAO = new RatingDAO();
+        followDAO = new FollowDAO();
         chapterDAO = new ChapterDAO();
         commentDAO = new CommentDAO();
         bookmarkDAO = new BookmarkDAO();
@@ -88,6 +96,7 @@ public class StoryServlet extends HttpServlet {
                 case "create": url = createOrEdit(request, response, true);  break;
                 case "edit":   url = createOrEdit(request, response, false); break;
                 case "delete": url = delete(request, response);  break;
+                case "stats":  url = stats(request);             break;
                 default:       url = list(request);              break;
             }
         } catch (SQLException e) {
@@ -130,18 +139,28 @@ public class StoryServlet extends HttpServlet {
         String tag = request.getParameter("tag");
         String keyword = trim(request.getParameter("q"));
         String sort = request.getParameter("sort");
+
+        /*
+         * Lọc theo tình trạng ra / hoàn thành.
+         *
+         * Không kiểm giá trị ở đây vì DAO đã so sánh với chuỗi hằng số: giá
+         * trị lạ rơi vào "không lọc gì". Kiểm hai lần cũng được nhưng sẽ có
+         * hai danh sách hợp lệ ở hai nơi, sớm muộn lệch nhau.
+         */
+        String progress = request.getParameter("progress");
+
         int page = parseIntOr(request.getParameter("page"), 1);
         if (page < 1) {
             page = 1;   // ?page=-5 không được thành OFFSET âm
         }
 
-        int total = storyDAO.countPage(tag, keyword);
+        int total = storyDAO.countPage(tag, keyword, progress);
         int totalPages = Math.max(1, (int) Math.ceil(total / (double) pageSize));
         if (page > totalPages) {
             page = totalPages;
         }
 
-        List<Story> stories = storyDAO.findPage(tag, keyword, sort,
+        List<Story> stories = storyDAO.findPage(tag, keyword, sort, progress,
                                                 (page - 1) * pageSize, pageSize);
 
         request.setAttribute("stories", stories);
@@ -149,6 +168,7 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("currentTag", tag);
         request.setAttribute("keyword", keyword);
         request.setAttribute("sort", sort);
+        request.setAttribute("progress", progress);
         request.setAttribute("page", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalStories", total);
@@ -183,6 +203,20 @@ public class StoryServlet extends HttpServlet {
 
         storyDAO.increaseView(id);
 
+        /*
+         * Ghi thêm một dòng vào nhật ký lượt xem.
+         *
+         * TÁCH RIÊNG khỏi increaseView() có chủ ý: bộ đếm view_count phải luôn
+         * đúng vì nó hiện trên mọi thẻ truyện, còn nhật ký thiếu vài dòng thì
+         * chỉ làm bảng xếp hạng tuần lệch chút — không đáng để cả trang chi
+         * tiết hỏng theo. Vì vậy lỗi ở đây được nuốt, chỉ ghi log.
+         */
+        try {
+            storyDAO.logView(id, me != null ? me.getId() : 0);
+        } catch (SQLException e) {
+            log("Không ghi được nhật ký lượt xem cho truyện " + id, e);
+        }
+
         request.setAttribute("story", story);
         request.setAttribute("tags", tagDAO.findByStory(id));
         request.setAttribute("chapters", chapterDAO.findByStory(id));
@@ -190,6 +224,9 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("canEdit", canEdit(me, story));
         if (me != null) {
             request.setAttribute("bookmarked", bookmarkDAO.exists(me.getId(), id));
+            request.setAttribute("myRating", ratingDAO.findScore(me.getId(), id));
+            request.setAttribute("following",
+                    followDAO.isFollowing(me.getId(), story.getAuthorId()));
         }
         request.setAttribute("pageTitle", story.getTitle());
         request.setAttribute("activeNav", "browse");
@@ -203,6 +240,44 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("pageTitle", "Truyện của tôi");
         request.setAttribute("mine", true);
         return "/WEB-INF/views/story/mine.jsp";
+    }
+
+    /**
+     * TRANG 16 — Thống kê truyện của tôi.
+     *
+     * Mỗi truyện một bộ ba số: lượt xem, số người đánh dấu, số bình luận.
+     * Gọi DAO một lần cho mỗi truyện. Với tác giả có vài chục truyện thì chấp
+     * nhận được; nếu có ai đăng hàng trăm truyện thì phải gộp thành một câu
+     * SQL duy nhất — ghi lại đây để người sau biết chỗ cần sửa.
+     */
+    private String stats(HttpServletRequest request) throws SQLException {
+        User me = currentUser(request);
+        List<Story> stories = storyDAO.findByAuthor(me.getId());
+
+        /*
+         * Map<id truyện, [xem, lưu, bình luận]>.
+         *
+         * Dùng Map thay vì nhét vào chính object Story: ba con số này chỉ
+         * đúng một trang cần. Thêm ba trường vào Story là bắt 30 chỗ khác
+         * trong dự án mang theo ba trường luôn bằng 0.
+         */
+        Map<Integer, int[]> stats = new LinkedHashMap<>();
+        int totalViews = 0, totalSaves = 0, totalComments = 0;
+        for (Story s : stories) {
+            int[] row = storyDAO.statsOf(s.getId());
+            stats.put(s.getId(), row);
+            totalViews += row[0];
+            totalSaves += row[1];
+            totalComments += row[2];
+        }
+
+        request.setAttribute("stories", stories);
+        request.setAttribute("stats", stats);
+        request.setAttribute("totalViews", totalViews);
+        request.setAttribute("totalSaves", totalSaves);
+        request.setAttribute("totalComments", totalComments);
+        request.setAttribute("pageTitle", "Thống kê truyện của tôi");
+        return "/WEB-INF/views/story/stats.jsp";
     }
 
     // ---- CASE 05: đăng / sửa ----------------------------------------------

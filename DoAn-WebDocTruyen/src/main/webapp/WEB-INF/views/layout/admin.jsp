@@ -28,10 +28,18 @@
     <aside class="admin-side">
         <h5>Quản trị</h5>
         <nav>
+            <a href="${pageContext.request.contextPath}/admin/dashboard"
+               class="${adminSection eq 'dashboard' ? 'is-active' : ''}">📊 Tổng quan</a>
             <a href="${pageContext.request.contextPath}/admin/story"
                class="${adminSection eq 'story' ? 'is-active' : ''}">📚 Truyện</a>
             <a href="${pageContext.request.contextPath}/admin/user"
                class="${adminSection eq 'user' ? 'is-active' : ''}">👤 Tài khoản</a>
+            <a href="${pageContext.request.contextPath}/admin/tag"
+               class="${adminSection eq 'tag' ? 'is-active' : ''}">🏷️ Thể loại</a>
+            <a href="${pageContext.request.contextPath}/admin/comment"
+               class="${adminSection eq 'comment' ? 'is-active' : ''}">💬 Bình luận</a>
+            <a href="${pageContext.request.contextPath}/admin/report"
+               class="${adminSection eq 'report' ? 'is-active' : ''}">🛡️ Báo cáo</a>
         </nav>
         <p class="admin-hint">
             Gỡ truyện và khoá tài khoản đều là <b>xoá mềm</b> — bấm nhầm vẫn

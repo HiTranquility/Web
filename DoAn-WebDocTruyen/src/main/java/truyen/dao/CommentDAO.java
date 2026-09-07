@@ -72,6 +72,53 @@ public class CommentDAO {
         }
     }
 
+    /**
+     * Toan bo binh luan cho trang quan tri — trang 29.
+     *
+     * Lay ca binh luan DA AN. Trang quan tri phai thay duoc thu minh da an,
+     * neu khong thi bam an xong la no bien mat luon, khong con duong hien lai.
+     *
+     * @param onlyHidden true = chi xem cac binh luan da an
+     */
+    public List<Comment> findAllForAdmin(boolean onlyHidden) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.allComments(onlyHidden);
+
+        String sql =
+            "SELECT c.*, u.username, u.display_name, s.title AS story_title "
+          + "FROM comments c "
+          + "JOIN users   u ON u.id = c.user_id "
+          + "JOIN stories s ON s.id = c.story_id "
+          + (onlyHidden ? "WHERE c.status = 'HIDDEN' " : "")
+          + "ORDER BY c.created_at DESC LIMIT 200";
+
+        List<Comment> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Comment c = mapRow(rs);
+                // story_title khong phai cot cua comments — muon truong
+                // content de cho sang JSP thi se de nham. Dat han mot truong
+                // rieng trong model Comment moi la cach dung.
+                c.setStoryTitle(rs.getString("story_title"));
+                list.add(c);
+            }
+        }
+        return list;
+    }
+
+    /** Hien lai mot binh luan da an. */
+    public void unhide(int id) throws SQLException {
+        if (!DBConnection.isReady()) return;
+
+        String sql = "UPDATE comments SET status = 'VISIBLE' WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+    }
+
     /** Ẩn bình luận — XOÁ MỀM, giữ lại làm bằng chứng khi xử lý tài khoản. */
     public void hide(int id) throws SQLException {
         try (Connection con = DBConnection.get();

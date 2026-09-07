@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.Statement;
 
 import truyen.model.User;
@@ -114,6 +116,123 @@ public class UserDAO {
             ps.setString(2, reason);
             ps.setInt(3, userId);
             ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Danh sách tài khoản kèm số truyện mỗi người — trang quản trị (TRANG 27).
+     *
+     * VÌ SAO CÂU NÀY NẰM Ở ĐÂY CHỨ KHÔNG PHẢI TRONG SERVLET
+     *   Trước đây nó nằm thẳng trong AdminUserServlet cho "gọn". Nhưng
+     *   standards §2 đã chốt: controller KHÔNG viết SQL. Lý do không phải là
+     *   sự sạch sẽ hình thức — mà là khi đổi tên cột `status`, người sửa chỉ
+     *   đi lục thư mục dao/, không ai nghĩ tới việc mở servlet ra tìm SQL.
+     *
+     * VÌ SAO DÙNG SUBQUERY CHỨ KHÔNG PHẢI LEFT JOIN + GROUP BY
+     *   JOIN rồi GROUP BY sẽ phải gom theo tất cả các cột của users. Subquery
+     *   tương quan đọc thẳng ý định: "với mỗi user, đếm truyện của user đó".
+     *   Với vài trăm tài khoản thì hai cách nhanh như nhau.
+     *
+     * LIMIT 200: trang quản trị chưa phân trang. Có giới hạn cứng để một ngày
+     * nào đó 50.000 tài khoản không làm trang đứng hình.
+     */
+    public List<User> findAllWithStoryCount() throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.users();
+
+        String sql =
+            "SELECT u.*, "
+          + "       (SELECT COUNT(*) FROM stories s "
+          + "        WHERE s.author_id = u.id AND s.status != 'DELETED') AS story_count "
+          + "FROM users u ORDER BY u.created_at DESC LIMIT 200";
+
+        List<User> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                User u = mapRow(rs);
+                u.setStoryCount(rs.getInt("story_count"));
+
+                // Chuoi bam KHONG duoc roi khoi tang dao khi khong can dung.
+                // Trang quan tri chi hien thi, khong xac thuc.
+                u.setPasswordHash(null);
+                list.add(u);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Đổi vai trò USER <-> ADMIN (TRANG 27).
+     *
+     * Chỉ nhận đúng hai giá trị. Không kiểm thì một request tay chân có thể
+     * đặt role = "SUPERADMIN", và mọi câu lệnh so sánh role trong dự án sẽ
+     * lặng lẽ trả về false — tài khoản đó mất quyền mà không ai hiểu vì sao.
+     */
+    public void updateRole(int userId, String role) throws SQLException {
+        if (!"ADMIN".equals(role) && !"USER".equals(role)) {
+            throw new SQLException("Vai trò không hợp lệ: " + role);
+        }
+        String sql = "UPDATE users SET role = ? WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, role);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Người dùng tự sửa hồ sơ của mình (TRANG 15).
+     *
+     * KHÔNG có username trong danh sách cột được sửa. Tên đăng nhập là danh
+     * tính: đổi được thì mọi bình luận cũ, mọi đường dẫn hồ sơ đã chia sẻ đều
+     * trỏ sai người. Muốn đổi cách hiển thị thì đổi display_name.
+     *
+     * KHÔNG có role và status. Người dùng tự nâng mình lên ADMIN được thì
+     * toàn bộ khu quản trị vô nghĩa.
+     */
+    public void updateProfile(User user) throws SQLException {
+        String sql = "UPDATE users SET display_name = ?, email = ?, "
+                   + "avatar_url = ?, bio = ? WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, user.getDisplayName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getAvatarUrl());
+            ps.setString(4, user.getBio());
+            ps.setInt(5, user.getId());
+            ps.executeUpdate();
+        }
+    }
+
+    /** Đổi mật khẩu. Nhận chuỗi ĐÃ BĂM — DAO không băm hộ, không kiểm hộ. */
+    public void updatePassword(int userId, String passwordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ? WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, passwordHash);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    /** Tìm theo email — dùng cho luồng quên mật khẩu (TRANG 21). */
+    public User findByEmail(String email) throws SQLException {
+        if (!DBConnection.isReady()) {
+            for (User u : DemoData.users()) {
+                if (u.getEmail().equalsIgnoreCase(email)) return u;
+            }
+            return null;
+        }
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapRow(rs) : null;
+            }
         }
     }
 

@@ -32,6 +32,13 @@ public class Story implements Serializable {
     private int viewCount;
     private int chapterCount;   // đếm sẵn, tránh COUNT() cho từng thẻ truyện
 
+    /*
+     * Điểm đánh giá — cũng đếm sẵn như hai cột trên.
+     * Giữ TỔNG và SỐ LƯỢT chứ không giữ trung bình, xem ghi chú ở schema.sql.
+     */
+    private int ratingSum;
+    private int ratingCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -74,6 +81,12 @@ public class Story implements Serializable {
     public int getChapterCount() { return chapterCount; }
     public void setChapterCount(int chapterCount) { this.chapterCount = chapterCount; }
 
+    public int getRatingSum() { return ratingSum; }
+    public void setRatingSum(int ratingSum) { this.ratingSum = ratingSum; }
+
+    public int getRatingCount() { return ratingCount; }
+    public void setRatingCount(int ratingCount) { this.ratingCount = ratingCount; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -96,6 +109,26 @@ public class Story implements Serializable {
     }
 
     /** true nếu truyện đã hoàn thành — để JSP chọn màu nhãn. */
+    /**
+     * Điểm trung bình, làm tròn một chữ số.
+     *
+     * TÍNH Ở ĐÂY CHỨ KHÔNG TÍNH TRONG JSP. Chia hai số nguyên trong EL
+     * (${story.ratingSum / story.ratingCount}) sẽ ra 4.333333333333333 và
+     * chia cho 0 khi chưa ai chấm. Đưa vào model thì mọi trang dùng chung
+     * một cách tính, sửa một chỗ là đúng cả hệ thống.
+     */
+    public double getRatingAvg() {
+        if (ratingCount <= 0) return 0;
+        return Math.round((double) ratingSum / ratingCount * 10) / 10.0;
+    }
+
+    /** Số sao đặc (đã làm tròn) để JSP vẽ vòng lặp. */
+    public int getRatingStars() {
+        return (int) Math.round(getRatingAvg());
+    }
+
+    public boolean isRated() { return ratingCount > 0; }
+
     public boolean isCompleted() {
         return "COMPLETED".equals(progress);
     }

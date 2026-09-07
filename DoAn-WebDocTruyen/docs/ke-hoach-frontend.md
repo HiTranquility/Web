@@ -38,7 +38,7 @@ Câu 5 quan trọng nhất: mặc định là `main`, không phải "tạo layou
 | `auth` | **4** | không nav, thẻ card giữa màn hình, footer gọn | ✅ đã dựng |
 | `reader` | **1** | thanh trên tối giản, cột hẹp 38em, font serif, không footer | ✅ đã dựng |
 | `admin` | **6** | nav trên + sidebar trái + nội dung | ✅ đã dựng |
-| `editor` | **1** | thanh công cụ lưu, vùng soạn thảo toàn màn hình | ⬜ tuỳ chọn |
+| `editor` | **1** | thanh trên tối giản, không footer, cột 860px, ô soạn cao 60vh | ✅ |
 
 ### Cấu trúc từng layout
 
@@ -169,11 +169,11 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | 11 | Truyện đã lưu | `/bookmark?action=list` | Danh sách đánh dấu + tiến độ đọc | ✅ |
 | 12 | Truyện của tôi | `/story?action=mine` | Danh sách truyện đã đăng, cả nháp | ✅ |
 | 13 | Đăng / sửa truyện | `/story?action=create\|edit` | Form thông tin truyện + chọn thể loại | ✅ |
-| 14 | Hồ sơ của tôi | `/user?action=me` | Xem thông tin cá nhân | ⬜ |
-| 15 | Sửa hồ sơ | `/user?action=edit` | Đổi tên, avatar, bio, mật khẩu | ⬜ |
-| 16 | Thống kê truyện của tôi | `/story?action=stats` | Lượt xem, số lưu, số bình luận | ⬜ |
-| 17 | Đang theo dõi | `/follow?action=list` | Tác giả đang theo dõi | ⬜ |
-| 18 | Thông báo | `/notification` | Chương mới của truyện đang theo dõi | ⬜ |
+| 14 | Hồ sơ của tôi | `/user?action=me` | Xem thông tin cá nhân | ✅ |
+| 15 | Sửa hồ sơ | `/user?action=edit` | Đổi tên, avatar, bio, mật khẩu | ✅ |
+| 16 | Thống kê truyện của tôi | `/story?action=stats` | Lượt xem, số lưu, số bình luận | ✅ |
+| 17 | Đang theo dõi | `/follow?action=list` | Tác giả đang theo dõi | ✅ |
+| 18 | Thông báo | `/notification` | Chương mới của truyện đang theo dõi | ✅ |
 
 ### C. Trang xác thực — layout `auth` (4 trang)
 
@@ -181,8 +181,8 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 |:-:|-------|-----|-------------------|:----:|
 | 19 | Đăng nhập | `/auth?action=login` | Đăng nhập | ✅ |
 | 20 | Đăng ký | `/auth?action=register` | Đăng ký + xác nhận nội quy | ✅ |
-| 21 | Quên mật khẩu | `/auth?action=forgot` | Gửi link đặt lại qua email | ⬜ |
-| 22 | Đặt lại mật khẩu | `/auth?action=reset&token=` | Nhập mật khẩu mới | ⬜ |
+| 21 | Quên mật khẩu | `/auth?action=forgot` | Gửi link đặt lại qua email | ✅ *(hiện link ra màn hình — đồ án không có máy chủ thư)* |
+| 22 | Đặt lại mật khẩu | `/auth?action=reset&token=` | Nhập mật khẩu mới | ✅ |
 
 ### D. Trang đọc — layout `reader` (1 trang)
 
@@ -194,34 +194,34 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 
 | # | Trang | URL | Chức năng phục vụ | Xong |
 |:-:|-------|-----|-------------------|:----:|
-| 24 | Thêm / sửa chương | `/chapter?action=create\|edit` | Soạn nội dung chương | ✅ *(đang dùng `main`)* |
+| 24 | Thêm / sửa chương | `/chapter?action=create\|edit` | Soạn nội dung chương | ✅ |
 
 ### F. Trang quản trị — layout `admin` (6 trang)
 
 | # | Trang | URL | Chức năng phục vụ | Xong |
 |:-:|-------|-----|-------------------|:----:|
-| 25 | Bảng điều khiển | `/admin/dashboard` | Thống kê tổng quan | ⬜ |
+| 25 | Bảng điều khiển | `/admin/dashboard` | Thống kê tổng quan | ✅ |
 | 26 | Quản lý truyện | `/admin/story` | Gỡ / khôi phục truyện | ✅ |
 | 27 | Quản lý tài khoản | `/admin/user` | Khoá / mở khoá, đổi quyền | ✅ |
-| 28 | Quản lý thể loại | `/admin/tag` | Thêm / sửa / xoá thể loại | ⬜ |
-| 29 | Quản lý bình luận | `/admin/comment` | Ẩn bình luận vi phạm | ⬜ |
-| 30 | Xử lý báo cáo | `/admin/report` | Duyệt báo cáo từ người dùng | ⬜ |
+| 28 | Quản lý thể loại | `/admin/tag` | Thêm / sửa / xoá thể loại | ✅ |
+| 29 | Quản lý bình luận | `/admin/comment` | Ẩn bình luận vi phạm | ✅ |
+| 30 | Xử lý báo cáo | `/admin/report` | Duyệt báo cáo từ người dùng | ✅ |
 
 ### Tổng kết
 
-*Cập nhật sau giai đoạn 2.*
+*Cập nhật sau giai đoạn 6 — **đã dựng xong toàn bộ**.*
 
 | Nhóm | Đã dựng | Tổng |
 |------|:---:|:---:|
 | A. Công khai | **10** | 10 |
-| B. Thành viên | **3** | 8 |
-| C. Xác thực | **2** | 4 |
+| B. Thành viên | **8** | 8 |
+| C. Xác thực | **4** | 4 |
 | D. Đọc | **1** | 1 |
 | E. Soạn thảo | **1** | 1 |
-| F. Quản trị | **2** | 6 |
-| **Trang — tổng** | **19** | **30** |
-| Layout | **4** | 5 |
-| Mảnh tái dùng | **5** | 9 |
+| F. Quản trị | **6** | 6 |
+| **Trang — tổng** | **30** | **30** |
+| Layout | **5** | 5 |
+| Mảnh tái dùng | **9** | 9 |
 
 ---
 
@@ -233,14 +233,14 @@ một chỗ, cả hệ thống đổi theo.
 | Mảnh | Dùng ở trang | Nội dung | Xong |
 |------|--------------|----------|:----:|
 | `_card.jsp` | 1, 2, 4, 5, 12 | Thẻ truyện trong lưới | ✅ |
-| `_story-row.jsp` | 11, 17, 26 | Truyện dạng hàng ngang (có ảnh bìa nhỏ) | ⬜ |
+| `_story-row.jsp` | 11, 16, 17, 26 | Truyện dạng hàng ngang (có ảnh bìa nhỏ) | ✅ |
 | `_pagination.jsp` | 2, 4, 5, 26, 27 | Thanh phân trang | ✅ |
 | `_tag-filter.jsp` | 2, 4, 5 | Hàng nút lọc thể loại | ✅ |
 | `_comment.jsp` | 3, 29 | Một bình luận (avatar + nội dung + nút gỡ) | ✅ |
-| `_rating-stars.jsp` | 2, 3, 5 | Hiển thị / chấm sao | ⬜ |
-| `_chapter-list.jsp` | 3, 12 | Mục lục chương | ⬜ |
+| `_rating-stars.jsp` | 2, 3, 5 | Hiển thị / chấm sao | ✅ |
+| `_chapter-list.jsp` | 3, 12 | Mục lục chương | ✅ |
 | `_empty.jsp` | mọi trang danh sách | Trạng thái rỗng có thiết kế | ✅ |
-| `_stat-tile.jsp` | 16, 25 | Ô thống kê (số lớn + nhãn nhỏ) | ⬜ |
+| `_stat-tile.jsp` | 16, 25 | Ô thống kê (số lớn + nhãn nhỏ) | ✅ |
 
 > **Quy tắc tách mảnh:** chỉ tách khi khối đó xuất hiện ở **ít nhất 2 trang**.
 > Tách sớm quá thì có một đống file mỗi file 5 dòng, mở ra đọc mệt hơn là để
@@ -268,9 +268,12 @@ trang hỏng giữa chừng.
 
 | Giai đoạn | Trạng thái |
 |:---------:|------------|
-| 1 | ✅ xong — 4 mảnh trong `views/_partials/` |
-| 2 | ✅ xong — trang 4 (tác giả), 5 (xếp hạng), 9 (403) |
-| 3–6 | chưa làm |
+| 1 | ✅ 4 mảnh đầu trong `views/_partials/` |
+| 2 | ✅ trang 4 (tác giả), 5 (xếp hạng), 9 (403) |
+| 3 | ✅ trang 14, 15 (hồ sơ) |
+| 4 | ✅ trang 16, 17, 18 + `_rating-stars` (thống kê, theo dõi, thông báo) |
+| 5 | ✅ trang 25, 28, 29, 30 (quản trị) |
+| 6 | ✅ layout `editor`, tuỳ chỉnh cỡ chữ / giãn dòng / nền khi đọc |
 
 ---
 

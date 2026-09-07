@@ -31,4 +31,8 @@
     <input type="password" id="password" name="password" required>
 
     <button type="submit" class="btn btn-primary">Đăng nhập</button>
-</form>
+</form>    <p class="auth-alt">
+        <a href="${pageContext.request.contextPath}/auth?action=forgot">Quên mật khẩu?</a>
+    </p>
+
+

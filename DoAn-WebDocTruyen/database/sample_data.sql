@@ -494,6 +494,151 @@ INSERT INTO bookmarks (user_id, story_id, last_chapter_id) VALUES
 
 
 -- =============================================================================
+--  ratings — chấm sao
+-- =============================================================================
+--  Không chấm đủ mọi truyện cho mọi người: dữ liệu mẫu phải có cả truyện được
+--  chấm nhiều, truyện chấm ít, và truyện CHƯA AI CHẤM. Giao diện nào cũng cần
+--  được nhìn thấy ở cả trạng thái có dữ liệu lẫn trạng thái rỗng.
+-- =============================================================================
+INSERT INTO ratings (user_id, story_id, score) VALUES
+    (5, 1, 5), (3, 1, 5), (4, 1, 4), (1, 1, 5),
+    (5, 4, 4), (2, 4, 5), (4, 4, 4),
+    (5, 5, 5), (2, 5, 4),
+    (5, 6, 5), (3, 6, 4), (2, 6, 5), (1, 6, 4),
+    (5, 8, 4), (3, 8, 5),
+    (5, 2, 4),
+    (5, 7, 3);
+-- Truyện 3 ("Cà phê tầng bốn") cố ý KHÔNG có dòng nào — để thấy giao diện
+-- "Chưa có đánh giá".
+
+-- Đồng bộ bản đếm sẵn trên bảng stories với bảng ratings vừa nạp.
+--
+-- ĐÂY CHÍNH LÀ CÁI GIÁ CỦA PHI CHUẨN HOÁ đã ghi trong schema.sql: dữ liệu
+-- nằm hai nơi thì nạp dữ liệu cũng phải nạp hai nơi. Trong lúc chạy thật,
+-- RatingDAO.rate() lo việc này trong một transaction; ở đây nạp hàng loạt nên
+-- tính lại một lần cho cả bảng.
+UPDATE stories s SET
+    s.rating_sum   = (SELECT COALESCE(SUM(r.score), 0) FROM ratings r WHERE r.story_id = s.id),
+    s.rating_count = (SELECT COUNT(*)                  FROM ratings r WHERE r.story_id = s.id);
+
+
+-- =============================================================================
+--  follows — theo dõi tác giả
+-- =============================================================================
+INSERT INTO follows (follower_id, author_id) VALUES
+    (5, 2),   -- Thuỷ Tiên theo dõi Mộc Miên
+    (5, 3),   -- Thuỷ Tiên theo dõi Hải Dương
+    (5, 4),   -- Thuỷ Tiên theo dõi Kiếm Vũ
+    (2, 3),   -- các tác giả cũng đọc của nhau
+    (3, 2),
+    (4, 2),
+    (1, 4);
+
+
+-- =============================================================================
+--  notifications — thông báo chương mới
+-- =============================================================================
+--  Cột message ghi SẴN câu chữ, không ghép lúc hiển thị. Thông báo là ảnh chụp
+--  một thời điểm: tên truyện đổi ngày mai thì thông báo cũ vẫn phải đọc đúng
+--  như lúc gửi.
+--
+--  Vài cái để is_read = FALSE để nhìn thấy vệt hổ phách "chưa đọc".
+-- =============================================================================
+INSERT INTO notifications (user_id, story_id, chapter_id, type, message, is_read, created_at) VALUES
+    (5, 3, NULL, 'NEW_CHAPTER',
+     'Mộc Miên vừa đăng chương 9 của "Cà phê tầng bốn"', FALSE,
+     DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+    (5, 7, NULL, 'NEW_CHAPTER',
+     'Kiếm Vũ vừa đăng chương 18 của "Trấn yêu lục"', FALSE,
+     DATE_SUB(NOW(), INTERVAL 1 DAY)),
+    (5, 2, NULL, 'NEW_CHAPTER',
+     'Mộc Miên vừa đăng chương 12 của "Người ở lại"', TRUE,
+     DATE_SUB(NOW(), INTERVAL 3 DAY)),
+    (5, 4, NULL, 'NEW_CHAPTER',
+     'Hải Dương vừa đăng chương 31 của "Đêm không trăng"', TRUE,
+     DATE_SUB(NOW(), INTERVAL 6 DAY)),
+    (2, NULL, NULL, 'SYSTEM',
+     'Chào mừng bạn đến với Web Đọc Truyện. Đọc nội quy trước khi đăng nhé.', TRUE,
+     DATE_SUB(NOW(), INTERVAL 30 DAY));
+-- chapter_id để NULL vì id chương thật do AUTO_INCREMENT sinh, không đoán
+-- trước được trong file nạp dữ liệu. Thông báo vẫn hiện đúng, chỉ là bấm vào
+-- không nhảy thẳng tới chương.
+
+
+-- =============================================================================
+--  reports — báo cáo vi phạm
+-- =============================================================================
+--  Đủ cả ba trạng thái để trang 30 có cái mà lọc.
+-- =============================================================================
+INSERT INTO reports (reporter_id, target_type, target_id, reason, status, created_at, handled_at) VALUES
+    (5, 'STORY',   7, 'Chương 5 có cảnh mạnh nhưng chưa gắn cảnh báo nội dung.',
+     'PENDING',   DATE_SUB(NOW(), INTERVAL 4 HOUR),  NULL),
+    (3, 'COMMENT', 1, 'Nghi ngờ là bình luận quảng cáo trá hình.',
+     'PENDING',   DATE_SUB(NOW(), INTERVAL 1 DAY),   NULL),
+    (5, 'COMMENT', 2, 'Lời lẽ xúc phạm người khác.',
+     'RESOLVED',  DATE_SUB(NOW(), INTERVAL 5 DAY),   DATE_SUB(NOW(), INTERVAL 4 DAY)),
+    (2, 'STORY',   4, 'Nghi ngờ đăng lại tác phẩm của người khác.',
+     'DISMISSED', DATE_SUB(NOW(), INTERVAL 9 DAY),   DATE_SUB(NOW(), INTERVAL 8 DAY));
+
+
+-- =============================================================================
+--  view_logs — nhật ký lượt xem
+-- =============================================================================
+--  Rải lượt xem qua 30 ngày gần nhất để bảng xếp hạng theo tuần / tháng có dữ
+--  liệu mà chạy. Không rải thì mọi truy vấn
+--  "WHERE viewed_at >= NOW() - INTERVAL 7 DAY" đều trả về rỗng và trang xếp
+--  hạng tuần trông như bị hỏng.
+--
+--  Số dòng ở đây ÍT HƠN NHIỀU so với stories.view_count — hoàn toàn bình
+--  thường: view_count là con số cộng dồn từ ngày đăng, còn nhật ký chỉ giữ
+--  giai đoạn gần đây. Hệ thống thật cũng dọn dòng cũ định kỳ.
+-- =============================================================================
+INSERT INTO view_logs (story_id, user_id, viewed_at) VALUES
+    -- tuần này: truyện 6 và 4 dẫn đầu
+    (6, 5, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+    (6, 3, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+    (6, NULL, DATE_SUB(NOW(), INTERVAL 9 HOUR)),
+    (6, 2, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+    (6, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+    (6, 5, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+    (4, 5, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+    (4, NULL, DATE_SUB(NOW(), INTERVAL 8 HOUR)),
+    (4, 2, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+    (4, NULL, DATE_SUB(NOW(), INTERVAL 4 DAY)),
+    (1, 5, DATE_SUB(NOW(), INTERVAL 6 HOUR)),
+    (1, NULL, DATE_SUB(NOW(), INTERVAL 3 DAY)),
+    (5, 3, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+    (8, 5, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+    (2, NULL, DATE_SUB(NOW(), INTERVAL 6 DAY)),
+    -- tháng này nhưng ngoài tuần này: đủ để bảng xếp hạng tháng khác tuần
+    (1, 3, DATE_SUB(NOW(), INTERVAL 9 DAY)),
+    (1, NULL, DATE_SUB(NOW(), INTERVAL 12 DAY)),
+    (1, 5, DATE_SUB(NOW(), INTERVAL 15 DAY)),
+    (1, 2, DATE_SUB(NOW(), INTERVAL 18 DAY)),
+    (5, NULL, DATE_SUB(NOW(), INTERVAL 11 DAY)),
+    (5, 5, DATE_SUB(NOW(), INTERVAL 14 DAY)),
+    (5, 2, DATE_SUB(NOW(), INTERVAL 20 DAY)),
+    (7, NULL, DATE_SUB(NOW(), INTERVAL 10 DAY)),
+    (7, 5, DATE_SUB(NOW(), INTERVAL 22 DAY)),
+    (3, 5, DATE_SUB(NOW(), INTERVAL 25 DAY)),
+    (8, NULL, DATE_SUB(NOW(), INTERVAL 27 DAY));
+
+
+-- =============================================================================
+--  password_resets
+-- =============================================================================
+--  KHÔNG nạp dòng nào — cố ý.
+--
+--  Vé đặt lại mật khẩu là thứ phải do người dùng tự xin, và token phải sinh
+--  ngẫu nhiên bằng SecureRandom lúc chạy. Đặt sẵn một token trong file này là
+--  đặt sẵn một chìa khoá công khai vào tài khoản: file dữ liệu mẫu nằm trên
+--  GitHub, ai đọc cũng thấy.
+--
+--  Muốn thử luồng quên mật khẩu thì vào /auth?action=forgot và làm như người
+--  dùng thật.
+
+
+-- =============================================================================
 --  KIỂM TRA
 -- =============================================================================
 SELECT 'users'      AS bang, COUNT(*) AS so_dong FROM users
@@ -502,7 +647,12 @@ UNION ALL SELECT 'chapters',   COUNT(*) FROM chapters
 UNION ALL SELECT 'tags',       COUNT(*) FROM tags
 UNION ALL SELECT 'story_tags', COUNT(*) FROM story_tags
 UNION ALL SELECT 'comments',   COUNT(*) FROM comments
-UNION ALL SELECT 'bookmarks',  COUNT(*) FROM bookmarks;
+UNION ALL SELECT 'bookmarks',  COUNT(*) FROM bookmarks
+UNION ALL SELECT 'ratings',    COUNT(*) FROM ratings
+UNION ALL SELECT 'follows',    COUNT(*) FROM follows
+UNION ALL SELECT 'notifications', COUNT(*) FROM notifications
+UNION ALL SELECT 'reports',    COUNT(*) FROM reports
+UNION ALL SELECT 'view_logs',  COUNT(*) FROM view_logs;
 
 SELECT '=== TÀI KHOẢN ĐĂNG NHẬP ===' AS '';
 SELECT username AS tai_khoan,

@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import truyen.model.Bookmark;
+import truyen.model.Follow;
+import truyen.model.Notification;
+import truyen.model.Report;
 import truyen.model.Chapter;
 import truyen.model.Comment;
 import truyen.model.Story;
@@ -91,7 +94,7 @@ public final class DemoData {
     }
 
     public static List<User> users() {
-        return new ArrayList<>(Arrays.asList(
+        List<User> list = new ArrayList<>(Arrays.asList(
             user(1, "admin", "Quản trị viên", "ADMIN", "ACTIVE",
                  "Tài khoản quản trị của Web Đọc Truyện."),
             user(2, "mocmien", "Mộc Miên", "USER", "ACTIVE",
@@ -105,6 +108,13 @@ public final class DemoData {
             user(6, "spammer", "Tài khoản vi phạm", "USER", "BANNED",
                  "Tài khoản này đã bị khoá.")
         ));
+
+        // storyCount không phải cột trong bảng users — trang quản trị đếm
+        // sang. Ở đây đếm từ danh sách truyện giả cho khớp.
+        for (User u : list) {
+            u.setStoryCount(storiesByAuthor(u.getId()).size());
+        }
+        return list;
     }
 
     public static User user(int id) {
@@ -181,6 +191,31 @@ public final class DemoData {
         s.setCreatedAt(T0.minusDays(daysAgo));
         s.setUpdatedAt(T0.minusDays(daysAgo / 3));
         s.setTags(tagsOf(tagIds));
+
+        /*
+         * Điểm đánh giá giả.
+         *
+         * Sinh theo id chứ không random: mỗi lần khởi động phải ra đúng con
+         * số cũ, nếu không thì mở lại trang thấy sao nhảy lung tung và không
+         * ai tin là dữ liệu thật.
+         *
+         * Truyện id 3 để 0 lượt — cố ý, để nhìn thấy được cả trạng thái
+         * "Chưa có đánh giá". Giao diện nào cũng phải xem được cả trường hợp
+         * có dữ liệu lẫn trường hợp rỗng.
+         */
+        if (id != 3) {
+            int count = 8 + id * 5;
+            int avgTimes10 = 35 + (id * 3) % 15;      // 3.5 .. 4.9
+            s.setRatingCount(count);
+            s.setRatingSum(Math.round(count * avgTimes10 / 10f));
+        }
+
+        // Diem danh gia gia lap: suy tu luot xem cho co ve that — truyen doc
+        // nhieu thi thuong cung nhieu nguoi cham. Cong thuc khong co y nghia
+        // gi ngoai viec sinh ra so khac nhau moi truyen.
+        int count = Math.max(3, views / 900);
+        s.setRatingCount(count);
+        s.setRatingSum(count * 4 + (id % 3));
         // Không đặt coverUrl: thẻ truyện sẽ rơi vào nhánh chữ cái đầu. Đúng
         // trường hợp thật nhất — phần lớn truyện mới đăng đều chưa có ảnh bìa.
         return s;
@@ -291,8 +326,14 @@ public final class DemoData {
         return out;
     }
 
-    /** Lọc theo thể loại + từ khoá, giống điều kiện WHERE của StoryDAO.findPage(). */
-    public static List<Story> filter(String tagSlug, String keyword) {
+    /**
+     * Lọc theo thể loại + từ khoá + tình trạng.
+     *
+     * Giữ ĐÚNG cùng điều kiện với mệnh đề WHERE của StoryDAO.findPage(). Lệch
+     * nhau thì giao diện xem lúc chưa có MySQL sẽ khác lúc có — và bug đó rất
+     * khó tìm vì ai cũng tưởng mình đang nhìn cùng một thứ.
+     */
+    public static List<Story> filter(String tagSlug, String keyword, String progress) {
         List<Story> out = new ArrayList<>();
         for (Story s : stories()) {
             if (tagSlug != null && !tagSlug.isEmpty()) {
@@ -304,14 +345,30 @@ public final class DemoData {
             }
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String k = keyword.toLowerCase();
+                // Tìm cả tên tác giả, giống câu SQL thật.
                 if (!s.getTitle().toLowerCase().contains(k)
+                        && !s.getAuthorName().toLowerCase().contains(k)
                         && !s.getDescription().toLowerCase().contains(k)) {
                     continue;
                 }
             }
+            if ("ongoing".equals(progress) && !"ONGOING".equals(s.getProgress())) continue;
+            if ("completed".equals(progress) && !"COMPLETED".equals(s.getProgress())) continue;
             out.add(s);
         }
         return out;
+    }
+
+    /** Sắp xếp, khớp với các nhánh ORDER BY của StoryDAO.findPage(). */
+    public static List<Story> sort(List<Story> list, String by) {
+        if ("popular".equals(by)) {
+            list.sort((a, b) -> b.getViewCount() - a.getViewCount());
+        } else if ("rating".equals(by)) {
+            list.sort((a, b) -> Double.compare(b.getRatingAvg(), a.getRatingAvg()));
+        } else {
+            list.sort((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()));
+        }
+        return list;
     }
 
     /** Cắt một trang từ danh sách, an toàn với chỉ số vượt biên. */
@@ -464,5 +521,176 @@ public final class DemoData {
 
     public static boolean bookmarked(int storyId) {
         return storyId == 1 || storyId == 4 || storyId == 6 || storyId == 8;
+    }
+
+    // ========================================================================
+    //  ĐÁNH GIÁ SAO
+    // ========================================================================
+
+    /** Điểm "tôi" đã chấm. Cho vài truyện có sẵn để thấy trạng thái đã chấm. */
+    public static int myRating(int userId, int storyId) {
+        if (storyId == 1) return 5;
+        if (storyId == 4) return 4;
+        return 0;
+    }
+
+    // ========================================================================
+    //  THEO DÕI TÁC GIẢ
+    // ========================================================================
+
+    /** Coi như đang theo dõi Mộc Miên (2) và Kiếm Vũ (4). */
+    public static boolean following(int authorId) {
+        return authorId == 2 || authorId == 4;
+    }
+
+    public static int followerCount(int authorId) {
+        // Số cố định theo id để mỗi tác giả một con số, không đổi giữa các lần tải.
+        return 12 + authorId * 7;
+    }
+
+    public static List<Follow> followingList(int followerId) {
+        List<Follow> out = new ArrayList<>();
+        for (int id : new int[]{2, 4}) {
+            User u = user(id);
+            Follow f = new Follow();
+            f.setFollowerId(followerId);
+            f.setAuthorId(id);
+            f.setAuthorName(u.getName());
+            f.setAuthorUsername(u.getUsername());
+            f.setAuthorStoryCount(storiesByAuthor(id).size());
+            f.setCreatedAt(T0.minusDays(id * 5));
+            out.add(f);
+        }
+        return out;
+    }
+
+    // ========================================================================
+    //  THÔNG BÁO
+    // ========================================================================
+
+    private static Notification notif(int id, int userId, int storyId, int chapNo,
+                                      boolean read, int hoursAgo) {
+        Story s = story(storyId);
+        Notification n = new Notification();
+        n.setId(id);
+        n.setUserId(userId);
+        n.setStoryId(storyId);
+        n.setChapterId(storyId * 100 + chapNo);
+        n.setType("NEW_CHAPTER");
+        n.setMessage(s.getAuthorName() + " vừa đăng chương " + chapNo
+                   + " của \"" + s.getTitle() + "\"");
+        n.setRead(read);
+        n.setCreatedAt(T0.minusHours(hoursAgo));
+        return n;
+    }
+
+    public static List<Notification> notifications(int userId) {
+        return new ArrayList<>(Arrays.asList(
+            notif(1, userId, 3, 9,  false, 2),
+            notif(2, userId, 7, 8,  false, 26),
+            notif(3, userId, 2, 12, true,  50),
+            notif(4, userId, 6, 11, true,  96)
+        ));
+    }
+
+    public static int unreadCount(int userId) {
+        int n = 0;
+        for (Notification x : notifications(userId)) {
+            if (!x.isRead()) n++;
+        }
+        return n;
+    }
+
+    // ========================================================================
+    //  BÁO CÁO VI PHẠM
+    // ========================================================================
+
+    private static Report report(int id, int reporterId, String type, int targetId,
+                                 String reason, String status, int hoursAgo,
+                                 String title) {
+        Report r = new Report();
+        r.setId(id);
+        r.setReporterId(reporterId);
+        r.setReporterName(user(reporterId).getName());
+        r.setTargetType(type);
+        r.setTargetId(targetId);
+        r.setTargetTitle(title);
+        r.setReason(reason);
+        r.setStatus(status);
+        r.setCreatedAt(T0.minusHours(hoursAgo));
+        if (!"PENDING".equals(status)) {
+            r.setHandledAt(T0.minusHours(hoursAgo - 1));
+        }
+        return r;
+    }
+
+    public static List<Report> reports(String status) {
+        List<Report> all = new ArrayList<>(Arrays.asList(
+            report(1, 5, "COMMENT", 99, "Bình luận chứa đường dẫn quảng cáo.",
+                   "PENDING", 4, "Mua ngay tại shop... link rút gọn"),
+            report(2, 3, "STORY", 7, "Nội dung chương 5 chưa gắn cảnh báo phù hợp.",
+                   "PENDING", 30, "Trấn yêu lục"),
+            report(3, 5, "COMMENT", 98, "Xúc phạm người khác trong phần bình luận.",
+                   "RESOLVED", 72, "câu bình luận đã bị ẩn"),
+            report(4, 2, "STORY", 4, "Nghi ngờ đăng lại của người khác.",
+                   "DISMISSED", 120, "Đêm không trăng")
+        ));
+        if (status == null || status.isEmpty()) return all;
+
+        List<Report> out = new ArrayList<>();
+        for (Report r : all) {
+            if (status.equals(r.getStatus())) out.add(r);
+        }
+        return out;
+    }
+
+    // ========================================================================
+    //  BÌNH LUẬN CHO TRANG QUẢN TRỊ
+    // ========================================================================
+
+    public static List<Comment> allComments(boolean onlyHidden) {
+        List<Comment> out = new ArrayList<>();
+        for (Story s : stories()) {
+            for (Comment c : comments(s.getId())) {
+                c.setStoryTitle(s.getTitle());
+                // Cho một bình luận ở trạng thái đã ẩn để thấy được cả hai màu.
+                if (c.getId() == 2) c.setStatus("HIDDEN");
+                if (!onlyHidden || c.isHidden()) out.add(c);
+            }
+        }
+        return out;
+    }
+
+    // ========================================================================
+    //  THỐNG KÊ
+    // ========================================================================
+
+    /** [lượt xem, số người đánh dấu, số bình luận] cho một truyện. */
+    public static int[] statsOf(int storyId) {
+        Story s = story(storyId);
+        if (s == null) return new int[]{0, 0, 0};
+        return new int[]{
+                s.getViewCount(),
+                bookmarked(storyId) ? 4 : 1,
+                comments(storyId).size()
+        };
+    }
+
+    /**
+     * [0] truyện · [1] chương · [2] tài khoản
+     * [3] tổng lượt xem · [4] bình luận · [5] truyện đã gỡ
+     *
+     * Thứ tự này phải khớp CHÍNH XÁC với StoryDAO.adminOverview(), vì
+     * AdminDashboardServlet đọc theo chỉ số. Lệch một ô là số chương hiện
+     * thành số tài khoản mà không có gì báo lỗi.
+     */
+    public static int[] adminOverview() {
+        int chapters = 0, views = 0, cmt = 0;
+        for (Story s : stories()) {
+            chapters += s.getChapterCount();
+            views += s.getViewCount();
+            cmt += comments(s.getId()).size();
+        }
+        return new int[]{stories().size(), chapters, users().size(), views, cmt, 1};
     }
 }

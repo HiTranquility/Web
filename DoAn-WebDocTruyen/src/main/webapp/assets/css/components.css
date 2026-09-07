@@ -546,3 +546,357 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
     * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     html { scroll-behavior: auto; }
 }
+
+
+/* ============================================================================
+   GIAI ĐOẠN 3–6 — thành phần cho 11 trang mới
+   ============================================================================
+   Thứ tự trong file này đi theo thứ tự trang: hồ sơ, form, danh sách, thống
+   kê, thông báo, báo cáo, đọc truyện, chia sẻ.
+   ========================================================================= */
+
+/* ---- Hồ sơ: hàng nút dưới phần giới thiệu ---- */
+.profile-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+/* ---- Bảng khoá–giá trị (thông tin tài khoản) ----
+   Grid hai cột thay vì <table>: đây là danh sách thuộc tính, không phải dữ
+   liệu dạng bảng. Dùng <dl> đúng ngữ nghĩa hơn và tự xuống một cột khi hẹp. */
+.kv {
+    display: grid; grid-template-columns: max-content 1fr;
+    gap: 10px 26px; margin: 6px 0 14px;
+    font-size: .93rem;
+}
+.kv dt { color: var(--text-mut); }
+.kv dd { color: var(--text); }
+
+/* ---- Ô lối tắt ---- */
+.shortcut-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+}
+.shortcut {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 18px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    transition: border-color .18s var(--ease), transform .18s var(--ease);
+}
+.shortcut:hover { border-color: var(--ember-deep); transform: translateY(-2px); }
+.shortcut-icon { font-size: 1.5rem; }
+.shortcut .muted { font-size: .84rem; }
+
+/* ---- Form card (sửa hồ sơ, đổi mật khẩu) ---- */
+.form-card {
+    padding: 24px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-xl);
+    max-width: 620px;
+}
+.field { margin-bottom: 18px; }
+.field label {
+    display: block; margin-bottom: 6px;
+    font-size: .88rem; font-weight: 600; color: var(--text-dim);
+}
+.field input, .field textarea, .field select {
+    width: 100%;
+    padding: 10px 13px;
+    background: var(--ink-900);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-sm);
+    color: var(--text);
+    font-family: inherit; font-size: .95rem;
+    transition: border-color .16s var(--ease);
+}
+.field input:focus, .field textarea:focus {
+    outline: none; border-color: var(--ember);
+}
+/* Ô khoá: xám hẳn đi để nhìn là biết không sửa được, khỏi phải bấm thử */
+.field input:disabled {
+    color: var(--text-mut); cursor: not-allowed;
+    background: var(--ink-900); opacity: .6;
+}
+.field textarea { resize: vertical; line-height: 1.6; }
+.field-hint { margin-top: 6px; font-size: .82rem; color: var(--text-mut); line-height: 1.55; }
+.form-actions { display: flex; gap: 10px; margin-top: 24px; }
+
+/* ---- Hàng lọc (tình trạng / sắp xếp) ---- */
+.filter-bar {
+    display: flex; flex-wrap: wrap; gap: 22px;
+    margin: 4px 0 22px;
+}
+.filter-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.filter-label { color: var(--text-mut); font-size: .82rem; margin-right: 2px; }
+
+.chip {
+    padding: 5px 13px;
+    border-radius: 99px;
+    border: 1px solid var(--ink-700);
+    background: var(--ink-850);
+    color: var(--text-dim);
+    font-size: .84rem;
+    transition: all .16s var(--ease);
+}
+.chip:hover  { border-color: var(--ember-deep); color: var(--text); }
+.chip.is-on  { background: var(--ember); border-color: var(--ember);
+               color: #1a0f06; font-weight: 600; }
+
+/* ---- Sao đánh giá ---- */
+.rating { display: flex; align-items: center; gap: 9px; margin: 8px 0; }
+.rating-stars { letter-spacing: 1px; line-height: 1; }
+.star { color: var(--ink-700); font-size: 1.05rem; }
+.star-on { color: var(--ember); }
+.rating-text { font-size: .86rem; color: var(--text-dim); }
+.rating-text .muted { font-size: .8rem; }
+
+.rating-form {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 10px 0 16px;
+}
+.rating-label { font-size: .85rem; color: var(--text-mut); }
+.rating-pick { display: flex; }
+
+/* Nút sao: bỏ hết dáng nút mặc định của trình duyệt, chỉ còn ký tự sao.
+   Hover tô sáng từ trái sang nhờ quy tắc sibling bên dưới. */
+.star-btn {
+    border: 0; background: none; cursor: pointer; padding: 0 2px;
+    color: var(--ink-700); font-size: 1.5rem; line-height: 1;
+    transition: color .12s var(--ease), transform .12s var(--ease);
+}
+.star-btn:hover { transform: scale(1.15); }
+.star-btn.star-on { color: var(--ember); }
+/* Rê vào sao thứ 4 thì 1-2-3 cũng sáng: đặt cả hàng sáng khi hover vào
+   .rating-pick, rồi tắt những sao ĐỨNG SAU con trỏ. Không cần JavaScript. */
+.rating-pick:hover .star-btn { color: var(--ember-lit); }
+.rating-pick .star-btn:hover ~ .star-btn { color: var(--ink-700); }
+
+/* ---- Truyện dạng hàng ngang ---- */
+.story-row {
+    display: flex; align-items: center; gap: 15px;
+    padding: 12px 15px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    margin-bottom: 10px;
+    transition: border-color .18s var(--ease);
+}
+.story-row:hover { border-color: var(--ember-deep); }
+.story-row-cover {
+    width: 48px; height: 64px; flex: none;
+    border-radius: var(--r-sm); overflow: hidden;
+    background: var(--ink-800);
+    display: grid; place-items: center;
+}
+.story-row-cover img { width: 100%; height: 100%; object-fit: cover; }
+.story-row-body { flex: 1; min-width: 0; }
+.story-row-title { font-weight: 650; display: block; }
+.story-row-title:hover { color: var(--ember); }
+.story-row-meta { color: var(--text-mut); font-size: .82rem; margin-top: 3px; }
+.story-row-sub  { color: var(--text-dim); font-size: .84rem; margin-top: 4px; }
+.story-row-side { flex: none; }
+
+/* ---- Danh sách tác giả đang theo dõi ---- */
+.author-list { display: flex; flex-direction: column; gap: 10px; }
+.author-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+}
+.author-avatar {
+    width: 46px; height: 46px; flex: none;
+    display: grid; place-items: center; border-radius: 50%;
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
+    color: #1a0f06; font-weight: 800; font-size: 1.2rem;
+}
+.author-body { flex: 1; min-width: 0; }
+.author-name { font-weight: 650; }
+.author-name:hover { color: var(--ember); }
+.author-meta { color: var(--text-mut); font-size: .83rem; margin-top: 2px; }
+.author-action { flex: none; }
+
+/* ---- Ô thống kê ---- */
+.stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px; margin-bottom: 10px;
+}
+.stat-tile {
+    padding: 18px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+}
+.stat-icon  { font-size: 1.3rem; margin-bottom: 6px; }
+.stat-value {
+    font-size: 1.9rem; font-weight: 800; letter-spacing: -.03em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;   /* số thẳng cột giữa các ô */
+}
+.stat-label { color: var(--text-dim); font-size: .88rem; margin-top: 2px; }
+.stat-note  { color: var(--text-mut); font-size: .78rem; margin-top: 5px; }
+
+/* ---- Bảng điều khiển: hai cột ---- */
+.dash-cols {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+    margin-top: 30px;
+}
+
+/* ---- Thanh ngang thay biểu đồ ---- */
+.bar-list { display: flex; flex-direction: column; gap: 9px; }
+.bar-row  { display: flex; align-items: center; gap: 12px; font-size: .88rem; }
+.bar-label { width: 8.5em; flex: none; color: var(--text-dim); }
+.bar-label a:hover { color: var(--ember); }
+.bar-track {
+    flex: 1; height: 8px; border-radius: 99px;
+    background: var(--ink-800); overflow: hidden;
+}
+.bar-fill {
+    display: block; height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--ember-deep), var(--ember-lit));
+    /* min-width để tỉ lệ rất nhỏ vẫn thấy được một vệt, không thành vô hình */
+    min-width: 3px;
+}
+.bar-value { width: 2.5em; text-align: right; color: var(--text-mut);
+             font-variant-numeric: tabular-nums; }
+
+/* ---- Mục lục chương ---- */
+.chapter-list {
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+}
+.chapter-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--ink-800);
+    transition: background .15s var(--ease);
+}
+.chapter-item:last-child { border-bottom: 0; }
+.chapter-item:hover { background: var(--ink-850); }
+.chapter-link { flex: 1; display: flex; gap: 16px; min-width: 0; }
+.chapter-no {
+    color: var(--text-mut); font-size: .86rem;
+    width: 6.5em; flex: none;
+}
+.chapter-title { color: var(--text-dim); }
+.chapter-link:hover .chapter-title { color: var(--ember); }
+.chapter-actions { display: flex; gap: 6px; flex: none; }
+
+/* Chương đã đọc — mờ đi. Đánh dấu do JavaScript đặt từ localStorage.
+   Chỉ giảm độ đậm chứ không đổi màu: vẫn phải đọc được tên chương. */
+.chapter-read .chapter-title,
+.chapter-read .chapter-no { opacity: .45; }
+.chapter-read::after {
+    content: "✓"; color: var(--jade); font-size: .8rem; flex: none;
+}
+
+/* ---- Thông báo ---- */
+.notif-list { display: flex; flex-direction: column; gap: 8px; }
+.notif {
+    display: flex; align-items: flex-start; gap: 13px;
+    padding: 14px 16px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    transition: border-color .16s var(--ease);
+}
+a.notif:hover { border-color: var(--ember-deep); }
+/* Chưa đọc: vệt hổ phách bên trái. Dùng viền trái thay vì đổi cả nền —
+   nổi bật vừa đủ mà không làm rối cả danh sách khi có nhiều cái mới. */
+.notif-new { border-left: 3px solid var(--ember); background: var(--ink-800); }
+.notif-icon { font-size: 1.15rem; flex: none; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-text { display: block; color: var(--text); line-height: 1.55; }
+.notif-time { display: block; color: var(--text-mut); font-size: .78rem; margin-top: 4px; }
+.notif-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ember); flex: none; margin-top: 6px;
+}
+
+/* ---- Chuông trên thanh menu ---- */
+.bell {
+    position: relative; display: inline-grid; place-items: center;
+    width: 34px; height: 34px; border-radius: var(--r-sm);
+    font-size: 1.05rem;
+    transition: background .16s var(--ease);
+}
+.bell:hover { background: var(--ink-800); }
+.bell-badge {
+    position: absolute; top: -2px; right: -2px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    display: grid; place-items: center;
+    border-radius: 99px;
+    background: var(--rose); color: #fff;
+    font-size: .66rem; font-weight: 700;
+}
+
+/* ---- Báo cáo vi phạm ---- */
+.report-box { display: inline-block; }
+.report-box summary { cursor: pointer; list-style: none; }
+.report-box summary::-webkit-details-marker { display: none; }
+.report-box form {
+    display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
+}
+.report-inline summary { color: var(--text-mut); font-size: .8rem; }
+.report-inline summary:hover { color: var(--rose); }
+
+.report-list { display: flex; flex-direction: column; gap: 12px; }
+.report-item {
+    padding: 16px 18px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+}
+/* Việc chưa xử lý có viền trái đỏ — quét mắt là thấy ngay còn bao nhiêu việc */
+.report-pending { border-left: 3px solid var(--rose); }
+.report-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.report-time { color: var(--text-mut); font-size: .8rem; margin-left: auto; }
+.report-target, .report-reason { font-size: .9rem; margin-bottom: 6px; line-height: 1.6; }
+.report-by { color: var(--text-mut); font-size: .82rem; }
+.report-actions { display: flex; gap: 8px; margin-top: 12px; }
+.quote {
+    font-style: italic; color: var(--text-dim);
+    border-left: 2px solid var(--ink-700); padding-left: 10px;
+}
+
+/* ---- Chia sẻ ---- */
+.share-row {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    margin-top: 18px; padding-top: 16px;
+    border-top: 1px solid var(--ink-800);
+}
+.share-label { color: var(--text-mut); font-size: .82rem; }
+.share-btn {
+    padding: 4px 11px;
+    border: 1px solid var(--ink-700); border-radius: var(--r-sm);
+    color: var(--text-dim); font-size: .82rem;
+    transition: all .16s var(--ease);
+}
+.share-btn:hover { border-color: var(--ember-deep); color: var(--ember); }
+
+/* ---- Nhãn Hot trên thẻ truyện ----
+   Nằm dưới nhãn tình trạng, cùng góc phải. top tính bằng chiều cao nhãn kia
+   cộng khoảng hở. */
+.badge-hot {
+    top: 42px;
+    background: linear-gradient(135deg, #ff6b35, #f7411d);
+    color: #fff;
+}
+
+/* Sao trên thẻ truyện: nhỏ lại, không tranh chỗ với tiêu đề */
+.story-card .rating { margin: 6px 0 0; gap: 6px; }
+.story-card .star { font-size: .88rem; }
+.story-card .rating-text { font-size: .78rem; }
+
+/* ---- Form gọn một hàng ---- */
+.inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cell-text { max-width: 380px; line-height: 1.55; }
+
+@media (max-width: 860px) {
+    .dash-cols { grid-template-columns: 1fr; gap: 24px; }
+    .kv { grid-template-columns: 1fr; gap: 4px 0; }
+    .kv dd { margin-bottom: 10px; }
+    .filter-bar { gap: 14px; }
+}

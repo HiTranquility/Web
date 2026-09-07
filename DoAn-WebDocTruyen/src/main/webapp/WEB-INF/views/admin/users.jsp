@@ -1,6 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%-- admin/users.jsp — MẢNH. Quản trị tài khoản.   CASE 10 --%>
+<%-- admin/users.jsp — MẢNH NỘI DUNG. Quản trị tài khoản.   TRANG 27
+     TẦNG: views/  ·  Nhận: users (List<User> có storyCount) --%>
 <h1>Quản trị tài khoản</h1>
 <p>Khoá tài khoản vi phạm. <b>Truyện của họ vẫn giữ nguyên</b> trên trang —
    độc giả đang đọc dở không bị mất.</p>
@@ -21,6 +22,20 @@
             <td>
                 <span class="pill ${u.admin ? 'pill-warn' : 'pill-muted'}">
                     ${u.admin ? 'Admin' : 'Thành viên'}</span>
+
+                <%-- Đổi vai trò. Nút chỉ hiện với tài khoản KHÁC mình —
+                     admin tự hạ quyền mình là tự khoá cửa. --%>
+                <c:if test="${currentUser.id ne u.id}">
+                    <form action="${pageContext.request.contextPath}/admin/user"
+                          method="post" style="display:inline">
+                        <input type="hidden" name="action" value="role">
+                        <input type="hidden" name="id" value="${u.id}">
+                        <input type="hidden" name="role"
+                               value="${u.admin ? 'USER' : 'ADMIN'}">
+                        <button type="submit" class="btn btn-ghost btn-sm">
+                            ${u.admin ? '↓ Hạ' : '↑ Nâng'}</button>
+                    </form>
+                </c:if>
             </td>
             <td>
                 <c:choose>
@@ -33,9 +48,7 @@
                     <c:otherwise><span class="pill pill-ok">Hoạt động</span></c:otherwise>
                 </c:choose>
             </td>
-            <%-- bio đang chở story_count — xem ghi chú nợ kỹ thuật trong
-                 AdminUserServlet.findAllUsers() --%>
-            <td>${u.bio}</td>
+            <td>${u.storyCount}</td>
             <td class="col-actions">
                 <c:choose>
                     <c:when test="${currentUser.id eq u.id}">

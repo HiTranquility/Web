@@ -42,6 +42,21 @@
         <span class="badge ${story.completed ? 'badge-done' : 'badge-going'}">
             ${story.completed ? 'Hoàn thành' : 'Đang ra'}
         </span>
+
+        <%--
+          NHÃN "HOT" — ngưỡng đặt cứng 10.000 lượt xem.
+
+          Số này là quy ước, không phải phép tính. Cách "đúng" hơn là so với
+          trung bình của cả kho, nhưng như vậy thì lúc kho mới có ba truyện,
+          truyện nào cũng thành Hot — nhãn mất hết ý nghĩa. Một mốc cố định
+          dễ giải thích và không đổi theo ngày.
+
+          Đặt trong _card.jsp nên năm trang dùng thẻ này đều có nhãn, không
+          phải nhớ chép lại chỗ nào.
+        --%>
+        <c:if test="${story.viewCount ge 10000}">
+            <span class="badge badge-hot">🔥 Hot</span>
+        </c:if>
     </div>
 
     <div class="story-body">
@@ -59,5 +74,16 @@
                  cong tru, so sanh va sap xep duoc. --%>
             <span>👁️ <fmt:formatNumber pattern="#,##0" value="${story.viewCount}"/></span>
         </div>
+
+        <%--
+          MẢNH: sao đánh giá (chỉ hiển thị, không chấm được từ đây).
+
+          Chấm sao ngay trên thẻ nghe tiện, nhưng thẻ này nằm trong một thẻ
+          <a> bọc cả ô — nhét form vào trong link là HTML không hợp lệ và
+          trình duyệt xử lý mỗi nơi một kiểu. Muốn chấm thì vào trang chi tiết.
+        --%>
+        <c:set var="rsStory" value="${story}"/>
+        <c:set var="rsForm"  value="${false}"/>
+        <%@ include file="/WEB-INF/views/_partials/_rating-stars.jsp" %>
     </div>
 </a>
