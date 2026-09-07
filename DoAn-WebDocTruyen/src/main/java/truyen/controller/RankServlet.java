@@ -13,37 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.StoryDAO;
 import truyen.model.Story;
 
-/**
- * TRANG 5 — Bảng xếp hạng.
- *
- * TẦNG: controller/
- *
- * URL: /rank?by=views | chapters | newest
- *
- * SÁU KIỂU XẾP HẠNG, HAI NGUỒN DỮ LIỆU
- *   week, month   đếm trên bảng view_logs (mỗi dòng một lượt xem có thời điểm)
- *   views         đọc stories.view_count — số cộng dồn từ ngày đăng
- *   rating        điểm trung bình, có ngưỡng tối thiểu 3 lượt chấm
- *   chapters      số chương
- *   newest        mới đăng
- *
- *   Trước đây trang này KHÔNG làm được tuần/tháng, vì `stories` chỉ có một
- *   con số cộng dồn — nó không nhớ lượt xem nào xảy ra khi nào. Bảng
- *   view_logs sinh ra để trả lời đúng câu hỏi đó.
- */
+/** TRANG 5 — Bảng xếp hạng. */
 @WebServlet("/rank")
 public class RankServlet extends HttpServlet {
 
-    /**
-     * Danh sách TRẮNG các kiểu xếp hạng.
-     *
-     * Tham số "by" đi thẳng vào mệnh đề ORDER BY của câu SQL. Không kiểm thì
-     * đó là SQL injection. Kiểm ở đây là lớp phòng thủ thứ nhất; StoryDAO.findTop()
-     * còn một lớp nữa (chỉ dùng chuỗi hằng số).
-     *
-     * Hai lớp cho một lỗ hổng nghe thừa, nhưng lớp trong không phụ thuộc lớp
-     * ngoài — ai đó gọi findTop() từ chỗ khác vẫn an toàn.
-     */
+    /** Danh sách TRẮNG các kiểu xếp hạng. */
     private static final List<String> ALLOWED =
             Arrays.asList("views", "week", "month", "chapters", "newest", "rating");
 
@@ -66,15 +40,7 @@ public class RankServlet extends HttpServlet {
         }
 
         try {
-            /*
-             * Hai nhánh xếp hạng, hai nguồn dữ liệu khác nhau:
-             *
-             *   week / month -> đếm trên view_logs, biết lượt xem xảy ra KHI NÀO
-             *   còn lại      -> đọc thẳng số cộng dồn trên stories, nhanh hơn
-             *
-             * Không gộp làm một được: view_count là một con số duy nhất, nó
-             * không nhớ thời điểm. Đó chính là lý do bảng view_logs tồn tại.
-             */
+            /* Hai nhánh xếp hạng, hai nguồn dữ liệu khác nhau: */
             List<Story> stories;
             if ("week".equals(by)) {
                 stories = storyDAO.findTopByPeriod(7, 20);

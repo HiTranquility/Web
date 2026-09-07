@@ -118,22 +118,7 @@ public class TagDAO {
         }
     }
 
-    /**
-     * Xoa the loai — XOA THAT, khong phai xoa mem.
-     *
-     * VI SAO O DAY XOA THAT TRONG KHI TRUYEN VA TAI KHOAN CHI XOA MEM
-     *   Truyen bi go van con nguoi dang doc do, tai khoan bi khoa van con
-     *   binh luan mang ten ho — xoa han la mat du lieu cua NGUOI KHAC.
-     *   The loai thi khong: no chi la mot cai nhan. Xoa "Kinh di" di thi cac
-     *   truyen do mat mot nhan, khong mat gi khac.
-     *
-     *   story_tags co ON DELETE CASCADE nen cac dong noi tu bien mat theo.
-     *
-     * VI SAO CHAN KHI CON TRUYEN DUNG
-     *   CASCADE se lang le go nhan khoi hang tram truyen ma admin khong biet
-     *   minh vua lam gi. Bat kiem tra truoc de nguoi bam phai co y thuc: muon
-     *   xoa that thi go nhan khoi cac truyen do truoc da.
-     */
+    /** Xoa the loai — XOA THAT, khong phai xoa mem. */
     public void delete(int id) throws SQLException {
         if (!DBConnection.isReady()) return;
 
@@ -172,17 +157,7 @@ public class TagDAO {
         }
     }
 
-    /**
-     * Gán lại toàn bộ thể loại cho một truyện: xoá hết rồi thêm mới.
-     *
-     * VÌ SAO XOÁ HẾT RỒI THÊM LẠI, không so sánh cái nào thêm cái nào bớt:
-     * số tag mỗi truyện chỉ 2-3 cái, nên cách này rẻ hơn và code ngắn hơn hẳn
-     * so với việc tính hiệu hai tập hợp.
-     *
-     * HAI CÂU LỆNH NÀY PHẢI CHUNG MỘT TRANSACTION.
-     * Nếu xoá xong mà thêm lỗi giữa chừng, truyện sẽ mất sạch thể loại. Tắt
-     * autocommit, thành công thì commit, lỗi thì rollback về như cũ.
-     */
+    /** Gán lại toàn bộ thể loại cho một truyện: xoá hết rồi thêm mới. */
     public void setTagsForStory(int storyId, String[] tagIds) throws SQLException {
         try (Connection con = DBConnection.get()) {
             con.setAutoCommit(false);

@@ -10,25 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.CommentDAO;
 
-/**
- * TRANG 29 — Quản lý bình luận.
- *
- * TẦNG: controller/admin/
- *
- * URL: /admin/comment?action=list | hide | unhide [&filter=hidden]
- *
- * ẨN, KHÔNG XOÁ.
- *   Bình luận vi phạm bị chuyển sang status = 'HIDDEN': độc giả không thấy
- *   nữa, nhưng dòng dữ liệu vẫn còn. Hai lý do:
- *
- *     1. Bấm nhầm thì bỏ ẩn được. Xoá thật thì không có đường về.
- *     2. Ẩn xong người viết quay lại cãi thì còn nội dung gốc để đối chiếu.
- *        Xoá rồi thì chỉ còn lời qua tiếng lại.
- *
- *   Đây cùng một nguyên tắc với việc gỡ truyện (status = 'DELETED') và khoá
- *   tài khoản (status = 'BANNED') — toàn dự án dùng xoá mềm, không có chỗ nào
- *   thực sự DELETE dữ liệu người dùng.
- */
+/** TRANG 29 — Quản lý bình luận. */
 @WebServlet("/admin/comment")
 public class AdminCommentServlet extends HttpServlet {
 

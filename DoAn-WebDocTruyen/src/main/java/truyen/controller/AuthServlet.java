@@ -17,38 +17,14 @@ import truyen.dao.UserDAO;
 import truyen.model.User;
 import truyen.util.PasswordUtil;
 
-/**
- * CASE 01 — Đăng ký / Đăng nhập / Đăng xuất.
- *
- * URL:  /auth?action=login | register | logout | forgot | reset
- *
- * TRANG 19 · 20 · 21 · 22 — cả bốn trang xác thực nằm trong servlet này vì
- * chúng dùng chung layout `auth` và chung một quy trình: nhận form, kiểm tra,
- * hoặc trả lại form kèm lỗi, hoặc chuyển hướng đi.
- *
- * Viết theo đúng khuôn servlet ở docs/standards/01-CODING_CONVENTIONS.md §3:
- * mỗi action một method private, mỗi method chỉ TRẢ VỀ đường dẫn mảnh nội
- * dung, forward đúng một lần ở cuối.
- *
- * Servlet này dùng layout `auth` chứ không phải `main` — trang đăng nhập không
- * có thanh menu (người chưa đăng nhập thì menu để làm gì).
- */
+/** CASE 01 — Đăng ký / Đăng nhập / Đăng xuất. */
 @WebServlet("/auth")
 public class AuthServlet extends HttpServlet {
 
     private UserDAO userDAO;
     private PasswordResetDAO resetDAO;
 
-    /*
-     * SecureRandom, KHÔNG phải Random.
-     *
-     * java.util.Random sinh số từ một hạt giống có thể đoán được — biết vài
-     * giá trị đầu là suy ra được cả dãy. Với token đặt lại mật khẩu thì đó là
-     * lỗ hổng: đoán được token là đổi được mật khẩu người khác.
-     *
-     * SecureRandom lấy entropy từ hệ điều hành. Chậm hơn một chút, nhưng
-     * "chậm hơn một chút" ở đây nghĩa là vài micro-giây mỗi lần quên mật khẩu.
-     */
+    /* SecureRandom, KHÔNG phải Random. */
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @Override
@@ -140,16 +116,7 @@ public class AuthServlet extends HttpServlet {
 
         User user = userDAO.findByUsername(username);
 
-        /*
-         * MỘT THÔNG BÁO CHUNG CHO CẢ HAI TRƯỜNG HỢP SAI.
-         *
-         * Sai tên và sai mật khẩu đều báo "Tên đăng nhập hoặc mật khẩu không
-         * đúng" — KHÔNG tách thành "tên này không tồn tại" / "sai mật khẩu".
-         *
-         * Vì tách ra là tự tay xác nhận cho kẻ tấn công biết tài khoản nào CÓ
-         * thật. Nó dò được danh sách username hợp lệ rồi mới tập trung dò mật
-         * khẩu. Gọi là "user enumeration".
-         */
+        /* MỘT THÔNG BÁO CHUNG CHO CẢ HAI TRƯỜNG HỢP SAI. */
         if (user == null || !PasswordUtil.verify(password, user.getPasswordHash())) {
             request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng.");
             request.setAttribute("username", username);
@@ -164,15 +131,7 @@ public class AuthServlet extends HttpServlet {
             return "/WEB-INF/views/auth/login.jsp";
         }
 
-        /*
-         * ĐỔI ID PHIÊN NGAY TRƯỚC KHI ĐĂNG NHẬP THÀNH CÔNG.
-         *
-         * Chống "session fixation": kẻ tấn công ép nạn nhân dùng một
-         * JSESSIONID mà hắn biết trước, chờ nạn nhân đăng nhập, rồi dùng chính
-         * id đó để vào tài khoản. Tạo id mới lúc này là vô hiệu hoá cái cũ.
-         *
-         * Hai dòng, và nó chặn đứng cả một lớp tấn công.
-         */
+        /* ĐỔI ID PHIÊN NGAY TRƯỚC KHI ĐĂNG NHẬP THÀNH CÔNG. */
         HttpSession old = request.getSession(false);
         if (old != null) {
             old.invalidate();
@@ -296,17 +255,7 @@ public class AuthServlet extends HttpServlet {
 
     // ---- QUÊN MẬT KHẨU -----------------------------------------------------
 
-    /**
-     * TRANG 21 — Xin cấp vé đặt lại mật khẩu.
-     *
-     * LUÔN BÁO THÀNH CÔNG, KỂ CẢ KHI EMAIL KHÔNG TỒN TẠI.
-     *   Nếu báo "email này chưa đăng ký" thì trang này thành công cụ dò: gõ
-     *   thử vài trăm email là biết ai có tài khoản ở đây, ai không. Đó là rò
-     *   rỉ thông tin, dù nghe có vẻ chỉ là một câu thông báo tử tế.
-     *
-     *   Cái giá: người gõ nhầm email sẽ ngồi đợi thư không bao giờ tới. Đây là
-     *   đánh đổi mà gần như mọi trang web đều chọn theo hướng an toàn.
-     */
+    /** TRANG 21 — Xin cấp vé đặt lại mật khẩu. */
     private String forgot(HttpServletRequest request) throws SQLException {
         String email = trim(request.getParameter("email"));
 
@@ -333,17 +282,7 @@ public class AuthServlet extends HttpServlet {
         return "/WEB-INF/views/auth/forgot.jsp";
     }
 
-    /**
-     * TRANG 22 — Đặt lại mật khẩu bằng vé.
-     *
-     * GET  hiện form (đã kiểm vé trước, vé hỏng thì không hiện form làm gì).
-     * POST đổi mật khẩu thật.
-     *
-     * KIỂM VÉ LẠI Ở BƯỚC POST, không tin bước GET.
-     *   Vé có thể hết hạn trong lúc người dùng đang gõ, hoặc bị dùng ở tab
-     *   khác. Quan trọng hơn: POST tới thẳng đây mà bỏ qua GET là chuyện dễ
-     *   làm, nên mọi kiểm tra ở GET đều phải coi như chưa từng xảy ra.
-     */
+    /** TRANG 22 — Đặt lại mật khẩu bằng vé. */
     private String reset(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
 
@@ -388,16 +327,7 @@ public class AuthServlet extends HttpServlet {
         return null;
     }
 
-    /**
-     * Sinh token 32 byte ngẫu nhiên, mã hoá base64 an-toàn-cho-URL.
-     *
-     * 32 byte = 256 bit. Số tổ hợp lớn tới mức dò tìm là vô vọng, kể cả khi
-     * thử hàng tỷ lần mỗi giây.
-     *
-     * URL-safe base64 vì token nằm trong đường dẫn: base64 thường có ký tự
-     * '+' và '/', vào URL sẽ bị hiểu sai. withoutPadding() bỏ dấu '=' thừa,
-     * cho ra đúng 43 ký tự — khớp với CHAR(43) khai trong schema.sql.
-     */
+    /** Sinh token 32 byte ngẫu nhiên, mã hoá base64 an-toàn-cho-URL. */
     private String newToken() {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);

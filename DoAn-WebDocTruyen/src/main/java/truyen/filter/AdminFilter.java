@@ -13,21 +13,7 @@ import javax.servlet.http.HttpSession;
 
 import truyen.model.User;
 
-/**
- * CASE 10 — Chặn mọi người không phải admin ở khu quản trị.
- *
- * urlPatterns = "/admin/*" — một dòng bảo vệ CẢ khu.
- * Thêm servlet mới dưới /admin/ là nó tự động được bảo vệ theo, không phải
- * nhớ khai gì thêm. Đây là lý do chính để gom trang quản trị vào một tiền tố
- * URL chung thay vì rải rác /quanLyTruyen, /banUser...
- *
- * PHÂN BIỆT 401 / 403 — quyết định ở đây
- *   chưa đăng nhập  -> đá về trang login (giống AuthFilter)
- *   đã đăng nhập nhưng không phải admin -> 403 Forbidden
- *
- * Trả 403 chứ không đá về login, vì đăng nhập lại cũng chẳng giải quyết được
- * gì — vấn đề không phải "anh là ai" mà là "anh không đủ quyền".
- */
+/** CASE 10 — Chặn mọi người không phải admin ở khu quản trị. */
 @WebFilter("/admin/*")
 public class AdminFilter implements Filter {
 

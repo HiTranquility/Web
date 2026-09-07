@@ -69,19 +69,7 @@ public class AdminTagServlet extends HttpServlet {
                 .forward(request, response);
     }
 
-    /**
-     * Thêm mới hoặc đổi tên.
-     *
-     * SLUG SINH TỰ ĐỘNG TỪ TÊN, không cho admin tự gõ.
-     *   Slug là phần xuất hiện trong URL (/story?action=list&tag=ngon-tinh).
-     *   Để gõ tay thì sẽ có người gõ "Ngôn Tình" kèm dấu cách và dấu tiếng
-     *   Việt — URL hỏng, hoặc thành %C3%B4 dài loằng ngoằng.
-     *
-     * KHI SỬA, SLUG CŨ ĐƯỢC GIỮ NGUYÊN.
-     *   Đổi tên "Ngôn tình" thành "Ngôn tình hiện đại" mà slug đổi theo là mọi
-     *   đường dẫn đã chia sẻ trước đó chết hết. Tên hiển thị và định danh là
-     *   hai thứ khác nhau — đây cũng chính là lý do username không cho đổi.
-     */
+    /** Thêm mới hoặc đổi tên. */
     private void save(HttpServletRequest request, boolean isUpdate) throws SQLException {
         String name = trim(request.getParameter("name"));
         if (name.isEmpty()) {
@@ -110,17 +98,7 @@ public class AdminTagServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Xoá thể loại.
-     *
-     * KHÔNG XOÁ THỂ LOẠI CÒN TRUYỆN.
-     *   Khoá ngoại của story_tags có ON DELETE CASCADE, nên xoá thể loại là
-     *   xoá luôn mọi liên kết truyện–thể loại đó, im lặng và không hoàn tác
-     *   được. Chặn ở đây để cái CASCADE kia không bao giờ có cơ hội chạy.
-     *
-     *   Admin muốn xoá thật thì phải gỡ thể loại khỏi từng truyện trước —
-     *   phiền, nhưng đó là loại phiền có ích.
-     */
+    /** Xoá thể loại. */
     private void remove(HttpServletRequest request) throws SQLException {
         int id = parseIntOr(request.getParameter("id"), 0);
 

@@ -11,23 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- * CASE 01 — Chặn khách chưa đăng nhập.
- *
- * VẤN ĐỀ NÓ GIẢI QUYẾT
- *   Nhiều trang cần đăng nhập mới vào được. Chép đoạn kiểm tra session vào
- *   từng servlet thì quên MỘT chỗ là thủng. Filter chạy TRƯỚC servlet, nên
- *   thêm servlet mới dưới URL đã bảo vệ là nó tự động được bảo vệ theo.
- *
- * FILTER LÀM ĐƯỢC GÌ
- *   Biết "đã đăng nhập chưa". Hết.
- *
- * FILTER KHÔNG LÀM ĐƯỢC GÌ — chỗ này quan trọng
- *   Nó KHÔNG biết truyện id=6 là của ai. Việc kiểm quyền sở hữu
- *   (story.authorId == currentUser.id) phải nằm trong servlet.
- *   Thiếu bước đó thì người đã đăng nhập chỉ cần sửa ?id=5 thành ?id=6 là
- *   sửa được truyện người khác — filter cho qua vì họ vẫn là người dùng hợp lệ.
- */
+/** CASE 01 — Chặn khách chưa đăng nhập. */
 @WebFilter(urlPatterns = {
         "/story",       // đăng, sửa, xoá truyện
         "/chapter",     // thêm, sửa chương
@@ -80,15 +64,7 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        /*
-         * Chưa đăng nhập -> đá về trang đăng nhập.
-         *
-         * KHÔNG gọi chain.doFilter() ở nhánh này, nên servlet phía sau KHÔNG
-         * BAO GIỜ chạy. Đó là toàn bộ sức mạnh của filter.
-         *
-         * Nhớ lại URL họ định vào, để đăng nhập xong đưa họ trở lại đúng chỗ
-         * thay vì quăng về trang chủ.
-         */
+        /* Chưa đăng nhập -> đá về trang đăng nhập. */
         String target = request.getRequestURI();
         if (request.getQueryString() != null) {
             target += "?" + request.getQueryString();

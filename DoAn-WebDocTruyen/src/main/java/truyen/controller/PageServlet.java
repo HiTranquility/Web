@@ -9,22 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * CASE 11 — Trang tĩnh: Hướng dẫn sử dụng và Nội quy cộng đồng.
- *
- * URL: /page?name=guide | rules
- *
- * VÌ SAO CẦN SERVLET CHO TRANG TĨNH
- *   Hai trang này không có dữ liệu động, đáng lẽ để file .html là xong. Nhưng
- *   chúng cần khung chung (nav, footer) — mà JSP nằm trong WEB-INF thì không
- *   gõ URL vào được. Servlet mỏng này là cầu nối.
- *
- * DANH SÁCH TRẮNG — chỗ quan trọng nhất của file
- *   Tham số name đi thẳng vào đường dẫn file. Nếu không kiểm, ai đó gõ
- *       /page?name=../../../../etc/passwd
- *   là đọc được file ngoài ứng dụng. Lỗ hổng này gọi là "path traversal".
- *   Chỉ chấp nhận đúng những tên có trong danh sách là chặn được hoàn toàn.
- */
+/** CASE 11 — Trang tĩnh: Hướng dẫn sử dụng và Nội quy cộng đồng. */
 @WebServlet("/page")
 public class PageServlet extends HttpServlet {
 

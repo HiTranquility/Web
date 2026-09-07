@@ -10,22 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.ReportDAO;
 
-/**
- * TRANG 30 — Xử lý báo cáo vi phạm.
- *
- * TẦNG: controller/admin/
- *
- * URL: /admin/report?action=list | resolve | dismiss [&status=PENDING]
- *
- * ĐÁNH DẤU CHỨ KHÔNG TỰ HÀNH ĐỘNG.
- *   Bấm "Đã xử lý" KHÔNG tự gỡ truyện hay ẩn bình luận. Nó chỉ ghi lại rằng
- *   admin đã xem. Việc gỡ/ẩn làm ở trang tương ứng (/admin/story,
- *   /admin/comment).
- *
- *   Nghe như thừa một bước, nhưng gộp lại là nguy hiểm: một cú bấm nhầm ở
- *   trang báo cáo sẽ gỡ mất truyện của người khác. Tách ra thì mỗi hành động
- *   phá huỷ đều phải làm có ý thức, đúng chỗ của nó.
- */
+/** TRANG 30 — Xử lý báo cáo vi phạm. */
 @WebServlet("/admin/report")
 public class AdminReportServlet extends HttpServlet {
 

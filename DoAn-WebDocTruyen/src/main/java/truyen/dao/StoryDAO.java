@@ -13,34 +13,12 @@ import java.util.List;
 import truyen.model.Story;
 import truyen.util.DBConnection;
 
-/**
- * Tầng truy cập dữ liệu cho bảng stories.
- *
- * QUY TẮC CỦA CẢ TẦNG DAO — áp dụng cho mọi lớp trong package này:
- *
- *  1. CHỈ nói chuyện với database. Không forward, không đụng tới
- *     HttpServletRequest, không quyết định hiển thị gì. Servlet lo phần đó.
- *
- *  2. LUÔN dùng PreparedStatement với dấu ?, TUYỆT ĐỐI không nối chuỗi SQL.
- *     Đây là hàng rào chống SQL injection, và là lỗi bảo mật kinh điển nhất
- *     của sinh viên. Giải thích kỹ ở method findLatest bên dưới.
- *
- *  3. LUÔN try-with-resources. Connection/Statement/ResultSet đều là tài
- *     nguyên phải trả lại. Rò rỉ kết nối làm sập cả web sau vài chục request.
- *
- *  4. Ném SQLException lên trên, đừng nuốt. Tầng này không biết phải làm gì
- *     khi lỗi; servlet mới biết (hiện thông báo, ghi log).
- */
+/** Tầng truy cập dữ liệu cho bảng stories. */
 public class StoryDAO {
 
     /*
      * Viết SQL ra hằng số thay vì nhét thẳng vào lời gọi method:
      * dễ đọc, dễ sửa, và copy sang MySQL Workbench chạy thử được ngay.
-     *
-     * JOIN sang users để lấy luôn tên tác giả trong MỘT truy vấn.
-     * Nếu lấy danh sách truyện rồi lặp qua từng truyện để truy vấn tên tác giả
-     * thì 20 truyện = 21 truy vấn. Đó gọi là lỗi N+1, và là nguyên nhân phổ
-     * biến nhất khiến trang danh sách chậm.
      */
     private static final String SELECT_BASE =
         "SELECT s.id, s.title, s.slug, s.description, s.cover_url, "
@@ -71,27 +49,7 @@ public class StoryDAO {
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            /*
-             * ĐÂY LÀ ĐIỂM QUAN TRỌNG NHẤT CỦA CẢ FILE.
-             *
-             * Giá trị đi vào truy vấn qua setInt/setString, KHÔNG nối chuỗi.
-             * So sánh hai cách:
-             *
-             *     SAI:   "... LIMIT " + limit
-             *     ĐÚNG:  "... LIMIT ?"  rồi  ps.setInt(1, limit)
-             *
-             * Với số thì nhìn có vẻ vô hại, nhưng với chuỗi từ người dùng thì
-             * nối chuỗi là thảm hoạ. Ví dụ ô tìm kiếm nhập:
-             *
-             *     ' OR '1'='1
-             *
-             * Nối chuỗi sẽ thành  WHERE title LIKE '%' OR '1'='1'%'  — trả về
-             * toàn bộ bảng. Nhập thứ khác còn xoá được cả bảng.
-             *
-             * PreparedStatement gửi câu lệnh và dữ liệu qua HAI đường riêng
-             * biệt, nên dữ liệu không bao giờ được hiểu là câu lệnh. Đó là lý
-             * do nó an toàn — không phải vì nó "lọc ký tự xấu".
-             */
+            /* ĐÂY LÀ ĐIỂM QUAN TRỌNG NHẤT CỦA CẢ FILE. */
             ps.setInt(1, limit);
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -142,21 +100,7 @@ public class StoryDAO {
     //  CASE 02 / 03 — Danh sach co phan trang va loc theo the loai
     // ========================================================================
 
-    /**
-     * Danh sach truyen, co phan trang va loc tuy chon theo the loai.
-     *
-     * XAY CAU SQL DONG MA VAN AN TOAN — doc ky cho nay.
-     *   Cau lenh duoc ghep tu nhieu manh vi dieu kien loc thay doi theo tham so.
-     *   Nhung thu duoc ghep chi la KHUNG cau lenh (" AND t.slug = ? "), con
-     *   GIA TRI thi luon di qua dau ? va setInt/setString.
-     *
-     *   Ghep khung  : an toan, vi khung do code minh viet ra.
-     *   Ghep gia tri: SQL injection.
-     *
-     * @param tagSlug null hoac rong = khong loc
-     * @param sort    "popular" = nhieu luot xem; con lai = moi cap nhat
-     * @param offset  bo qua bao nhieu dong dau (trang 2 voi 24/trang -> 24)
-     */
+    /** Danh sach truyen, co phan trang va loc tuy chon theo the loai. */
     public List<Story> findPage(String tagSlug, String keyword, String sort,
                                 String progress, int offset, int limit)
             throws SQLException {
@@ -181,17 +125,7 @@ public class StoryDAO {
             params.add(tagSlug);
         }
         if (keyword != null && !keyword.isEmpty()) {
-            /*
-             * Tim theo TEN TRUYEN hoac TEN TAC GIA.
-             *
-             * Nguoi doc go "Moc Mien" la ho dang tim tac gia, khong ai nghi
-             * phai sang trang khac de tim. Mot o tim kiem lo ca hai la dung
-             * ky vong hon.
-             *
-             * Ba dau ? nhan CUNG mot gia tri nhung van phai them ba lan vao
-             * danh sach tham so: PreparedStatement dem theo vi tri dau ?,
-             * no khong biet ba cho do la cung mot chuoi.
-             */
+            /* Tim theo TEN TRUYEN hoac TEN TAC GIA. */
             sql.append("AND (s.title LIKE ? OR u.display_name LIKE ? OR u.username LIKE ?) ");
             // Dau % nam trong GIA TRI, khong nam trong cau lenh -> van an toan
             String like = "%" + keyword + "%";
@@ -463,17 +397,7 @@ public class StoryDAO {
     //  TRANG TAC GIA  (trang 4) va BANG XEP HANG  (trang 5)
     // ========================================================================
 
-    /**
-     * Truyen DA CONG KHAI cua mot tac gia, co phan trang.
-     *
-     * KHAC findByAuthor() o cho nao:
-     *   findByAuthor           -> gom ca DRAFT, dung cho trang "Truyen cua toi"
-     *   findPublishedByAuthor  -> chi PUBLISHED, dung cho trang cong khai
-     *
-     * Tach hai method thay vi them tham so boolean, vi ten method tu noi ro
-     * no tra ve gi. Doc "findPublishedByAuthor" la biet ngay, khong phai di
-     * tim xem tham so true/false nghia la gi.
-     */
+    /** Truyen DA CONG KHAI cua mot tac gia, co phan trang. */
     public List<Story> findPublishedByAuthor(int authorId, int offset, int limit)
             throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
@@ -527,25 +451,7 @@ public class StoryDAO {
         }
     }
 
-    /**
-     * Bang xep hang.
-     *
-     * @param by "chapters" = nhieu chuong nhat
-     *           "newest"   = moi dang gan day
-     *           mac dinh   = nhieu luot xem nhat
-     *
-     * DUNG DANH SACH TRANG CHO ORDER BY - doc ky cho nay.
-     *   Tham so "by" den tu URL, tuc la NGUOI DUNG kiem soat. Ghep thang no
-     *   vao cau lenh:
-     *       "ORDER BY " + by          <-- SQL INJECTION
-     *   la nguoi ta go ?by=1;DROP TABLE stories-- va xong doi.
-     *
-     *   Dau ? KHONG dung duoc cho ten cot va ORDER BY - PreparedStatement chi
-     *   thay the GIA TRI, khong thay the cau truc cau lenh.
-     *
-     *   Nen cach duy nhat an toan: so sanh voi danh sach cho phep, roi dung
-     *   chuoi HANG SO do minh viet ra. Gia tri la nao cung roi vao "else".
-     */
+    /** Bang xep hang. */
     public List<Story> findTop(String by, int limit) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.top(by, limit);
@@ -561,8 +467,6 @@ public class StoryDAO {
              * nguoi cham 4.8 — mot phieu khong noi len dieu gi. Dua dieu kien
              * (rating_count >= 3) len dau ORDER BY: MySQL coi bieu thuc dung
              * la 1, sai la 0, nen DESC day het nhom du 3 luot len tren.
-             *
-             * NULLIF chan chia cho 0 voi truyen chua ai cham.
              */
             orderBy = "(s.rating_count >= 3) DESC, "
                     + "s.rating_sum / NULLIF(s.rating_count, 0) DESC, "
@@ -595,25 +499,7 @@ public class StoryDAO {
      * mới thì sửa đúng một chỗ này, thay vì đi sửa từng vòng lặp — và chắc
      * chắn sẽ sót một chỗ nếu không tách.
      */
-    /**
-     * Truyen TUONG TU — cung the loai, khac chinh no.
-     *
-     * CACH DO "GIONG NHAU": DEM SO THE LOAI TRUNG NHAU.
-     *   Truyen A co {Ngon tinh, Hoc duong}, truyen B co {Ngon tinh, Hoc duong,
-     *   Doi thuong} -> trung 2. Truyen C chi co {Ngon tinh} -> trung 1.
-     *   B duoc xep truoc C. Cach nay tho nhung de giai thich va khong can gi
-     *   ngoai hai bang da co.
-     *
-     *   Cach "dung" hon la loc cong tac (nguoi doc truyen nay con doc gi nua)
-     *   — chinh xac hon nhieu, nhung can lich su doc cua hang nghin nguoi.
-     *   Kho truyen dang co tam chuc truyen thi cach do khong the chay.
-     *
-     * VI SAO CO CA rating_count TRONG ORDER BY
-     *   Cung so the loai trung nhau thi uu tien truyen duoc doc nhieu hon.
-     *   Goi y mot truyen chua ai doc va chua ai cham diem la goi y vo ich.
-     *
-     * @param storyId truyen dang xem — LOAI TRU khoi ket qua
-     */
+    /** Truyen TUONG TU — cung the loai, khac chinh no. */
     public List<Story> findSimilar(int storyId, int limit) throws SQLException {
         if (!DBConnection.isReady()) return DemoData.similar(storyId, limit);
 
@@ -639,21 +525,7 @@ public class StoryDAO {
         return list;
     }
 
-    /**
-     * Bang xep hang THEO KHOANG THOI GIAN — trang 5.
-     *
-     * VI SAO KHONG DUNG stories.view_count DUOC
-     *   view_count la mot so cong don tu ngay dang. No khong nho luot xem nao
-     *   xay ra khi nao, nen khong tra loi duoc "tuan nay truyen nao hot".
-     *   Cau nay dem tren view_logs — bang ghi TUNG luot xem kem thoi diem.
-     *
-     * VI SAO JOIN VOI MOT BANG CON THAY VI JOIN THANG view_logs
-     *   JOIN thang roi GROUP BY se phai gom theo toan bo cot cua stories.
-     *   Gom truoc trong bang con (chi hai cot story_id va so luot) roi moi
-     *   noi sang stories thi MySQL chi phai xu ly danh sach ngan.
-     *
-     * @param days 7 = tuan nay, 30 = thang nay
-     */
+    /** Bang xep hang THEO KHOANG THOI GIAN — trang 5. */
     public List<Story> findTopByPeriod(int days, int limit) throws SQLException {
         if (!DBConnection.isReady()) return DemoData.topByPeriod(days, limit);
 
@@ -680,16 +552,7 @@ public class StoryDAO {
         return list;
     }
 
-    /**
-     * Ghi mot luot xem vao nhat ky.
-     *
-     * Goi NGAY SAU increaseView(). Hai thao tac tach roi co chu y: bo dem
-     * view_count phai luon dung vi no hien tren moi the truyen, con nhat ky
-     * co the thieu vai dong ma khong ai chet — bang xep hang tuan lech mot
-     * luot thi khong sao.
-     *
-     * userId = 0 nghia la khach chua dang nhap -> ghi NULL.
-     */
+    /** Ghi mot luot xem vao nhat ky. */
     public void logView(int storyId, int userId) throws SQLException {
         if (!DBConnection.isReady()) return;
 
@@ -706,20 +569,7 @@ public class StoryDAO {
         }
     }
 
-    /**
-     * Thong ke cho MOT truyen — trang 16 (thong ke truyen cua toi).
-     *
-     * Tra ve mot mang 3 phan tu: [luot xem, so nguoi danh dau, so binh luan].
-     *
-     * VI SAO GOM BA CON SO VAO MOT CAU
-     *   Ba cau rieng la ba lan di lai voi MySQL. Ba subquery trong mot cau chi
-     *   mot lan. Voi trang thong ke liet ke 20 truyen thi khac biet la 60 lan
-     *   di lai so voi 20.
-     *
-     * VI SAO TRA VE int[] MA KHONG PHAI MOT LOP RIENG
-     *   Chi mot trang duy nhat dung. Tao lop StoryStats cho ba con so la them
-     *   mot file de doc mot lan. Neu co trang thu hai can thi tach ngay.
-     */
+    /** Thong ke cho MOT truyen — trang 16 (thong ke truyen cua toi). */
     public int[] statsOf(int storyId) throws SQLException {
         if (!DBConnection.isReady()) return DemoData.statsOf(storyId);
 
@@ -743,29 +593,11 @@ public class StoryDAO {
         }
     }
 
-    /**
-     * So lieu tong quan cho bang dieu khien quan tri — trang 25.
-     *
-     * Tra ve [so truyen, so chuong, so tai khoan, tong luot xem].
-     *
-     * DUNG MOT CAU SELECT KHONG CO FROM, boc bon subquery. Cach nay tranh
-     * duoc bon lan mo dong ket noi, va doc ra thi rat ro rang: moi dong la
-     * mot con so tren bang dieu khien.
-     */
+    /** So lieu tong quan cho bang dieu khien quan tri — trang 25. */
     public int[] adminOverview() throws SQLException {
         if (!DBConnection.isReady()) return DemoData.adminOverview();
 
-        /*
-         * SAU subquery trong MOT cau, khong phai sau cau rieng.
-         *
-         * Trang bang dieu khien chi hien sau con so. Goi sau lan la sau lan
-         * di lai voi MySQL cho mot man hinh tinh. Gop lai thi mot lan di,
-         * sau con so ve.
-         *
-         * COALESCE cho SUM: bang rong thi SUM tra ve NULL chu khong phai 0,
-         * va getInt(NULL) tra ve 0 nhung wasNull() moi biet — COALESCE xu ly
-         * ngay trong SQL, gon hon.
-         */
+        /* SAU subquery trong MOT cau, khong phai sau cau rieng. */
         String sql =
             "SELECT (SELECT COUNT(*) FROM stories WHERE status = 'PUBLISHED'), "
           + "       (SELECT COUNT(*) FROM chapters), "

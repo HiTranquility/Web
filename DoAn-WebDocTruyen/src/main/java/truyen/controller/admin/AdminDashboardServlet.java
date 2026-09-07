@@ -12,23 +12,7 @@ import truyen.dao.ReportDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.TagDAO;
 
-/**
- * TRANG 25 — Bảng điều khiển quản trị.
- *
- * TẦNG: controller/admin/
- *
- * URL: /admin/dashboard
- *
- * VÌ SAO GỌI MỘT HÀM adminOverview() TRẢ VỀ MẢNG THAY VÌ SÁU HÀM ĐẾM
- *   Sáu câu COUNT riêng là sáu lần đi lại với MySQL cho một trang chỉ hiện
- *   sáu con số. StoryDAO.adminOverview() gộp tất cả vào MỘT câu bằng các
- *   subquery — một lần đi, sáu con số về.
- *
- *   Cái giá là trả về int[] chứ không phải một object có tên trường rõ ràng,
- *   nên phải nhớ thứ tự. Vì vậy thứ tự được ghi ngay dưới đây và trong
- *   Javadoc của adminOverview(). Có nhiều hơn sáu con số thì nên tạo hẳn một
- *   lớp DashboardStats.
- */
+/** TRANG 25 — Bảng điều khiển quản trị. */
 @WebServlet("/admin/dashboard")
 public class AdminDashboardServlet extends HttpServlet {
 

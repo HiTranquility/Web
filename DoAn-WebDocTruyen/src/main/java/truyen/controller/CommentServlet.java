@@ -12,18 +12,7 @@ import truyen.dao.CommentDAO;
 import truyen.model.Comment;
 import truyen.model.User;
 
-/**
- * CASE 07 — Bình luận.
- *
- * URL: /comment?action=add | delete
- *
- * Servlet này KHÔNG BAO GIỜ forward sang JSP — nó luôn kết thúc bằng redirect
- * về trang chi tiết truyện. Vì bình luận không có "trang bình luận" riêng, nó
- * chỉ là một hành động rồi quay lại chỗ cũ.
- *
- * Đây cũng là Post/Redirect/Get: kết thúc bằng redirect nên F5 sau khi bình
- * luận không gửi lại, tránh đăng trùng.
- */
+/** CASE 07 — Bình luận. */
 @WebServlet("/comment")
 public class CommentServlet extends HttpServlet {
 

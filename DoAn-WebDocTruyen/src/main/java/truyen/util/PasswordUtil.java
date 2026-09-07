@@ -7,41 +7,7 @@ import java.util.Base64;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-/**
- * Băm và kiểm tra mật khẩu.
- *
- * TUYỆT ĐỐI KHÔNG LƯU MẬT KHẨU DẠNG CHỮ THƯỜNG.
- * Lộ database là lộ hết tài khoản — và vì người ta hay dùng chung một mật khẩu
- * cho nhiều nơi, lộ ở đây là lộ luôn email, Facebook của họ.
- *
- * BA THỨ LÀM NÊN MỘT HÀM BĂM MẬT KHẨU TỬ TẾ
- *
- *  1. MỘT CHIỀU — băm được, không giải ngược được.
- *     Nên "quên mật khẩu" chỉ đặt lại được, không lấy lại được. Web nào gửi
- *     mail báo đúng mật khẩu cũ của bạn nghĩa là nó lưu chữ thường.
- *
- *  2. CÓ SALT — mỗi người một chuỗi ngẫu nhiên riêng, trộn vào trước khi băm.
- *     Không có salt thì hai người cùng đặt "123456" sẽ ra cùng một chuỗi băm,
- *     và kẻ tấn công tra bảng tính sẵn (rainbow table) là ra ngay.
- *
- *  3. CHẬM CÓ CHỦ Ý — lặp 120.000 vòng.
- *     Nghe vô lý nhưng đây là điểm mấu chốt. MD5/SHA-256 được thiết kế để
- *     NHANH, nên máy tấn công thử được hàng tỉ mật khẩu mỗi giây. Hàm băm mật
- *     khẩu cố tình chậm (~100ms) — người dùng đăng nhập không thấy gì, còn kẻ
- *     dò thì từ hàng tỉ xuống còn vài chục lần thử mỗi giây.
- *
- * VÌ SAO DÙNG PBKDF2 CHỨ KHÔNG PHẢI BCRYPT
- *   BCrypt tốt hơn một chút, nhưng phải thêm thư viện ngoài (jbcrypt).
- *   PBKDF2 có SẴN trong JDK, không cần tải gì — với đồ án thì đây là đánh đổi
- *   đúng: an toàn thật, mà máy nào có Java là chạy được.
- *
- *   ĐỪNG dùng MD5 hay SHA-256 trần cho mật khẩu. Chúng nhanh, và nhanh là dở.
- *
- * ĐỊNH DẠNG CHUỖI LƯU VÀO DATABASE
- *   pbkdf2$120000$&lt;salt-base64&gt;$&lt;hash-base64&gt;
- *   Gói cả tham số vào chuỗi để sau này tăng số vòng lặp mà mật khẩu cũ vẫn
- *   kiểm được — vì mỗi chuỗi tự mang theo số vòng của chính nó.
- */
+/** Băm và kiểm tra mật khẩu. */
 public class PasswordUtil {
 
     private static final String ALGO = "PBKDF2WithHmacSHA256";
@@ -108,16 +74,7 @@ public class PasswordUtil {
         }
     }
 
-    /**
-     * So sánh hai mảng byte trong thời gian KHÔNG phụ thuộc nội dung.
-     *
-     * Vì sao không dùng Arrays.equals(): nó dừng ngay khi gặp byte đầu tiên
-     * khác nhau. Kẻ tấn công đo thời gian phản hồi có thể đoán dần từng byte
-     * của chuỗi băm — gọi là "timing attack".
-     *
-     * Cách dưới đây luôn duyệt HẾT mảng, dồn khác biệt vào biến diff bằng phép
-     * XOR, nên chạy bao lâu cũng như nhau dù sai ở byte đầu hay byte cuối.
-     */
+    /** So sánh hai mảng byte trong thời gian KHÔNG phụ thuộc nội dung. */
     private static boolean slowEquals(byte[] a, byte[] b) {
         int diff = a.length ^ b.length;
         for (int i = 0; i < a.length && i < b.length; i++) {

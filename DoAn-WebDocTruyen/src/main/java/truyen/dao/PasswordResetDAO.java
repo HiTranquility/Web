@@ -9,21 +9,7 @@ import java.time.LocalDateTime;
 
 import truyen.util.DBConnection;
 
-/**
- * Vé đặt lại mật khẩu.
- *
- * TẦNG: dao/
- *
- * VỀ VIỆC KHÔNG GỬI EMAIL
- *   Luồng thật là: người dùng nhập email → hệ thống gửi một đường dẫn chứa
- *   token → bấm vào đó mới đổi được mật khẩu. Đồ án không có máy chủ gửi thư,
- *   nên AuthServlet hiện thẳng đường dẫn đó ra màn hình.
- *
- *   Phần CÓ Ý NGHĨA của bài học vẫn còn nguyên: token ngẫu nhiên đủ dài, có
- *   hạn dùng, dùng một lần. Chỉ mỗi khâu vận chuyển là bị lược. Trong hệ
- *   thống thật, hiện token ra màn hình như vậy là lỗ hổng nghiêm trọng —
- *   ai mở trang cũng đổi được mật khẩu của người khác.
- */
+/** Vé đặt lại mật khẩu. */
 public class PasswordResetDAO {
 
     /** Vé sống 30 phút. Đủ để mở hộp thư, không đủ để quên rồi lộ. */

@@ -7,28 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-/**
- * Điểm duy nhất trong dự án mở kết nối tới MySQL.
- *
- * VÌ SAO GOM VÀO MỘT LỚP
- *   Đổi máy, đổi mật khẩu, đổi tên database — sửa đúng một file. Nếu mỗi DAO
- *   tự viết DriverManager.getConnection("jdbc:mysql://...") thì tới lúc nộp
- *   bài trên máy khác sẽ phải đi sửa 7 chỗ và chắc chắn sót một chỗ.
- *
- * VÌ SAO ĐỌC TỪ FILE .properties CHỨ KHÔNG VIẾT CỨNG
- *   Mật khẩu database KHÔNG được nằm trong file .java. Code thì đem nộp, đẩy
- *   lên GitHub, gửi cho bạn cùng nhóm — mật khẩu đi theo luôn. Để trong
- *   db.properties rồi cho file đó vào .gitignore là cách rẻ nhất để tránh.
- *
- *   Cách này cũng giống hệt tinh thần init-param của chương 5: giá trị đổi
- *   theo nơi chạy thì để ra ngoài code.
- *
- * GHI CHÚ VỀ CONNECTION POOL
- *   Lớp này mở kết nối MỚI mỗi lần gọi, và người gọi phải đóng. Đúng cho đồ án.
- *   Web thật dùng connection pool (HikariCP, hoặc DataSource của Tomcat) vì mở
- *   kết nối tốn khoảng chục mili-giây — không đáng kể với vài người dùng, nhưng
- *   là thảm hoạ với vài nghìn.
- */
+/** Điểm duy nhất trong dự án mở kết nối tới MySQL. */
 public class DBConnection {
 
     private static final String CONFIG_FILE = "db.properties";
@@ -64,31 +43,8 @@ public class DBConnection {
         return props;
     }
 
-    /**
-     * Mở một kết nối mới.
-     *
-     * NGƯỜI GỌI PHẢI ĐÓNG. Luôn dùng try-with-resources:
-     *
-     *     try (Connection con = DBConnection.get();
-     *          PreparedStatement ps = con.prepareStatement(sql)) {
-     *         ...
-     *     }
-     *
-     * Quên đóng thì kết nối bị rò rỉ. Sau vài chục request, MySQL đạt giới hạn
-     * max_connections và toàn bộ trang web chết — với lỗi trông chẳng liên quan
-     * gì tới chỗ thật sự sai.
-     */
-    /**
-     * Đã cấu hình được database chưa?
-     *
-     * DAO dùng hàm này để quyết định lấy dữ liệu thật hay dữ liệu giả
-     * (truyen.util.DemoData). Nhờ vậy dựng và xem được giao diện trước, cắm
-     * MySQL sau — đúng thứ tự khi làm frontend trước backend.
-     *
-     * Trả về false khi thiếu db.properties hoặc file đó thiếu khoá bắt buộc.
-     * Không mở thử kết nối: hàm này bị gọi rất nhiều lần, mở thử mỗi lần sẽ
-     * làm chậm toàn bộ trang.
-     */
+    /** Mở một kết nối mới. */
+    /** Đã cấu hình được database chưa? */
     public static boolean isReady() {
         return configError == null
                 && CONFIG.getProperty("db.url") != null

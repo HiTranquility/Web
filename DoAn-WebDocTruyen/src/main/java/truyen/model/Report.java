@@ -2,16 +2,7 @@ package truyen.model;
 
 import java.time.LocalDateTime;
 
-/**
- * Một báo cáo vi phạm do người dùng gửi.
- *
- * TẦNG: model/
- *
- * targetType + targetId là cặp "trỏ tới đâu": STORY thì targetId là id truyện,
- * COMMENT thì là id bình luận. Cách này gọi là quan hệ đa hình — tiện cho việc
- * mở rộng, nhưng đổi lại CSDL không kiểm hộ được targetId có thật hay không.
- * Xem ghi chú trong schema.sql.
- */
+/** Một báo cáo vi phạm do người dùng gửi. */
 public class Report {
 
     private int id;

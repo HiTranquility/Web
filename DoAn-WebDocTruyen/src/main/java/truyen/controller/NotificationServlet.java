@@ -13,18 +13,7 @@ import truyen.dao.NotificationDAO;
 import truyen.model.Notification;
 import truyen.model.User;
 
-/**
- * TRANG 18 — Thông báo.
- *
- * TẦNG: controller/
- *
- * URL: /notification
- *
- * MỞ TRANG LÀ COI NHƯ ĐÃ ĐỌC HẾT.
- *   Đọc danh sách TRƯỚC, đánh dấu đã đọc SAU. Làm ngược lại thì mọi thông báo
- *   đều hiện như đã đọc ngay lần đầu vào trang, không còn phân biệt được cái
- *   nào mới — mất hẳn ý nghĩa của cái chấm đỏ.
- */
+/** TRANG 18 — Thông báo. */
 @WebServlet("/notification")
 public class NotificationServlet extends HttpServlet {
 

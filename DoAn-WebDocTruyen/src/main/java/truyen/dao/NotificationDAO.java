@@ -70,17 +70,7 @@ public class NotificationDAO {
         }
     }
 
-    /**
-     * Gửi CÙNG MỘT thông báo cho nhiều người — tác giả đăng chương mới.
-     *
-     * VÌ SAO DÙNG addBatch() CHỨ KHÔNG GỌI executeUpdate() TRONG VÒNG LẶP
-     *   Tác giả có 500 người theo dõi thì cách thường là 500 lần đi lại giữa
-     *   Java và MySQL. addBatch gom lại rồi gửi một lần — nhanh hơn hàng chục
-     *   lần, và cả gói nằm trong một transaction nên không có chuyện gửi được
-     *   nửa số người rồi đứt.
-     *
-     *   Không có người theo dõi nào thì thoát sớm, đừng mở kết nối làm gì.
-     */
+    /** Gửi CÙNG MỘT thông báo cho nhiều người — tác giả đăng chương mới. */
     public void notifyFollowers(List<Integer> userIds, int storyId, int chapterId,
                                 String message) throws SQLException {
         if (userIds == null || userIds.isEmpty()) return;

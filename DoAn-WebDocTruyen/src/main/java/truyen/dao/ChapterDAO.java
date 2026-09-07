@@ -67,15 +67,7 @@ public class ChapterDAO {
         }
     }
 
-    /**
-     * Chương liền trước / liền sau — cho nút điều hướng ở trang đọc.
-     *
-     * @param direction -1 = chương trước, +1 = chương sau
-     *
-     * Dùng chapter_no chứ không dùng id, và LIMIT 1 sau khi sắp xếp — nhờ vậy
-     * vẫn đúng kể cả khi số chương không liên tục (tác giả xoá chương 5 thì
-     * chương trước của 6 phải là 4, không phải 5).
-     */
+    /** Chương liền trước / liền sau — cho nút điều hướng ở trang đọc. */
     public Chapter findNeighbour(int storyId, int chapterNo, int direction) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.neighbour(storyId, chapterNo, direction);
@@ -155,38 +147,7 @@ public class ChapterDAO {
     /** So ky tu trich dan quanh cho khop, moi ben. */
     private static final int SNIPPET_PAD = 60;
 
-    /**
-     * TIM KIEM TRONG NOI DUNG CHUONG.
-     *
-     * HAI DUONG, CHON THEO DO DAI TU KHOA
-     *
-     *   Tu khoa >= 3 ky tu -> MATCH ... AGAINST, dung chi muc ft_chapter_text.
-     *       Nhanh, va co san diem lien quan de sap xep: chuong nhac toi tu do
-     *       nhieu lan se len tren.
-     *
-     *   Tu khoa ngan hon    -> LIKE '%...%'.
-     *       Cham hon nhieu vi phai quet ca bang, nhung VAN RA KET QUA.
-     *       MySQL mac dinh khong dua tu ngan hon 3 ky tu vao chi muc
-     *       (innodb_ft_min_token_size), nen neu chi dung FULLTEXT thi go
-     *       "mẹ" hay "hạ" se ra rong — va nguoi dung se ket luan la truyen
-     *       khong co tu do, chu khong doan duoc la cong cu tim khong ho tro.
-     *
-     *   Tra ve rong ma khong giai thich duoc la kieu hong kho chiu nhat.
-     *
-     * BOOLEAN MODE thay vi che do tu nhien
-     *   Che do tu nhien tu bo qua tu xuat hien o tren 50% so dong — hop ly
-     *   voi kho van ban lon, nhung voi vai chuc chuong thi mot tu thuong gap
-     *   se bien mat khong dau vet. Boolean mode khong co nguong do.
-     *
-     * DAU + VA THAM SO
-     *   Tu khoa van di qua dau ? nhu moi cau khac, nen KHONG co SQL injection.
-     *   Nhung cu phap boolean co ky tu dac biet (+ - * " ~) — nguoi dung go
-     *   nham mot dau ngoac kep la MySQL bao loi cu phap. removeOperators()
-     *   don sach truoc khi gui di.
-     *
-     * @param keyword tu khoa nguoi dung go
-     * @param limit   so ket qua toi da
-     */
+    /** TIM KIEM TRONG NOI DUNG CHUONG. */
     public List<Chapter> searchContent(String keyword, int limit) throws SQLException {
         String kw = keyword == null ? "" : keyword.trim();
         if (kw.isEmpty()) return new ArrayList<>();

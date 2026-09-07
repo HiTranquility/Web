@@ -76,16 +76,7 @@ public class UserDAO {
         }
     }
 
-    /**
-     * Thêm tài khoản mới, gán luôn id vừa sinh vào object user.
-     *
-     * RETURN_GENERATED_KEYS: bảo MySQL trả về id AUTO_INCREMENT vừa tạo.
-     * Không có nó thì user.getId() vẫn là 0 và mọi thứ dựa vào id sẽ sai.
-     *
-     * Chỉ nhận passwordHash — DAO KHÔNG băm mật khẩu. Băm là việc của
-     * PasswordUtil, servlet gọi trước rồi mới đưa xuống đây. Tách vậy để DAO
-     * chỉ làm đúng một việc là đọc ghi database.
-     */
+    /** Thêm tài khoản mới, gán luôn id vừa sinh vào object user. */
     public void insert(User user) throws SQLException {
         String sql = "INSERT INTO users "
                    + "(username, email, password_hash, display_name, role, status) "
@@ -121,20 +112,6 @@ public class UserDAO {
 
     /**
      * Danh sách tài khoản kèm số truyện mỗi người — trang quản trị (TRANG 27).
-     *
-     * VÌ SAO CÂU NÀY NẰM Ở ĐÂY CHỨ KHÔNG PHẢI TRONG SERVLET
-     *   Trước đây nó nằm thẳng trong AdminUserServlet cho "gọn". Nhưng
-     *   standards §2 đã chốt: controller KHÔNG viết SQL. Lý do không phải là
-     *   sự sạch sẽ hình thức — mà là khi đổi tên cột `status`, người sửa chỉ
-     *   đi lục thư mục dao/, không ai nghĩ tới việc mở servlet ra tìm SQL.
-     *
-     * VÌ SAO DÙNG SUBQUERY CHỨ KHÔNG PHẢI LEFT JOIN + GROUP BY
-     *   JOIN rồi GROUP BY sẽ phải gom theo tất cả các cột của users. Subquery
-     *   tương quan đọc thẳng ý định: "với mỗi user, đếm truyện của user đó".
-     *   Với vài trăm tài khoản thì hai cách nhanh như nhau.
-     *
-     * LIMIT 200: trang quản trị chưa phân trang. Có giới hạn cứng để một ngày
-     * nào đó 50.000 tài khoản không làm trang đứng hình.
      */
     public List<User> findAllWithStoryCount() throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
@@ -183,16 +160,7 @@ public class UserDAO {
         }
     }
 
-    /**
-     * Người dùng tự sửa hồ sơ của mình (TRANG 15).
-     *
-     * KHÔNG có username trong danh sách cột được sửa. Tên đăng nhập là danh
-     * tính: đổi được thì mọi bình luận cũ, mọi đường dẫn hồ sơ đã chia sẻ đều
-     * trỏ sai người. Muốn đổi cách hiển thị thì đổi display_name.
-     *
-     * KHÔNG có role và status. Người dùng tự nâng mình lên ADMIN được thì
-     * toàn bộ khu quản trị vô nghĩa.
-     */
+    /** Người dùng tự sửa hồ sơ của mình (TRANG 15). */
     public void updateProfile(User user) throws SQLException {
         String sql = "UPDATE users SET display_name = ?, email = ?, "
                    + "avatar_url = ?, bio = ? WHERE id = ?";

@@ -23,15 +23,7 @@ import truyen.model.User;
 import truyen.util.DBConnection;
 import truyen.util.SlugUtil;
 
-/**
- * CASE 02, 03, 04, 05 — Truyện.
- *
- * URL: /story?action=list | detail | mine | create | edit | delete
- *
- * MỘT SERVLET CHO MỘT THỰC THỂ.
- * Tách mỗi thao tác một servlet thì 6 thực thể x 4 thao tác = 24 servlet.
- * Gộp lại còn 6. Mỗi action một method private, doGet chỉ điều phối.
- */
+/** CASE 02, 03, 04, 05 — Truyện. */
 @WebServlet("/story")
 public class StoryServlet extends HttpServlet {
 
@@ -289,16 +281,7 @@ public class StoryServlet extends HttpServlet {
         return "/WEB-INF/views/story/stats.jsp";
     }
 
-    /**
-     * TRANG 2b — Tim kiem SAU trong noi dung chuong.
-     *
-     * Dung chung URL /story voi kho truyen, chi khac action. Ly do: day van la
-     * "tim truyen", chi khac cho tim. Tach ra mot servlet rieng thi nguoi dung
-     * doi giua hai che do se nhay giua hai duong dan khong lien quan gi nhau.
-     *
-     * Ket qua tra ve la CHUONG chu khong phai TRUYEN — vi thu nguoi dung muon
-     * biet la "cau do nam o chuong nao", va bam vao la mo thang chuong do.
-     */
+    /** TRANG 2b — Tim kiem SAU trong noi dung chuong. */
     private String search(HttpServletRequest request) throws SQLException {
         String keyword = trim(request.getParameter("q"));
 

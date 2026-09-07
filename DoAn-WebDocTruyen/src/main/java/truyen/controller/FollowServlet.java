@@ -13,20 +13,7 @@ import truyen.dao.FollowDAO;
 import truyen.model.Follow;
 import truyen.model.User;
 
-/**
- * TRANG 17 — Theo dõi tác giả.
- *
- * TẦNG: controller/
- *
- * URL:
- *   GET  /follow?action=list        danh sách đang theo dõi
- *   POST /follow  (authorId, do=follow|unfollow)
- *
- * VÌ SAO ĐẶT TÊN THAM SỐ LÀ "do" CHỨ KHÔNG PHẢI "action"
- *   "action" đã dùng để chọn TRANG. Nếu dùng lại cho việc theo dõi/bỏ theo
- *   dõi thì một chữ phải mang hai nghĩa, và nhìn URL không đoán được nó sẽ
- *   hiện trang hay đổi dữ liệu.
- */
+/** TRANG 17 — Theo dõi tác giả. */
 @WebServlet("/follow")
 public class FollowServlet extends HttpServlet {
 

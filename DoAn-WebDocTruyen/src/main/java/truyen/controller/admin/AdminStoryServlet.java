@@ -10,18 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.StoryDAO;
 
-/**
- * CASE 10 — Quản trị truyện: gỡ và khôi phục.
- *
- * URL: /admin/story?action=list | delete | restore
- *
- * KHÔNG kiểm quyền admin trong file này — AdminFilter đã chặn ở /admin/*
- * trước khi request tới đây. Kiểm lại lần nữa là thừa, và tệ hơn: nó khiến
- * người đọc tưởng filter không đáng tin.
- *
- * Đặt trong package con `admin` để nhìn cây thư mục là thấy ngay đâu là khu
- * quản trị — và để url-pattern của filter khớp với cấu trúc package.
- */
+/** CASE 10 — Quản trị truyện: gỡ và khôi phục. */
 @WebServlet("/admin/story")
 public class AdminStoryServlet extends HttpServlet {
 

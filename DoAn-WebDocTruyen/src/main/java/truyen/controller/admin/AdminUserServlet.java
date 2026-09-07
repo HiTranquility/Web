@@ -12,15 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.UserDAO;
 import truyen.model.User;
 
-/**
- * TRANG 27 — Quản trị tài khoản: khoá, mở khoá, đổi vai trò.
- *
- * TẦNG: controller/
- *
- * URL: /admin/user?action=list | ban | unban | role
- *
- * Quyền admin do AdminFilter lo ở /admin/* — không kiểm lại ở đây.
- */
+/** TRANG 27 — Quản trị tài khoản: khoá, mở khoá, đổi vai trò. */
 @WebServlet("/admin/user")
 public class AdminUserServlet extends HttpServlet {
 

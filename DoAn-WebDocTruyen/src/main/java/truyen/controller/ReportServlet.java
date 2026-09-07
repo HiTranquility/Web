@@ -12,20 +12,7 @@ import truyen.dao.ReportDAO;
 import truyen.model.Report;
 import truyen.model.User;
 
-/**
- * Người dùng gửi báo cáo vi phạm.
- *
- * TẦNG: controller/
- *
- * URL: POST /report  (targetType, targetId, reason)
- *
- * ĐÂY LÀ ĐẦU VÀO CỦA TRANG 30 (khu quản trị xử lý báo cáo). Người dùng bấm
- * "Báo cáo" ở trang truyện hoặc dưới một bình luận, admin xem ở /admin/report.
- *
- * KHÔNG có trang riêng để gửi báo cáo — chỉ một form nhỏ ngay tại chỗ. Bắt
- * người ta chuyển trang để tố cáo một bình luận rác là cách chắc chắn khiến
- * không ai buồn báo cáo.
- */
+/** Người dùng gửi báo cáo vi phạm. */
 @WebServlet("/report")
 public class ReportServlet extends HttpServlet {
 

@@ -16,33 +16,7 @@ import truyen.model.Story;
 import truyen.model.User;
 import truyen.util.PasswordUtil;
 
-/**
- * TRANG 4 · 14 · 15 — Hồ sơ người dùng.
- *
- * TẦNG: controller/ — chỉ điều phối. Không viết SQL, không sinh HTML.
- *
- * URL:
- *   /user?action=profile&id=2   hồ sơ CÔNG KHAI của ai đó      TRANG 4
- *   /user?action=me             hồ sơ CỦA TÔI                  TRANG 14
- *   /user?action=edit           form sửa hồ sơ                 TRANG 15
- *   POST /user?action=save      lưu hồ sơ
- *   POST /user?action=password  đổi mật khẩu
- *
- * VÌ SAO TRANG 4 VÀ TRANG 14 KHÔNG DÙNG CHUNG MỘT JSP
- *   Nhìn qua thì "hồ sơ của tôi" chỉ là "hồ sơ công khai + vài nút". Nhưng
- *   hai trang trả lời hai câu hỏi khác nhau: trang 4 là "người này viết gì",
- *   trang 14 là "tài khoản của tôi đang thế nào" (email, ngày tham gia, số
- *   truyện đã lưu, nút đổi mật khẩu). Nhồi cả hai vào một file thì quá nửa
- *   file nằm trong c:if kiểm tra "có phải chính mình không".
- *
- * NHIỆM VỤ CỦA MỘT CONTROLLER, đúng 4 bước:
- *   1. đọc tham số từ request
- *   2. gọi DAO lấy dữ liệu
- *   3. setAttribute cho JSP
- *   4. forward tới layout ĐÚNG MỘT LẦN ở cuối
- *
- * Không có bước thứ 5. Mọi câu SQL nằm ở dao/, mọi thẻ HTML nằm ở views/.
- */
+/** TRANG 4 · 14 · 15 — Hồ sơ người dùng. */
 @WebServlet("/user")
 public class UserServlet extends HttpServlet {
 
@@ -123,15 +97,7 @@ public class UserServlet extends HttpServlet {
             return null;
         }
 
-        /*
-         * KHÔNG BAO GIỜ để chuỗi băm mật khẩu đi ra ngoài tầng controller.
-         *
-         * UserDAO.findById() trả về đầy đủ, gồm cả password_hash. Nếu để
-         * nguyên rồi setAttribute, một dòng ${author.passwordHash} lỡ tay
-         * trong JSP là in chuỗi băm ra trang web công khai.
-         *
-         * Xoá ngay tại đây — sớm nhất có thể sau khi rời DAO.
-         */
+        /* KHÔNG BAO GIỜ để chuỗi băm mật khẩu đi ra ngoài tầng controller. */
         author.setPasswordHash(null);
 
         int page = parseIntOr(request.getParameter("page"), 1);
@@ -218,15 +184,7 @@ public class UserServlet extends HttpServlet {
         return "/WEB-INF/views/user/edit.jsp";
     }
 
-    /**
-     * Lưu hồ sơ.
-     *
-     * CHỈ SỬA ĐƯỢC BỐN TRƯỜNG: tên hiển thị, email, ảnh đại diện, giới thiệu.
-     * Không có username (là danh tính), không có role và status (tự nâng
-     * quyền). Danh sách này do UserDAO.updateProfile() khoá cứng, ở đây chỉ
-     * đọc đúng bốn ô tương ứng — dù người dùng có nhét thêm tham số role vào
-     * form thì cũng không có chỗ nào nhận.
-     */
+    /** Lưu hồ sơ. */
     private String save(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
 

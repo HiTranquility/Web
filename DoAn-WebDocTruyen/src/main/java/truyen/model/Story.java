@@ -5,15 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Một truyện.
- *
- * JavaBean thuần: chỉ có dữ liệu và get/set, KHÔNG có logic truy vấn.
- * Việc đọc/ghi database là của StoryDAO. Trộn hai thứ vào một lớp là bước đầu
- * để dự án rối tung.
- *
- * Vì sao vẫn cần implements Serializable: xem ghi chú trong User.java.
- */
+/** Một truyện. */
 public class Story implements Serializable {
 
     private int id;
@@ -129,24 +121,7 @@ public class Story implements Serializable {
 
     public boolean isRated() { return ratingCount > 0; }
 
-    /**
-     * Truyện mới đăng — trong vòng 14 ngày.
-     *
-     * TÊN LÀ isRecent CHỨ KHÔNG PHẢI isNew — có lý do bắt buộc.
-     *   Đặt isNew() thì JSP phải gọi ${story.new}, mà `new` là TỪ KHOÁ của
-     *   EL. Trình biên dịch JSP không phân tích nổi biểu thức đó và cả trang
-     *   trả về lỗi 500:
-     *       Failed to parse the expression [${story.new}]
-     *   Lỗi chỉ lộ ra lúc chạy, không phải lúc biên dịch Java — vì Java thấy
-     *   isNew() hoàn toàn hợp lệ.
-     *
-     * Tính ở model để JSP chỉ việc hỏi ${story.new}. EL không làm được phép
-     * trừ ngày tháng, mà nhét java.time vào scriptlet trong JSP thì vi phạm
-     * đúng cái ranh giới mà chương 5 dành cả buổi để nói.
-     *
-     * createdAt có thể null với truyện tạo bằng tay trong lúc thử — kiểm
-     * trước để không nổ NullPointerException giữa vòng lặp render.
-     */
+    /** Truyện mới đăng — trong vòng 14 ngày. */
     public boolean isRecent() {
         if (createdAt == null) return false;
         return createdAt.isAfter(java.time.LocalDateTime.now().minusDays(14));

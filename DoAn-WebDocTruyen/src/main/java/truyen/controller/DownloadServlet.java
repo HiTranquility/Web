@@ -18,18 +18,7 @@ import truyen.model.Chapter;
 import truyen.model.Story;
 import truyen.util.SlugUtil;
 
-/**
- * CASE 09 — Tải truyện về dạng .txt
- *
- * URL: /download?storyId=5
- *
- * SERVLET DUY NHẤT TRONG DỰ ÁN KHÔNG FORWARD SANG JSP.
- *
- * Mọi servlet khác đều kết thúc bằng forward tới layout. Servlet này thì tự
- * ghi thẳng ra response — vì đầu ra không phải HTML mà là một file .txt.
- * Đây đúng là trường hợp mà chương 5 (CASE 01) nói: dùng PrintWriter khi
- * response không phải trang web.
- */
+/** CASE 09 — Tải truyện về dạng .txt */
 @WebServlet("/download")
 public class DownloadServlet extends HttpServlet {
 
@@ -63,28 +52,14 @@ public class DownloadServlet extends HttpServlet {
             return;
         }
 
-        /*
-         * BA HEADER PHẢI ĐẶT TRƯỚC getWriter() — sau đó là muộn.
-         *
-         * 1. setContentType: text/plain, KHÔNG phải text/html. Đặt sai thì
-         *    trình duyệt cố hiển thị như trang web thay vì tải xuống.
-         *
-         * 2. setCharacterEncoding UTF-8: thiếu là tiếng Việt trong file thành
-         *    dấu hỏi khi mở bằng Notepad.
-         */
+        /* BA HEADER PHẢI ĐẶT TRƯỚC getWriter() — sau đó là muộn. */
         response.setContentType("text/plain; charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
 
         /*
          * 3. Content-Disposition: attachment — đây là header BẮT TRÌNH DUYỆT
-         *    TẢI XUỐNG thay vì mở trong tab. Không có nó thì nội dung truyện
-         *    hiện thẳng ra màn hình.
-         *
-         * VÌ SAO CÓ HAI CÁCH GHI TÊN FILE
-         *   filename=          — tên đơn giản, chỉ ASCII. Trình duyệt cũ hiểu.
-         *   filename*=UTF-8''  — tên có dấu, đã mã hoá. Trình duyệt mới ưu tiên
-         *                        cái này và hiện đúng "Kiếm Khí Trường Sinh.txt"
-         *   Ghi cả hai thì trình duyệt nào cũng ra tên đọc được.
+         * TẢI XUỐNG thay vì mở trong tab. Không có nó thì nội dung truyện
+         * hiện thẳng ra màn hình.
          */
         String asciiName = SlugUtil.toSlug(story.getTitle());
         if (asciiName.isEmpty()) {

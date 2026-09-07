@@ -11,25 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.RatingDAO;
 import truyen.model.User;
 
-/**
- * Chấm sao truyện.
- *
- * TẦNG: controller/
- *
- * URL: POST /rating   (storyId, score)
- *
- * CHỈ NHẬN POST — KHÔNG CÓ doGet.
- *   Chấm sao là hành động THAY ĐỔI dữ liệu. Nếu nhận cả GET thì chỉ cần dụ
- *   người khác mở một thẻ <img src="/rating?storyId=1&score=1"> là truyện bị
- *   dìm điểm mà chủ trình duyệt không hề bấm gì. Đó là CSRF.
- *
- *   Chặn bằng POST không diệt hẳn CSRF (form giả vẫn POST được), nhưng loại bỏ
- *   được kiểu tấn công dễ nhất. Hàng rào đủ cho quy mô đồ án; hệ thống thật
- *   thêm token CSRF cho mỗi form.
- *
- * Đường dẫn /rating nằm trong danh sách cần đăng nhập của AuthFilter, nên tới
- * được đây là chắc chắn đã có currentUser.
- */
+/** Chấm sao truyện. */
 @WebServlet("/rating")
 public class RatingServlet extends HttpServlet {
 

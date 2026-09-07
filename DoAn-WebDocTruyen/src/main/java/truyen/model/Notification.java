@@ -2,15 +2,7 @@ package truyen.model;
 
 import java.time.LocalDateTime;
 
-/**
- * Một thông báo gửi tới một người dùng.
- *
- * TẦNG: model/
- *
- * message được sinh SẴN lúc tạo thông báo, không ghép lúc hiển thị.
- * Lý do: tên truyện lúc gửi thông báo có thể khác tên truyện hôm nay. Thông
- * báo là ảnh chụp một thời điểm, nó phải giữ nguyên câu chữ của thời điểm đó.
- */
+/** Một thông báo gửi tới một người dùng. */
 public class Notification {
 
     private int id;

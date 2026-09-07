@@ -45,19 +45,7 @@ public class ReportDAO {
         }
     }
 
-    /**
-     * Danh sách báo cáo cho trang quản trị (TRANG 30).
-     *
-     * VÌ SAO DÙNG HAI LEFT JOIN CHỨ KHÔNG PHẢI MỘT JOIN
-     *   target_id trỏ sang stories hay comments tuỳ theo target_type. Không có
-     *   cách nào JOIN "có điều kiện" trong SQL chuẩn, nên nối cả hai bảng bằng
-     *   LEFT JOIN kèm điều kiện loại, rồi lấy cái nào không NULL.
-     *
-     *   COALESCE chọn giá trị đầu tiên khác NULL. Báo cáo truyện thì cột
-     *   bình luận NULL và ngược lại, nên luôn ra đúng một cái.
-     *
-     *   Đây chính là cái giá của thiết kế đa hình đã ghi trong schema.sql.
-     */
+    /** Danh sách báo cáo cho trang quản trị (TRANG 30). */
     public List<Report> findAll(String status) throws SQLException {
         if (!DBConnection.isReady()) return DemoData.reports(status);
 

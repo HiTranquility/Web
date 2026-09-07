@@ -2,15 +2,7 @@ package truyen.model;
 
 import java.time.LocalDateTime;
 
-/**
- * Quan hệ theo dõi: followerId theo dõi authorId.
- *
- * TẦNG: model/
- *
- * Các trường author* KHÔNG có trong bảng follows. Chúng do câu JOIN sang users
- * đổ sang, để trang "Đang theo dõi" hiện được tên tác giả mà không phải hỏi
- * thêm một câu SQL cho từng dòng — đúng bài toán N+1 query.
- */
+/** Quan hệ theo dõi: followerId theo dõi authorId. */
 public class Follow {
 
     private int followerId;

@@ -30,16 +30,7 @@ public class Comment implements Serializable {
     /** null = bình luận gốc; có giá trị = đang trả lời bình luận đó. */
     private Integer parentId;
 
-    /*
-     * Các trả lời của bình luận này.
-     *
-     * KHÔNG phải cột trong CSDL. CommentDAO đọc danh sách phẳng từ một câu
-     * SQL rồi tự xếp thành cây trong bộ nhớ — xem findByStory().
-     *
-     * Khởi tạo sẵn danh sách rỗng chứ không để null: JSP viết
-     * <c:forEach items="${cm.replies}"> mà gặp null thì JSTL bỏ qua êm, nhưng
-     * mọi đoạn code Java đụng vào sẽ nổ NullPointerException.
-     */
+    /* Các trả lời của bình luận này. */
     private java.util.List<Comment> replies = new java.util.ArrayList<>();
 
     // Lấy qua JOIN sang bảng users, để hiện tên người viết mà khỏi truy vấn thêm

@@ -35,17 +35,7 @@ public class User implements Serializable {
 
     private LocalDateTime createdAt;
 
-    /*
-     * Số truyện người này đã đăng.
-     *
-     * KHÔNG phải cột trong bảng users. Đây là dữ liệu ĐI KÈM, do câu SQL của
-     * trang quản trị đếm sang. Các truy vấn khác để nguyên 0.
-     *
-     * Trước đây trang quản trị mượn tạm cột `bio` để chở con số này sang JSP.
-     * Cách đó chạy được nhưng sai: người đọc code thấy ${u.bio} trong bảng
-     * quản trị sẽ không hiểu vì sao lời giới thiệu bản thân lại là một con số,
-     * và ngày nào đó có người hiển thị bio thật ở đó là hỏng.
-     */
+    /* Số truyện người này đã đăng. */
     private int storyCount;
 
     /** Số người đang theo dõi. Cũng là dữ liệu đi kèm, không phải cột users. */

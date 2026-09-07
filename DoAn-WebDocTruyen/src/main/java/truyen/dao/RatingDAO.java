@@ -8,20 +8,7 @@ import java.sql.SQLException;
 import truyen.util.DBConnection;
 import truyen.util.DemoData;
 
-/**
- * Chấm sao truyện.
- *
- * TẦNG: dao/ — chỗ duy nhất trong dự án viết SQL cho bảng ratings.
- *
- * ĐÂY LÀ DAO PHỨC TẠP NHẤT DỰ ÁN, vì mỗi lần chấm phải sửa HAI nơi:
- *     1. bảng ratings           — dữ liệu gốc, ai chấm mấy điểm
- *     2. stories.rating_sum/_count — bản đếm sẵn để hiển thị cho nhanh
- *
- * Hai nơi đó phải luôn khớp nhau. Nếu chỉ một trong hai chạy xong rồi mất
- * điện, ngôi sao hiển thị sẽ sai vĩnh viễn mà không ai biết. Vì vậy mọi thao
- * tác ghi ở đây đều nằm trong MỘT transaction: hoặc cả hai cùng vào, hoặc
- * không cái nào vào cả.
- */
+/** Chấm sao truyện. */
 public class RatingDAO {
 
     /**
@@ -44,23 +31,7 @@ public class RatingDAO {
         }
     }
 
-    /**
-     * Chấm hoặc chấm lại.
-     *
-     * VÌ SAO TỰ TẮT autoCommit THAY VÌ ĐỂ MẶC ĐỊNH
-     *   Mặc định JDBC commit sau MỖI câu lệnh. Ở đây có ba câu lệnh phải đi
-     *   cùng nhau, nên phải tự cầm lái: tắt autoCommit, chạy hết, commit một
-     *   lần. Có lỗi giữa chừng thì rollback trả lại nguyên trạng.
-     *
-     * VÌ SAO ĐỌC ĐIỂM CŨ TRƯỚC
-     *   Chấm lần đầu thì rating_sum += điểm mới, rating_count += 1.
-     *   Chấm LẠI thì rating_sum += (điểm mới − điểm cũ), count GIỮ NGUYÊN.
-     *   Không biết điểm cũ thì không tính nổi hiệu số.
-     *
-     * VÌ SAO KHÔNG DÙNG "ON DUPLICATE KEY UPDATE" CHO GỌN
-     *   Câu đó gộp được bước 1 và 2, nhưng vẫn không cho biết điểm cũ là bao
-     *   nhiêu để cập nhật bản đếm sẵn. Viết tường minh dễ đọc hơn.
-     */
+    /** Chấm hoặc chấm lại. */
     public void rate(int userId, int storyId, int score) throws SQLException {
         if (score < 1 || score > 5) {
             throw new SQLException("Điểm phải từ 1 đến 5, nhận được: " + score);

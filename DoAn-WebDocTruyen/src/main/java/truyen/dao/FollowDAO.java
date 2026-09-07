@@ -11,15 +11,7 @@ import truyen.model.Follow;
 import truyen.util.DBConnection;
 import truyen.util.DemoData;
 
-/**
- * Theo dõi tác giả.
- *
- * TẦNG: dao/
- *
- * Bảng follows nối users với chính nó. Mọi câu SQL ở đây vì thế phải JOIN
- * users hai lần hoặc đặt bí danh rõ ràng, nếu không sẽ không phân biệt được
- * "người theo dõi" với "người được theo dõi".
- */
+/** Theo dõi tác giả. */
 public class FollowDAO {
 
     /** Người này có đang theo dõi tác giả kia không? */
@@ -37,15 +29,7 @@ public class FollowDAO {
         }
     }
 
-    /**
-     * Bấm theo dõi.
-     *
-     * INSERT IGNORE thay vì kiểm tra trước rồi mới thêm: bấm hai lần thật
-     * nhanh (hoặc mở hai tab) sẽ vượt qua được bước kiểm tra ở tầng Java,
-     * nhưng không vượt được khoá chính của CSDL. IGNORE biến lỗi trùng khoá
-     * thành "không làm gì" — đúng ý muốn, vì theo dõi hai lần cũng chỉ là
-     * đang theo dõi.
-     */
+    /** Bấm theo dõi. */
     public void follow(int followerId, int authorId) throws SQLException {
         if (followerId == authorId) {
             throw new SQLException("Không thể tự theo dõi chính mình.");

@@ -66,15 +66,7 @@ public class ChapterServlet extends HttpServlet {
             action = "read";
         }
 
-        /*
-         * Mỗi action tự chọn layout của mình — đây là chỗ khác StoryServlet.
-         *
-         * Servlet này một mình dùng BA layout khác nhau, và đó là lý do khối
-         * chọn layout nằm ngay trong switch chứ không đặt cứng ở cuối:
-         *     đọc chương    -> reader  (không nav, không footer, chữ to)
-         *     soạn chương   -> editor  (không footer, cột hẹp, ô soạn cao)
-         *     xoá / còn lại -> main
-         */
+        /* Mỗi action tự chọn layout của mình — đây là chỗ khác StoryServlet. */
         String url;
         String layout = "/WEB-INF/views/layout/main.jsp";
 
@@ -128,15 +120,7 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
-        /*
-         * Tự động ghi lại vị trí đọc cho người đã đăng nhập.
-         *
-         * Người dùng không phải bấm gì — mở chương là hệ thống nhớ. Lần sau
-         * vào trang "Truyện đã lưu" sẽ thấy nút "Đọc tiếp chương N".
-         *
-         * Bọc try/catch riêng: ghi vị trí đọc thất bại KHÔNG được làm hỏng
-         * việc đọc truyện. Đây là chức năng phụ, không phải chức năng chính.
-         */
+        /* Tự động ghi lại vị trí đọc cho người đã đăng nhập. */
         User me = currentUser(request);
         if (me != null) {
             try {
@@ -263,23 +247,7 @@ public class ChapterServlet extends HttpServlet {
     }
 
 
-    /**
-     * Báo cho những người đang theo dõi tác giả rằng có chương mới.
-     *
-     * VÌ SAO BỌC TRONG try-catch RIÊNG VÀ NUỐT LỖI
-     *   Chương ĐÃ được lưu ở dòng trên. Nếu bảng notifications trục trặc mà
-     *   để ngoại lệ bay lên, tác giả sẽ thấy trang lỗi 500 và tưởng chương
-     *   chưa lưu — rồi bấm đăng lại, thành hai chương trùng.
-     *
-     *   Thông báo là việc phụ. Việc phụ hỏng thì không được kéo việc chính
-     *   xuống theo. Ghi log để người bảo trì biết, nhưng người dùng không cần
-     *   biết và cũng không làm gì được.
-     *
-     * VÌ SAO CÂU THÔNG BÁO ĐƯỢC GHÉP SẴN Ở ĐÂY
-     *   Tên truyện hôm nay có thể đổi ngày mai. Thông báo là ảnh chụp một
-     *   thời điểm nên phải giữ nguyên câu chữ lúc gửi — xem ghi chú trong
-     *   model/Notification.java.
-     */
+    /** Báo cho những người đang theo dõi tác giả rằng có chương mới. */
     private void notifyFollowers(Story story, Chapter chapter) {
         try {
             List<Integer> followers = followDAO.findFollowerIds(story.getAuthorId());

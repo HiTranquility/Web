@@ -13,21 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.StoryDAO;
 import truyen.model.Story;
 
-/**
- * Trang chủ.
- *
- * MẪU CHUNG CỦA MỌI CONTROLLER TRONG DỰ ÁN — giống hệt CASE 11 của chương 5:
- *   1. đọc tham số
- *   2. gọi DAO lấy dữ liệu
- *   3. setAttribute cho JSP
- *   4. forward ĐÚNG MỘT LẦN ở cuối
- * Controller không chứa SQL, không chứa HTML. Nó chỉ điều phối.
- *
- * Vì sao map "" (chuỗi rỗng) chứ không phải "/":
- *   "" là pattern dành riêng cho context root, tức http://localhost:8080/app/
- *   "/" là "default servlet", sẽ nuốt luôn cả file CSS và ảnh — trang web mất
- *   sạch định dạng. Đây là cái bẫy rất hay gặp.
- */
+/** Trang chủ. */
 @WebServlet("")
 public class HomeServlet extends HttpServlet {
 
@@ -82,20 +68,6 @@ public class HomeServlet extends HttpServlet {
     /*
      * Gom lệnh forward vào một chỗ để không lặp lại ba lần, và để chắc chắn
      * mọi nhánh đều đi tới đúng một view.
-     *
-     * CÁCH LAYOUT HOẠT ĐỘNG — hai bước:
-     *   1. đặt contentPage = mảnh nội dung cần hiện
-     *   2. forward tới LAYOUT, không phải tới mảnh đó
-     *
-     * layout/main.jsp dựng khung HTML đầy đủ rồi chèn mảnh vào giữa bằng
-     * <jsp:include page="${contentPage}" />.
-     *
-     * Muốn trang này dùng khung khác (ví dụ auth) thì chỉ đổi dòng forward
-     * cuối cùng sang "/WEB-INF/views/layout/auth.jsp" — mảnh nội dung không
-     * phải sửa gì cả. Đó là toàn bộ lợi ích của cách chia này.
-     *
-     * Cả layout lẫn mảnh đều nằm trong /WEB-INF/ nên không ai gõ URL vào xem
-     * trực tiếp được — mọi lối vào đều phải qua controller.
      */
     private void forward(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

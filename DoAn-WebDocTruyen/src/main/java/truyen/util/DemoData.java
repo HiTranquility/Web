@@ -15,55 +15,14 @@ import truyen.model.Story;
 import truyen.model.Tag;
 import truyen.model.User;
 
-/**
- * DỮ LIỆU GIẢ — dùng để DỰNG VÀ XEM GIAO DIỆN khi chưa có MySQL.
- *
- * TẦNG: util/ (không phải model, không phải dao)
- *
- * ┌──────────────────────────────────────────────────────────────────────────┐
- * │  VÌ SAO CÓ FILE NÀY                                                      │
- * │                                                                          │
- * │  Giai đoạn hiện tại của đồ án là LÀM GIAO DIỆN. Nhưng JSP chỉ là cái     │
- * │  khuôn — không có dữ liệu đổ vào thì mọi trang đều hiện "chưa có gì",    │
- * │  và không ai đánh giá được thiết kế.                                     │
- * │                                                                          │
- * │  Chờ cài MySQL + chạy sample_data.sql xong mới xem được giao diện là     │
- * │  ràng buộc sai thứ tự: giao diện không nên phụ thuộc cơ sở dữ liệu.      │
- * │                                                                          │
- * │  Nên file này đóng vai "cơ sở dữ liệu giả trong RAM". DAO sẽ tự lấy dữ   │
- * │  liệu ở đây KHI VÀ CHỈ KHI chưa cấu hình db.properties.                  │
- * └──────────────────────────────────────────────────────────────────────────┘
- *
- * KHI NÀO XOÁ FILE NÀY
- *   Khi chạy được scripts\setup-db.ps1 và web đọc dữ liệu thật. Lúc đó:
- *     1. Xoá file này
- *     2. Xoá mọi dòng "if (!DBConnection.isReady()) return DemoData..." trong dao/
- *   Không có chỗ nào khác trong dự án tham chiếu tới DemoData, nên xoá là sạch.
- *
- * LƯU Ý QUAN TRỌNG
- *   Đây KHÔNG phải cache, KHÔNG phải mock để test. Nó chỉ sống trong bộ nhớ,
- *   mọi thay đổi (đăng truyện, bình luận) sẽ mất khi tắt server. Đúng như vậy —
- *   giai đoạn này chỉ cần NHÌN, chưa cần LƯU.
- *
- *   Dữ liệu ở đây trùng khớp với database/sample_data.sql để lúc chuyển sang
- *   DB thật, giao diện trông y hệt, không bị "lệch pha".
- */
+/** DỮ LIỆU GIẢ — dùng để DỰNG VÀ XEM GIAO DIỆN khi chưa có MySQL. */
 public final class DemoData {
 
     /** Lớp tiện ích thuần tĩnh — chặn khởi tạo. */
     private DemoData() { }
 
     /** Mốc thời gian cố định để mỗi lần khởi động không ra ngày khác nhau. */
-    /**
-     * Mốc thời gian.
-     *
-     * Trước đây là một ngày CỐ ĐỊNH (1/8/2026) để mỗi lần khởi động ra đúng
-     * số cũ. Nhưng nhãn "Mới" so ngày đăng với HÔM NAY, nên mốc cố định làm
-     * mọi truyện vĩnh viễn cũ và nhãn đó không bao giờ hiện.
-     *
-     * Đổi sang "bây giờ": ngày tháng hiển thị vẫn nhất quán trong một lần
-     * chạy, và truyện mới nhất luôn nằm trong 14 ngày gần đây.
-     */
+    /** Mốc thời gian. */
     private static final LocalDateTime T0 = LocalDateTime.now();
 
     // ========================================================================
@@ -202,17 +161,7 @@ public final class DemoData {
         s.setUpdatedAt(T0.minusDays(daysAgo / 3));
         s.setTags(tagsOf(tagIds));
 
-        /*
-         * Điểm đánh giá giả.
-         *
-         * Sinh theo id chứ không random: mỗi lần khởi động phải ra đúng con
-         * số cũ, nếu không thì mở lại trang thấy sao nhảy lung tung và không
-         * ai tin là dữ liệu thật.
-         *
-         * Truyện id 3 để 0 lượt — cố ý, để nhìn thấy được cả trạng thái
-         * "Chưa có đánh giá". Giao diện nào cũng phải xem được cả trường hợp
-         * có dữ liệu lẫn trường hợp rỗng.
-         */
+        /* Điểm đánh giá giả. */
         if (id != 3) {
             int count = 8 + id * 5;
             int avgTimes10 = 35 + (id * 3) % 15;      // 3.5 .. 4.9
@@ -307,18 +256,6 @@ public final class DemoData {
 
     /**
      * Xếp hạng theo giai đoạn — bản giả lập của StoryDAO.findTopByPeriod().
-     *
-     * VÌ SAO KHÔNG TRẢ VỀ NGUYÊN top("views")
-     *   Trả về y hệt thì bấm tab "Tuần này" ra đúng danh sách của "Xem nhiều
-     *   nhất", và người xem sẽ kết luận rằng tính năng hỏng. Dữ liệu giả sai
-     *   kiểu đó còn tệ hơn không có dữ liệu.
-     *
-     *   Ở đây sinh một con số "lượt xem gần đây" riêng cho từng truyện. Nó
-     *   KHÔNG tỉ lệ với tổng lượt xem — đúng như đời thật: truyện cũ đông
-     *   tổng lượt nhưng tuần này có thể chẳng ai đọc, truyện mới thì ngược lại.
-     *
-     *   Công thức dựa trên id nên mỗi lần chạy ra cùng kết quả, không nhảy
-     *   lung tung giữa các lần tải trang.
      */
     public static List<Story> topByPeriod(int days, int limit) {
         List<Story> list = stories();
