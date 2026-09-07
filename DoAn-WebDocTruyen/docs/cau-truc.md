@@ -20,7 +20,7 @@ không đổi cho tới lúc nộp bài.
 
 **Layout thì đúng 4 cái.** Không phải 10, không phải 20.
 
-Lý do: layout không sinh theo TRANG, nó sinh theo **KHUNG**. 25 trang nhưng chỉ
+Lý do: layout không sinh theo TRANG, nó sinh theo **KHUNG**. 31 trang nhưng chỉ
 có 4 kiểu khung. Trang chủ, kho truyện, chi tiết truyện, bookmark, hướng dẫn,
 nội quy, 2 trang lỗi — **8 trang dùng chung 1 layout `main`**.
 

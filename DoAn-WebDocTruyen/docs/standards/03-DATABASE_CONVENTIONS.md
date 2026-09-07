@@ -183,7 +183,7 @@ Quên một chỗ là truyện đã gỡ hiện lại trên trang công khai.
 
 | File | Việc | Chạy khi nào |
 |------|------|--------------|
-| `schema.sql` | tạo database + 7 bảng | **một lần**, lúc cài |
+| `schema.sql` | tạo database + 13 bảng | **một lần**, lúc cài |
 | `setup_user.sql` | tạo tài khoản MySQL riêng cho app | **một lần**, sau schema |
 | `sample_data.sql` | dữ liệu demo | tuỳ chọn, chạy lại bao nhiêu lần cũng được |
 

@@ -8,7 +8,7 @@
 | **Tên ngắn** | ĐọcTruyện — Nền tảng đọc truyện cộng đồng |
 | **Công nghệ** | Java Servlet 3.1 · JSP + JSTL · MySQL 8 · Apache Tomcat 9 |
 | **Kiến trúc** | MVC Model 2 (Model – View – Controller), server-rendered |
-| **Quy mô** | 27 lớp Java · 26 trang JSP · 7 bảng dữ liệu |
+| **Quy mô** | 47 lớp Java · 51 file JSP (31 trang) · 13 bảng dữ liệu |
 
 ---
 
@@ -79,7 +79,7 @@ kể cả khi tự sửa tham số trên URL.
 
 ---
 
-## 4. Cơ sở dữ liệu — 7 bảng
+## 4. Cơ sở dữ liệu — 13 bảng
 
 | Bảng | Vai trò |
 |------|---------|

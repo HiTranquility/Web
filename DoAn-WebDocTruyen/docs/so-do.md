@@ -4,7 +4,7 @@ Sơ đồ vẽ bằng **Mermaid** — GitHub tự render, không cần cài gì.
 Muốn xem trong VS Code thì cài extension *Markdown Preview Mermaid Support*.
 
 **Mục lục**
-1. [ERD — 7 bảng](#1-erd--quan-hệ-7-bảng)
+1. [ERD — 13 bảng](#1-erd--quan-hệ-13-bảng)
 2. [Kiến trúc 4 tầng](#2-kiến-trúc-4-tầng)
 3. [Luồng MVC — một request đi qua đâu](#3-luồng-mvc--một-request-đi-qua-đâu)
 4. [Layout lắp trang thế nào](#4-layout-lắp-trang-thế-nào)
@@ -14,7 +14,7 @@ Muốn xem trong VS Code thì cài extension *Markdown Preview Mermaid Support*.
 
 ---
 
-## 1. ERD — quan hệ 7 bảng
+## 1. ERD — quan hệ 13 bảng
 
 ```mermaid
 erDiagram
@@ -63,17 +63,76 @@ erDiagram
         int story_id PK_FK
         int last_chapter_id FK "NULL được"
     }
+    ratings {
+        int user_id PK_FK
+        int story_id PK_FK
+        tinyint score "1..5"
+    }
+    follows {
+        int follower_id PK_FK
+        int author_id PK_FK
+    }
+    notifications {
+        int id PK
+        int user_id FK "người nhận"
+        int story_id FK
+        int chapter_id FK
+        enum type "NEW_CHAPTER|SYSTEM"
+        bool is_read
+    }
+    reports {
+        int id PK
+        int reporter_id FK
+        enum target_type "STORY|COMMENT"
+        int target_id "KHÔNG có FK"
+        enum status "PENDING|RESOLVED|DISMISSED"
+    }
+    view_logs {
+        bigint id PK
+        int story_id FK
+        int user_id FK "NULL = khách"
+        datetime viewed_at
+    }
+    password_resets {
+        char token PK
+        int user_id FK
+        datetime expires_at
+        datetime used_at
+    }
 
-    users    ||--o{ stories    : "là tác giả của"
-    users    ||--o{ comments   : "viết"
-    users    ||--o{ bookmarks  : "đánh dấu"
-    stories  ||--o{ chapters   : "gồm nhiều"
-    stories  ||--o{ comments   : "nhận"
-    stories  ||--o{ bookmarks  : "được lưu bởi"
-    stories  ||--o{ story_tags : ""
-    tags     ||--o{ story_tags : ""
-    chapters ||--o{ bookmarks  : "vị trí đọc dở"
+    users    ||--o{ stories       : "là tác giả của"
+    users    ||--o{ comments      : "viết"
+    users    ||--o{ bookmarks     : "đánh dấu"
+    users    ||--o{ ratings       : "chấm sao"
+    users    ||--o{ notifications : "nhận"
+    users    ||--o{ reports       : "gửi báo cáo"
+    users    ||--o{ view_logs     : "xem"
+    users    ||--o{ password_resets : "xin đặt lại"
+    users    ||--o{ follows       : "theo dõi / được theo dõi"
+    stories  ||--o{ chapters      : "gồm nhiều"
+    stories  ||--o{ comments      : "nhận"
+    stories  ||--o{ bookmarks     : "được lưu bởi"
+    stories  ||--o{ ratings       : "được chấm"
+    stories  ||--o{ view_logs     : "được mở"
+    stories  ||--o{ story_tags    : ""
+    tags     ||--o{ story_tags    : ""
+    chapters ||--o{ bookmarks     : "vị trí đọc dở"
+    comments ||--o{ comments      : "trả lời (parent_id)"
 ```
+
+**Sáu bảng thêm sau, và lý do từng bảng:**
+
+| Bảng | Vì sao phải có bảng riêng |
+|------|---------------------------|
+| `ratings` | Khoá chính kép (user, story) ép mỗi người một điểm. Chặn ở Java thôi thì hai request cùng lúc vẫn lọt cả hai. |
+| `follows` | Quan hệ nhiều-nhiều của `users` với **chính nó** — hai cột đều trỏ về `users`. |
+| `notifications` | Sinh lúc đăng chương, không tính lúc mở trang. Nhờ vậy đánh dấu được đã đọc / chưa đọc từng cái. |
+| `reports` | `target_id` trỏ sang `stories` **hoặc** `comments` tuỳ dòng, nên **không khai được khoá ngoại**. Đánh đổi có ý thức. |
+| `view_logs` | `stories.view_count` chỉ là một số cộng dồn, nó không nhớ lượt xem xảy ra *khi nào*. Không có bảng này thì không có xếp hạng tuần/tháng. |
+| `password_resets` | Vé dùng một lần, có hạn. Để trong `users` thì mỗi tài khoản mang thêm hai cột gần như luôn rỗng. |
+
+`comments.parent_id` trỏ về chính bảng `comments` — đó là cách làm trả lời
+lồng nhau mà không phải tạo bảng thứ hai.
 
 **Ba điểm đáng chú ý:**
 
@@ -207,7 +266,7 @@ flowchart LR
     style SLOT fill:#f0863a,color:#1a0f06
 ```
 
-**4 layout, không phải 25:**
+**5 layout, không phải 31:**
 
 ```mermaid
 flowchart TD

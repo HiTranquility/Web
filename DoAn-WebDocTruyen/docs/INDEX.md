@@ -7,7 +7,7 @@ docs/
 ├── INDEX.md                          ← bạn đang ở đây
 ├── DANG-KY-DE-TAI.md                 BẢN ĐĂNG KÝ ĐỀ TÀI — danh sách chức năng đề xuất
 ├── MO-TA-DO-AN.md                    BẢN MÔ TẢ GỬI GIẢNG VIÊN — tên đề tài, 16 chức năng
-├── cau-truc.md                       bản đồ 59 file · 13 thư mục · 4 layout
+├── cau-truc.md                       bản đồ dự án · 5 layout
 ├── ke-hoach-frontend.md              5 LAYOUT · 30 TRANG · 9 mảnh tái dùng
 ├── ke-hoach-database.md              13 BẢNG · chuẩn hoá + phi chuẩn hoá
 ├── so-do.md                          ERD · luồng MVC · kiến trúc — 7 sơ đồ Mermaid
@@ -54,7 +54,7 @@ docs/
 | File | Nội dung |
 |------|----------|
 | [`../README.md`](../README.md) | Cài đặt, cách chạy, lộ trình 11 CASE |
-| [`../database/schema.sql`](../database/schema.sql) | 7 bảng, chú thích từng cột |
+| [`../database/schema.sql`](../database/schema.sql) | 13 bảng, chú thích từng cột |
 
 ---
 
