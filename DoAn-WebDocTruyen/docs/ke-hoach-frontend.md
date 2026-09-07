@@ -150,12 +150,12 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | 1 | Trang chủ | `/` | Truyện mới cập nhật, xem nhiều nhất | ✅ |
 | 2 | Kho truyện | `/story?action=list` | Duyệt, phân trang, lọc thể loại, tìm kiếm | ✅ |
 | 3 | Chi tiết truyện | `/story?action=detail&id=` | Thông tin, mục lục, bình luận, đánh giá | ✅ |
-| 4 | Trang tác giả | `/user?action=profile&id=` | Hồ sơ công khai, danh sách truyện, nút theo dõi | ⬜ |
-| 5 | Bảng xếp hạng | `/rank?period=week` | Top truyện theo tuần/tháng | ⬜ |
+| 4 | Trang tác giả | `/user?action=profile&id=` | Hồ sơ công khai, danh sách truyện | ✅ *(chưa có nút theo dõi)* |
+| 5 | Bảng xếp hạng | `/rank?by=views\|chapters\|newest` | Top 20 theo lượt xem / số chương / mới đăng | ✅ *(chưa có theo tuần-tháng, thiếu bảng `view_logs`)* |
 | 6 | Hướng dẫn sử dụng | `/page?name=guide` | Hướng dẫn từng chức năng | ✅ |
 | 7 | Nội quy cộng đồng | `/page?name=rules` | Quy định nội dung và ứng xử | ✅ |
 | 8 | Lỗi 404 | *(container gọi)* | Không tìm thấy trang | ✅ |
-| 9 | Lỗi 403 | *(container gọi)* | Không đủ quyền | ⬜ |
+| 9 | Lỗi 403 | *(container gọi)* | Không đủ quyền | ✅ |
 | 10 | Lỗi 500 | *(container gọi)* | Lỗi hệ thống | ✅ |
 
 > Trang 2 gánh cả **duyệt, lọc, tìm kiếm** — không tách trang riêng cho kết quả
@@ -209,10 +209,19 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 
 ### Tổng kết
 
-| | Đã dựng | Còn lại | Tổng |
-|---|:---:|:---:|:---:|
-| Trang | **13** | 17 | **30** |
-| Layout | **4** | 1 | **5** |
+*Cập nhật sau giai đoạn 2.*
+
+| Nhóm | Đã dựng | Tổng |
+|------|:---:|:---:|
+| A. Công khai | **10** | 10 |
+| B. Thành viên | **3** | 8 |
+| C. Xác thực | **2** | 4 |
+| D. Đọc | **1** | 1 |
+| E. Soạn thảo | **1** | 1 |
+| F. Quản trị | **2** | 6 |
+| **Trang — tổng** | **19** | **30** |
+| Layout | **4** | 5 |
+| Mảnh tái dùng | **5** | 9 |
 
 ---
 
@@ -225,12 +234,12 @@ một chỗ, cả hệ thống đổi theo.
 |------|--------------|----------|:----:|
 | `_card.jsp` | 1, 2, 4, 5, 12 | Thẻ truyện trong lưới | ✅ |
 | `_story-row.jsp` | 11, 17, 26 | Truyện dạng hàng ngang (có ảnh bìa nhỏ) | ⬜ |
-| `_pagination.jsp` | 2, 4, 5, 26, 27 | Thanh phân trang | ⬜ *(đang viết thẳng trong list.jsp)* |
-| `_tag-filter.jsp` | 2, 4, 5 | Hàng nút lọc thể loại | ⬜ |
-| `_comment.jsp` | 3, 29 | Một bình luận (avatar + nội dung + nút gỡ) | ⬜ |
+| `_pagination.jsp` | 2, 4, 5, 26, 27 | Thanh phân trang | ✅ |
+| `_tag-filter.jsp` | 2, 4, 5 | Hàng nút lọc thể loại | ✅ |
+| `_comment.jsp` | 3, 29 | Một bình luận (avatar + nội dung + nút gỡ) | ✅ |
 | `_rating-stars.jsp` | 2, 3, 5 | Hiển thị / chấm sao | ⬜ |
 | `_chapter-list.jsp` | 3, 12 | Mục lục chương | ⬜ |
-| `_empty.jsp` | mọi trang danh sách | Trạng thái rỗng có thiết kế | ⬜ |
+| `_empty.jsp` | mọi trang danh sách | Trạng thái rỗng có thiết kế | ✅ |
 | `_stat-tile.jsp` | 16, 25 | Ô thống kê (số lớn + nhãn nhỏ) | ⬜ |
 
 > **Quy tắc tách mảnh:** chỉ tách khi khối đó xuất hiện ở **ít nhất 2 trang**.
