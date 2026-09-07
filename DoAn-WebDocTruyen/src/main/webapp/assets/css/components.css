@@ -327,3 +327,222 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
     .form-row { flex-direction: column; align-items: stretch; }
     .bookmark-item { flex-wrap: wrap; }
 }
+
+/* ============================================================================
+   PHASE 2 — Trang tac gia (trang 4) va Bang xep hang (trang 5)
+   ========================================================================= */
+
+/* ---- Trang tac gia ---- */
+.profile-head {
+    display: flex; gap: 22px; align-items: flex-start;
+    padding: 24px; margin-bottom: 10px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-xl);
+}
+.profile-avatar {
+    width: 84px; height: 84px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
+    color: #1a0f06; font-weight: 800; font-size: 2.2rem;
+    box-shadow: 0 4px 18px rgba(240,134,58,.32);
+}
+.profile-info { flex: 1; min-width: 0; }
+.profile-info h1 { font-size: 1.5rem; line-height: 1.25; margin-bottom: 2px; }
+.profile-username { color: var(--text-mut); font-size: .88rem; margin-bottom: 10px; }
+.profile-bio {
+    color: var(--text-dim); font-size: .93rem; line-height: 1.65;
+    margin-bottom: 12px; max-width: 52ch;
+}
+.profile-stats {
+    display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
+    color: var(--text-mut); font-size: .88rem;
+}
+.profile-stats b { color: var(--text); font-size: 1.05rem; }
+
+/* ---- Bang xep hang ---- */
+.rank-list { list-style: none; padding: 0; margin: 0;
+             display: flex; flex-direction: column; gap: 10px; }
+
+.rank-item {
+    display: flex; align-items: center; gap: 15px;
+    padding: 12px 16px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    transition: border-color .18s var(--ease), transform .18s var(--ease);
+}
+.rank-item:hover { border-color: var(--ember-deep); transform: translateX(3px); }
+
+.rank-no {
+    flex: none; width: 2.2em; text-align: center;
+    font-size: 1.15rem; font-weight: 800;
+    color: var(--text-mut);
+    font-variant-numeric: tabular-nums;   /* so thang cot deu nhau */
+}
+/* Ba hang dau noi bat hon */
+.rank-no.rank-top {
+    color: var(--ember);
+    font-size: 1.45rem;
+}
+
+.rank-cover {
+    width: 46px; height: 62px; flex: none;
+    border-radius: var(--r-sm); overflow: hidden;
+    background: var(--ink-800);
+}
+.rank-cover img { width: 100%; height: 100%; object-fit: cover; }
+.rank-cover .cover-fallback { font-size: 1.3rem; }
+
+.rank-info { flex: 1; min-width: 0; }
+.rank-title {
+    font-weight: 650; font-size: .98rem; line-height: 1.35;
+    display: block;
+    /* Cat mot dong de moi hang cao bang nhau */
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rank-title:hover { color: var(--ember); }
+.rank-meta { color: var(--text-mut); font-size: .82rem; margin-top: 3px; }
+.rank-meta a { color: var(--text-dim); }
+.rank-meta a:hover { color: var(--ember); }
+
+@media (max-width: 620px) {
+    .profile-head { flex-direction: column; align-items: center; text-align: center; }
+    .profile-stats { justify-content: center; }
+    .rank-item .pill { display: none; }
+    .rank-title { white-space: normal; }
+}
+
+
+/* ============================================================================
+   KHUNG CHUNG CỦA TRANG — header, footer, thanh menu
+   ============================================================================
+   VÌ SAO NẰM Ở components.css CHỨ KHÔNG PHẢI layout-main.css
+
+     parts/nav.jsp và parts/footer.jsp được BỐN layout dùng chung. Ban đầu CSS
+     của chúng để trong layout-main.css, hậu quả: mở /admin/user thì thanh menu
+     mất sạch định dạng — vì layout admin nạp layout-admin.css chứ không nạp
+     layout-main.css.
+
+     Quy tắc rút ra, khớp với standards §3:
+         mảnh JSP dùng ở NHIỀU layout  ->  CSS phải ở components.css
+         mảnh JSP chỉ MỘT layout dùng  ->  CSS ở layout-<ten>.css
+
+     .hero chỉ trang chủ dùng nên vẫn ở lại layout-main.css.
+   ========================================================================= */
+
+.shell { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+/* ============================================================================
+   HEADER — dính trên cùng, kính mờ
+   ========================================================================= */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    /* Glassmorphism: nền mờ + làm nhoè thứ phía sau khi cuộn qua */
+    background: rgba(16, 18, 25, .78);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border-bottom: 1px solid var(--ink-700);
+}
+
+.site-header .shell {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 66px;
+}
+
+.brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 1.14rem; letter-spacing: -.02em;
+    flex: none;
+}
+.brand-mark {
+    width: 32px; height: 32px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
+    color: var(--ink-950);
+    font-size: 1rem;
+    box-shadow: 0 3px 12px rgba(240,134,58,.4);
+}
+.brand em { color: var(--ember); font-style: normal; }
+
+.nav { display: flex; gap: 4px; flex: 1; }
+.nav a {
+    padding: 8px 14px;
+    border-radius: var(--r-sm);
+    color: var(--text-dim);
+    font-size: .92rem; font-weight: 500;
+    transition: color .18s var(--ease), background .18s var(--ease);
+}
+.nav a:hover      { color: var(--text); background: var(--ink-800); }
+.nav a.is-active  { color: var(--ember); background: var(--ember-ghost); }
+
+.header-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+
+/* ============================================================================
+   FOOTER
+   ========================================================================= */
+.site-footer {
+    border-top: 1px solid var(--ink-800);
+    background: var(--ink-900);
+    padding: 40px 0 30px;
+    margin-top: 60px;
+}
+.footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px;
+    margin-bottom: 28px;
+}
+.site-footer h5 { font-size: .84rem; text-transform: uppercase;
+                  letter-spacing: .07em; color: var(--text-mut);
+                  margin-bottom: 12px; }
+.site-footer p  { color: var(--text-dim); font-size: .88rem; max-width: 42ch; }
+.site-footer ul { list-style: none; display: flex; flex-direction: column;
+                  gap: 8px; }
+.site-footer li a { color: var(--text-dim); font-size: .88rem;
+                    transition: color .16s var(--ease); }
+.site-footer li a:hover { color: var(--ember); }
+.footer-base {
+    border-top: 1px solid var(--ink-800); padding-top: 20px;
+    color: var(--text-mut); font-size: .82rem;
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+
+/* ---- Chip người dùng đang đăng nhập trên thanh menu ---- */
+.user-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 99px;
+    background: var(--ink-800);
+    border: 1px solid var(--ink-700);
+    font-size: .86rem; font-weight: 500;
+    max-width: 14em;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.user-avatar {
+    width: 26px; height: 26px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
+    color: #1a0f06; font-weight: 700; font-size: .82rem;
+}
+
+/* ---- Thu nhỏ màn hình: giấu menu ngang, footer xếp dọc ---- */
+@media (max-width: 860px) {
+    .footer-grid { grid-template-columns: 1fr; gap: 26px; }
+    .nav { display: none; }        /* sẽ thay bằng menu hamburger */
+}
+@media (max-width: 520px) {
+    .shell { padding: 0 16px; }
+}
+
+/* Tôn trọng người bật "giảm chuyển động" trong hệ điều hành.
+   Đây là yêu cầu về khả năng tiếp cận, không phải tuỳ chọn. */
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    html { scroll-behavior: auto; }
+}

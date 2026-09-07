@@ -26,6 +26,8 @@
                class="${activeNav eq 'home' ? 'is-active' : ''}">Trang chủ</a>
             <a href="${pageContext.request.contextPath}/story?action=list"
                class="${activeNav eq 'browse' ? 'is-active' : ''}">Kho truyện</a>
+            <a href="${pageContext.request.contextPath}/rank"
+               class="${activeNav eq 'rank' ? 'is-active' : ''}">Xếp hạng</a>
             <a href="${pageContext.request.contextPath}/page?name=rules"
                class="${activeNav eq 'rules' ? 'is-active' : ''}">Nội quy</a>
             <c:if test="${not empty currentUser}">

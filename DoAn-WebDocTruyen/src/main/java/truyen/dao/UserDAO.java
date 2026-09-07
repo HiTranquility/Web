@@ -1,5 +1,7 @@
 package truyen.dao;
 
+import truyen.util.DemoData;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,6 +30,8 @@ public class UserDAO {
      * Trả null nếu không có. Servlet phải kiểm null trước khi dùng.
      */
     public User findByUsername(String username) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.userByUsername(username);
         String sql = SELECT_BASE + "WHERE username = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -39,6 +43,8 @@ public class UserDAO {
     }
 
     public User findById(int id) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.user(id);
         String sql = SELECT_BASE + "WHERE id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {

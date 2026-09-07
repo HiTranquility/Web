@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%-- story/mine.jsp — Truyện của tôi. Gồm cả bản nháp.   CASE 05 --%>
 <div class="section-head">
     <h2>Truyện của tôi</h2>

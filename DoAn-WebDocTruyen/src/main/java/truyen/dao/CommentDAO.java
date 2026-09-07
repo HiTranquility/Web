@@ -1,5 +1,7 @@
 package truyen.dao;
 
+import truyen.util.DemoData;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,6 +24,8 @@ public class CommentDAO {
      * và giữ bằng chứng.
      */
     public List<Comment> findByStory(int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.comments(storyId);
         String sql =
             "SELECT c.id, c.story_id, c.user_id, c.content, c.status, c.created_at, "
           + "       u.username, u.display_name "
@@ -79,6 +83,8 @@ public class CommentDAO {
     }
 
     public int countByStory(int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.comments(storyId).size();
         String sql = "SELECT COUNT(*) FROM comments WHERE story_id = ? AND status = 'VISIBLE'";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {

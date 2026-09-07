@@ -1,5 +1,7 @@
 package truyen.dao;
 
+import truyen.util.DemoData;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +23,8 @@ public class BookmarkDAO {
      * chưa đọc sẽ biến mất khỏi danh sách một cách khó hiểu.
      */
     public List<Bookmark> findByUser(int userId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.bookmarks(userId);
         String sql =
             "SELECT b.user_id, b.story_id, b.last_chapter_id, b.created_at, "
           + "       s.title AS story_title, s.slug AS story_slug, s.cover_url, "
@@ -59,6 +63,8 @@ public class BookmarkDAO {
 
     /** Người này đã lưu truyện này chưa — để nút hiện "Đã lưu" hay "Lưu truyện". */
     public boolean exists(int userId, int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.bookmarked(storyId);
         String sql = "SELECT 1 FROM bookmarks WHERE user_id = ? AND story_id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -106,6 +112,9 @@ public class BookmarkDAO {
      * cùng thấy "chưa có" rồi cùng INSERT.
      */
     public void updateProgress(int userId, int storyId, int chapterId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: bo qua, ly do giong increaseView().
+        if (!DBConnection.isReady()) return;
+
         String sql = "INSERT INTO bookmarks (user_id, story_id, last_chapter_id) "
                    + "VALUES (?, ?, ?) "
                    + "ON DUPLICATE KEY UPDATE last_chapter_id = VALUES(last_chapter_id)";

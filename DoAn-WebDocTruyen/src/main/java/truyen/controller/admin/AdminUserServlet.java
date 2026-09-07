@@ -1,5 +1,7 @@
 package truyen.controller.admin;
 
+import truyen.util.DemoData;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -107,6 +109,8 @@ public class AdminUserServlet extends HttpServlet {
      * dữ liệu này thì phải chuyển xuống DAO ngay.
      */
     private List<User> findAllUsers() throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.users();
         String sql =
             "SELECT u.id, u.username, u.email, u.display_name, u.role, u.status, "
           + "       u.ban_reason, u.created_at, "

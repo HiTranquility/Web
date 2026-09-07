@@ -1,5 +1,7 @@
 package truyen.dao;
 
+import truyen.util.DemoData;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,6 +57,8 @@ public class StoryDAO {
      * @param limit số truyện tối đa
      */
     public List<Story> findLatest(int limit) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.top("newest", limit);
         String sql = SELECT_BASE
                    + "WHERE s.status = 'PUBLISHED' "
                    + "ORDER BY s.updated_at DESC "
@@ -99,6 +103,8 @@ public class StoryDAO {
 
     /** Truyện nhiều lượt xem nhất. */
     public List<Story> findPopular(int limit) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.top("views", limit);
         String sql = SELECT_BASE
                    + "WHERE s.status = 'PUBLISHED' "
                    + "ORDER BY s.view_count DESC "
@@ -119,6 +125,8 @@ public class StoryDAO {
 
     /** Tổng số truyện đã công khai — cho phần thống kê ở trang chủ. */
     public int countPublished() throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.stories().size();
         String sql = "SELECT COUNT(*) FROM stories WHERE status = 'PUBLISHED'";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -149,6 +157,8 @@ public class StoryDAO {
      */
     public List<Story> findPage(String tagSlug, String keyword, String sort,
                                 int offset, int limit) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.slice(DemoData.filter(tagSlug, keyword), offset, limit);
 
         StringBuilder sql = new StringBuilder(SELECT_BASE);
         List<Object> params = new ArrayList<>();
@@ -191,6 +201,8 @@ public class StoryDAO {
 
     /** Tong so truyen khop bo loc — de tinh so trang. */
     public int countPage(String tagSlug, String keyword) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.filter(tagSlug, keyword).size();
         StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT s.id) FROM stories s ");
         List<Object> params = new ArrayList<>();
 
@@ -239,6 +251,8 @@ public class StoryDAO {
      * Viec quyet dinh AI DUOC XEM la cua SERVLET, khong phai cua DAO.
      */
     public Story findById(int id) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.story(id);
         String sql = SELECT_BASE + "WHERE s.id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -251,6 +265,8 @@ public class StoryDAO {
 
     /** Truyen cua mot tac gia — cho trang "Truyen cua toi". Gom ca DRAFT. */
     public List<Story> findByAuthor(int authorId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.storiesByAuthor(authorId);
         String sql = SELECT_BASE
                    + "WHERE s.author_id = ? AND s.status != 'DELETED' "
                    + "ORDER BY s.updated_at DESC";
@@ -339,6 +355,12 @@ public class StoryDAO {
      * nguoi mo cung luc (dung bai toan lost update o chuong 5).
      */
     public void increaseView(int id) throws SQLException {
+        // CHE DO XEM GIAO DIEN: khong co DB thi bo qua, KHONG nem ngoai le.
+        // Day chi la bo dem luot xem — hong thi khong dang de lam hong ca
+        // trang chi tiet truyen. Cac lenh ghi that (them/sua/xoa truyen) van
+        // nem ngoai le de nguoi dung biet ro la chua luu duoc.
+        if (!DBConnection.isReady()) return;
+
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(
                      "UPDATE stories SET view_count = view_count + 1 WHERE id = ?")) {
@@ -353,6 +375,8 @@ public class StoryDAO {
 
     /** Moi truyen, gom ca DRAFT va DELETED — chi admin goi. */
     public List<Story> findAllForAdmin() throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.stories();
         String sql = SELECT_BASE + "ORDER BY s.updated_at DESC LIMIT 200";
         List<Story> list = new ArrayList<>();
         try (Connection con = DBConnection.get();
@@ -373,6 +397,123 @@ public class StoryDAO {
             ps.setInt(2, id);
             ps.executeUpdate();
         }
+    }
+
+
+    // ========================================================================
+    //  TRANG TAC GIA  (trang 4) va BANG XEP HANG  (trang 5)
+    // ========================================================================
+
+    /**
+     * Truyen DA CONG KHAI cua mot tac gia, co phan trang.
+     *
+     * KHAC findByAuthor() o cho nao:
+     *   findByAuthor           -> gom ca DRAFT, dung cho trang "Truyen cua toi"
+     *   findPublishedByAuthor  -> chi PUBLISHED, dung cho trang cong khai
+     *
+     * Tach hai method thay vi them tham so boolean, vi ten method tu noi ro
+     * no tra ve gi. Doc "findPublishedByAuthor" la biet ngay, khong phai di
+     * tim xem tham so true/false nghia la gi.
+     */
+    public List<Story> findPublishedByAuthor(int authorId, int offset, int limit)
+            throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.slice(DemoData.storiesByAuthor(authorId), offset, limit);
+        String sql = SELECT_BASE
+                   + "WHERE s.author_id = ? AND s.status = 'PUBLISHED' "
+                   + "ORDER BY s.updated_at DESC LIMIT ? OFFSET ?";
+
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    /** Dem truyen da cong khai cua mot tac gia - de tinh so trang. */
+    public int countPublishedByAuthor(int authorId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.storiesByAuthor(authorId).size();
+        String sql = "SELECT COUNT(*) FROM stories "
+                   + "WHERE author_id = ? AND status = 'PUBLISHED'";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /** Tong luot xem cua tat ca truyen mot tac gia - thong ke trang ca nhan. */
+    public int totalViewsByAuthor(int authorId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.viewsOfAuthor(authorId);
+        String sql = "SELECT COALESCE(SUM(view_count), 0) FROM stories "
+                   + "WHERE author_id = ? AND status = 'PUBLISHED'";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
+     * Bang xep hang.
+     *
+     * @param by "chapters" = nhieu chuong nhat
+     *           "newest"   = moi dang gan day
+     *           mac dinh   = nhieu luot xem nhat
+     *
+     * DUNG DANH SACH TRANG CHO ORDER BY - doc ky cho nay.
+     *   Tham so "by" den tu URL, tuc la NGUOI DUNG kiem soat. Ghep thang no
+     *   vao cau lenh:
+     *       "ORDER BY " + by          <-- SQL INJECTION
+     *   la nguoi ta go ?by=1;DROP TABLE stories-- va xong doi.
+     *
+     *   Dau ? KHONG dung duoc cho ten cot va ORDER BY - PreparedStatement chi
+     *   thay the GIA TRI, khong thay the cau truc cau lenh.
+     *
+     *   Nen cach duy nhat an toan: so sanh voi danh sach cho phep, roi dung
+     *   chuoi HANG SO do minh viet ra. Gia tri la nao cung roi vao "else".
+     */
+    public List<Story> findTop(String by, int limit) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.top(by, limit);
+        String orderBy;
+        if ("chapters".equals(by)) {
+            orderBy = "chapter_count DESC";
+        } else if ("newest".equals(by)) {
+            orderBy = "s.created_at DESC";
+        } else {
+            orderBy = "s.view_count DESC";
+        }
+
+        String sql = SELECT_BASE
+                   + "WHERE s.status = 'PUBLISHED' "
+                   + "ORDER BY " + orderBy + " LIMIT ?";
+
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
     }
 
     /*

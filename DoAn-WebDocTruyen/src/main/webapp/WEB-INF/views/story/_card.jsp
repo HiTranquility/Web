@@ -53,7 +53,11 @@
         </div>
         <div class="story-meta">
             <span>📄 ${story.chapterCount} chương</span>
-            <span>👁️ ${story.viewCount}</span>
+            <%-- fmt:formatNumber dat dau phan cach hang nghin: "31.200" de doc
+                 luot hon "31200". Dinh dang o tang view, KHONG bien so
+                 thanh String trong model — model giu so nguyen thi con
+                 cong tru, so sanh va sap xep duoc. --%>
+            <span>👁️ <fmt:formatNumber pattern="#,##0" value="${story.viewCount}"/></span>
         </div>
     </div>
 </a>

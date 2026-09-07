@@ -1,5 +1,7 @@
 package truyen.dao;
 
+import truyen.util.DemoData;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +23,8 @@ public class TagDAO {
      * ra (với số 0). JOIN thường sẽ loại nó khỏi kết quả.
      */
     public List<Tag> findAllWithCount() throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.tags();
         String sql =
             "SELECT t.id, t.name, t.slug, COUNT(s.id) AS story_count "
           + "FROM tags t "
@@ -44,6 +48,10 @@ public class TagDAO {
 
     /** Thể loại của MỘT truyện — hiện ở trang chi tiết. */
     public List<Tag> findByStory(int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.story(storyId) == null
+                    ? new java.util.ArrayList<Tag>()
+                    : DemoData.story(storyId).getTags();
         String sql =
             "SELECT t.id, t.name, t.slug "
           + "FROM tags t JOIN story_tags st ON st.tag_id = t.id "
@@ -63,6 +71,8 @@ public class TagDAO {
     }
 
     public Tag findBySlug(String slug) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.tagBySlug(slug);
         String sql = "SELECT id, name, slug FROM tags WHERE slug = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {

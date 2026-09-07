@@ -50,8 +50,10 @@ public class DBConnection {
         try (InputStream in = DBConnection.class.getClassLoader()
                                                 .getResourceAsStream(CONFIG_FILE)) {
             if (in == null) {
-                configError = "Không tìm thấy " + CONFIG_FILE
-                        + " trong src/main/resources. "
+                configError = "Đang ở CHẾ ĐỘ XEM GIAO DIỆN (chưa nối cơ sở dữ liệu). "
+                        + "Xem thì được, nhưng chưa lưu được gì. "
+                        + "Muốn lưu thật: chạy scripts\setup-db.ps1 rồi tạo "
+                        + CONFIG_FILE + " trong src/main/resources. "
                         + "Hãy chép db.properties.example thành db.properties.";
                 return props;
             }
@@ -76,6 +78,23 @@ public class DBConnection {
      * max_connections và toàn bộ trang web chết — với lỗi trông chẳng liên quan
      * gì tới chỗ thật sự sai.
      */
+    /**
+     * Đã cấu hình được database chưa?
+     *
+     * DAO dùng hàm này để quyết định lấy dữ liệu thật hay dữ liệu giả
+     * (truyen.util.DemoData). Nhờ vậy dựng và xem được giao diện trước, cắm
+     * MySQL sau — đúng thứ tự khi làm frontend trước backend.
+     *
+     * Trả về false khi thiếu db.properties hoặc file đó thiếu khoá bắt buộc.
+     * Không mở thử kết nối: hàm này bị gọi rất nhiều lần, mở thử mỗi lần sẽ
+     * làm chậm toàn bộ trang.
+     */
+    public static boolean isReady() {
+        return configError == null
+                && CONFIG.getProperty("db.url") != null
+                && CONFIG.getProperty("db.username") != null;
+    }
+
     public static Connection get() throws SQLException {
         if (configError != null) {
             throw new SQLException(configError);

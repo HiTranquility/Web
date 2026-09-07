@@ -255,6 +255,93 @@ Làm theo thứ tự này để lúc nào cũng có thứ chạy được để 
 Mỗi giai đoạn xong là **chạy được và xem được** — không có giai đoạn nào để lại
 trang hỏng giữa chừng.
 
+### Tiến độ
+
+| Giai đoạn | Trạng thái |
+|:---------:|------------|
+| 1 | ✅ xong — 4 mảnh trong `views/_partials/` |
+| 2 | ✅ xong — trang 4 (tác giả), 5 (xếp hạng), 9 (403) |
+| 3–6 | chưa làm |
+
+---
+
+## Phần 4b — Chế độ xem giao diện (chưa cần MySQL)
+
+Giai đoạn này là **làm giao diện**, nên web phải xem được ngay mà không phải cài
+cơ sở dữ liệu trước. Đó là việc của `truyen/util/DemoData.java`.
+
+**Cách hoạt động.** Mỗi hàm ĐỌC trong `dao/` mở đầu bằng đúng một dòng:
+
+```java
+if (!DBConnection.isReady()) return DemoData.xxx();
+```
+
+`isReady()` chỉ kiểm tra có `db.properties` hay không. Không có → lấy dữ liệu
+trong RAM. Có → chạy SQL thật như bình thường.
+
+**Vì sao đặt ở tầng `dao/` chứ không phải `controller/`.** Vì `dao/` đúng là
+tầng chịu trách nhiệm "lấy dữ liệu ở đâu ra". Controller không được biết dữ liệu
+là thật hay giả — nếu nó biết thì sau này gỡ dữ liệu giả sẽ phải sửa cả tầng
+controller. Hiện tại gỡ chỉ cần xoá `DemoData.java` và xoá các dòng `if` đó.
+
+**Cái gì xem được, cái gì chưa.**
+
+| | Trạng thái |
+|---|---|
+| Xem mọi trang, lọc theo thể loại, tìm kiếm, phân trang | ✅ chạy |
+| Đăng nhập bằng tài khoản mẫu | ✅ chạy (băm PBKDF2 thật) |
+| Phân quyền: chủ truyện / admin / khách | ✅ chạy |
+| Tải truyện `.txt` | ✅ chạy |
+| Đăng truyện, sửa, bình luận, ban tài khoản | ❌ báo lỗi rõ ràng — **cần MySQL** |
+
+Các lệnh GHI cố tình vẫn báo lỗi. Giả vờ lưu thành công rồi mất dữ liệu khi tắt
+server thì tệ hơn nhiều so với nói thẳng là chưa lưu được.
+
+**Tài khoản mẫu.**
+
+| Tài khoản | Mật khẩu | Vai |
+|---|---|---|
+| `admin` | `admin123` | quản trị viên |
+| `mocmien` | `123456` | tác giả — 3 truyện |
+| `haiduong` | `123456` | tác giả — 2 truyện |
+| `kiemvu` | `123456` | tác giả — 3 truyện |
+| `thuytien` | `123456` | độc giả — 4 truyện đã lưu |
+| `spammer` | `123456` | **bị khoá** — thử xem màn chặn |
+
+**Chuyển sang dữ liệu thật:** chạy `scripts\setup-db.ps1`, tạo `db.properties`
+từ `db.properties.example`. Không cần sửa dòng code nào — `isReady()` tự
+chuyển nhánh.
+
+---
+
+## Phần 4c — Hai lỗi giao diện đã sửa trong giai đoạn này
+
+**1. Thanh menu mất định dạng ở khu quản trị.**
+`parts/nav.jsp` và `parts/footer.jsp` được 4 layout dùng chung, nhưng CSS của
+chúng lại nằm trong `layout-main.css`. Layout admin không nạp file đó nên thanh
+menu hiện ra trơ trụi. Đã chuyển toàn bộ phần khung chung sang `components.css`.
+
+> **Quy tắc:** mảnh JSP dùng ở nhiều layout thì CSS phải ở `components.css`.
+> Chỉ mảnh nào riêng một layout mới để trong `layout-<tên>.css`.
+
+**2. Số lượt xem hiện thô `31200` thay vì `31.200`.**
+`<fmt:formatNumber>` chọn cách viết số theo header `Accept-Language`. Không có
+header đó thì JSTL **im lặng in số thô**, không báo lỗi gì. Trình duyệt luôn gửi
+header nên lỗi này chỉ lộ ra khi test bằng `curl` — nhưng nó cũng có nghĩa là
+máy cài tiếng Anh thấy `28,360` còn máy tiếng Việt thấy `28.360`.
+
+Đã ghim trong `web.xml`:
+
+```xml
+<context-param>
+    <param-name>javax.servlet.jsp.jstl.fmt.locale</param-name>
+    <param-value>vi_VN</param-value>
+</context-param>
+```
+
+Dùng `fmt.locale` (ghi đè) chứ không phải `fmt.fallbackLocale` (chỉ dùng khi
+trình duyệt im lặng) — để ai xem cũng thấy một kiểu số.
+
 ---
 
 ## Phần 5 — Quy ước giao diện đã chốt

@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%--
   story/detail.jsp — MẢNH nội dung. Chi tiết truyện.        CASE 04 + 07 + 08
@@ -38,7 +39,7 @@
 
         <div class="detail-stats">
             <span>📄 ${story.chapterCount} chương</span>
-            <span>👁️ ${story.viewCount} lượt xem</span>
+            <span>👁️ <fmt:formatNumber pattern="#,##0" value="${story.viewCount}"/> lượt xem</span>
             <span class="${story.completed ? 'yes' : ''}">
                 ${story.completed ? '✓ Hoàn thành' : '⏳ Đang ra'}</span>
         </div>
@@ -130,25 +131,15 @@
     </c:otherwise>
 </c:choose>
 
+<%-- MẢNH: mỗi bình luận. cmStoryId để nút gỡ biết quay về truyện nào. --%>
+<c:set var="cmStoryId" value="${story.id}" scope="request"/>
 <c:forEach var="cm" items="${comments}">
-    <div class="comment">
-        <span class="user-avatar">${cm.initial}</span>
-        <div class="comment-body">
-            <div class="comment-head">
-                <b><c:out value="${cm.name}"/></b>
-                <%-- Chủ bình luận hoặc admin mới thấy nút gỡ --%>
-                <c:if test="${not empty currentUser and (currentUser.id eq cm.userId or currentUser.admin)}">
-                    <form action="${pageContext.request.contextPath}/comment" method="post"
-                          style="display:inline">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="id" value="${cm.id}">
-                        <input type="hidden" name="storyId" value="${story.id}">
-                        <button type="submit" class="link-danger">gỡ</button>
-                    </form>
-                </c:if>
-            </div>
-            <%-- <c:out> BẮT BUỘC — bình luận là chữ người dùng nhập --%>
-            <p><c:out value="${cm.content}"/></p>
-        </div>
-    </div>
+    <%@ include file="/WEB-INF/views/_partials/_comment.jsp" %>
 </c:forEach>
+
+<c:if test="${empty comments}">
+    <c:set var="emIcon"  value="💬"/>
+    <c:set var="emTitle" value="Chưa có bình luận nào"/>
+    <c:set var="emText"  value="Hãy là người đầu tiên chia sẻ cảm nhận về truyện này."/>
+    <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
+</c:if>

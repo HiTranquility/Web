@@ -44,12 +44,52 @@
 
 
     <!--
+      Ngôn ngữ mặc định cho các thẻ <fmt:...>.
+
+      VÌ SAO CẦN DÒNG NÀY
+        JSTL quyết định cách viết số và ngày dựa trên header Accept-Language
+        của trình duyệt. Nếu request KHÔNG có header đó, JSTL không chọn được
+        ngôn ngữ nào và... in ra số thô, không định dạng gì cả. Nó không báo
+        lỗi — chỉ lặng lẽ hiện "31200" thay vì "31.200".
+
+        Trình duyệt luôn gửi header này nên lúc dùng thật sẽ không thấy vấn đề.
+        Nhưng công cụ dòng lệnh (curl), bot, hay trình duyệt bị chỉnh cấu hình
+        thì không gửi — và trang sẽ hiện khác nhau tuỳ người xem.
+
+      CHỌN fmt.locale CHỨ KHÔNG PHẢI fmt.fallbackLocale
+        fallbackLocale chỉ dùng khi trình duyệt không nói gì. Nghĩa là máy cài
+        tiếng Anh vẫn thấy "28,360" còn máy tiếng Việt thấy "28.360" — cùng
+        một trang, hai kiểu số.
+
+        fmt.locale ghi đè luôn, ai xem cũng thấy như nhau: 28.360. Đây là web
+        tiếng Việt, nội dung tiếng Việt, nên định dạng số cũng nên tiếng Việt,
+        không phụ thuộc cấu hình máy người đọc.
+    -->
+    <context-param>
+        <param-name>javax.servlet.jsp.jstl.fmt.locale</param-name>
+        <param-value>vi_VN</param-value>
+    </context-param>
+
+
+    <!--
       Trang lỗi tuỳ biến.
       Trong lúc phát triển có thể comment lại để thấy stack trace thật.
     -->
     <error-page>
         <error-code>404</error-code>
         <location>/WEB-INF/views/page/error404.jsp</location>
+    </error-page>
+
+    <!--
+      403 Forbidden — TRANG 9.
+      Kich hoat khi AdminFilter chan nguoi khong phai admin, hoac khi servlet
+      goi sendError(403) vi nguoi dung sua noi dung khong phai cua minh.
+      Phai la sendError, khong phai setStatus - setStatus KHONG kich hoat
+      error-page.
+    -->
+    <error-page>
+        <error-code>403</error-code>
+        <location>/WEB-INF/views/page/error403.jsp</location>
     </error-page>
     <error-page>
         <exception-type>java.lang.Throwable</exception-type>

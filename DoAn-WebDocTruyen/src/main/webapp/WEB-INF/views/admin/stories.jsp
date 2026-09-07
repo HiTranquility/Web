@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%-- admin/stories.jsp — MẢNH. Quản trị truyện.   CASE 10
      AdminFilter đã chặn ở /admin/* nên tới đây chắc chắn là admin. --%>
 <h1>Quản trị truyện</h1>
@@ -29,7 +30,7 @@
                 </c:choose>
             </td>
             <td>${s.chapterCount}</td>
-            <td>${s.viewCount}</td>
+            <td><fmt:formatNumber pattern="#,##0" value="${s.viewCount}"/></td>
             <td class="col-actions">
                 <c:choose>
                     <c:when test="${s.status eq 'DELETED'}">

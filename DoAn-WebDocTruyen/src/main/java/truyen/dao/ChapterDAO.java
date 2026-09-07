@@ -1,5 +1,7 @@
 package truyen.dao;
 
+import truyen.util.DemoData;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,6 +24,8 @@ public class ChapterDAO {
      * cột nào thật sự cần.
      */
     public List<Chapter> findByStory(int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.chapters(storyId);
         String sql =
             "SELECT id, story_id, chapter_no, title, created_at, updated_at "
           + "FROM chapters WHERE story_id = ? ORDER BY chapter_no";
@@ -41,6 +45,8 @@ public class ChapterDAO {
 
     /** Một chương KÈM nội dung — cho trang đọc. */
     public Chapter findById(int id) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.chapter(id);
         String sql =
             "SELECT c.id, c.story_id, c.chapter_no, c.title, c.content, "
           + "       c.created_at, c.updated_at, s.title AS story_title "
@@ -71,6 +77,8 @@ public class ChapterDAO {
      * chương trước của 6 phải là 4, không phải 5).
      */
     public Chapter findNeighbour(int storyId, int chapterNo, int direction) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.neighbour(storyId, chapterNo, direction);
         String sql = direction < 0
             ? "SELECT id, story_id, chapter_no, title FROM chapters "
             + "WHERE story_id = ? AND chapter_no < ? ORDER BY chapter_no DESC LIMIT 1"
@@ -89,6 +97,8 @@ public class ChapterDAO {
 
     /** Số chương kế tiếp, để form thêm chương điền sẵn. */
     public int nextChapterNo(int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.chapters(storyId).size() + 1;
         String sql = "SELECT COALESCE(MAX(chapter_no), 0) + 1 FROM chapters WHERE story_id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -141,6 +151,8 @@ public class ChapterDAO {
 
     /** CASE 09 — mọi chương KÈM nội dung, để ghép thành file .txt tải về. */
     public List<Chapter> findAllWithContent(int storyId) throws SQLException {
+        // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
+        if (!DBConnection.isReady()) return DemoData.chapters(storyId);
         String sql = "SELECT id, story_id, chapter_no, title, content, created_at, updated_at "
                    + "FROM chapters WHERE story_id = ? ORDER BY chapter_no";
         List<Chapter> list = new ArrayList<>();
