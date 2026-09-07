@@ -494,6 +494,47 @@ INSERT INTO bookmarks (user_id, story_id, last_chapter_id) VALUES
 
 
 -- =============================================================================
+--  Trả lời bình luận (comments.parent_id)
+-- =============================================================================
+--  Chèn SAU khối bình luận gốc vì parent_id phải trỏ tới dòng đã tồn tại.
+--
+--  Không viết cứng số id: id do AUTO_INCREMENT sinh, chạy lại file này trên
+--  máy khác có thể ra dãy số khác. Dùng truy vấn con tìm đúng bình luận gốc
+--  theo nội dung — dài dòng hơn nhưng luôn đúng.
+-- =============================================================================
+INSERT INTO comments (story_id, user_id, content, parent_id, created_at)
+SELECT 1, 2,
+       'Cảm ơn bạn đã đọc tới cuối. Truyện sau mình sẽ viết nhanh hơn.',
+       c.id, DATE_SUB(NOW(), INTERVAL 2 HOUR)
+FROM comments c
+WHERE c.story_id = 1 AND c.parent_id IS NULL
+ORDER BY c.created_at DESC LIMIT 1;
+
+INSERT INTO comments (story_id, user_id, content, parent_id, created_at)
+SELECT 1, 4,
+       'Mình cũng vừa đọc xong. Chương 20 là chương hay nhất.',
+       c.id, DATE_SUB(NOW(), INTERVAL 1 HOUR)
+FROM comments c
+WHERE c.story_id = 1 AND c.parent_id IS NULL
+ORDER BY c.created_at DESC LIMIT 1;
+
+INSERT INTO comments (story_id, user_id, content, parent_id, created_at)
+SELECT 4, 3,
+       'Bạn đọc kỹ đó. Nhưng chưa phải manh mối chính đâu.',
+       c.id, DATE_SUB(NOW(), INTERVAL 5 HOUR)
+FROM comments c
+WHERE c.story_id = 4 AND c.parent_id IS NULL
+ORDER BY c.created_at DESC LIMIT 1;
+
+INSERT INTO comments (story_id, user_id, content, parent_id, created_at)
+SELECT 4, 5,
+       'Vậy là còn thứ khác nữa à? Hồi hộp quá.',
+       c.id, DATE_SUB(NOW(), INTERVAL 4 HOUR)
+FROM comments c
+WHERE c.story_id = 4 AND c.parent_id IS NULL
+ORDER BY c.created_at DESC LIMIT 1;
+
+-- =============================================================================
 --  ratings — chấm sao
 -- =============================================================================
 --  Không chấm đủ mọi truyện cho mọi người: dữ liệu mẫu phải có cả truyện được

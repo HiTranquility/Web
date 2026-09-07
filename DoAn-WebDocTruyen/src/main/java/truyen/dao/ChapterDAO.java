@@ -149,6 +149,146 @@ public class ChapterDAO {
         }
     }
 
+    /** Tu khoa ngan hon so nay thi FULLTEXT bo qua — xem ghi chu ben duoi. */
+    private static final int MIN_FT_LEN = 3;
+
+    /** So ky tu trich dan quanh cho khop, moi ben. */
+    private static final int SNIPPET_PAD = 60;
+
+    /**
+     * TIM KIEM TRONG NOI DUNG CHUONG.
+     *
+     * HAI DUONG, CHON THEO DO DAI TU KHOA
+     *
+     *   Tu khoa >= 3 ky tu -> MATCH ... AGAINST, dung chi muc ft_chapter_text.
+     *       Nhanh, va co san diem lien quan de sap xep: chuong nhac toi tu do
+     *       nhieu lan se len tren.
+     *
+     *   Tu khoa ngan hon    -> LIKE '%...%'.
+     *       Cham hon nhieu vi phai quet ca bang, nhung VAN RA KET QUA.
+     *       MySQL mac dinh khong dua tu ngan hon 3 ky tu vao chi muc
+     *       (innodb_ft_min_token_size), nen neu chi dung FULLTEXT thi go
+     *       "mẹ" hay "hạ" se ra rong — va nguoi dung se ket luan la truyen
+     *       khong co tu do, chu khong doan duoc la cong cu tim khong ho tro.
+     *
+     *   Tra ve rong ma khong giai thich duoc la kieu hong kho chiu nhat.
+     *
+     * BOOLEAN MODE thay vi che do tu nhien
+     *   Che do tu nhien tu bo qua tu xuat hien o tren 50% so dong — hop ly
+     *   voi kho van ban lon, nhung voi vai chuc chuong thi mot tu thuong gap
+     *   se bien mat khong dau vet. Boolean mode khong co nguong do.
+     *
+     * DAU + VA THAM SO
+     *   Tu khoa van di qua dau ? nhu moi cau khac, nen KHONG co SQL injection.
+     *   Nhung cu phap boolean co ky tu dac biet (+ - * " ~) — nguoi dung go
+     *   nham mot dau ngoac kep la MySQL bao loi cu phap. removeOperators()
+     *   don sach truoc khi gui di.
+     *
+     * @param keyword tu khoa nguoi dung go
+     * @param limit   so ket qua toi da
+     */
+    public List<Chapter> searchContent(String keyword, int limit) throws SQLException {
+        String kw = keyword == null ? "" : keyword.trim();
+        if (kw.isEmpty()) return new ArrayList<>();
+
+        if (!DBConnection.isReady()) return DemoData.searchChapters(kw, limit);
+
+        boolean useFulltext = kw.length() >= MIN_FT_LEN;
+
+        String sql;
+        if (useFulltext) {
+            sql = "SELECT c.id, c.story_id, c.chapter_no, c.title, c.content, "
+                + "       c.created_at, c.updated_at, s.title AS story_title "
+                + "FROM chapters c JOIN stories s ON s.id = c.story_id "
+                + "WHERE s.status = 'PUBLISHED' "
+                + "  AND MATCH(c.title, c.content) AGAINST (? IN BOOLEAN MODE) "
+                + "ORDER BY MATCH(c.title, c.content) AGAINST (? IN BOOLEAN MODE) DESC "
+                + "LIMIT ?";
+        } else {
+            sql = "SELECT c.id, c.story_id, c.chapter_no, c.title, c.content, "
+                + "       c.created_at, c.updated_at, s.title AS story_title "
+                + "FROM chapters c JOIN stories s ON s.id = c.story_id "
+                + "WHERE s.status = 'PUBLISHED' "
+                + "  AND (c.content LIKE ? OR c.title LIKE ?) "
+                + "ORDER BY c.story_id, c.chapter_no "
+                + "LIMIT ?";
+        }
+
+        List<Chapter> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (useFulltext) {
+                // Dau + = tu nay BAT BUOC phai co mat.
+                String bool = "+" + removeOperators(kw);
+                ps.setString(1, bool);
+                ps.setString(2, bool);   // lap lai cho menh de ORDER BY
+                ps.setInt(3, limit);
+            } else {
+                String like = "%" + kw + "%";
+                ps.setString(1, like);
+                ps.setString(2, like);
+                ps.setInt(3, limit);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Chapter c = mapRow(rs, true);
+                    c.setStoryTitle(rs.getString("story_title"));
+
+                    /*
+                     * Thay noi dung day du bang mot doan trich quanh cho khop.
+                     *
+                     * Ket qua tim kiem 20 chuong ma moi chuong keo theo vai
+                     * nghin chu la vai tram KB HTML cho mot trang danh sach.
+                     * Cat ngay o day, truoc khi du lieu roi khoi tang dao.
+                     */
+                    c.setContent(snippet(c.getContent(), kw));
+                    list.add(c);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Bo ky tu dieu khien cua cu phap boolean fulltext.
+     *
+     * Danh sach: + - > < ( ) ~ * " @
+     * Nguoi dung go mot dau ngoac kep le loi la MySQL nem loi cu phap va ca
+     * trang tim kiem chet — trong khi y ho chi la tim mot cau co dau ngoac.
+     */
+    private String removeOperators(String s) {
+        return s.replaceAll("[+\\-><()~*\"@]", " ").trim();
+    }
+
+    /**
+     * Cat mot doan quanh cho tu khoa xuat hien.
+     *
+     * Khong tim thay (truong hop FULLTEXT khop o cot title) thi lay tam phan
+     * dau. Van co ich: nguoi doc thay duoc chuong noi ve cai gi.
+     */
+    private String snippet(String content, String keyword) {
+        if (content == null) return "";
+
+        String flat = content.replace('\n', ' ').replace('\r', ' ');
+        int at = flat.toLowerCase().indexOf(keyword.toLowerCase());
+
+        if (at < 0) {
+            return flat.length() <= SNIPPET_PAD * 2
+                 ? flat
+                 : flat.substring(0, SNIPPET_PAD * 2) + "…";
+        }
+
+        int from = Math.max(0, at - SNIPPET_PAD);
+        int to   = Math.min(flat.length(), at + keyword.length() + SNIPPET_PAD);
+        String cut = flat.substring(from, to);
+
+        if (from > 0) cut = "…" + cut;
+        if (to < flat.length()) cut = cut + "…";
+        return cut;
+    }
+
     /** CASE 09 — mọi chương KÈM nội dung, để ghép thành file .txt tải về. */
     public List<Chapter> findAllWithContent(int storyId) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.

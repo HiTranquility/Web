@@ -49,6 +49,20 @@
     <button type="submit" class="btn btn-primary btn-sm">Tìm</button>
 </form>
 
+<%-- Hai chế độ tìm. Đặt ngay dưới ô nhập, không giấu trong menu: người
+     không tìm thấy bằng tên truyện cần nhìn thấy lối thứ hai NGAY LÚC ĐÓ. --%>
+<div class="filter-bar" style="margin-top:-6px">
+    <div class="filter-group">
+        <span class="filter-label">Tìm theo</span>
+        <a class="chip is-on"
+           href="${pageContext.request.contextPath}/story?action=list&amp;q=${keyword}">
+            Tên truyện / tác giả</a>
+        <a class="chip"
+           href="${pageContext.request.contextPath}/story?action=search&amp;q=${keyword}">
+            🔎 Nội dung chương</a>
+    </div>
+</div>
+
 <%-- MẢNH: bộ lọc thể loại --%>
 <c:set var="tfBase" value="story?action=list" scope="request"/>
 <%@ include file="/WEB-INF/views/_partials/_tag-filter.jsp" %>

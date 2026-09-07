@@ -87,6 +87,17 @@ public class CommentServlet extends HttpServlet {
 
         Comment c = new Comment();
         c.setStoryId(storyId);
+
+        /*
+         * parentId co thi day la TRA LOI, khong co thi la binh luan goc.
+         *
+         * Khong kiem o day xem cha co thuoc dung truyen nay khong —
+         * CommentDAO.insert() da tra lai bang findById va tu ep ve goc.
+         * Kiem hai lan cung mot thu o hai tang la cach chac chan de mot ngay
+         * nao do hai noi lech nhau.
+         */
+        int parentId = parseIntOr(request.getParameter("parentId"), 0);
+        c.setParentId(parentId > 0 ? parentId : null);
         c.setUserId(me.getId());
         c.setContent(content);
         commentDAO.insert(c);

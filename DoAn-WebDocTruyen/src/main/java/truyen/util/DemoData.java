@@ -528,6 +528,44 @@ public final class DemoData {
         return out;
     }
 
+    /**
+     * Tìm trong nội dung chương — bản giả lập.
+     *
+     * Mọi chương giả đều dùng chung một đoạn văn LOREM, nên tìm "ngõ" sẽ ra
+     * rất nhiều kết quả. Đó là hạn chế của dữ liệu giả, không phải của tính
+     * năng: với CSDL thật mỗi chương một nội dung riêng.
+     */
+    public static List<Chapter> searchChapters(String keyword, int limit) {
+        String kw = keyword == null ? "" : keyword.trim().toLowerCase();
+        List<Chapter> out = new ArrayList<>();
+        if (kw.isEmpty()) return out;
+
+        for (Story s : stories()) {
+            for (Chapter c : chapters(s.getId())) {
+                String hay = (c.getTitle() + " " + c.getContent()).toLowerCase();
+                if (!hay.contains(kw)) continue;
+
+                // Cắt đoạn trích y như ChapterDAO.snippet() để hai chế độ
+                // hiển thị giống hệt nhau.
+                String flat = c.getContent().replace('\n', ' ');
+                int at = flat.toLowerCase().indexOf(kw);
+                if (at >= 0) {
+                    int from = Math.max(0, at - 60);
+                    int to = Math.min(flat.length(), at + kw.length() + 60);
+                    String cut = flat.substring(from, to);
+                    if (from > 0) cut = "…" + cut;
+                    if (to < flat.length()) cut = cut + "…";
+                    c.setContent(cut);
+                } else {
+                    c.setContent(flat.substring(0, Math.min(120, flat.length())) + "…");
+                }
+                out.add(c);
+                if (out.size() >= limit) return out;
+            }
+        }
+        return out;
+    }
+
     public static Chapter chapter(int id) {
         for (Chapter c : chapters(id / 100)) {
             if (c.getId() == id) return c;
@@ -541,6 +579,13 @@ public final class DemoData {
 
     private static Comment comment(int id, int storyId, int userId, String user,
                                    String name, int hoursAgo, String content) {
+        return comment(id, storyId, userId, user, name, hoursAgo, content, null);
+    }
+
+    /** Bản có parentId — dùng cho các trả lời. */
+    private static Comment comment(int id, int storyId, int userId, String user,
+                                   String name, int hoursAgo, String content,
+                                   Integer parentId) {
         Comment c = new Comment();
         c.setId(id);
         c.setStoryId(storyId);
@@ -550,6 +595,7 @@ public final class DemoData {
         c.setContent(content);
         c.setStatus("VISIBLE");
         c.setCreatedAt(T0.minusHours(hoursAgo));
+        c.setParentId(parentId);
         return c;
     }
 
@@ -568,14 +614,39 @@ public final class DemoData {
             comment(6, 6, 5, "thuytien", "Thuỷ Tiên", 30,
                     "Ra chương đều thật sự đáng quý. Mong tác giả giữ sức."),
             comment(7, 6, 4, "kiemvu", "Kiếm Vũ", 26,
-                    "Mình cố gắng mỗi tuần một chương. Cảm ơn bạn.")
+                    "Mình cố gắng mỗi tuần một chương. Cảm ơn bạn."),
+
+            // ---- Trả lời (parentId trỏ về bình luận gốc) ----
+            comment(101, 1, 2, "mocmien", "Mộc Miên", 2,
+                    "Cảm ơn bạn đã đọc tới cuối. Truyện sau mình viết nhanh hơn.", 1),
+            comment(102, 1, 4, "kiemvu", "Kiếm Vũ", 1,
+                    "Mình cũng vừa đọc xong. Chương 20 là chương hay nhất.", 1),
+            comment(103, 4, 3, "haiduong", "Hải Dương", 5,
+                    "Bạn đọc kỹ đó. Nhưng chưa phải manh mối chính đâu.", 4),
+            comment(104, 4, 5, "thuytien", "Thuỷ Tiên", 4,
+                    "Vậy là còn thứ khác nữa à? Hồi hộp quá.", 4),
+            comment(105, 6, 4, "kiemvu", "Kiếm Vũ", 25,
+                    "Cảm ơn bạn. Tuần này có thể ra hai chương.", 6)
         ));
 
-        List<Comment> out = new ArrayList<>();
+        // Lọc theo truyện rồi XẾP CÂY — làm y hệt CommentDAO.buildTree() để
+        // giao diện lúc chạy dữ liệu giả và lúc chạy dữ liệu thật giống nhau.
+        List<Comment> mine = new ArrayList<>();
         for (Comment c : all) {
-            if (c.getStoryId() == storyId) out.add(c);
+            if (c.getStoryId() == storyId) mine.add(c);
         }
-        return out;
+
+        java.util.Map<Integer, Comment> roots = new java.util.LinkedHashMap<>();
+        for (Comment c : mine) {
+            if (!c.isReply()) roots.put(c.getId(), c);
+        }
+        for (Comment c : mine) {
+            if (c.isReply()) {
+                Comment parent = roots.get(c.getParentId());
+                if (parent != null) parent.getReplies().add(c);
+            }
+        }
+        return new ArrayList<>(roots.values());
     }
 
     // ========================================================================

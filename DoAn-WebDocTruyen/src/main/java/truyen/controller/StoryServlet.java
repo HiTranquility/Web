@@ -97,6 +97,7 @@ public class StoryServlet extends HttpServlet {
                 case "edit":   url = createOrEdit(request, response, false); break;
                 case "delete": url = delete(request, response);  break;
                 case "stats":  url = stats(request);             break;
+                case "search": url = search(request);            break;
                 default:       url = list(request);              break;
             }
         } catch (SQLException e) {
@@ -286,6 +287,31 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("totalComments", totalComments);
         request.setAttribute("pageTitle", "Thống kê truyện của tôi");
         return "/WEB-INF/views/story/stats.jsp";
+    }
+
+    /**
+     * TRANG 2b — Tim kiem SAU trong noi dung chuong.
+     *
+     * Dung chung URL /story voi kho truyen, chi khac action. Ly do: day van la
+     * "tim truyen", chi khac cho tim. Tach ra mot servlet rieng thi nguoi dung
+     * doi giua hai che do se nhay giua hai duong dan khong lien quan gi nhau.
+     *
+     * Ket qua tra ve la CHUONG chu khong phai TRUYEN — vi thu nguoi dung muon
+     * biet la "cau do nam o chuong nao", va bam vao la mo thang chuong do.
+     */
+    private String search(HttpServletRequest request) throws SQLException {
+        String keyword = trim(request.getParameter("q"));
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("results", keyword.isEmpty()
+                ? java.util.Collections.emptyList()
+                : chapterDAO.searchContent(keyword, 30));
+
+        request.setAttribute("pageTitle", keyword.isEmpty()
+                ? "Tìm trong nội dung"
+                : "Tìm: " + keyword);
+        request.setAttribute("activeNav", "browse");
+        return "/WEB-INF/views/story/search.jsp";
     }
 
     // ---- CASE 05: đăng / sửa ----------------------------------------------

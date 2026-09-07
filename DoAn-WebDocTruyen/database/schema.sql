@@ -143,6 +143,36 @@ CREATE TABLE chapters (
     -- Trong một truyện không được có hai chương cùng số.
     -- Ràng buộc ở DB chứ không chỉ ở code: code có thể quên, DB thì không.
     UNIQUE KEY uq_story_chapter (story_id, chapter_no)
+,
+
+    /*
+      CHI MUC TOAN VAN — de tim kiem TRONG NOI DUNG chuong.
+
+      VI SAO KHONG DUNG LIKE '%tu khoa%'
+        LIKE bat dau bang dau % thi MySQL KHONG dung duoc index nao ca: no
+        phai doc tung dong, tung ky tu. Voi cot TEXT chua ca chuong truyen,
+        vai nghin chuong la vai chuc trieu ky tu cho MOI lan tim.
+
+        FULLTEXT dung so do dao nguoc: no tach san moi tu ra va nho tu do
+        nam o nhung dong nao. Tim mot tu la tra bang, khong phai quet bang.
+
+      GIA PHAI TRA
+        1. Ghi cham hon mot chut, vi moi lan them/sua chuong deu phai cap
+           nhat chi muc. Doi lai doc nhanh hon nhieu bac — dung danh doi voi
+           mot bang ma nguoi ta doc nhieu hon ghi rat nhieu.
+
+        2. Chi muc chiem them dung luong dia, co khi bang ca du lieu goc.
+
+        3. MySQL mac dinh BO QUA tu ngan hon 3 ky tu
+           (innodb_ft_min_token_size = 3). Tieng Viet nhieu tu hai am tiet
+           viet roi ("ha", "me", "cho") se khong tim duoc. Vi vay ChapterDAO
+           tu chuyen sang LIKE khi tu khoa qua ngan — cham hon nhung ra ket
+           qua, con hon tra ve rong ma khong giai thich duoc tai sao.
+
+      CO CA title VA content: nguoi ta go "chuong cuoi" thi mong tim thay ten
+      chuong, khong phai chi ruot truyen.
+    */
+    FULLTEXT INDEX ft_chapter_text (title, content)
 ) ENGINE=InnoDB;
 
 
@@ -199,12 +229,38 @@ CREATE TABLE comments (
     -- giữ lại để còn bằng chứng khi xử lý tài khoản.
     status     ENUM('VISIBLE','HIDDEN') NOT NULL DEFAULT 'VISIBLE',
 
+    /*
+      TRẢ LỜI BÌNH LUẬN — quan hệ CHA-CON trong CÙNG MỘT BẢNG.
+
+      NULL      = bình luận gốc
+      có giá trị = trả lời cho bình luận có id đó
+
+      VÌ SAO KHÔNG TÁCH BẢNG comment_replies RIÊNG
+        Trả lời cũng là bình luận: cùng người viết, cùng nội dung, cùng cần
+        ẩn khi vi phạm, cùng cần báo cáo. Tách bảng là chép y nguyên năm cột
+        và nhân đôi mọi câu truy vấn quản trị.
+
+      CHỈ LỒNG MỘT CẤP — quyết định có chủ ý, ép ở tầng Java.
+        CSDL không cấm được A trả lời B trả lời C trả lời D. Nhưng lồng sâu
+        thì trên màn hình điện thoại, tới cấp 4 là cột chữ chỉ còn vài từ mỗi
+        dòng. CommentDAO.insert() ép mọi trả lời gắn về bình luận GỐC.
+
+      ON DELETE CASCADE trỏ về chính bảng này: xoá bình luận gốc thì các trả
+      lời của nó đi theo. Đúng ý muốn — một chuỗi trả lời mất phần đầu thì
+      không ai hiểu người ta đang nói về cái gì.
+    */
+    parent_id  INT NULL,
+
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (story_id) REFERENCES stories(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)  REFERENCES users(id)   ON DELETE CASCADE,
+    FOREIGN KEY (story_id)  REFERENCES stories(id)  ON DELETE CASCADE,
+    FOREIGN KEY (user_id)   REFERENCES users(id)    ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE,
 
-    INDEX idx_comments_story (story_id, created_at)
+    INDEX idx_comments_story (story_id, created_at),
+
+    -- Gom trả lời theo bình luận cha
+    INDEX idx_comments_parent (parent_id)
 ) ENGINE=InnoDB;
 
 

@@ -148,7 +148,8 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | # | Trang | URL | Chức năng phục vụ | Xong |
 |:-:|-------|-----|-------------------|:----:|
 | 1 | Trang chủ | `/` | Truyện mới cập nhật, xem nhiều nhất | ✅ |
-| 2 | Kho truyện | `/story?action=list` | Duyệt, phân trang, lọc thể loại, tìm kiếm | ✅ |
+| 2 | Kho truyện | `/story?action=list` | Duyệt, phân trang, lọc thể loại + tình trạng, sắp xếp, tìm tên truyện/tác giả | ✅ |
+| 2b | Tìm trong nội dung | `/story?action=search` | Tìm sâu bên trong chương, có đoạn trích | ✅ |
 | 3 | Chi tiết truyện | `/story?action=detail&id=` | Thông tin, mục lục, bình luận, đánh giá | ✅ |
 | 4 | Trang tác giả | `/user?action=profile&id=` | Hồ sơ công khai, danh sách truyện | ✅ *(chưa có nút theo dõi)* |
 | 5 | Bảng xếp hạng | `/rank?by=week\|month\|views\|rating\|chapters\|newest` | Top 20, **6 tiêu chí** — tuần/tháng đếm trên `view_logs` | ✅ |
@@ -219,7 +220,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | D. Đọc | **1** | 1 |
 | E. Soạn thảo | **1** | 1 |
 | F. Quản trị | **6** | 6 |
-| **Trang — tổng** | **30** | **30** |
+| **Trang — tổng** | **31** | **30** + 1 phát sinh |
 | Layout | **5** | 5 |
 | Mảnh tái dùng | **9** | 9 |
 

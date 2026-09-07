@@ -27,6 +27,21 @@ public class Comment implements Serializable {
 
     private LocalDateTime createdAt;
 
+    /** null = bình luận gốc; có giá trị = đang trả lời bình luận đó. */
+    private Integer parentId;
+
+    /*
+     * Các trả lời của bình luận này.
+     *
+     * KHÔNG phải cột trong CSDL. CommentDAO đọc danh sách phẳng từ một câu
+     * SQL rồi tự xếp thành cây trong bộ nhớ — xem findByStory().
+     *
+     * Khởi tạo sẵn danh sách rỗng chứ không để null: JSP viết
+     * <c:forEach items="${cm.replies}"> mà gặp null thì JSTL bỏ qua êm, nhưng
+     * mọi đoạn code Java đụng vào sẽ nổ NullPointerException.
+     */
+    private java.util.List<Comment> replies = new java.util.ArrayList<>();
+
     // Lấy qua JOIN sang bảng users, để hiện tên người viết mà khỏi truy vấn thêm
     private String username;
     private String displayName;
@@ -50,6 +65,17 @@ public class Comment implements Serializable {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public Integer getParentId() { return parentId; }
+    public void setParentId(Integer parentId) { this.parentId = parentId; }
+
+    public java.util.List<Comment> getReplies() { return replies; }
+    public void setReplies(java.util.List<Comment> replies) { this.replies = replies; }
+
+    /** Có phải trả lời không — để JSP khỏi so sánh null. */
+    public boolean isReply() { return parentId != null; }
+
+    public int getReplyCount() { return replies.size(); }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
