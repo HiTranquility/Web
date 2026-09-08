@@ -49,6 +49,26 @@
       Servlet nao dat "message" thi trang do tu co thong bao, khong phai sua gi.
       Them trang moi cung duoc huong san.
     --%>
+    <%--
+      THONG BAO SAU KHI CHUYEN TRANG ("flash message").
+
+      Vi sao phai la SESSION chu khong phai request:
+        Luu ho so xong, servlet redirect ve /user?action=me. Redirect la mot
+        request MOI hoan toan — moi thu dat trong request cu deu mat sach.
+        Session song qua nhieu request nen tin nhan di theo duoc.
+
+      Vi sao phai XOA NGAY sau khi hien:
+        Khong xoa thi "Da luu ho so" bam theo nguoi dung sang moi trang, tan
+        toi luc dang xuat. Doc xong la bo — day dung la ly do cai mau nay ten
+        "flash": loe mot cai roi tat.
+
+      c:remove chinh la buoc "doc xong thi bo" do.
+    --%>
+    <c:if test="${not empty flash}">
+        <div class="panel panel-ok"><c:out value="${flash}"/></div>
+        <c:remove var="flash" scope="session"/>
+    </c:if>
+
     <c:if test="${not empty message}">
         <div class="panel panel-warn" style="margin-bottom:22px">
             <c:out value="${message}"/>

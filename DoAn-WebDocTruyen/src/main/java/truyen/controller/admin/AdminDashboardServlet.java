@@ -10,20 +10,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.ReportDAO;
 import truyen.dao.StoryDAO;
-import truyen.dao.TagDAO;
+import truyen.util.AppListener;
 
 /** TRANG 25 — Bảng điều khiển quản trị. */
 @WebServlet("/admin/dashboard")
 public class AdminDashboardServlet extends HttpServlet {
 
     private StoryDAO storyDAO;
-    private TagDAO tagDAO;
     private ReportDAO reportDAO;
 
     @Override
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
-        tagDAO = new TagDAO();
         reportDAO = new ReportDAO();
     }
 
@@ -62,7 +60,7 @@ public class AdminDashboardServlet extends HttpServlet {
 
             request.setAttribute("pending", reportDAO.countPending());
             request.setAttribute("topStories", storyDAO.findTop("views", 5));
-            request.setAttribute("tags", tagDAO.findAllWithCount());
+            request.setAttribute("tags", AppListener.tags(getServletContext()));
 
         } catch (SQLException e) {
             log("AdminDashboardServlet: lỗi truy vấn", e);

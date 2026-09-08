@@ -48,6 +48,12 @@
     </aside>
 
     <main class="admin-main">
+        <%-- Thong bao sau khi chuyen trang — xem ghi chu day du o main.jsp --%>
+        <c:if test="${not empty flash}">
+            <div class="panel panel-ok"><c:out value="${flash}"/></div>
+            <c:remove var="flash" scope="session"/>
+        </c:if>
+
         <c:if test="${not empty message}">
             <div class="panel panel-warn"><c:out value="${message}"/></div>
         </c:if>

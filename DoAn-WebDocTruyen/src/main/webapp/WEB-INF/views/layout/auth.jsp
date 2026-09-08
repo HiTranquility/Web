@@ -32,7 +32,12 @@
     </a>
 
     <div class="auth-card">
-        <jsp:include page="${contentPage}" />
+        <c:if test="${not empty flash}">
+    <div class="panel panel-ok"><c:out value="${flash}"/></div>
+    <c:remove var="flash" scope="session"/>
+</c:if>
+
+<jsp:include page="${contentPage}" />
     </div>
 
     <p class="auth-foot">

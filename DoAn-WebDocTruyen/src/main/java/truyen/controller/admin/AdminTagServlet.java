@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.TagDAO;
 import truyen.model.Tag;
+import truyen.util.AppListener;
 import truyen.util.SlugUtil;
 
 /**
@@ -53,6 +54,20 @@ public class AdminTagServlet extends HttpServlet {
             } else if ("delete".equals(action)) {
                 remove(request);
             }
+            /*
+             * SUA XONG thi NAP LAI cache o application scope.
+             *
+             * Bo buoc nay thi ca web van hien ten the loai cu cho toi luc
+             * restart — va khong co gi bao loi. Day dung la cai gia phai tra
+             * cua viec giu du lieu trong bo nho: doi mot noi thi phai tu di
+             * bao noi kia.
+             */
+            if (action != null) {
+                AppListener.refresh(getServletContext());
+            }
+
+            // Trang nay doc THANG tu CSDL, khong qua cache — admin vua sua
+            // xong phai thay ngay ket qua that, khong phai ban da nap.
             request.setAttribute("tags", tagDAO.findAllWithCount());
 
         } catch (SQLException e) {

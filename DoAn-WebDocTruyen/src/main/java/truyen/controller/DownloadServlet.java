@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import truyen.util.DBConnection;
 import truyen.dao.ChapterDAO;
 import truyen.dao.StoryDAO;
 import truyen.model.Chapter;
@@ -48,6 +49,16 @@ public class DownloadServlet extends HttpServlet {
             chapters = chapterDAO.findAllWithContent(storyId);
         } catch (SQLException e) {
             log("DownloadServlet: không đọc được truyện id=" + storyId, e);
+
+            // Chua co CSDL thi khong the sinh file. Dua ve trang truyen kem
+            // mot cau giai thich, thay vi mot trang 500 khong noi len gi.
+            if (!DBConnection.isReady()) {
+                request.getSession().setAttribute("flash",
+                        "Chưa nối cơ sở dữ liệu nên chưa tải truyện được.");
+                response.sendRedirect(request.getContextPath()
+                        + "/story?action=detail&id=" + storyId);
+                return;
+            }
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }

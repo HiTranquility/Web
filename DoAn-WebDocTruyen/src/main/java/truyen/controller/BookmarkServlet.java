@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import truyen.util.DBConnection;
 import truyen.dao.BookmarkDAO;
 import truyen.model.User;
 
@@ -92,6 +93,19 @@ public class BookmarkServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log("BookmarkServlet: lỗi truy vấn, action=" + action, e);
+
+            /*
+             * KHONG nem trang 500 khi nguyen nhan la CHUA CO CSDL.
+             * O che do xem giao dien moi lenh GHI deu that bai — dung nhu
+             * thiet ke — nhung trang 500 khien nguoi dung tuong web hong.
+             */
+            if (!DBConnection.isReady()) {
+                request.getSession().setAttribute("flash",
+                        "Chưa nối cơ sở dữ liệu nên chưa lưu được. "
+                        + "Chạy scripts\setup-db.ps1 rồi tạo db.properties.");
+                response.sendRedirect(request.getContextPath() + "/bookmark");
+                return;
+            }
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

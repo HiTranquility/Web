@@ -18,6 +18,7 @@ import truyen.dao.StoryDAO;
 import truyen.dao.FollowDAO;
 import truyen.dao.RatingDAO;
 import truyen.dao.TagDAO;
+import truyen.util.AppListener;
 import truyen.model.Story;
 import truyen.model.User;
 import truyen.util.DBConnection;
@@ -157,7 +158,12 @@ public class StoryServlet extends HttpServlet {
                                                 (page - 1) * pageSize, pageSize);
 
         request.setAttribute("stories", stories);
-        request.setAttribute("tags", tagDAO.findAllWithCount());
+        /*
+         * Doc tu APPLICATION SCOPE thay vi chay SQL.
+         * Danh sach the loai gan nhu khong doi ma trang nay ai cung mo —
+         * xem ghi chu day du trong util/AppListener.
+         */
+        request.setAttribute("tags", AppListener.tags(getServletContext()));
         request.setAttribute("currentTag", tag);
         request.setAttribute("keyword", keyword);
         request.setAttribute("sort", sort);
@@ -352,7 +358,7 @@ public class StoryServlet extends HttpServlet {
         // GET = chỉ hiện form
         if (!"POST".equals(request.getMethod())) {
             request.setAttribute("story", story);
-            request.setAttribute("allTags", tagDAO.findAllWithCount());
+            request.setAttribute("allTags", AppListener.tags(getServletContext()));
             request.setAttribute("selectedTags", isCreate
                     ? java.util.Collections.emptyList()
                     : tagDAO.findByStory(story.getId()));
@@ -377,7 +383,7 @@ public class StoryServlet extends HttpServlet {
         if (title.isEmpty()) {
             request.setAttribute("message", "Tiêu đề không được để trống.");
             request.setAttribute("story", story);
-            request.setAttribute("allTags", tagDAO.findAllWithCount());
+            request.setAttribute("allTags", AppListener.tags(getServletContext()));
             request.setAttribute("pageTitle", isCreate ? "Đăng truyện mới" : "Sửa truyện");
             return "/WEB-INF/views/story/form.jsp";
         }

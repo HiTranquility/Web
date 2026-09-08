@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import truyen.util.DBConnection;
 import truyen.dao.FollowDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.UserDAO;
@@ -72,6 +73,24 @@ public class UserServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log("UserServlet: lỗi truy vấn, action=" + action, e);
+
+            /*
+             * KHONG nem trang 500 khi nguyen nhan la CHUA CO CSDL.
+             *
+             * O che do xem giao dien, moi lenh GHI deu that bai — dung nhu
+             * thiet ke. Nhung tra ve trang 500 thi nguoi dung tuong web hong,
+             * trong khi thuc te chi la chua chay setup-db.ps1.
+             *
+             * Noi ro nguyen nhan roi tra ho ve cho cu. Chi loi THAT SU bat ngo
+             * moi dang mot trang 500.
+             */
+            if (!DBConnection.isReady()) {
+                request.getSession().setAttribute("flash",
+                        "Chưa nối cơ sở dữ liệu nên chưa lưu được. "
+                        + "Chạy scripts\\setup-db.ps1 rồi tạo db.properties.");
+                response.sendRedirect(request.getContextPath() + "/user?action=me");
+                return;
+            }
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
