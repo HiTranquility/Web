@@ -593,6 +593,104 @@ public class StoryDAO {
         }
     }
 
+    /**
+     * Dem theo NGAY cho bieu do — dung chung cho ba loai so lieu.
+     *
+     * VI SAO MOT HAM CHO CA BA thay vi countStoriesByDay / countUsersByDay /
+     * countViewsByDay
+     *   Ba cau SQL khac nhau dung TEN BANG va TEN COT khac nhau, phan con lai
+     *   giong het: gom theo ngay, lap day ngay trong, tra ve mang. Viet ba lan
+     *   la chep ba lan cung mot logic lap day.
+     *
+     *   Ten bang KHONG the truyen bang dau ? — no khong phai gia tri. Nen o day
+     *   dung DANH SACH TRANG: chuoi `what` chi chon duoc mot trong ba cau da
+     *   viet san, khong co duong nao ghep chu nguoi dung vao SQL.
+     *
+     * VI SAO PHAI LAP DAY NGAY TRONG
+     *   GROUP BY chi tra ve nhung ngay CO du lieu. Ngay khong ai dang truyen
+     *   thi bien mat khoi ket qua, va bieu do se noi lien hai cot cach nhau ba
+     *   ngay nhu the chung lien nhau — doc ra sai han xu huong.
+     *
+     * @param what "stories" | "users" | "views"
+     * @param days so ngay gan nhat, tinh ca hom nay
+     * @return mang do dai `days`, phan tu 0 la ngay xa nhat
+     */
+    public int[] countByDay(String what, int days) throws SQLException {
+        if (days < 1) days = 1;
+        if (days > 90) days = 90;      // chan xin mot nam du lieu
+
+        if (!DBConnection.isReady()) return DemoData.countByDay(what, days);
+
+        String sql;
+        if ("users".equals(what)) {
+            sql = "SELECT DATE(created_at) d, COUNT(*) n FROM users "
+                + "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) "
+                + "GROUP BY d";
+        } else if ("views".equals(what)) {
+            sql = "SELECT DATE(viewed_at) d, COUNT(*) n FROM view_logs "
+                + "WHERE viewed_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) "
+                + "GROUP BY d";
+        } else {
+            sql = "SELECT DATE(created_at) d, COUNT(*) n FROM stories "
+                + "WHERE status != 'DELETED' "
+                + "  AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) "
+                + "GROUP BY d";
+        }
+
+        // Dat ket qua vao dung o theo khoang cach ngay so voi hom nay.
+        int[] out = new int[days];
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, days - 1);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Date d = rs.getDate("d");
+                    if (d == null) continue;
+                    long back = java.time.temporal.ChronoUnit.DAYS.between(
+                            d.toLocalDate(), today);
+                    int idx = days - 1 - (int) back;
+                    if (idx >= 0 && idx < days) out[idx] = rs.getInt("n");
+                }
+            }
+        }
+        return out;
+    }
+
+    /** Luot xem theo ngay cua RIENG mot truyen — trang thong ke cua tac gia. */
+    public int[] viewsByDay(int storyId, int days) throws SQLException {
+        if (days < 1) days = 1;
+        if (days > 90) days = 90;
+
+        if (!DBConnection.isReady()) return DemoData.viewsByDay(storyId, days);
+
+        String sql = "SELECT DATE(viewed_at) d, COUNT(*) n FROM view_logs "
+                   + "WHERE story_id = ? "
+                   + "  AND viewed_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) "
+                   + "GROUP BY d";
+
+        int[] out = new int[days];
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            ps.setInt(2, days - 1);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Date d = rs.getDate("d");
+                    if (d == null) continue;
+                    long back = java.time.temporal.ChronoUnit.DAYS.between(
+                            d.toLocalDate(), today);
+                    int idx = days - 1 - (int) back;
+                    if (idx >= 0 && idx < days) out[idx] = rs.getInt("n");
+                }
+            }
+        }
+        return out;
+    }
+
     /** So lieu tong quan cho bang dieu khien quan tri — trang 25. */
     public int[] adminOverview() throws SQLException {
         if (!DBConnection.isReady()) return DemoData.adminOverview();

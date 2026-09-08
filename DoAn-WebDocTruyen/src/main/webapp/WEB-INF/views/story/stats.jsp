@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--
 ================================================================================
@@ -40,6 +41,16 @@
     <c:set var="stNote"  value="chưa tính bình luận đã ẩn"/>
     <%@ include file="/WEB-INF/views/_partials/_stat-tile.jsp" %>
 </div>
+
+<c:if test="${not empty topStory}">
+    <div class="chart-row" style="margin-top:22px">
+        <c:set var="dcTitle" value="Lượt xem — ${topStory.title}"/>
+        <c:set var="dcData"  value="${dViews}"/>
+        <c:set var="dcMax"   value="${mViews}"/>
+        <c:set var="dcUnit"  value="lượt"/>
+        <%@ include file="/WEB-INF/views/_partials/_daily-chart.jsp" %>
+    </div>
+</c:if>
 
 <c:choose>
     <c:when test="${not empty stories}">
@@ -89,10 +100,10 @@
         </div>
 
         <p class="muted-note" style="margin-top:18px">
-            <b>Vì sao chưa có biểu đồ theo ngày.</b> Muốn vẽ đường lượt xem
-            theo thời gian thì phải đếm từ bảng <code>view_logs</code> — bảng
-            đó đã có trong lược đồ và đang ghi, nhưng trang này mới chỉ hiện
-            số cộng dồn. Đó là việc của giai đoạn sau.
+            Biểu đồ phía trên đếm từ bảng <code>view_logs</code> — nơi ghi
+            <b>từng</b> lượt xem kèm thời điểm. Cột "Lượt xem" trong bảng này
+            là số cộng dồn từ ngày đăng, nên hai con số không bằng nhau và
+            không cần bằng nhau.
         </p>
     </c:when>
 

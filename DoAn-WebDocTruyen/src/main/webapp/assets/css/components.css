@@ -823,8 +823,15 @@ a.notif:hover { border-color: var(--ember-deep); }
     transition: background .16s var(--ease);
 }
 .bell:hover { background: var(--ink-800); }
-/* .bell-badge da go cung markup: chấm đỏ khong bao gio hien vi khong
-   trang nao dat unreadCount. Xem ghi chu trong layout/parts/nav.jsp. */
+.bell-badge {
+    position: absolute; top: -2px; right: -2px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    display: grid; place-items: center;
+    border-radius: 99px;
+    background: var(--rose); color: #fff;
+    font-size: .66rem; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
 
 /* ---- Báo cáo vi phạm ---- */
 .report-box { display: inline-block; }
@@ -990,4 +997,58 @@ a.notif:hover { border-color: var(--ember-deep); }
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* ---- Biểu đồ cột theo ngày ----
+   Dựng bằng CSS thuần, không thư viện. Cột là <i> cao theo phần trăm của
+   giá trị lớn nhất; thẻ cha .chart-col giữ chỗ đều nhau và neo cột xuống đáy. */
+.chart-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 13px; margin-top: 16px;
+}
+.chart {
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    padding: 14px 16px 12px;
+}
+.chart-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 10px; margin-bottom: 12px;
+}
+.chart-title {
+    font-size: .86rem; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chart-max {
+    font-size: .72rem; color: var(--text-mut); flex: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-bars {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 64px;
+}
+.chart-col {
+    flex: 1;
+    display: flex; align-items: flex-end;
+    height: 100%;
+    cursor: default;
+}
+.chart-col i {
+    display: block; width: 100%;
+    /* Ngày bằng 0 vẫn phải thấy có cột — không thì nhìn như dữ liệu bị thiếu */
+    min-height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--ember-deep);
+    transition: background .15s var(--ease);
+}
+.chart-col:hover i { background: var(--ember-lit); }
+/* Đỉnh tô sáng hơn: mắt tìm ngay được ngày cao nhất mà không phải so từng cột */
+.chart-col i.peak { background: var(--ember); }
+
+.chart-foot {
+    display: flex; justify-content: space-between;
+    margin-top: 7px;
+    font-size: .68rem; color: var(--text-mut);
 }

@@ -634,6 +634,27 @@ public final class DemoData {
     //  THEO DÕI TÁC GIẢ
     // ========================================================================
 
+    /**
+     * Những người đã bấm vào trang thông báo trong LẦN CHẠY NÀY.
+     *
+     * VÌ SAO CẦN
+     *   markAllRead() là lệnh GHI, mà mọi lệnh ghi ở chế độ xem giao diện đều
+     *   bị bỏ qua. Hậu quả: đọc thông báo xong chấm đỏ vẫn còn nguyên, và
+     *   người xem sẽ kết luận là tính năng hỏng — trong khi với CSDL thật nó
+     *   chạy đúng.
+     *
+     *   Dữ liệu giả mà mô tả sai hành vi thật còn tệ hơn không có dữ liệu.
+     *
+     * Set tĩnh, sống trong bộ nhớ, mất khi tắt server — đúng như mọi thứ khác
+     * trong file này.
+     */
+    private static final java.util.Set<Integer> READ = new java.util.HashSet<>();
+
+    /** Đánh dấu đã đọc — bản giả lập của NotificationDAO.markAllRead(). */
+    public static void markRead(int userId) {
+        READ.add(userId);
+    }
+
     /** Coi như đang theo dõi Mộc Miên (2) và Kiếm Vũ (4). */
     public static boolean following(int authorId) {
         return authorId == 2 || authorId == 4;
@@ -681,12 +702,17 @@ public final class DemoData {
     }
 
     public static List<Notification> notifications(int userId) {
-        return new ArrayList<>(Arrays.asList(
+        boolean seen = READ.contains(userId);
+        List<Notification> all = new ArrayList<>(Arrays.asList(
             notif(1, userId, 3, 9,  false, 2),
             notif(2, userId, 7, 8,  false, 26),
             notif(3, userId, 2, 12, true,  50),
             notif(4, userId, 6, 11, true,  96)
         ));
+        if (seen) {
+            for (Notification n : all) n.setRead(true);
+        }
+        return all;
     }
 
     public static int unreadCount(int userId) {
@@ -780,6 +806,38 @@ public final class DemoData {
      * AdminDashboardServlet đọc theo chỉ số. Lệch một ô là số chương hiện
      * thành số tài khoản mà không có gì báo lỗi.
      */
+    /**
+     * Đếm theo ngày — bản giả lập.
+     *
+     * Sinh theo công thức chứ không random: mỗi lần tải trang phải ra đúng
+     * biểu đồ cũ, không thì người xem tưởng số liệu đang nhảy.
+     *
+     * Cuối tuần cho cao hơn ngày thường — số liệu giả mà phẳng lì thì nhìn
+     * là biết giả, và cũng không kiểm được biểu đồ có vẽ đúng đỉnh hay không.
+     */
+    public static int[] countByDay(String what, int days) {
+        int[] out = new int[days];
+        int base = "views".equals(what) ? 40 : ("users".equals(what) ? 3 : 2);
+        java.time.LocalDate d = java.time.LocalDate.now().minusDays(days - 1L);
+        for (int i = 0; i < days; i++, d = d.plusDays(1)) {
+            int dow = d.getDayOfWeek().getValue();          // 6,7 = cuối tuần
+            int wave = (i * 7 + base * 3) % 11;
+            out[i] = Math.max(0, base + wave / 2 + (dow >= 6 ? base : 0));
+        }
+        return out;
+    }
+
+    /** Lượt xem theo ngày của một truyện — bản giả lập. */
+    public static int[] viewsByDay(int storyId, int days) {
+        int[] out = new int[days];
+        Story s = story(storyId);
+        int base = s == null ? 3 : Math.max(1, s.getViewCount() / 4000);
+        for (int i = 0; i < days; i++) {
+            out[i] = Math.max(0, base + (i * storyId + 5) % (base + 6) - 2);
+        }
+        return out;
+    }
+
     public static int[] adminOverview() {
         int chapters = 0, views = 0, cmt = 0;
         for (Story s : stories()) {

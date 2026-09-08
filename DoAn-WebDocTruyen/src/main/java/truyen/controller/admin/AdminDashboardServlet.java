@@ -44,6 +44,22 @@ public class AdminDashboardServlet extends HttpServlet {
             request.setAttribute("cComments", o[4]);
             request.setAttribute("cDeleted",  o[5]);
 
+            /*
+             * Ba bieu do 14 ngay gan nhat.
+             *
+             * max tinh o DAY chu khong o JSP: EL khong co ham max() cho mang,
+             * tinh trong JSP phai chay them mot vong lap chi de tim so lon nhat.
+             */
+            int[] dStories = storyDAO.countByDay("stories", 14);
+            int[] dUsers   = storyDAO.countByDay("users", 14);
+            int[] dViews   = storyDAO.countByDay("views", 14);
+            request.setAttribute("dStories", dStories);
+            request.setAttribute("dUsers", dUsers);
+            request.setAttribute("dViews", dViews);
+            request.setAttribute("mStories", max(dStories));
+            request.setAttribute("mUsers", max(dUsers));
+            request.setAttribute("mViews", max(dViews));
+
             request.setAttribute("pending", reportDAO.countPending());
             request.setAttribute("topStories", storyDAO.findTop("views", 5));
             request.setAttribute("tags", tagDAO.findAllWithCount());
@@ -60,5 +76,12 @@ public class AdminDashboardServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/admin.jsp")
                 .forward(request, response);
+    }
+
+    /** Gia tri lon nhat trong mang, 0 neu mang rong. */
+    private int max(int[] a) {
+        int m = 0;
+        for (int x : a) if (x > m) m = x;
+        return m;
     }
 }

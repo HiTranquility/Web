@@ -272,6 +272,26 @@ public class StoryServlet extends HttpServlet {
             totalComments += row[2];
         }
 
+        /*
+         * Luot xem 14 ngay cua truyen DUOC XEM NHIEU NHAT.
+         *
+         * Ve mot bieu do cho MOI truyen thi tac gia co 10 truyen se nhan 10
+         * bieu do nho xiu, khong doc duoc cai nao. Mot bieu do cua truyen chinh
+         * tra loi dung cau hoi hay gap nhat: "dao nay co ai doc khong".
+         */
+        Story top = null;
+        for (Story s2 : stories) {
+            if (top == null || s2.getViewCount() > top.getViewCount()) top = s2;
+        }
+        if (top != null) {
+            int[] d = storyDAO.viewsByDay(top.getId(), 14);
+            int m = 0;
+            for (int x : d) if (x > m) m = x;
+            request.setAttribute("topStory", top);
+            request.setAttribute("dViews", d);
+            request.setAttribute("mViews", m);
+        }
+
         request.setAttribute("stories", stories);
         request.setAttribute("stats", stats);
         request.setAttribute("totalViews", totalViews);

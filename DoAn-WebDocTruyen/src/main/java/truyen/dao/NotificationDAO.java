@@ -59,7 +59,12 @@ public class NotificationDAO {
      * bấm vào cái nào.
      */
     public void markAllRead(int userId) throws SQLException {
-        if (!DBConnection.isReady()) return;
+        if (!DBConnection.isReady()) {
+            // Che do xem giao dien: ghi vao bo nho de cham do tat that,
+            // giong het luc co CSDL. Xem ghi chu trong DemoData.markRead().
+            DemoData.markRead(userId);
+            return;
+        }
 
         String sql = "UPDATE notifications SET is_read = TRUE "
                    + "WHERE user_id = ? AND is_read = FALSE";

@@ -222,7 +222,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | F. Quản trị | **6** | 6 |
 | **Trang — tổng** | **31** | **30** + 1 phát sinh |
 | Layout | **5** | 5 |
-| Mảnh tái dùng | **9** | 9 |
+| Mảnh tái dùng | **10** | 9 + 1 phát sinh |
 
 ---
 

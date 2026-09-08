@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--
 ================================================================================
@@ -48,6 +49,31 @@
     <c:set var="stLabel" value="Truyện đã gỡ"/>
     <c:set var="stNote" value="xoá mềm, khôi phục được"/>
     <%@ include file="/WEB-INF/views/_partials/_stat-tile.jsp" %>
+</div>
+
+<%--
+  Ba bieu do 14 ngay. Dat NGAY SAU cac o tong: o tong tra loi "bao nhieu",
+  bieu do tra loi "dang tang hay dang dung" — cau hoi thu hai luon di ngay
+  sau cau thu nhat.
+--%>
+<div class="chart-row">
+    <c:set var="dcTitle" value="Truyện đăng mới"/>
+    <c:set var="dcData"  value="${dStories}"/>
+    <c:set var="dcMax"   value="${mStories}"/>
+    <c:set var="dcUnit"  value="truyện"/>
+    <%@ include file="/WEB-INF/views/_partials/_daily-chart.jsp" %>
+
+    <c:set var="dcTitle" value="Tài khoản mới"/>
+    <c:set var="dcData"  value="${dUsers}"/>
+    <c:set var="dcMax"   value="${mUsers}"/>
+    <c:set var="dcUnit"  value="tài khoản"/>
+    <%@ include file="/WEB-INF/views/_partials/_daily-chart.jsp" %>
+
+    <c:set var="dcTitle" value="Lượt xem"/>
+    <c:set var="dcData"  value="${dViews}"/>
+    <c:set var="dcMax"   value="${mViews}"/>
+    <c:set var="dcUnit"  value="lượt"/>
+    <%@ include file="/WEB-INF/views/_partials/_daily-chart.jsp" %>
 </div>
 
 <div class="dash-cols">
@@ -114,8 +140,8 @@
 </div>
 
 <p class="muted-note" style="margin-top:26px">
-    <b>Vì sao chưa có "tài khoản mới theo ngày".</b> Bảng <code>users</code> có
-    <code>created_at</code> nên đếm được, nhưng vẽ đường theo ngày cần một
-    biểu đồ thật. Sáu con số trên đủ trả lời câu hỏi thường gặp nhất — hệ
-    thống đang lớn hay đang đứng yên.
+    Biểu đồ đếm theo <code>DATE(created_at)</code> và <code>DATE(viewed_at)</code>,
+    có <b>lấp đầy ngày trống</b> — ngày không ai đăng truyện vẫn là một cột bằng
+    không, chứ không bị bỏ qua. Thiếu bước đó thì hai cột cách nhau ba ngày sẽ
+    nối liền nhau và đọc ra sai hẳn xu hướng.
 </p>
