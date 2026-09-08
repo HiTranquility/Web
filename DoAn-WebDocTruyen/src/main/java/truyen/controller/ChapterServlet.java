@@ -84,6 +84,11 @@ public class ChapterServlet extends HttpServlet {
                 case "delete":
                     url = delete(request, response);
                     break;
+                case "raw":
+                    // Tra ve TRAN, khong boc layout nao. raw() tu forward roi
+                    // tra null, nen khoi if (url == null) ben duoi se thoat.
+                    url = raw(request, response);
+                    break;
                 default:
                     url = read(request, response);
                     layout = "/WEB-INF/views/layout/reader.jsp";   // khung đọc
@@ -159,6 +164,71 @@ public class ChapterServlet extends HttpServlet {
                 "Chương " + chapter.getChapterNo() + " — " + story.getTitle());
         return "/WEB-INF/views/chapter/read.jsp";
     }
+    /**
+     * Tra ve CHI noi dung mot chuong, khong co khung trang.
+     *
+     * JavaScript o trang doc goi duong dan nay bang fetch() de nap chuong ke
+     * tiep roi noi vao cuoi trang dang doc (doc lien tuc).
+     *
+     * VI SAO TU FORWARD ROI TRA VE null
+     *   handle() o cuoi luon boc ket qua vao mot layout. Rieng action nay
+     *   KHONG duoc boc — no phai nha ra dung mot the <article>. Nen no tu
+     *   forward toi raw.jsp roi tra null, dung quy uoc chung cua servlet nay:
+     *   null = "da xu ly xong, dung forward nua".
+     *
+     * VI SAO VAN GHI VI TRI DOC O DAY
+     *   Day la cai bay de sot nhat cua doc lien tuc. read() ghi vi tri moi
+     *   lan TAI TRANG — nhung doc lien tuc chi tai trang MOT lan, roi noi
+     *   them 20 chuong ma khong tai lai lan nao. Khong ghi o day thi tu
+     *   truyen mai mai bao "dang doc chuong 1".
+     *
+     *   Ghi ngay trong chinh request nap chuong: khong ton them mot vong goi
+     *   nao, va khong the quen.
+     */
+    private String raw(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException, ServletException {
+
+        int id = parseIntOr(request.getParameter("id"), 0);
+        Chapter chapter = chapterDAO.findById(id);
+        if (chapter == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
+        Story story = storyDAO.findById(chapter.getStoryId());
+        if (story == null || "DELETED".equals(story.getStatus())) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
+        // Chuong cua truyen NHAP chi tac gia va admin duoc doc.
+        // Kiem lai o day chu khong tin rang JS chi goi nhung id hop le —
+        // duong dan nay go thang vao thanh dia chi cung goi duoc.
+        User me = currentUser(request);
+        if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
+        if (me != null) {
+            try {
+                bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
+            } catch (SQLException e) {
+                log("Khong luu duoc vi tri doc, userId=" + me.getId(), e);
+            }
+        }
+
+        request.setAttribute("chapter", chapter);
+        request.setAttribute("story", story);
+        request.setAttribute("next",
+                chapterDAO.findNeighbour(story.getId(), chapter.getChapterNo(), +1));
+
+        getServletContext()
+                .getRequestDispatcher("/WEB-INF/views/chapter/raw.jsp")
+                .forward(request, response);
+        return null;
+    }
+
 
     // ---- thêm / sửa chương -------------------------------------------------
 

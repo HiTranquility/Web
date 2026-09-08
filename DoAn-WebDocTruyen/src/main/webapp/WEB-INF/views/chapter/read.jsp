@@ -1,6 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%--
 ================================================================================
   chapter/read.jsp — MẢNH nội dung, dùng khung layout/reader.jsp   TRANG 23
@@ -9,57 +8,46 @@
 
   Nhận: chapter · story · prev · next
 
-  Đây là trang duy nhất dùng layout `reader` — bỏ hết nav và footer, chữ to,
-  cột hẹp, font serif. Mọi thứ để đọc lâu không mỏi mắt.
+  Trang duy nhất dùng layout `reader` — bỏ hết nav và footer, chữ to, cột hẹp,
+  font serif. Mọi thứ để đọc lâu không mỏi mắt.
+
+  CHƯƠNG ĐẦU DÙNG CHUNG MẢNH _block.jsp VỚI CÁC CHƯƠNG NỐI THÊM.
+    Nhờ vậy JavaScript đối xử với mọi chương như nhau — cùng một lớp CSS,
+    cùng bộ data-*. Nếu chương đầu vẽ một kiểu còn chương nối vẽ kiểu khác
+    thì mọi thứ động vào cả hai đều phải viết hai lần.
 ================================================================================
 --%>
 
-<%--
-  Hai thuộc tính data-* này là chỗ duy nhất JavaScript trong reader.jsp lấy
-  được id chương và id truyện. Đặt trên một thẻ vô hình thay vì nhúng số vào
-  giữa mã JS: giữ đúng ranh giới — JSP lo dữ liệu, JS lo hành vi, không trộn.
---%>
-<span hidden data-chapter-id="${chapter.id}" data-story-id="${story.id}"></span>
-
-<h1><c:out value="${chapter.title}"/></h1>
-<p class="reader-sub">
-    Chương ${chapter.chapterNo} &middot; <c:out value="${story.title}"/>
-</p>
-
-<div class="chapter-content">
-    <%--
-      GIỮ XUỐNG DÒNG CỦA TÁC GIẢ — và vẫn chống được XSS.
-
-      Vấn đề: trong database nội dung là chữ thuần, có ký tự xuống dòng. Nhưng
-      HTML gộp mọi khoảng trắng liên tiếp thành MỘT dấu cách — in thẳng ra thì
-      cả chương thành một khối chữ dính liền, không có đoạn nào.
-
-      Cách xử lý — THỨ TỰ HAI BƯỚC NÀY BẮT BUỘC:
-        1. fn:escapeXml  đổi < > & thành &lt; &gt; &amp;   -> vô hiệu hoá thẻ
-                         độc mà tác giả có thể chèn vào
-        2. fn:replace    đổi ký tự xuống dòng thành thẻ <br>
-
-      Làm ngược lại (replace trước, escape sau) thì chính thẻ <br> vừa thêm
-      cũng bị escape thành chữ "&lt;br&gt;" hiện ra màn hình — và tệ hơn, thẻ
-      độc của người dùng lại lọt qua.
-
-      Chuỗi tìm kiếm ở fn:replace là một ký tự XUỐNG DÒNG THẬT nằm giữa hai
-      dấu nháy, không phải chuỗi "\n" — EL không hiểu escape kiểu Java.
-    --%>
-    ${fn:replace(fn:escapeXml(chapter.content), '
-', '<br>')}
+<%-- Nơi JavaScript nối thêm chương. Chương đầu server dựng sẵn. --%>
+<div id="chapters">
+    <%@ include file="/WEB-INF/views/chapter/_block.jsp" %>
 </div>
 
-<div class="reader-nav">
-    <%-- prev/next là null ở chương đầu và chương cuối. Dùng span trống giữ chỗ
-         để nút "Mục lục" luôn nằm chính giữa, không bị lệch. --%>
+<%-- Vòng quay báo đang tải chương sau. Ẩn cho tới khi JS bật lên. --%>
+<div id="loading" class="chapter-loading" hidden>
+    <span class="spinner" aria-hidden="true"></span> Đang tải chương tiếp…
+</div>
+
+<%--
+  ---- Điều hướng chương ----
+
+  GIỮ NGUYÊN dù đã có đọc liên tục.
+
+  Đọc liên tục bắt buộc phải có JavaScript — không thể vừa nối nội dung mới
+  vừa giữ nguyên chỗ mắt đang đọc bằng HTML thuần. Bỏ ba nút này đi thì người
+  tắt JavaScript đọc được đúng một chương rồi hết đường.
+
+  Giữ cả hai thì tắt JS là rơi về đúng cách cũ, không mất gì.
+  JavaScript sẽ tự cập nhật href của hai nút mỗi khi nối thêm chương.
+--%>
+<div class="reader-nav" id="reader-nav">
     <c:choose>
         <c:when test="${not empty prev}">
-            <a class="btn btn-ghost"
+            <a class="btn btn-ghost" id="nav-prev"
                href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${prev.id}">
                 &larr; Chương ${prev.chapterNo}</a>
         </c:when>
-        <c:otherwise><span class="spacer"></span></c:otherwise>
+        <c:otherwise><span class="spacer" id="nav-prev"></span></c:otherwise>
     </c:choose>
 
     <a class="btn btn-ghost"
@@ -68,21 +56,23 @@
 
     <c:choose>
         <c:when test="${not empty next}">
-            <a class="btn btn-primary"
+            <a class="btn btn-primary" id="nav-next"
                href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${next.id}">
                 Chương ${next.chapterNo} &rarr;</a>
         </c:when>
-        <c:otherwise><span class="spacer"></span></c:otherwise>
+        <c:otherwise><span class="spacer" id="nav-next"></span></c:otherwise>
     </c:choose>
 </div>
+
+<%-- Hiện khi đã nối tới chương cuối cùng --%>
+<p class="chapter-done" id="chapter-done" hidden>
+    Hết truyện. Cảm ơn bạn đã đọc tới đây.
+</p>
 
 <%--
   Ghi chú về "tự động ghi nhớ vị trí đọc".
 
-  Chỗ này KHÔNG có nút "Lưu vị trí" — cố ý. ChapterServlet đã gọi
-  BookmarkDAO.updateProgress() ngay khi trang được mở, với điều kiện người đọc
-  đã đăng nhập và đã lưu truyện. Người đọc không phải bấm gì cả.
-
-  Ngoài ra JavaScript ở reader.jsp còn ghi id chương vào localStorage để mục
-  lục làm mờ chương đã đọc — cái đó chạy cho cả khách chưa đăng nhập.
+  Không có nút "Lưu vị trí" — cố ý. ChapterServlet ghi ngay khi trang được mở,
+  và action=raw cũng ghi mỗi lần nối thêm một chương. Người đọc không phải
+  bấm gì cả.
 --%>

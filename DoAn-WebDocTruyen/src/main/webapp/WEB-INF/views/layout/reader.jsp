@@ -74,6 +74,20 @@
             <button type="button" class="tool-btn" data-set="theme" data-val="light" title="Nền sáng">☀️</button>
             <button type="button" class="tool-btn" data-set="theme" data-val="sepia" title="Nền giấy">📜</button>
         </div>
+
+        <%--
+          Bật / tắt đọc liên tục.
+
+          Nút này để RIÊNG một nhóm vì nó khác loại: ba nhóm trên chỉ đổi cách
+          trang TRÔNG ra sao, nút này đổi cách trang HOẠT ĐỘNG.
+
+          aria-pressed cho trình đọc màn hình biết đây là công tắc hai trạng
+          thái chứ không phải nút bấm một lần.
+        --%>
+        <div class="tool-group">
+            <button type="button" class="tool-btn" id="toggle-continuous"
+                    aria-pressed="true" title="Đọc liên tục">∞</button>
+        </div>
     </div>
 </header>
 
@@ -82,6 +96,15 @@
 </main>
 
 <script>
+/*
+ * Duong dan goc cua ung dung, do JSP dat vao.
+ *
+ * JavaScript khong tu biet contextPath. Viet cung "/chapter" thi chay dung
+ * khi web deploy o goc nhung sai ngay khi doi sang /webdoctruyen. Day la
+ * BIEN DUY NHAT truyen tu JSP sang JS trong ca du an.
+ */
+var CTX = '${pageContext.request.contextPath}';
+
 /*
  * Tuỳ chỉnh trải nghiệm đọc.
  *
@@ -137,27 +160,180 @@
         });
     }
 
-    /*
-     * ĐÁNH DẤU ĐÃ ĐỌC.
-     *
-     * Vị trí đọc "chính thức" nằm ở bảng bookmarks, do máy chủ ghi khi mở
-     * chương. Cái này khác: nó nhớ TỪNG chương đã đọc, ngay cả khi người đọc
-     * chưa lưu truyện và chưa đăng nhập. Mục lục ở trang chi tiết đọc lại
-     * danh sách này để làm mờ những chương đã qua.
-     */
-    var meta = document.querySelector('[data-chapter-id]');
-    if (meta) {
+})();
+/*
+ * ĐỌC LIÊN TỤC — cuộn hết chương là chương sau tự nối vào bên dưới.
+ *
+ * BỐN MẢNH GHÉP
+ *   1. ?action=raw     trả về CHỈ một thẻ <article>, không có khung trang
+ *   2. fetch()         lấy chương sau
+ *   3. IntersectionObserver  báo khi sắp đọc hết
+ *   4. history.replaceState  đổi thanh địa chỉ khi trôi sang chương mới
+ *
+ * VÌ SAO KHÔNG DÙNG SỰ KIỆN scroll
+ *   scroll bắn hàng trăm lần mỗi giây khi người dùng cuộn nhanh, và mỗi lần
+ *   gọi getBoundingClientRect() là một lần trình duyệt phải tính lại bố cục.
+ *   IntersectionObserver để trình duyệt tự theo dõi và chỉ báo đúng lúc cần.
+ *
+ * TẮT JAVASCRIPT THÌ SAO
+ *   Toàn bộ đoạn này không chạy, ba nút điều hướng ở cuối trang vẫn nguyên.
+ *   Đọc chậm hơn một nhịp bấm, nhưng không mất gì.
+ */
+(function () {
+    var wrap = document.getElementById('chapters');
+    var nav  = document.getElementById('reader-nav');
+    if (!wrap || !window.IntersectionObserver || !window.fetch) return;
+
+    var KEY = 'reader.continuous';
+    var loading = document.getElementById('loading');
+    var done    = document.getElementById('chapter-done');
+    var busy    = false;
+    var on      = true;
+
+    try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) { }
+
+    /* ------------------------------------------------------ đánh dấu đã đọc */
+    function markRead(block) {
         try {
-            var storyId = meta.getAttribute('data-story-id');
-            var key = 'read.' + storyId;
-            var done = JSON.parse(localStorage.getItem(key) || '[]');
-            var id = meta.getAttribute('data-chapter-id');
-            if (done.indexOf(id) === -1) {
-                done.push(id);
-                localStorage.setItem(key, JSON.stringify(done));
+            var key = 'read.' + block.getAttribute('data-story-id');
+            var seen = JSON.parse(localStorage.getItem(key) || '[]');
+            var id = block.getAttribute('data-chapter-id');
+            if (seen.indexOf(id) === -1) {
+                seen.push(id);
+                localStorage.setItem(key, JSON.stringify(seen));
             }
-        } catch (e) { /* không lưu được thì thôi, không ảnh hưởng việc đọc */ }
+        } catch (e) { /* trình duyệt chặn lưu trữ — việc đọc không ảnh hưởng */ }
     }
+
+    /* ---------------------------------------------- nạp chương kế tiếp */
+    function loadNext() {
+        if (busy || !on) return;
+
+        var last = wrap.lastElementChild;
+        var nextId = last && last.getAttribute('data-next-id');
+        if (!nextId) {                       // hết truyện
+            if (done) done.hidden = false;
+            if (loading) loading.hidden = true;
+            return;
+        }
+
+        busy = true;
+        if (loading) loading.hidden = false;
+
+        fetch(CTX + '/chapter?action=raw&id=' + encodeURIComponent(nextId), {
+            credentials: 'same-origin'       // gửi kèm cookie phiên, để server
+        })                                   // còn ghi được vị trí đọc
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.text();
+            })
+            .then(function (html) {
+                /*
+                 * Dựng HTML trong một thẻ rời rồi mới lấy phần tử ra.
+                 * Không dùng innerHTML += trên chính wrap: cách đó vẽ lại toàn
+                 * bộ các chương đã có, và mọi trạng thái cuộn bị đặt lại.
+                 */
+                var box = document.createElement('div');
+                box.innerHTML = html;
+                var block = box.querySelector('.chapter-block');
+                if (!block) throw new Error('không thấy .chapter-block');
+
+                wrap.appendChild(block);
+                watch(block);
+                syncNav(block);
+                if (loading) loading.hidden = true;
+                busy = false;
+            })
+            .catch(function (err) {
+                /*
+                 * Hỏng thì TẮT hẳn đọc liên tục và để lộ ba nút điều hướng.
+                 * Thử lại vô hạn khi máy chủ đang lỗi chỉ làm mọi thứ tệ hơn;
+                 * người đọc vẫn còn nút bấm để đi tiếp.
+                 */
+                if (loading) loading.hidden = true;
+                busy = false;
+                on = false;
+                if (nav) nav.scrollIntoView({ block: 'nearest' });
+                if (window.console) console.warn('Đọc liên tục dừng lại:', err);
+            });
+    }
+
+    /* ------------------------------- cập nhật hai nút prev/next ở cuối */
+    function syncNav(block) {
+        var nextId = block.getAttribute('data-next-id');
+        var nextBtn = document.getElementById('nav-next');
+        if (!nextBtn) return;
+        if (nextId) {
+            nextBtn.setAttribute('href', CTX + '/chapter?action=read&id=' + nextId);
+        } else {
+            nextBtn.removeAttribute('href');
+            nextBtn.textContent = 'Hết truyện';
+        }
+    }
+
+    /* --------------------------- theo dõi một chương: cuối + tiêu đề */
+    var endObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) loadNext(); });
+    }, {
+        /*
+         * rootMargin 600px = nạp TRƯỚC khi người đọc chạm đáy 600 pixel.
+         * Đợi họ tới đáy rồi mới bắt đầu tải thì phải ngồi nhìn vòng quay.
+         */
+        rootMargin: '0px 0px 600px 0px'
+    });
+
+    var titleObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            var b = e.target;
+
+            /*
+             * replaceState chứ KHÔNG PHẢI pushState.
+             *
+             * pushState thêm một mục vào lịch sử cho MỖI chương trôi qua —
+             * đọc 20 chương rồi bấm Back là phải bấm 20 lần mới thoát nổi
+             * trang đọc. replaceState chỉ sửa mục hiện tại.
+             */
+            var url = b.getAttribute('data-url');
+            if (url && location.pathname + location.search !== url) {
+                history.replaceState(null, '', url);
+                document.title = b.getAttribute('data-title') || document.title;
+            }
+            markRead(b);
+        });
+    }, {
+        /* Chỉ đổi địa chỉ khi tiêu đề chương đã lên gần đỉnh màn hình,
+           không đổi ngay lúc nó vừa ló ra ở đáy. */
+        rootMargin: '-25% 0px -70% 0px'
+    });
+
+    function watch(block) {
+        var end = block.querySelector('.chapter-end');
+        if (end) endObserver.observe(end);
+        titleObserver.observe(block);
+    }
+
+    /* ------------------------------------------------------- nút bật/tắt */
+    var toggle = document.getElementById('toggle-continuous');
+    function paint() {
+        if (!toggle) return;
+        toggle.classList.toggle('is-on', on);
+        toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+        toggle.title = on ? 'Đọc liên tục: đang bật' : 'Đọc liên tục: đang tắt';
+    }
+    if (toggle) {
+        toggle.addEventListener('click', function () {
+            on = !on;
+            try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) { }
+            paint();
+            if (on) loadNext();
+        });
+        paint();
+    }
+
+    /* Chương đầu do server dựng — vẫn phải theo dõi như mọi chương khác */
+    var first = wrap.querySelector('.chapter-block');
+    if (first) { watch(first); markRead(first); }
 })();
 </script>
 

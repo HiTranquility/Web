@@ -357,6 +357,60 @@ trình duyệt im lặng) — để ai xem cũng thấy một kiểu số.
 
 ---
 
+## Phần 4d — Đọc liên tục (infinite scroll) ở trang đọc chương
+
+Đọc hết chương 1, cuộn tiếp thì chương 2 tự nối vào bên dưới — không bấm gì,
+không tải lại trang. Wattpad, MeTruyen, TruyenFull đều làm kiểu này.
+
+### Vì sao KHÔNG bỏ hẳn cách bấm nút
+
+Ba nút `← Chương trước · ☰ Mục lục · Chương sau →` **giữ nguyên**. Đọc liên
+tục nằm *bên trên* nó, không thay nó.
+
+Lý do: đọc liên tục **bắt buộc phải có JavaScript**. Không thể vừa nối nội
+dung mới vừa giữ nguyên chỗ mắt đang đọc bằng HTML thuần. Nên nếu bỏ nút đi,
+người tắt JavaScript sẽ đọc được đúng một chương rồi hết đường.
+
+Giữ cả hai thì tắt JS là rơi về đúng cách cũ, không mất gì. Đây là nguyên tắc
+"hoạt động được trước, đẹp sau" — cùng tinh thần với việc bảng lọc và phân
+trang trong dự án đều là thẻ `<a>` chứ không phải nút JavaScript.
+
+### Bốn mảnh ghép
+
+| # | Mảnh | Vì sao cần |
+|:-:|------|-----------|
+| 1 | Action `?action=raw` trả về **chỉ nội dung chương**, không có khung | `?action=read` trả về nguyên trang HTML kèm `<head>`, thanh trên, script. Nối cả cục đó vào giữa trang đang đọc là HTML hỏng. |
+| 2 | `fetch()` lấy chương sau | Chỗ **thứ hai** trong cả dự án thật sự cần JavaScript (chỗ đầu là chỉnh cỡ chữ). |
+| 3 | `IntersectionObserver` báo khi sắp đọc hết | Không dùng sự kiện `scroll`: nó bắn hàng trăm lần mỗi giây. `IntersectionObserver` chỉ báo đúng lúc cần. |
+| 4 | `history.replaceState()` đổi URL khi trôi sang chương mới | Thiếu bước này thì đọc tới chương 7 mà thanh địa chỉ vẫn ghi chương 1 — copy link gửi bạn là sai chương, F5 nhảy về đầu. |
+
+### Cái giá phải trả — ghi lại để sau này khỏi tranh cãi
+
+| | Bấm nút | Đọc liên tục |
+|---|---|---|
+| Tắt JavaScript | vẫn chạy | chết hẳn → **vì vậy phải giữ cả hai** |
+| Nút Back trình duyệt | đúng sẵn | phải tự xử lý, dễ sai |
+| Đọc 30 chương liền | mỗi lần tải lại là bộ nhớ sạch | DOM phình to, máy yếu bắt đầu giật |
+| Ghi vị trí đọc | server tự ghi mỗi lần tải trang | **phải gọi lại mỗi lần nối chương** |
+
+Dòng cuối là cái bẫy dễ sót nhất trong dự án này. `ChapterServlet.read()` gọi
+`bookmarkDAO.updateProgress()` mỗi lần tải trang. Chuyển sang đọc liên tục thì
+trang chỉ tải **một lần** — đọc 20 chương mà tủ truyện vẫn ghi "đang đọc
+chương 1".
+
+Cách xử lý ở đây: `?action=raw` **cũng gọi** `updateProgress()`. Nhờ vậy mỗi
+lần nối một chương là một lần ghi vị trí, không cần thêm request nào khác.
+
+### Giới hạn cố ý
+
+Không dọn chương cũ khỏi DOM khi cuộn xa (kỹ thuật "virtual list"). Đọc vài
+chục chương liền thì trang sẽ nặng dần. Làm đúng thì phải tính lại chiều cao
+và giữ vị trí cuộn — phức tạp hơn nhiều lần phần còn lại, mà độc giả thật hiếm
+khi đọc quá mười chương một mạch. Ghi lại đây để biết đó là **quyết định**,
+không phải sót.
+
+---
+
 ## Phần 5 — Quy ước giao diện đã chốt
 
 **Bảng màu Ink & Ember** — nền mực đen ngả xanh, điểm nhấn hổ phách ấm.

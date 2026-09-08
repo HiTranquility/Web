@@ -27,7 +27,11 @@ public class AuthFilter implements Filter {
      * Ngược lại (danh sách đen — chặn thứ có tên) là sai hướng: thêm action
      * mới mà quên bổ sung vào danh sách là nó lọt ra ngoài, không ai biết.
      */
-    private static final String[] PUBLIC_ACTIONS = { "list", "detail", "read", "search" };
+    private static final String[] PUBLIC_ACTIONS =
+            { "list", "detail", "read", "search", "raw" };
+    // "raw" la ban khong khung cua "read", dung cho doc lien tuc.
+    // Thieu no o day thi fetch() bi da ve trang dang nhap va nhan lai
+    // NGUYEN mot trang HTML — noi vao giua trang dang doc la hong het.
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)

@@ -58,6 +58,44 @@ public class Chapter implements Serializable {
     public void setStoryTitle(String storyTitle) { this.storyTitle = storyTitle; }
 
     /**
+     * Nội dung chương, cắt sẵn thành từng đoạn văn.
+     *
+     * VÌ SAO CẮT Ở MODEL CHỨ KHÔNG PHẢI Ở JSP
+     *   Hai cách làm trong JSP đều hỏng:
+     *
+     *   1. fn:replace đổi xuống dòng thành &lt;br&gt; — cần một ký tự xuống
+     *      dòng THẬT nằm giữa hai dấu nháy trong mã JSP. File .jsp lưu kiểu
+     *      CRLF trên Windows thì chuỗi tìm kiếm thành "
+" trong khi nội
+     *      dung chỉ có "
+": không khớp, cả chương dính liền một khối.
+     *
+     *   2. c:forTokens với delims="&amp;#10;" — JSP cổ điển KHÔNG giải mã
+     *      entity trong thuộc tính, nên nó cắt theo đúng năm ký tự
+     *      &amp; # 1 0 ; chứ không phải xuống dòng.
+     *
+     *   Cắt chuỗi là việc xử lý DỮ LIỆU, không phải trang trí — nên nó thuộc
+     *   về model. Model trả về chữ thuần; view tự quyết định bọc bằng thẻ gì.
+     *
+     * \R khớp MỌI kiểu xuống dòng — 
+, 
+,  — nên nội dung soạn trên
+     * Windows hay Linux đều cắt đúng. Đây là chỗ giải quyết tận gốc.
+     *
+     * Bỏ dòng trống: hai lần xuống dòng liền nhau ra ĐÚNG một lần ngắt đoạn,
+     * không phải một đoạn rỗng.
+     */
+    public java.util.List<String> getParagraphs() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (content == null) return out;
+        for (String line : content.split("\\R")) {
+            String t = line.trim();
+            if (!t.isEmpty()) out.add(t);
+        }
+        return out;
+    }
+
+    /**
      * Ước lượng số phút đọc, hiện ở đầu trang đọc.
      * Tốc độ đọc trung bình khoảng 200 từ/phút.
      *
