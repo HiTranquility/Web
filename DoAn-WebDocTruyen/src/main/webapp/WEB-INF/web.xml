@@ -23,6 +23,31 @@
     <display-name>Web Đọc Truyện</display-name>
 
     <!--
+      BỘ LỌC BẢNG MÃ — phải chạy TRƯỚC mọi thứ khác.
+
+      Khai ở đây chứ KHÔNG dùng @WebFilter, vì thứ tự chạy giữa các filter
+      khai bằng annotation là KHÔNG XÁC ĐỊNH. Filter này bắt buộc phải chạy
+      trước AuthFilter: AuthFilter đọc getParameter("action") ngay dòng đầu,
+      mà một khi tham số đã được đọc thì setCharacterEncoding() gọi sau đó
+      vô tác dụng — im lặng, không báo lỗi gì.
+
+      Hậu quả nếu thiếu: tiếng Việt gõ vào form lưu xuống CSDL thành
+      "Tráº£ lá»i thá»­". Chỉ POST bị, GET thì không — tham số trên URL do
+      connector giải mã và Tomcat 8+ mặc định UTF-8 cho URI.
+
+      Thứ tự các <filter-mapping> trong web.xml được bảo đảm, và Tomcat chạy
+      nhóm khai trong web.xml trước nhóm khai bằng annotation.
+    -->
+    <filter>
+        <filter-name>EncodingFilter</filter-name>
+        <filter-class>truyen.filter.EncodingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>EncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!--
       Thư mục chứa ảnh bìa người dùng tải lên.
 
       PHẢI NẰM NGOÀI webapp. Để trong webapp thì mỗi lần deploy lại là Tomcat
