@@ -147,16 +147,33 @@ public class TagDAO {
         }
     }
 
-    /** Doi ten the loai. */
+    /**
+     * Doi ten the loai. CHI cot name — slug GIU NGUYEN.
+     *
+     * VI SAO KHONG DONG VAO slug
+     *   slug la phan nam trong duong dan:
+     *       /story?action=list&tag=ngon-tinh
+     *   Doi ten "Ngon tinh" thanh "Ngon tinh hien dai" ma slug doi theo thi
+     *   moi duong dan da chia se truoc do deu chet. Ten hien thi va dinh danh
+     *   la hai thu khac nhau — cung ly do username khong cho doi.
+     *
+     * LOI DA MAC O DAY
+     *   Ban truoc cau lenh la "SET name = ?, slug = ?". Nhung
+     *   AdminTagServlet.save() o nhanh sua chi dat MOI name, khong dat slug —
+     *   dung nhu y dinh tren. Ket qua: slug = NULL, ma cot do NOT NULL UNIQUE,
+     *   nen moi lan doi ten deu nem SQLException va khong luu duoc gi.
+     *
+     *   Chinh comment trong servlet da ghi "TagDAO.update chi sua cot name" —
+     *   comment dung, code sai. Nay code lam dung nhu comment noi.
+     */
     public void update(Tag tag) throws SQLException {
         if (!DBConnection.isReady()) return;
 
-        String sql = "UPDATE tags SET name = ?, slug = ? WHERE id = ?";
+        String sql = "UPDATE tags SET name = ? WHERE id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, tag.getName());
-            ps.setString(2, tag.getSlug());
-            ps.setInt(3, tag.getId());
+            ps.setInt(2, tag.getId());
             ps.executeUpdate();
         }
     }
