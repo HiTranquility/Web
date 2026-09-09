@@ -1,5 +1,5 @@
 # =============================================================================
-#  setup-db.ps1 — Cai dat toan bo database bang MOT lenh
+#  setup-db.ps1 - Cai dat toan bo database bang MOT lenh
 # =============================================================================
 #  Chay:  powershell -ExecutionPolicy Bypass -File scripts\setup-db.ps1
 #
@@ -107,7 +107,7 @@ default-character-set=utf8mb4
     & $mysql "--defaults-extra-file=$cnf" -e "source database/schema.sql"
     if ($LASTEXITCODE -ne 0) {
         Write-Host ''
-        Write-Host '  That bai o buoc 1 — tao database.' -ForegroundColor Red
+        Write-Host '  That bai o buoc 1 - tao database.' -ForegroundColor Red
         Write-Host '  Nguyen nhan thuong gap:' -ForegroundColor Yellow
         Write-Host '    - Go sai mat khau root'
         Write-Host '    - MySQL cu hon 8.0.16 (schema dung rang buoc CHECK)'
@@ -116,7 +116,7 @@ default-character-set=utf8mb4
     }
 
     # ---- 2. Tai khoan ung dung ---------------------------------------------
-    # Sinh cau lenh tai cho, khong sua file setup_user.sql — de mat khau khong
+    # Sinh cau lenh tai cho, khong sua file setup_user.sql - de mat khau khong
     # bao gio nam trong file duoc commit len git.
     Write-Host '[2/4] Tao tai khoan MySQL cho ung dung...' -ForegroundColor Yellow
     $grantSql = @"
@@ -128,13 +128,25 @@ FLUSH PRIVILEGES;
     $tmp = Join-Path $env:TEMP "grant_$(Get-Random).sql"
     try {
         Set-Content -LiteralPath $tmp -Value $grantSql -Encoding UTF8
-        & $mysql "--defaults-extra-file=$cnf" -e "source $tmp"
+
+        # DAU \ PHAI DOI THANH / TRUOC KHI DUA VAO LENH source.
+        #
+        # mysql client coi \ trong "source ..." la ky tu ESCAPE, khong phai
+        # dau phan cach thu muc. Duong dan tam kieu Windows
+        #     C:\Users\Admin\AppData\Local\Temp\grant_123.sql
+        # bi doc thanh \U -> mysql bao "ERROR at line 1: Unknown command '\U'"
+        # va buoc 2 chet, trong khi buoc 1 vua chay xong binh thuong.
+        #
+        # Buoc 1 va 3 khong dinh loi nay vi chung dung duong dan TUONG DOI
+        # (database/schema.sql) von da co san dau /.
+        $tmpFwd = $tmp -replace '\\', '/'
+        & $mysql "--defaults-extra-file=$cnf" -e "source $tmpFwd"
         if ($LASTEXITCODE -ne 0) {
-            Write-Host '  That bai o buoc 2 — tao tai khoan MySQL.' -ForegroundColor Red
+            Write-Host '  That bai o buoc 2 - tao tai khoan MySQL.' -ForegroundColor Red
             exit 1
         }
     } finally {
-        # Xoa ngay — file nay chua mat khau cua tai khoan ung dung
+        # Xoa ngay - file nay chua mat khau cua tai khoan ung dung
         Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
     }
 
@@ -142,7 +154,7 @@ FLUSH PRIVILEGES;
     Write-Host '[3/4] Nap du lieu mau...' -ForegroundColor Yellow
     & $mysql "--defaults-extra-file=$cnf" webdoctruyen -e "source database/sample_data.sql"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host '  That bai o buoc 3 — nap du lieu mau.' -ForegroundColor Red
+        Write-Host '  That bai o buoc 3 - nap du lieu mau.' -ForegroundColor Red
         Write-Host '  Database va cac bang da tao xong; chi thieu du lieu mau.' -ForegroundColor Yellow
         exit 1
     }
@@ -161,7 +173,7 @@ if (-not $ok) { exit 1 }
 # ---- 4. db.properties ------------------------------------------------------
 Write-Host '[4/4] Ghi file db.properties...' -ForegroundColor Yellow
 $props = @"
-# Sinh tu dong boi setup-db.ps1 — KHONG commit file nay len git
+# Sinh tu dong boi setup-db.ps1 - KHONG commit file nay len git
 db.url=jdbc:mysql://localhost:3306/webdoctruyen?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&useSSL=false
 db.username=truyen_app
 db.password=$AppPassword
