@@ -22,6 +22,22 @@ public final class DemoData {
     private DemoData() { }
 
     /** Mốc thời gian cố định để mỗi lần khởi động không ra ngày khác nhau. */
+    /** Thể loại xếp theo lượt xem — bản giả lập. */
+    public static List<Tag> tagsByViews(int limit) {
+        List<Tag> out = tags();
+        for (Tag t : out) {
+            int sum = 0;
+            for (Story s : stories()) {
+                for (Tag x : s.getTags()) {
+                    if (x.getId() == t.getId()) sum += s.getViewCount();
+                }
+            }
+            t.setViewCount(sum);
+        }
+        out.sort((a, b) -> b.getViewCount() - a.getViewCount());
+        return slice(out, 0, limit);
+    }
+
     /** Mốc thời gian. */
     private static final LocalDateTime T0 = LocalDateTime.now();
 

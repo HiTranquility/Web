@@ -19,6 +19,17 @@ public class Tag implements Serializable {
     // dùng để hiện "Tiên hiệp (24)" ở bộ lọc.
     private int storyCount;
 
+    /**
+     * Tổng lượt xem của mọi truyện thuộc thể loại này.
+     *
+     * KHÔNG phải cột trong bảng tags — chỉ câu truy vấn của bảng điều khiển
+     * cộng sang. Các truy vấn khác để nguyên 0.
+     *
+     * Có trường riêng chứ không mượn storyCount: hai con số khác hẳn nhau
+     * về ý nghĩa, mượn lẫn nhau là kiểu bug im lặng khó tìm nhất.
+     */
+    private int viewCount;
+
     public Tag() { }
 
     public Tag(int id, String name, String slug) {
@@ -38,4 +49,7 @@ public class Tag implements Serializable {
 
     public int getStoryCount() { return storyCount; }
     public void setStoryCount(int storyCount) { this.storyCount = storyCount; }
+
+    public int getViewCount() { return viewCount; }
+    public void setViewCount(int viewCount) { this.viewCount = viewCount; }
 }

@@ -46,6 +46,49 @@ public class TagDAO {
         return list;
     }
 
+    /**
+     * The loai duoc DOC nhieu nhat — cong luot xem cua moi truyen trong the loai.
+     *
+     * KHAC findAllWithCount(): ham kia dem SO TRUYEN, ham nay cong LUOT XEM.
+     * Ban dang ky de tai ghi "The loai duoc doc nhieu nhat", ma mot the loai
+     * co 10 truyen khong ai doc thi khong the goi la duoc doc nhieu.
+     *
+     * COALESCE cho SUM: the loai chua co truyen nao thi SUM tra ve NULL.
+     * LEFT JOIN de the loai rong van xuat hien, chi la o cuoi bang.
+     */
+    public List<Tag> findTopByViews(int limit) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.tagsByViews(limit);
+
+        String sql =
+            "SELECT t.id, t.name, t.slug, "
+          + "       COUNT(DISTINCT s.id) AS story_count, "
+          + "       COALESCE(SUM(s.view_count), 0) AS view_total "
+          + "FROM tags t "
+          + "LEFT JOIN story_tags st ON st.tag_id = t.id "
+          + "LEFT JOIN stories s ON s.id = st.story_id AND s.status = 'PUBLISHED' "
+          + "GROUP BY t.id, t.name, t.slug "
+          + "ORDER BY view_total DESC "
+          + "LIMIT ?";
+
+        List<Tag> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Tag t = new Tag();
+                    t.setId(rs.getInt("id"));
+                    t.setName(rs.getString("name"));
+                    t.setSlug(rs.getString("slug"));
+                    t.setStoryCount(rs.getInt("story_count"));
+                    t.setViewCount(rs.getInt("view_total"));
+                    list.add(t);
+                }
+            }
+        }
+        return list;
+    }
+
     /** Thể loại của MỘT truyện — hiện ở trang chi tiết. */
     public List<Tag> findByStory(int storyId) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.

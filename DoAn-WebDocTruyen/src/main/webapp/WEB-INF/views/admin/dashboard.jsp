@@ -109,7 +109,7 @@
 
     <section>
         <div class="section-head">
-            <h3>Thể loại được dùng nhiều</h3>
+            <h3>Thể loại được đọc nhiều nhất</h3>
             <a class="more" href="${pageContext.request.contextPath}/admin/tag">Quản lý →</a>
         </div>
 
@@ -121,17 +121,27 @@
         --%>
         <div class="bar-list">
             <c:forEach var="t" items="${tags}">
-                <c:if test="${t.storyCount gt 0}">
+                <c:if test="${t.viewCount gt 0}">
                     <div class="bar-row">
                         <span class="bar-label">
                             <a href="${pageContext.request.contextPath}/story?action=list&amp;tag=${t.slug}">
                                 <c:out value="${t.name}"/></a>
                         </span>
+                        <%--
+                          Thanh dài theo LƯỢT XEM, đo so với thể loại đứng đầu
+                          (tags[0]) chứ không so với tổng.
+
+                          So với tổng thì mọi thanh đều ngắn tí và không phân
+                          biệt được với nhau; so với cái lớn nhất thì hàng đầu
+                          luôn đầy và các hàng sau đọc ra ngay tỉ lệ.
+                        --%>
                         <span class="bar-track">
                             <span class="bar-fill"
-                                  style="width:${cStories gt 0 ? (t.storyCount * 100 / cStories) : 0}%"></span>
+                                  style="width:${tags[0].viewCount gt 0 ? (t.viewCount * 100 / tags[0].viewCount) : 0}%"></span>
                         </span>
-                        <span class="bar-value">${t.storyCount}</span>
+                        <span class="bar-value">
+                            <fmt:formatNumber pattern="#,##0" value="${t.viewCount}"/>
+                        </span>
                     </div>
                 </c:if>
             </c:forEach>
