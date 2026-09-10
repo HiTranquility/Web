@@ -1145,3 +1145,59 @@ a.notif:hover { border-color: var(--ember-deep); }
 }
 .danger-body p { font-size: .87rem; line-height: 1.6; margin-bottom: 12px;
                  max-width: 62ch; }
+
+/* ---- Dải "Đọc tiếp" ở trang chủ ----
+   Nằm ngang chứ không phải lưới như kho truyện: đây là danh sách ngắn (tối đa
+   3) và có tiến độ đọc, khác hẳn thẻ truyện vốn để KHÁM PHÁ cái mới. Trông
+   khác nhau thì mắt phân biệt được ngay hai vùng làm hai việc khác nhau. */
+.resume-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+.resume-card {
+    display: flex; gap: 13px; padding: 12px;
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    background: var(--ink-850);
+    transition: border-color .18s var(--ease), transform .18s var(--ease);
+}
+.resume-card:hover { border-color: var(--ember-deep); transform: translateY(-2px); }
+
+.resume-cover {
+    width: 52px; flex: 0 0 52px; aspect-ratio: 3/4;
+    border-radius: var(--r-sm); overflow: hidden;
+    background: var(--ink-800);
+}
+.resume-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.resume-cover .cover-fallback { font-size: 1.4rem; }
+
+.resume-info { flex: 1; min-width: 0; display: flex; flex-direction: column;
+               justify-content: center; gap: 5px; }
+.resume-title {
+    font-size: .92rem; font-weight: 700; line-height: 1.3;
+    /* Cắt một dòng: ô thấp, tên dài hai dòng là đội cả hàng lên */
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.resume-card:hover .resume-title { color: var(--ember); }
+.resume-meta { color: var(--text-mut); font-size: .78rem; }
+
+.resume-bar {
+    display: block; height: 3px; border-radius: 99px;
+    background: var(--ink-700); overflow: hidden; margin-top: 2px;
+}
+.resume-fill { display: block; height: 100%; background: var(--ember); }
+
+/* ---- Thanh điều khiển mục lục chương (trang 3) ---- */
+.chapter-toolbar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 14px;
+}
+.toolbar-label { color: var(--text-mut); font-size: .84rem; margin-right: 2px; }
+/* Đẩy về cuối hàng: đây là chú thích, không phải nút bấm */
+.toolbar-note  { margin-left: auto; color: var(--text-mut); font-size: .8rem; }
+
+@media (max-width: 560px) {
+    /* Màn hẹp thì chú thích xuống hàng riêng thay vì ép các chip co lại */
+    .toolbar-note { margin-left: 0; flex-basis: 100%; }
+}

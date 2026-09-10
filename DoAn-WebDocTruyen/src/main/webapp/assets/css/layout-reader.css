@@ -224,3 +224,61 @@
     margin-top: -1px;
     pointer-events: none;
 }
+
+/* ===========================================================================
+   MỤC LỤC THẢ XUỐNG ở thanh điều hướng khi đọc
+   ======================================================================== */
+.toc-box { position: relative; }
+
+/* Bỏ mũi tên tam giác mặc định của <details> — summary ở đây trông như nút */
+.toc-box > summary { list-style: none; cursor: pointer; }
+.toc-box > summary::-webkit-details-marker { display: none; }
+
+/* Bảng nổi LÊN TRÊN nội dung, không đẩy chữ xuống.
+   Đẩy nội dung thì cả trang đang đọc nhảy một đoạn dài — mất chỗ đang đọc. */
+.toc-panel {
+    position: absolute; z-index: 40;
+    bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    width: min(420px, calc(100vw - 32px));
+    background: var(--ink-900);
+    border: 1px solid var(--ink-600);
+    border-radius: var(--r-lg);
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    overflow: hidden;
+}
+
+.toc-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; padding: 11px 14px;
+    border-bottom: 1px solid var(--ink-700);
+    font-size: .85rem;
+}
+.toc-head b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toc-head a { color: var(--text-mut); white-space: nowrap; }
+.toc-head a:hover { color: var(--ember); }
+
+/* Cuộn TRONG bảng, không cuộn cả trang. 60vh để trên màn hình thấp vẫn còn
+   thấy được thanh điều hướng bên dưới. */
+.toc-body { max-height: min(60vh, 460px); overflow-y: auto; }
+
+.toc-list { list-style: none; margin: 0; padding: 6px; }
+.toc-link {
+    display: flex; align-items: baseline; gap: 9px;
+    padding: 8px 10px; border-radius: var(--r-sm);
+    font-size: .87rem; line-height: 1.4;
+}
+a.toc-link:hover { background: var(--ink-800); }
+.toc-no { flex: 0 0 auto; color: var(--text-mut); font-weight: 600;
+          font-size: .8rem; }
+a.toc-link:hover .toc-no { color: var(--ember); }
+.toc-title { flex: 1; min-width: 0;
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Chương đang đọc: nền mờ + vạch cam bên trái, thấy ngay mình ở đâu */
+.toc-item.is-current .toc-link {
+    background: var(--ember-ghost);
+    box-shadow: inset 2px 0 0 var(--ember);
+    cursor: default;
+}
+.toc-here { flex: 0 0 auto; font-size: .72rem; color: var(--ember);
+            text-transform: uppercase; letter-spacing: .03em; }

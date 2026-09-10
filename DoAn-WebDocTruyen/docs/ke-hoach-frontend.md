@@ -200,6 +200,16 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 |:-:|-------|-----|-------------------|:----:|
 | 23 | Đọc chương | `/chapter?action=read&id=` | Đọc, chuyển chương, tự ghi vị trí, tuỳ chỉnh cỡ chữ/nền | ✅ |
 
+> **Hai đường dẫn phụ, đều trả HTML TRẦN (không khung trang):**
+> `?action=raw` — nội dung một chương, cho đọc liên tục.
+> `?action=toc` — mục lục truyện, cho bảng thả xuống ở thanh đọc; nạp bằng
+> `fetch()` ở **lần mở đầu tiên**, vì truyện 500 chương in sẵn vào mọi trang
+> đọc là bắt ai cũng tải trong khi phần lớn không mở mục lục lần nào.
+>
+> Cả hai phải nằm trong danh sách trắng của `AuthFilter`. Thiếu thì `fetch()`
+> bị đá về trang đăng nhập và nhận lại **nguyên một trang HTML** — nhét vào
+> giữa trang đang đọc là hỏng hết.
+
 ### E. Trang soạn thảo — layout `editor` hoặc `main` (1 trang)
 
 | # | Trang | URL | Chức năng phục vụ | Xong |

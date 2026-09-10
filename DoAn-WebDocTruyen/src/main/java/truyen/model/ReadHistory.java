@@ -80,6 +80,28 @@ public class ReadHistory implements Serializable {
         return lastChapterId > 0;
     }
 
+    /**
+     * Phần trăm đã đọc, làm tròn về SỐ NGUYÊN — cho thanh tiến độ ở trang chủ.
+     *
+     * VÌ SAO KHÔNG TÍNH THẲNG TRONG JSP
+     *   ${r.lastChapterNo * 100 / r.totalChapters} chạy được, nhưng phép chia
+     *   trong EL luôn trả về Double, nên HTML nhận
+     *       style="width:42.857142857142854%"
+     *   Trình duyệt vẽ đúng, chỉ là 15 chữ số thập phân cho một cái vạch rộng
+     *   vài chục pixel thì thừa, và xem mã nguồn trang thấy rất bẩn.
+     *
+     *   Chặn chia cho 0 cũng gọn hơn ở đây: truyện chưa có chương nào thì
+     *   totalChapters = 0, mà trong JSP phải viết thêm một toán tử ba ngôi
+     *   ngay giữa thuộc tính style.
+     */
+    public int getProgressPercent() {
+        if (totalChapters <= 0) {
+            return 0;
+        }
+        int pct = lastChapterNo * 100 / totalChapters;
+        return pct > 100 ? 100 : pct;   // chương bị xoá bớt -> có thể vượt 100
+    }
+
     public String getInitial() {
         return (storyTitle == null || storyTitle.isEmpty())
                 ? "?" : storyTitle.substring(0, 1).toUpperCase();

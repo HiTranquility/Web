@@ -32,11 +32,77 @@
 --%>
 
 
-    <section class="hero">
-        <h1>Đọc, viết và <em>chia sẻ</em> những câu chuyện</h1>
-        <p>Kho truyện do cộng đồng đóng góp. Tìm theo thể loại bạn thích,
-           đánh dấu để đọc tiếp, hoặc tự đăng truyện của riêng mình.</p>
-    </section>
+    <%--
+      HERO chỉ hiện với KHÁCH.
+
+      Người đã đăng nhập không cần đọc lại lời giới thiệu web mỗi lần vào —
+      họ đã biết đây là gì rồi. Chỗ quý nhất của trang, ngay đầu màn hình,
+      nên dành cho thứ họ thật sự quay lại để làm: đọc tiếp truyện đang dở.
+    --%>
+    <c:if test="${empty currentUser}">
+        <section class="hero">
+            <h1>Đọc, viết và <em>chia sẻ</em> những câu chuyện</h1>
+            <p>Kho truyện do cộng đồng đóng góp. Tìm theo thể loại bạn thích,
+               đánh dấu để đọc tiếp, hoặc tự đăng truyện của riêng mình.</p>
+        </section>
+    </c:if>
+
+    <%-- ---- Đọc tiếp (chỉ người đã đăng nhập, và phải có truyện dở) ------- --%>
+    <c:if test="${not empty resume}">
+        <div class="section-head" style="margin-top:26px">
+            <h2>📖 Đọc tiếp</h2>
+            <a class="more" href="${pageContext.request.contextPath}/history">
+                Lịch sử đọc →</a>
+        </div>
+
+        <div class="resume-row">
+            <c:forEach var="r" items="${resume}">
+                <%--
+                  Cả ô là một link, không chỉ mỗi cái nút.
+
+                  Đích đến là CHƯƠNG ĐANG DỞ, không phải trang chi tiết truyện.
+                  Người bấm vào ô "Đọc tiếp" muốn đọc ngay, bắt họ ghé trang
+                  giới thiệu rồi mới tìm nút đọc là thừa đúng một cú bấm — mà
+                  cú bấm đó lặp lại mỗi lần vào web.
+                --%>
+                <a class="resume-card"
+                   href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${r.lastChapterId}">
+                    <span class="resume-cover">
+                        <c:choose>
+                            <c:when test="${not empty r.coverUrl}">
+                                <img src="<c:out value='${r.coverUrl}'/>"
+                                     alt="<c:out value='${r.storyTitle}'/>">
+                            </c:when>
+                            <c:otherwise>
+                                <span class="cover-fallback">${r.initial}</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </span>
+
+                    <span class="resume-info">
+                        <b class="resume-title"><c:out value="${r.storyTitle}"/></b>
+                        <span class="resume-meta">
+                            Chương ${r.lastChapterNo} / ${r.totalChapters}
+                            &middot; ${r.viewedLabel}
+                        </span>
+
+                        <%--
+                          Thanh tiến độ. Không dùng thư viện biểu đồ nào cho
+                          một cái vạch ngang — độ dài là CSS thuần.
+
+                          progressPercent do model tính (số nguyên, đã chặn
+                          chia cho 0). Tính trong EL thì phép chia trả về
+                          Double và HTML nhận "width:42.857142857142854%".
+                        --%>
+                        <span class="resume-bar">
+                            <span class="resume-fill"
+                                  style="width:${r.progressPercent}%"></span>
+                        </span>
+                    </span>
+                </a>
+            </c:forEach>
+        </div>
+    </c:if>
 
     <%-- ---- Truyện xem nhiều -------------------------------------------- --%>
     <c:if test="${not empty popular}">

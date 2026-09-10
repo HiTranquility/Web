@@ -43,6 +43,68 @@ public class ChapterDAO {
         return list;
     }
 
+    /** Đếm số chương của một truyện — để chia trang mục lục. */
+    public int countByStory(int storyId) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.chapters(storyId).size();
+
+        String sql = "SELECT COUNT(*) FROM chapters WHERE story_id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
+     * Mục lục MỘT TRANG — trang 3.
+     *
+     * VÌ SAO CẦN BẢN CÓ PHÂN TRANG
+     *   findByStory() ở trên không có LIMIT: nó lấy MỌI chương. Truyện 500
+     *   chương là 500 hàng đổ vào một trang HTML. Không sập, nhưng trang nặng
+     *   và người đọc phải cuộn rất lâu mới tới phần bình luận.
+     *   Dữ liệu mẫu chỉ vài chương nên chưa lộ ra — đúng loại vấn đề chỉ xuất
+     *   hiện khi có người dùng thật.
+     *
+     * @param desc true = chương mới nhất lên đầu
+     *
+     * THỨ TỰ GHÉP THẲNG VÀO CÂU SQL — VÌ SAO VẪN AN TOÀN
+     *   ORDER BY không nhận tham số ?, nên buộc phải nối chuỗi. Nhưng thứ
+     *   được nối là một trong HAI hằng viết sẵn ("ASC"/"DESC") do boolean
+     *   quyết định, không phải chữ người dùng gõ. Nhận thẳng
+     *   request.getParameter("order") rồi nối vào mới là lỗ tiêm SQL.
+     */
+    public List<Chapter> findByStory(int storyId, int offset, int limit, boolean desc)
+            throws SQLException {
+
+        if (!DBConnection.isReady()) {
+            List<Chapter> all = DemoData.chapters(storyId);
+            if (desc) java.util.Collections.reverse(all);
+            return DemoData.slice(all, offset, limit);
+        }
+
+        String sql =
+            "SELECT id, story_id, chapter_no, title, created_at, updated_at "
+          + "FROM chapters WHERE story_id = ? "
+          + "ORDER BY chapter_no " + (desc ? "DESC" : "ASC") + " "
+          + "LIMIT ? OFFSET ?";
+
+        List<Chapter> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs, false));
+                }
+            }
+        }
+        return list;
+    }
+
     /** Một chương KÈM nội dung — cho trang đọc. */
     public Chapter findById(int id) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.

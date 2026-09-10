@@ -89,6 +89,11 @@ public class ChapterServlet extends HttpServlet {
                     // tra null, nen khoi if (url == null) ben duoi se thoat.
                     url = raw(request, response);
                     break;
+                case "toc":
+                    // Cung kieu tran nhu raw — muc luc cho bang tha xuong o
+                    // trang doc, nap bang fetch() luc nguoi dung bam mo.
+                    url = toc(request, response);
+                    break;
                 default:
                     url = read(request, response);
                     layout = "/WEB-INF/views/layout/reader.jsp";   // khung đọc
@@ -225,6 +230,53 @@ public class ChapterServlet extends HttpServlet {
 
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/chapter/raw.jsp")
+                .forward(request, response);
+        return null;
+    }
+
+    /**
+     * MUC LUC TRAN — danh sach chuong cua mot truyen, khong khung trang.
+     *
+     * Trang doc goi bang fetch() khi nguoi dung mo bang "Muc luc".
+     *
+     * VI SAO NAP MUON, KHONG IN SAN VAO TRANG
+     *   Truyen 500 chuong la 500 the <a>. In san vao MOI trang doc nghia la
+     *   moi lan lat chuong deu tai lai tung ay, trong khi phan lon nguoi doc
+     *   khong mo muc luc lan nao. Nap khi mo thi ai can moi tra gia.
+     *
+     * VI SAO KHONG TRA VE JSON
+     *   Tra JSON thi phia trinh duyet phai tu dung the HTML bang JavaScript —
+     *   them mot cho sinh HTML, va la cho DE QUEN escape nhat. Tra thang HTML
+     *   do JSP dung san thi <c:out> lo phan escape, giong het moi trang khac.
+     *
+     * Tham so la storyId chu khong phai chapter id: muc luc thuoc ve TRUYEN.
+     */
+    private String toc(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException, ServletException {
+
+        int storyId = parseIntOr(request.getParameter("storyId"), 0);
+        Story story = storyDAO.findById(storyId);
+        if (story == null || "DELETED".equals(story.getStatus())) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
+        // Truyen nhap: chi tac gia va admin. Kiem lai y het raw() — duong dan
+        // nay go thang vao thanh dia chi cung goi duoc.
+        User me = currentUser(request);
+        if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
+        request.setAttribute("story", story);
+        request.setAttribute("chapters", chapterDAO.findByStory(storyId));
+
+        // id chuong DANG doc, de to dam dung dong trong danh sach
+        request.setAttribute("currentId", parseIntOr(request.getParameter("current"), 0));
+
+        getServletContext()
+                .getRequestDispatcher("/WEB-INF/views/chapter/toc.jsp")
                 .forward(request, response);
         return null;
     }

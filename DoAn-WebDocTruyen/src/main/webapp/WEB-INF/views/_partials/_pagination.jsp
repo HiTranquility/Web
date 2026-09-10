@@ -21,6 +21,14 @@
       pgBase      String  phần URL trước dấu ? — ví dụ "story?action=list"
       pgQuery     String  tham số cần GIỮ khi chuyển trang (có thể rỗng)
 
+  BIẾN TUỲ CHỌN:
+      pgParam     String  tên tham số trang, mặc định "page". Trang chi tiết
+                          truyện dùng "cpage" cho mục lục.
+      pgHash      String  neo thêm vào cuối, ví dụ "#muc-luc". Không có nó thì
+                          bấm sang trang 2 của mục lục sẽ nhảy về ĐẦU trang và
+                          người dùng phải cuộn xuống lại — mục lục nằm giữa
+                          trang chi tiết, không phải trên cùng.
+
   VÌ SAO PHẢI CÓ pgQuery:
     Không giữ lại tag/từ khoá/sắp xếp thì bấm sang trang 2 là MẤT bộ lọc —
     người dùng đang lọc "Tiên hiệp" bỗng thấy toàn bộ kho truyện. Đây là lỗi
@@ -28,29 +36,34 @@
 ================================================================================
 --%>
 <c:if test="${totalPages > 1}">
+    <%-- Giá trị mặc định cho hai biến tuỳ chọn. empty bắt cả null lẫn chuỗi
+         rỗng, nên trang nào không đặt gì vẫn chạy đúng như trước. --%>
+    <c:set var="pgP" value="${empty pgParam ? 'page' : pgParam}"/>
+    <c:set var="pgH" value="${empty pgHash  ? ''     : pgHash}"/>
+
     <nav class="pager" aria-label="Phân trang">
 
         <%-- Trang đầu: chỉ hiện khi đang ở trang 3 trở đi, để nhảy nhanh về --%>
         <c:if test="${page > 2}">
             <a class="btn btn-ghost btn-sm"
-               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;page=1">« Đầu</a>
+               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;${pgP}=1${pgH}">« Đầu</a>
         </c:if>
 
         <c:if test="${page > 1}">
             <a class="btn btn-ghost btn-sm"
-               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;page=${page - 1}">‹ Trước</a>
+               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;${pgP}=${page - 1}${pgH}">‹ Trước</a>
         </c:if>
 
         <span class="pager-info">Trang <b>${page}</b> / ${totalPages}</span>
 
         <c:if test="${page < totalPages}">
             <a class="btn btn-ghost btn-sm"
-               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;page=${page + 1}">Sau ›</a>
+               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;${pgP}=${page + 1}${pgH}">Sau ›</a>
         </c:if>
 
         <c:if test="${page < totalPages - 1}">
             <a class="btn btn-ghost btn-sm"
-               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;page=${totalPages}">Cuối »</a>
+               href="${pageContext.request.contextPath}/${pgBase}${pgQuery}&amp;${pgP}=${totalPages}${pgH}">Cuối »</a>
         </c:if>
     </nav>
 </c:if>

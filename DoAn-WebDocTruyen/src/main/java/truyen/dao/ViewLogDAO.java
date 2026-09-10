@@ -75,23 +75,94 @@ public class ViewLogDAO {
             ps.setInt(2, userId);
             ps.setInt(3, limit);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ReadHistory h = new ReadHistory();
-                    h.setStoryId(rs.getInt("id"));
-                    h.setStoryTitle(rs.getString("title"));
-                    h.setCoverUrl(rs.getString("cover_url"));
-                    h.setAuthorName(rs.getString("author_name"));
-                    h.setTotalChapters(rs.getInt("total_chapters"));
+                while (rs.next()) list.add(map(rs));
+            }
+        }
+        return list;
+    }
 
-                    Timestamp ts = rs.getTimestamp("last_viewed");
-                    if (ts != null) {
-                        h.setLastViewed(ts.toLocalDateTime());
-                    }
-                    h.setViewTimes(rs.getInt("times"));
-                    h.setLastChapterId(rs.getInt("last_chapter_id"));
-                    h.setLastChapterNo(rs.getInt("last_chapter_no"));
-                    list.add(h);
-                }
+    /**
+     * Một dòng ResultSet -> một ReadHistory.
+     *
+     * Dùng chung cho findByUser() và findResumable(): hai câu SQL khác nhau ở
+     * điều kiện JOIN, nhưng trả về ĐÚNG cùng bộ cột — nên chỉ cần một hàm đọc.
+     * Tách ra để thêm cột sau này chỉ phải sửa một chỗ.
+     */
+    private ReadHistory map(ResultSet rs) throws SQLException {
+        ReadHistory h = new ReadHistory();
+        h.setStoryId(rs.getInt("id"));
+        h.setStoryTitle(rs.getString("title"));
+        h.setCoverUrl(rs.getString("cover_url"));
+        h.setAuthorName(rs.getString("author_name"));
+        h.setTotalChapters(rs.getInt("total_chapters"));
+
+        Timestamp ts = rs.getTimestamp("last_viewed");
+        if (ts != null) {
+            h.setLastViewed(ts.toLocalDateTime());
+        }
+        h.setViewTimes(rs.getInt("times"));
+        h.setLastChapterId(rs.getInt("last_chapter_id"));
+        h.setLastChapterNo(rs.getInt("last_chapter_no"));
+        return h;
+    }
+
+    /**
+     * Truyện ĐANG ĐỌC DỞ, gần nhất trước — cho dải "Đọc tiếp" ở trang chủ.
+     *
+     * KHÁC findByUser() ĐÚNG MỘT ĐIỀU KIỆN: bắt buộc có vị trí đọc.
+     *   findByUser   -> mọi truyện đã mở, kể cả ngó qua rồi thôi   (LEFT JOIN)
+     *   findResumable-> chỉ truyện có chỗ để đọc tiếp               (JOIN thường)
+     *
+     * Dải ở trang chủ chỉ có một nút duy nhất là "Đọc tiếp", nên truyện không
+     * có chương để tiếp thì đưa lên đó cũng không làm gì được.
+     *
+     * VÌ SAO KHÔNG LỌC BẰNG JAVA SAU KHI GỌI findByUser()
+     *   Lấy 20 dòng về rồi bỏ 17 là bắt CSDL làm thừa việc, mà vẫn không chắc
+     *   đủ 3 dòng cần dùng. Điều kiện thuộc về câu SQL thì để SQL làm.
+     *
+     * CHƯA ĐỌC HẾT MỚI TÍNH LÀ ĐANG DỞ
+     *   ch.chapter_no < tổng số chương. Đọc xong chương cuối rồi mà vẫn nằm ở
+     *   "Đọc tiếp" thì bấm vào lại rơi đúng chương vừa đọc — mỗi lần vào trang
+     *   chủ lại thấy một truyện đã xong nằm đó, không bỏ đi được.
+     */
+    public List<ReadHistory> findResumable(int userId, int limit) throws SQLException {
+        if (!DBConnection.isReady()) {
+            List<ReadHistory> demo = new ArrayList<>();
+            for (ReadHistory h : DemoData.history(userId, 50)) {
+                if (h.isResumable() && demo.size() < limit) demo.add(h);
+            }
+            return demo;
+        }
+
+        String sql =
+            "SELECT s.id, s.title, s.cover_url, "
+          + "       COALESCE(u.display_name, u.username) AS author_name, "
+          + "       (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) AS total_chapters, "
+          + "       v.last_viewed, v.times, "
+          + "       b.last_chapter_id, ch.chapter_no AS last_chapter_no "
+          + "FROM ( "
+          + "   SELECT story_id, MAX(viewed_at) AS last_viewed, COUNT(*) AS times "
+          + "   FROM view_logs "
+          + "   WHERE user_id = ? "
+          + "   GROUP BY story_id "
+          + ") v "
+          + "JOIN stories  s  ON s.id = v.story_id "
+          + "JOIN users    u  ON u.id = s.author_id "
+          + "JOIN bookmarks b ON b.story_id = s.id AND b.user_id = ? "
+          + "JOIN chapters ch ON ch.id = b.last_chapter_id "
+          + "WHERE s.status = 'PUBLISHED' "
+          + "  AND ch.chapter_no < (SELECT COUNT(*) FROM chapters c2 WHERE c2.story_id = s.id) "
+          + "ORDER BY v.last_viewed DESC "
+          + "LIMIT ?";
+
+        List<ReadHistory> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
             }
         }
         return list;

@@ -50,9 +50,40 @@
         <c:otherwise><span class="spacer" id="nav-prev"></span></c:otherwise>
     </c:choose>
 
-    <a class="btn btn-ghost"
-       href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">
-        &#9776; Mục lục</a>
+    <%--
+      MỤC LỤC — bảng thả xuống NGAY TẠI CHỖ, không rời trang.
+
+      Trước đây đây là một link sang trang chi tiết truyện. Đang đọc chương 40
+      mà muốn xem chương 12 thì bị văng khỏi trang đọc: mất vị trí cuộn, mất
+      luôn mạch đọc liên tục, và phải bấm quay lại nếu đổi ý.
+
+      <details> làm phần đóng/mở mà không cần JavaScript. JavaScript chỉ lo
+      MỘT việc: nạp danh sách chương lần đầu mở (xem reader.jsp). Tách vai như
+      vậy nên khi tắt JavaScript, thẻ vẫn mở ra được và bên trong là link dự
+      phòng sang trang chi tiết — không bấm vào khoảng trống.
+    --%>
+    <details class="toc-box" id="toc-box" data-story-id="${story.id}"
+             data-current-id="${chapter.id}">
+        <summary class="btn btn-ghost">&#9776; Mục lục</summary>
+
+        <div class="toc-panel" id="toc-panel">
+            <div class="toc-head">
+                <b><c:out value="${story.title}"/></b>
+                <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">
+                    Trang truyện →</a>
+            </div>
+
+            <%-- Chỗ này bị JavaScript thay bằng danh sách chương. Không có
+                 JavaScript thì nó ở lại, và vẫn là một đường đi được. --%>
+            <div class="toc-body" id="toc-body">
+                <p class="muted" style="padding:14px">
+                    Đang tải mục lục…
+                    <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}#muc-luc">
+                        Xem mục lục đầy đủ →</a>
+                </p>
+            </div>
+        </div>
+    </details>
 
     <c:choose>
         <c:when test="${not empty next}">

@@ -6,8 +6,13 @@
 ================================================================================
   TẦNG: views/
 
-  DÙNG Ở: trang 3 (chi tiết truyện), 12 (truyện của tôi — khi tác giả mở ra
-          quản lý chương)
+  DÙNG Ở: trang 3 (chi tiết truyện).
+
+          KHÔNG dùng ở trang 12 (ghi chú cũ ghi sai). Trang "Truyện của tôi"
+          liệt kê TRUYỆN chứ không phải chương, nên nó dùng _story-row.
+
+  Mảnh này chỉ vẽ DANH SÁCH. Thanh sắp xếp và phân trang nằm ở trang gọi nó
+  (detail.jsp) — chúng phụ thuộc vào tham số URL của riêng trang đó.
 
   CÁCH DÙNG:
       <c:set var="clChapters" value="${chapters}"/>

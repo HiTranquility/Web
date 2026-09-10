@@ -157,15 +157,69 @@
 </div>
 
 <%-- ---- Mục lục chương — MẢNH _chapter-list ---- --%>
-<div class="section-head">
+<%--
+  id="muc-luc" là ĐÍCH NEO.
+
+  Mục lục nằm giữa trang chi tiết. Không có neo thì bấm "Sau ›" ở phân trang
+  sẽ tải lại trang và nhảy về đầu — người dùng phải cuộn xuống lại mỗi lần
+  lật trang. Neo giữ họ đúng chỗ đang xem.
+--%>
+<div class="section-head" id="muc-luc">
     <h2>Danh sách chương</h2>
-    <span class="more">${story.chapterCount} chương</span>
+    <span class="more">${chapterTotal} chương</span>
 </div>
+
+<c:if test="${chapterTotal gt 0}">
+    <div class="chapter-toolbar">
+        <%--
+          ĐẢO THỨ TỰ.
+
+          Là LINK chứ không phải nút JavaScript: thứ tự nằm trên URL nên
+          F5 hay chia sẻ link đều giữ nguyên lựa chọn, và chạy được cả khi
+          tắt JavaScript.
+
+          Quay về cpage=1 khi đổi thứ tự — giữ nguyên số trang là vô nghĩa:
+          "trang 3 tính từ đầu" và "trang 3 tính từ cuối" là hai tập chương
+          hoàn toàn khác nhau, người dùng sẽ tưởng mình lạc chỗ.
+        --%>
+        <span class="toolbar-label">Sắp xếp:</span>
+        <a class="chip ${not cDesc ? 'is-on' : ''}"
+           href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}&amp;cpage=1#muc-luc">
+            Cũ nhất trước</a>
+        <a class="chip ${cDesc ? 'is-on' : ''}"
+           href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}&amp;order=desc&amp;cpage=1#muc-luc">
+            Mới nhất trước</a>
+
+        <c:if test="${cTotalPages gt 1}">
+            <span class="toolbar-note">
+                Trang ${cpage}/${cTotalPages} &middot; 50 chương mỗi trang
+            </span>
+        </c:if>
+    </div>
+</c:if>
 
 <c:set var="clChapters" value="${chapters}"/>
 <c:set var="clStoryId"  value="${story.id}"/>
 <c:set var="clCanEdit"  value="${canEdit}"/>
 <%@ include file="/WEB-INF/views/_partials/_chapter-list.jsp" %>
+
+<%--
+  MẢNH: phân trang mục lục.
+
+  _pagination.jsp đọc hai biến tên cố định là page và totalPages, nên phải
+  gán từ cpage/cTotalPages ngay trước khi include. Không đổi tên biến trong
+  mảnh chung vì năm trang khác đang dùng đúng hai tên đó.
+
+  pgParam="cpage" để link sinh ra là "&cpage=2" chứ không phải "&page=2".
+  pgHash="#muc-luc" để lật trang xong vẫn đứng ở mục lục.
+--%>
+<c:set var="page"       value="${cpage}"/>
+<c:set var="totalPages" value="${cTotalPages}"/>
+<c:set var="pgBase"  value="story?action=detail" scope="request"/>
+<c:set var="pgQuery" value="&id=${story.id}${cDesc ? '&order=desc' : ''}" scope="request"/>
+<c:set var="pgParam" value="cpage"    scope="request"/>
+<c:set var="pgHash"  value="#muc-luc" scope="request"/>
+<%@ include file="/WEB-INF/views/_partials/_pagination.jsp" %>
 
 <%-- ---- Bình luận ---- --%>
 <div class="section-head" id="comments">

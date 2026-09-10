@@ -114,27 +114,82 @@ public class UserDAO {
      * Danh sách tài khoản kèm số truyện mỗi người — trang quản trị (TRANG 27).
      */
     public List<User> findAllWithStoryCount() throws SQLException {
+        return searchWithStoryCount(null, null);
+    }
+
+    /**
+     * Như trên nhưng có LỌC — trang 27.
+     *
+     * @param keyword tìm trong tên đăng nhập, tên hiển thị, email. null/rỗng = mọi người
+     * @param status  ACTIVE hoặc BANNED. null/rỗng = mọi trạng thái
+     *
+     * VÌ SAO PHẢI CÓ Ô TÌM
+     *   Câu cũ là "lấy 200 tài khoản mới nhất". Với vài chục người thì cuộn
+     *   được, nhưng admin cần tìm MỘT người cụ thể — thường là người vừa bị
+     *   báo cáo. Không có ô tìm thì phải Ctrl+F trên trang, mà cách đó chỉ
+     *   thấy được trong 200 dòng đã tải; người thứ 201 là không tìm ra.
+     *
+     * DỰNG CÂU SQL BẰNG CÁCH NỐI CHUỖI — VẪN AN TOÀN
+     *   Phần nối thêm là các mảnh CỐ ĐỊNH viết sẵn trong code, còn giá trị
+     *   người dùng gõ luôn đi qua dấu ? và ps.setString(). Không có mẩu chữ
+     *   nào của người dùng lọt vào câu lệnh, nên không có đường tiêm SQL.
+     *   Sai lầm cần tránh là "... LIKE '%" + keyword + "%'" — chỗ đó mới chết.
+     *
+     * DẤU % ĐẶT Ở THAM SỐ, KHÔNG PHẢI TRONG CÂU SQL
+     *   Viết LIKE ? rồi truyền "%kiem%" chứ không viết LIKE '%?%'. Cách sau
+     *   không chạy: dấu ? nằm trong chuỗi nháy nên JDBC coi nó là ký tự thường,
+     *   không phải chỗ điền tham số.
+     */
+    public List<User> searchWithStoryCount(String keyword, String status) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.users();
 
-        String sql =
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasStatus  = "ACTIVE".equals(status) || "BANNED".equals(status);
+
+        StringBuilder sql = new StringBuilder(
             "SELECT u.*, "
           + "       (SELECT COUNT(*) FROM stories s "
           + "        WHERE s.author_id = u.id AND s.status != 'DELETED') AS story_count "
-          + "FROM users u ORDER BY u.created_at DESC LIMIT 200";
+          + "FROM users u WHERE 1 = 1 ");
+
+        /* "WHERE 1 = 1" ở trên để mọi điều kiện sau đều bắt đầu bằng AND.
+           Không có nó thì phải nhớ điều kiện nào là cái đầu tiên để viết
+           WHERE, các cái sau mới AND — đúng chỗ hay quên nhất khi thêm bộ lọc
+           thứ ba. MySQL loại bỏ 1 = 1 khi tối ưu, không tốn gì. */
+        if (hasKeyword) {
+            sql.append("AND (u.username LIKE ? OR u.display_name LIKE ? OR u.email LIKE ?) ");
+        }
+        if (hasStatus) {
+            sql.append("AND u.status = ? ");
+        }
+        sql.append("ORDER BY u.created_at DESC LIMIT 200");
 
         List<User> list = new ArrayList<>();
         try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                User u = mapRow(rs);
-                u.setStoryCount(rs.getInt("story_count"));
+             PreparedStatement ps = con.prepareStatement(sql.toString())) {
 
-                // Chuoi bam KHONG duoc roi khoi tang dao khi khong can dung.
-                // Trang quan tri chi hien thi, khong xac thuc.
-                u.setPasswordHash(null);
-                list.add(u);
+            int i = 1;
+            if (hasKeyword) {
+                String like = "%" + keyword.trim() + "%";
+                ps.setString(i++, like);
+                ps.setString(i++, like);
+                ps.setString(i++, like);
+            }
+            if (hasStatus) {
+                ps.setString(i++, status);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User u = mapRow(rs);
+                    u.setStoryCount(rs.getInt("story_count"));
+
+                    // Chuoi bam KHONG duoc roi khoi tang dao khi khong can dung.
+                    // Trang quan tri chi hien thi, khong xac thuc.
+                    u.setPasswordHash(null);
+                    list.add(u);
+                }
             }
         }
         return list;

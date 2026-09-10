@@ -39,6 +39,15 @@ public class StoryServlet extends HttpServlet {
     /** Số truyện mỗi trang. Đọc từ context-param nên đổi được mà khỏi biên dịch lại. */
     private int pageSize = 24;
 
+    /**
+     * Số chương mỗi trang mục lục (trang 3).
+     *
+     * Để riêng, KHÔNG dùng chung pageSize: thẻ truyện là ô vuông có ảnh bìa
+     * nên 24 cái đã đầy màn hình, còn chương chỉ là một hàng chữ — 50 hàng
+     * vẫn gọn. Hai thứ khác kích thước thì không có lý do đếm bằng nhau.
+     */
+    private static final int CHAPTER_PAGE_SIZE = 50;
+
     @Override
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
@@ -218,7 +227,36 @@ public class StoryServlet extends HttpServlet {
 
         request.setAttribute("story", story);
         request.setAttribute("tags", tagDAO.findByStory(id));
-        request.setAttribute("chapters", chapterDAO.findByStory(id));
+
+        /*
+         * MỤC LỤC CÓ PHÂN TRANG.
+         *
+         * Trước đây là chapterDAO.findByStory(id) — lấy sạch mọi chương. Với
+         * truyện dài thì đó là hàng trăm hàng trong một trang, đẩy phần bình
+         * luận xuống tận đáy.
+         *
+         * Tham số tên "cpage" chứ không phải "page": trang này còn có thể có
+         * phân trang khác sau này, và "page" là tên quá chung để dành riêng
+         * cho mục lục.
+         */
+        int total = chapterDAO.countByStory(id);
+        int totalPages = Math.max(1, (int) Math.ceil(total / (double) CHAPTER_PAGE_SIZE));
+
+        int cpage = parseIntOr(request.getParameter("cpage"), 1);
+        if (cpage < 1) cpage = 1;
+        if (cpage > totalPages) cpage = totalPages;
+
+        /* Mặc định CŨ->MỚI: người mới vào truyện đọc từ chương 1. Ai đang
+           theo truyện dài thì bật "Mới nhất trước" để thấy chương vừa ra. */
+        boolean desc = "desc".equals(request.getParameter("order"));
+
+        request.setAttribute("chapters", chapterDAO.findByStory(
+                id, (cpage - 1) * CHAPTER_PAGE_SIZE, CHAPTER_PAGE_SIZE, desc));
+        request.setAttribute("chapterTotal", total);
+        request.setAttribute("cpage", cpage);
+        request.setAttribute("cTotalPages", totalPages);
+        request.setAttribute("cDesc", desc);
+
         request.setAttribute("comments", commentDAO.findByStory(id));
         request.setAttribute("canEdit", canEdit(me, story));
         if (me != null) {

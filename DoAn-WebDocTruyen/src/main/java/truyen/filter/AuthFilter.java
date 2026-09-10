@@ -47,10 +47,13 @@ public class AuthFilter implements Filter {
                 return new String[] { "list", "detail", "search" };
 
             // "raw" la ban khong khung cua "read", dung cho doc lien tuc.
-            // Thieu no o day thi fetch() bi da ve trang dang nhap va nhan lai
-            // NGUYEN mot trang HTML — noi vao giua trang dang doc la hong het.
+            // "toc" la muc luc tran, cho bang tha xuong o thanh doc.
+            // Thieu chung o day thi fetch() bi da ve trang dang nhap va nhan
+            // lai NGUYEN mot trang HTML — noi vao giua trang dang doc la hong
+            // het. Ca hai deu chi DOC, va deu tu kiem lai quyen voi truyen
+            // nhap trong servlet.
             case "/chapter":
-                return new String[] { "read", "raw" };
+                return new String[] { "read", "raw", "toc" };
 
             // /comment và /bookmark: không có action nào công khai.
             //   comment  — mọi action đều là ghi (thêm, xoá).

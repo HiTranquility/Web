@@ -335,6 +335,65 @@ var CTX = '${pageContext.request.contextPath}';
     var first = wrap.querySelector('.chapter-block');
     if (first) { watch(first); markRead(first); }
 })();
+
+
+/* ===========================================================================
+   MỤC LỤC THẢ XUỐNG — nạp danh sách chương ở LẦN MỞ ĐẦU TIÊN
+   ===========================================================================
+   Vì sao nạp muộn: truyện 500 chương là 500 thẻ <a>. In sẵn vào mọi trang đọc
+   nghĩa là mỗi lần lật chương đều tải lại từng ấy, trong khi phần lớn người
+   đọc không mở mục lục lần nào.
+
+   Vì sao dùng sự kiện "toggle" của <details>: trình duyệt tự bắn sự kiện này
+   mỗi lần đóng/mở, nên không cần tự bắt click rồi tự quản trạng thái. Phần
+   đóng/mở là việc của HTML, JavaScript chỉ lo phần nạp dữ liệu.
+   ======================================================================== */
+(function () {
+    var box = document.getElementById('toc-box');
+    if (!box || !window.fetch) return;      // không có JS/fetch -> giữ link dự phòng
+
+    var body   = document.getElementById('toc-body');
+    var loaded = false;
+
+    box.addEventListener('toggle', function () {
+        /* Chỉ nạp khi MỞ, và chỉ MỘT lần. Thiếu cờ loaded thì đóng mở năm lần
+           là gọi server năm lần cho cùng một danh sách. */
+        if (!box.open || loaded) return;
+        loaded = true;
+
+        var url = CTX + '/chapter?action=toc'
+                + '&storyId=' + encodeURIComponent(box.getAttribute('data-story-id'))
+                + '&current='  + encodeURIComponent(box.getAttribute('data-current-id'));
+
+        fetch(url, { credentials: 'same-origin' })
+            .then(function (r) {
+                if (!r.ok) throw new Error(r.status);
+                return r.text();
+            })
+            .then(function (html) {
+                body.innerHTML = html;
+
+                /* Cuộn thẳng tới chương đang đọc.
+                   Mở mục lục ở chương 300 mà danh sách đứng ở chương 1 thì
+                   người dùng phải tự cuộn — đúng việc mà mục lục sinh ra để
+                   khỏi phải làm. block:'center' đặt nó giữa khung, thấy được
+                   cả chương trước và sau. */
+                var here = body.querySelector('.is-current');
+                if (here && here.scrollIntoView) {
+                    here.scrollIntoView({ block: 'center' });
+                }
+            })
+            .catch(function () {
+                /* Hỏng thì cho lại đường đi bộ, đừng để một ô trống câm lặng. */
+                loaded = false;     // cho phép thử lại ở lần mở sau
+                body.innerHTML =
+                    '<p class="muted" style="padding:14px">Không tải được mục lục. '
+                  + '<a href="' + CTX + '/story?action=detail&id='
+                  + box.getAttribute('data-story-id') + '#muc-luc">'
+                  + 'Xem ở trang truyện →</a></p>';
+            });
+    });
+})();
 </script>
 
 </body>

@@ -88,7 +88,17 @@ public class AdminUserServlet extends HttpServlet {
                  */
             }
 
-            request.setAttribute("users", userDAO.findAllWithStoryCount());
+            /*
+             * Giữ lại chữ đã gõ và trạng thái đang lọc để hiện lại trên form.
+             * Thiếu bước này thì khoá một người xong là ô tìm trống trơn và
+             * bảng nhảy về toàn bộ danh sách — admin phải gõ lại từ đầu cho
+             * mỗi người muốn xử lý.
+             */
+            String q = trim(request.getParameter("q"));
+            String status = trim(request.getParameter("status"));
+            request.setAttribute("q", q);
+            request.setAttribute("statusFilter", status);
+            request.setAttribute("users", userDAO.searchWithStoryCount(q, status));
 
         } catch (SQLException e) {
             log("AdminUserServlet: lỗi truy vấn, action=" + action, e);

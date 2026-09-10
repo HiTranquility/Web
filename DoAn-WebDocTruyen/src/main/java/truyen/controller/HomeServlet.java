@@ -11,13 +11,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.StoryDAO;
+import truyen.dao.ViewLogDAO;
+import truyen.model.ReadHistory;
 import truyen.model.Story;
+import truyen.model.User;
 
 /** Trang chủ. */
 @WebServlet("")
 public class HomeServlet extends HttpServlet {
 
     private StoryDAO storyDAO;
+    private ViewLogDAO viewLogDAO;
+
+    /** Số truyện trong dải "Đọc tiếp". Ba là vừa một hàng, không đẩy kho
+     *  truyện xuống quá sâu. */
+    private static final int RESUME_COUNT = 3;
 
     /*
      * init() chạy một lần, đúng chỗ để tạo DAO (bài học CASE 14 của chương 5).
@@ -30,6 +38,7 @@ public class HomeServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
+        viewLogDAO = new ViewLogDAO();
     }
 
     @Override
@@ -47,6 +56,23 @@ public class HomeServlet extends HttpServlet {
             request.setAttribute("latest", latest);
             request.setAttribute("popular", popular);
             request.setAttribute("totalStories", storyDAO.countPublished());
+
+            /*
+             * DẢI "ĐỌC TIẾP" — phần duy nhất của trang chủ khác nhau tuỳ người.
+             *
+             * Chỉ hỏi khi ĐÃ đăng nhập. Khách thì không có gì để tiếp, hỏi cũng
+             * chỉ tốn thêm một câu SQL cho mỗi lượt ghé trang chủ — mà trang
+             * chủ là trang đông lượt truy cập nhất.
+             *
+             * Dữ liệu đã có sẵn từ trước: view_logs biết đọc lúc nào,
+             * bookmarks.last_chapter_id biết dừng ở đâu. Trang chủ chỉ là chỗ
+             * thứ hai dùng lại chúng, không thêm bảng hay cột nào.
+             */
+            User me = (User) request.getSession().getAttribute("currentUser");
+            if (me != null) {
+                List<ReadHistory> resume = viewLogDAO.findResumable(me.getId(), RESUME_COUNT);
+                request.setAttribute("resume", resume);
+            }
 
         } catch (SQLException e) {
             /*
