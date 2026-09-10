@@ -11,6 +11,7 @@ import truyen.model.Notification;
 import truyen.model.Report;
 import truyen.model.Chapter;
 import truyen.model.Comment;
+import truyen.model.ReadHistory;
 import truyen.model.Story;
 import truyen.model.Tag;
 import truyen.model.User;
@@ -633,6 +634,45 @@ public final class DemoData {
 
     public static boolean bookmarked(int storyId) {
         return storyId == 1 || storyId == 4 || storyId == 6 || storyId == 8;
+    }
+
+    // ========================================================================
+    //  LỊCH SỬ ĐỌC — TRANG 31
+    // ========================================================================
+
+    /**
+     * Lịch sử mẫu. Cố ý xếp CẢ HAI loại để thấy đủ hai kiểu hiển thị:
+     *   - truyện 4, 1  đã lưu  -> có vị trí đọc, nút "Đọc tiếp"
+     *   - truyện 2, 5  chưa lưu -> không có vị trí, nút "Mở lại"
+     * Loại thứ hai chính là lý do trang này tồn tại: bookmark không giữ nó.
+     */
+    public static List<ReadHistory> history(int userId, int limit) {
+        List<ReadHistory> list = new ArrayList<>(Arrays.asList(
+            hist(4, 0,  12, 31),   // hôm nay, đang đọc dở
+            hist(2, 1,   0,  3),   // hôm qua, ngó qua rồi thôi
+            hist(1, 2,  24,  9),   // 2 ngày trước, đã đọc xong
+            hist(5, 6,   0,  1),   // 6 ngày trước
+            hist(6, 20,  3,  4)    // hơn tuần -> hiện ngày/tháng
+        ));
+        return slice(list, 0, limit);
+    }
+
+    private static ReadHistory hist(int storyId, int daysAgo, int lastNo, int times) {
+        Story s = story(storyId);
+        ReadHistory h = new ReadHistory();
+        h.setStoryId(storyId);
+        h.setStoryTitle(s.getTitle());
+        h.setCoverUrl(s.getCoverUrl());
+        h.setAuthorName(s.getAuthorName());
+        h.setTotalChapters(s.getChapterCount());
+
+        /* Mốc thời gian tính từ HÔM NAY, không phải từ T0 cố định — nhãn
+           "Hôm nay"/"Hôm qua" phải đúng vào mọi ngày mở dự án ra xem. */
+        h.setLastViewed(LocalDateTime.now().minusDays(daysAgo).minusHours(2));
+        h.setViewTimes(times);
+        h.setLastChapterNo(lastNo);
+        h.setLastChapterId(lastNo == 0 ? 0 : storyId * 100 + lastNo);
+        return h;
     }
 
     // ========================================================================

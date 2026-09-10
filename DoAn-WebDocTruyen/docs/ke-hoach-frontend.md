@@ -163,7 +163,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 > tìm kiếm. Cùng một giao diện, chỉ khác tham số URL. Tách ra là nhân đôi code
 > mà không được gì.
 
-### B. Trang thành viên — layout `main` (8 trang)
+### B. Trang thành viên — layout `main` (9 trang)
 
 | # | Trang | URL | Chức năng phục vụ | Xong |
 |:-:|-------|-----|-------------------|:----:|
@@ -175,6 +175,15 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | 16 | Thống kê truyện của tôi | `/story?action=stats` | Lượt xem, số lưu, số bình luận | ✅ |
 | 17 | Đang theo dõi | `/follow?action=list` | Tác giả đang theo dõi | ✅ |
 | 18 | Thông báo | `/notification` | Chương mới của truyện đang theo dõi | ✅ |
+| 31 | Lịch sử đọc | `/history` | Truyện đã mở, tự động ghi — kèm nút xoá | ✅ |
+
+> **Trang 31 khác trang 11 chỗ nào?** Trang 11 là danh sách người dùng TỰ CHỌN
+> (bấm ☆ Lưu). Trang 31 là dấu vết TỰ ĐỘNG — mở truyện ra là có. Hai trang trả
+> lời hai câu khác nhau: *"truyện tôi ĐỊNH đọc"* và *"truyện tôi ĐÃ đọc"*.
+> Ai quên tên truyện hôm qua vừa đọc thì trang 11 không cứu được, vì họ có bấm
+> lưu đâu.
+> Dữ liệu lấy từ `view_logs` — bảng vốn dựng để xếp hạng tuần/tháng, nay dùng
+> thêm cho mục đích cá nhân mà không phải thêm bảng nào.
 
 ### C. Trang xác thực — layout `auth` (4 trang)
 
@@ -215,12 +224,12 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | Nhóm | Đã dựng | Tổng |
 |------|:---:|:---:|
 | A. Công khai | **10** | 10 |
-| B. Thành viên | **8** | 8 |
+| B. Thành viên | **9** | 8 + 1 phát sinh |
 | C. Xác thực | **4** | 4 |
 | D. Đọc | **1** | 1 |
 | E. Soạn thảo | **1** | 1 |
 | F. Quản trị | **6** | 6 |
-| **Trang — tổng** | **31** | **30** + 1 phát sinh |
+| **Trang — tổng** | **32** | **30** + 2 phát sinh |
 | Layout | **5** | 5 |
 | Mảnh tái dùng | **10** | 9 + 1 phát sinh |
 

@@ -33,6 +33,11 @@
                    class="${activeNav eq 'mine' ? 'is-active' : ''}">Truyện của tôi</a>
                 <a href="${pageContext.request.contextPath}/bookmark"
                    class="${activeNav eq 'bookmark' ? 'is-active' : ''}">Đã lưu</a>
+                <%-- Đặt NGAY SAU "Đã lưu": hai mục cùng trả lời "truyện nào
+                     liên quan tới tôi", chỉ khác một cái do tôi tự chọn, một
+                     cái hệ thống tự ghi. Để cạnh nhau thì so sánh ra ngay. --%>
+                <a href="${pageContext.request.contextPath}/history"
+                   class="${activeNav eq 'history' ? 'is-active' : ''}">Lịch sử</a>
                 <a href="${pageContext.request.contextPath}/follow?action=list"
                    class="${activeNav eq 'follow' ? 'is-active' : ''}">Theo dõi</a>
             </c:if>

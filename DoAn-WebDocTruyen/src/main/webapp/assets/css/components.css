@@ -1056,3 +1056,92 @@ a.notif:hover { border-color: var(--ember-deep); }
     margin-top: 7px;
     font-size: .68rem; color: var(--text-mut);
 }
+
+/* =============================================================================
+   Bảng, nhãn trạng thái, nút nguy hiểm, lỗi biểu mẫu
+
+   TỪNG NẰM SAI CHỖ. Bốn nhóm dưới đây trước ở layout-admin.css và
+   layout-auth.css — nhưng chúng KHÔNG phải của riêng hai khu đó:
+
+       .admin-table  cũng dùng ở story/stats.jsp        (layout main)
+       .pill-*       cũng dùng ở detail, profile, me,
+                     và _comment.jsp                     (layout main)
+       .btn-danger   dùng ở 6 trang ngoài khu quản trị   (main + editor)
+       .form-error   dùng ở story/form và chapter/form   (layout editor)
+
+   Mà layout main/editor KHÔNG nạp layout-admin.css hay layout-auth.css. Hậu
+   quả: nhãn "Bản nháp", "Tác giả", "Quản trị viên" hiện ra như chữ trần,
+   và mọi nút Xoá/Gỡ/Báo cáo ngoài khu quản trị đều mất viền đỏ.
+
+   Trình duyệt KHÔNG báo lỗi khi thiếu lớp CSS — nó chỉ vẽ theo mặc định. Vì
+   vậy loại lỗi này sống rất lâu: trang vẫn chạy, chỉ trông nhạt hơn ý định.
+
+   Quy tắc rút ra: file layout-*.css chỉ chứa thứ CHỈ khu đó dùng. Dùng chung
+   từ hai layout trở lên thì thuộc về components.css.
+   ========================================================================== */
+
+/* Bảng quản trị — cuộn ngang trên màn hình hẹp thay vì vỡ layout */
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.admin-table th {
+    text-align: left; padding: 10px 12px;
+    border-bottom: 1px solid var(--ink-600);
+    color: var(--text-mut); font-weight: 500; font-size: .8rem;
+    text-transform: uppercase; letter-spacing: .04em;
+    white-space: nowrap;
+}
+.admin-table td {
+    padding: 12px; border-bottom: 1px solid var(--ink-800);
+    vertical-align: middle;
+}
+.admin-table tr:hover td { background: var(--ink-850); }
+.admin-table .col-actions { text-align: right; white-space: nowrap; }
+
+/* Nhãn trạng thái */
+.pill {
+    display: inline-block; padding: 3px 10px; border-radius: 99px;
+    font-size: .74rem; font-weight: 600;
+}
+.pill-ok      { background: rgba(43,183,137,.16); color: #6ee7b7; }
+.pill-warn    { background: rgba(240,134,58,.16); color: var(--ember-lit); }
+.pill-danger  { background: rgba(229,87,111,.16); color: #ffa3b3; }
+.pill-muted   { background: var(--ink-800); color: var(--text-mut); }
+
+.btn-danger {
+    background: transparent; color: #ffa3b3;
+    border: 1px solid rgba(229,87,111,.4);
+}
+.btn-danger:hover { background: rgba(229,87,111,.14); border-color: var(--rose); }
+
+.form-error {
+    background: rgba(229,87,111,.12);
+    border: 1px solid var(--rose);
+    color: #ffc9d3;
+    border-radius: var(--r-sm);
+    padding: 10px 13px;
+    font-size: .88rem;
+    margin-bottom: 16px;
+}
+
+
+/* ---- Khu nguy hiểm: xoá lịch sử (trang 31) ----
+   Gấp lại bằng <details>. Viền đỏ nhạt cho biết đây là việc không hoàn tác
+   được, nhưng đặt cuối trang và không tô đậm — nó không phải thứ người dùng
+   vào trang này để tìm. */
+.danger-zone { margin-top: 34px; border-top: 1px solid var(--ink-800);
+               padding-top: 18px; }
+.danger-zone > summary {
+    cursor: pointer; color: var(--text-mut); font-size: .88rem;
+    list-style: none; display: inline-block;
+}
+.danger-zone > summary::-webkit-details-marker { display: none; }
+.danger-zone > summary::before { content: '⚠ '; }
+.danger-zone > summary:hover { color: var(--rose); }
+.danger-body {
+    margin-top: 12px; padding: 15px 17px;
+    border: 1px solid rgba(229,87,111,.32);
+    border-radius: var(--r);
+    background: rgba(229,87,111,.06);
+}
+.danger-body p { font-size: .87rem; line-height: 1.6; margin-bottom: 12px;
+                 max-width: 62ch; }

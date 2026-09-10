@@ -448,7 +448,23 @@ CREATE TABLE view_logs (
     -- Xếp hạng tuần chạy: WHERE viewed_at >= ? GROUP BY story_id
     -- Thời gian đứng TRƯỚC vì nó là điều kiện lọc, story_id đứng sau để
     -- MySQL gom nhóm ngay trên index, khỏi phải đọc bảng.
-    INDEX idx_viewlog_time (viewed_at, story_id)
+    INDEX idx_viewlog_time (viewed_at, story_id),
+
+    -- Lịch sử đọc (trang 31) hỏi NGƯỢC LẠI với xếp hạng:
+    --     xếp hạng  -> "truyện nào được đọc nhiều trong 7 ngày"  (lọc theo thời gian)
+    --     lịch sử   -> "NGƯỜI NÀY đã đọc những truyện nào"       (lọc theo người)
+    -- Index trên đổi thứ tự cột nên không phục vụ được câu thứ hai.
+    --
+    -- Khoá ngoại user_id đã tự sinh một index một cột, đủ để LỌC nhanh. Nhưng
+    -- câu lịch sử còn GROUP BY story_id, mà index một cột không giúp gì cho
+    -- bước gom nhóm — EXPLAIN hiện "Using temporary": MySQL phải dựng bảng
+    -- tạm. Thêm story_id và viewed_at vào sau user_id thì cả lọc, gom nhóm
+    -- lẫn lấy MAX(viewed_at) đều xong ngay trên index, không đụng bảng.
+    --
+    -- Đáng thêm vì view_logs là bảng DUY NHẤT trong dự án phình vô hạn — mỗi
+    -- lượt mở truyện một dòng. Các bảng khác lớn theo số truyện, số người;
+    -- bảng này lớn theo số lần đọc.
+    INDEX idx_viewlog_user (user_id, story_id, viewed_at)
 ) ENGINE=InnoDB;
 
 

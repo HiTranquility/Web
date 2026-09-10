@@ -74,7 +74,14 @@ public class BookmarkServlet extends HttpServlet {
             switch (action) {
                 case "add":
                     bookmarkDAO.add(me.getId(), storyId);
-                    backToStory(request, response, storyId);
+                    // Lưu từ trang lịch sử đọc thì ở lại đó — người ta đang
+                    // lướt lại truyện cũ, ném sang trang truyện là mất chỗ.
+                    if ("history".equals(request.getParameter("from"))) {
+                        request.getSession().setAttribute("flash", "Đã lưu truyện.");
+                        response.sendRedirect(request.getContextPath() + "/history");
+                    } else {
+                        backToStory(request, response, storyId);
+                    }
                     return;
 
                 case "remove":
