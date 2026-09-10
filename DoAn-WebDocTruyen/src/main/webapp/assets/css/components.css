@@ -361,6 +361,9 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 }
 .profile-stats b { color: var(--text); font-size: 1.05rem; }
 
+/* Nut theo doi tac gia. Cach hang so lieu ra mot khoang de khong dinh vao no. */
+.profile-follow { margin-top: 14px; }
+
 /* ---- Bang xep hang ---- */
 .rank-list { list-style: none; padding: 0; margin: 0;
              display: flex; flex-direction: column; gap: 10px; }
@@ -410,6 +413,7 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 @media (max-width: 620px) {
     .profile-head { flex-direction: column; align-items: center; text-align: center; }
     .profile-stats { justify-content: center; }
+    .profile-follow { display: flex; justify-content: center; }
     .rank-item .pill { display: none; }
     .rank-title { white-space: normal; }
 }

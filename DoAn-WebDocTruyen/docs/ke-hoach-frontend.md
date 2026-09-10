@@ -151,7 +151,7 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 | 2 | Kho truyện | `/story?action=list` | Duyệt, phân trang, lọc thể loại + tình trạng, sắp xếp, tìm tên truyện/tác giả | ✅ |
 | 2b | Tìm trong nội dung | `/story?action=search` | Tìm sâu bên trong chương, có đoạn trích | ✅ |
 | 3 | Chi tiết truyện | `/story?action=detail&id=` | Thông tin, mục lục, bình luận, đánh giá | ✅ |
-| 4 | Trang tác giả | `/user?action=profile&id=` | Hồ sơ công khai, danh sách truyện | ✅ *(chưa có nút theo dõi)* |
+| 4 | Trang tác giả | `/user?action=profile&id=` | Hồ sơ công khai, danh sách truyện, số người theo dõi, nút theo dõi | ✅ |
 | 5 | Bảng xếp hạng | `/rank?by=week\|month\|views\|rating\|chapters\|newest` | Top 20, **6 tiêu chí** — tuần/tháng đếm trên `view_logs` | ✅ |
 | 6 | Hướng dẫn sử dụng | `/page?name=guide` | Hướng dẫn từng chức năng | ✅ |
 | 7 | Nội quy cộng đồng | `/page?name=rules` | Quy định nội dung và ứng xử | ✅ |

@@ -8,6 +8,7 @@
   TẦNG: views/ — chỉ hiển thị. Dữ liệu do UserServlet chuẩn bị sẵn.
 
   Nhận: author (User) · stories · totalStories · totalViews · page · totalPages
+        followerCount · isFollowing
 
   Dùng khung layout/main.jsp — vẫn có nav và footer như trang thường.
   Đúng nhánh 5 của bảng quyết định chọn layout: không rơi vào khung đặc biệt
@@ -28,10 +29,39 @@
         <div class="profile-stats">
             <span><b>${totalStories}</b> truyện</span>
             <span><b><fmt:formatNumber pattern="#,##0" value="${totalViews}"/></b> lượt xem</span>
+            <span><b>${followerCount}</b> người theo dõi</span>
             <c:if test="${author.admin}">
                 <span class="pill pill-warn">Quản trị viên</span>
             </c:if>
         </div>
+
+        <%--
+          NÚT THEO DÕI.
+
+          Không hiện với khách chưa đăng nhập (theo dõi cần biết ai theo dõi
+          ai) và không hiện trên hồ sơ của chính mình — tự theo dõi mình thì
+          thông báo chương mới sẽ báo lại chính truyện mình vừa đăng.
+
+          isFollowing do UserServlet.profile() đặt, và CHỈ đặt trong đúng hai
+          trường hợp trên. Ở các trường hợp khác biến này rỗng, mà EL coi rỗng
+          là false — nên điều kiện c:if bên ngoài mới là chỗ quyết định, không
+          phải giá trị của isFollowing.
+
+          back="profile": FollowServlet cần biết đường quay về. Thiếu tham số
+          này thì bấm xong vẫn về đúng trang hồ sơ (đó là nhánh mặc định),
+          nhưng ghi rõ ra thì sau này đổi mặc định không làm hỏng chỗ này.
+        --%>
+        <c:if test="${not empty currentUser and currentUser.id ne author.id}">
+            <form method="post" class="profile-follow"
+                  action="${pageContext.request.contextPath}/follow">
+                <input type="hidden" name="do" value="${isFollowing ? 'unfollow' : 'follow'}">
+                <input type="hidden" name="authorId" value="${author.id}">
+                <input type="hidden" name="back" value="profile">
+                <button type="submit" class="btn ${isFollowing ? 'btn-ghost' : 'btn-primary'}">
+                    ${isFollowing ? '✓ Đang theo dõi' : '+ Theo dõi'}
+                </button>
+            </form>
+        </c:if>
     </div>
 </div>
 
