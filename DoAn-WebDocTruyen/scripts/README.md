@@ -1,6 +1,6 @@
 # scripts/ — Script chạy dự án
 
-Cả hai script đều tự lùi về thư mục gốc dự án, nên gọi từ đâu cũng được.
+Cả ba script đều tự lùi về thư mục gốc dự án, nên gọi từ đâu cũng được.
 
 ---
 
@@ -14,7 +14,7 @@ Làm 4 việc:
 
 | Bước | Việc |
 |:----:|------|
-| 1 | Tạo database `webdoctruyen` + 7 bảng |
+| 1 | Tạo database `webdoctruyen` + 13 bảng |
 | 2 | Tạo tài khoản MySQL `truyen_app` cho ứng dụng |
 | 3 | Nạp dữ liệu mẫu (9 truyện, 29 chương, 6 tài khoản) |
 | 4 | Sinh `src/main/resources/db.properties` |
@@ -32,7 +32,31 @@ Chạy lại script bao nhiêu lần cũng được — nó xoá dữ liệu cũ
 
 ---
 
-## 2. Build và chạy web
+## 2. Bổ sung index — chỉ khi database đã cài TỪ TRƯỚC
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts	hem-index.ps1
+```
+
+**Cài mới thì bỏ qua mục này** — `schema.sql` đã có đủ index.
+
+Cần đến nó khi database đã tạo từ trước rồi `schema.sql` mới thêm index:
+MySQL không tự moc thêm index vào bảng đã tồn tại, và cũng không có cơ chế
+"đồng bộ lại" nào. Script so với `information_schema` rồi chỉ tạo phần còn
+thiếu, nên **chạy lại bao nhiêu lần cũng được**.
+
+Phải dùng `root`: tài khoản `truyen_app` **cố ý** chỉ có
+`SELECT / INSERT / UPDATE / DELETE` — không có `INDEX`, không có `ALTER`,
+không có `DROP`. Web chạy đủ với bấy nhiêu, và nếu có lỗ hổng SQL injection
+nào lọt lưới thì kẻ tấn công cũng không xoá nổi bảng nào. Đổi lại, việc đổi
+cấu trúc bảng phải làm bằng root — đúng ý đồ.
+
+Mật khẩu root bạn gõ thẳng vào ô nhập, script không hiện ra màn hình và không
+để lại trong lịch sử lệnh.
+
+---
+
+## 3. Build và chạy web
 
 ```bash
 powershell -ExecutionPolicy Bypass -File scripts\run.ps1
