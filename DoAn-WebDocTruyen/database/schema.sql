@@ -478,7 +478,21 @@ CREATE TABLE view_logs (
 --  rỗng, và không lưu được lịch sử ai xin đặt lại bao nhiêu lần.
 -- =============================================================================
 CREATE TABLE password_resets (
-    -- Token là chuỗi ngẫu nhiên dài, KHÔNG đoán được. Dùng luôn làm khoá chính.
+    -- KHÔNG PHẢI VÉ, MÀ LÀ DẤU VÂN TAY CỦA VÉ (SHA-256, mã base64url).
+    --
+    -- Vé đặt lại mật khẩu chính là một mật khẩu tạm: ai cầm được nó là đổi
+    -- được mật khẩu của tài khoản kia. Mật khẩu đã băm PBKDF2 rất kỹ mà vé
+    -- lại nằm nguyên chữ ở đây thì công sức đó mất một nửa — lộ database là
+    -- chiếm được mọi tài khoản còn vé chưa hết hạn.
+    --
+    -- Vé thật chỉ tồn tại trong đường link gửi cho người dùng.
+    --
+    -- Vì sao vẫn CHAR(43): SHA-256 ra 32 byte, mã base64url không đệm của 32
+    -- byte là đúng 43 ký tự — trùng khít độ dài vé, nên không phải đổi cột.
+    --
+    -- Vì sao SHA-256 chứ không PBKDF2 như mật khẩu: xem PasswordResetDAO.
+    -- Tóm tắt — vé là 256 bit ngẫu nhiên từ SecureRandom, không có gì để dò,
+    -- nên băm chậm không thêm an toàn.
     token      CHAR(43)     NOT NULL PRIMARY KEY,
 
     user_id    INT NOT NULL,
