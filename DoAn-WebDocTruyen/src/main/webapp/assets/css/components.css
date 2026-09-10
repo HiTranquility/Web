@@ -1201,3 +1201,24 @@ a.notif:hover { border-color: var(--ember-deep); }
     /* Màn hẹp thì chú thích xuống hàng riêng thay vì ép các chip co lại */
     .toolbar-note { margin-left: 0; flex-basis: 100%; }
 }
+
+/* ---- Xem trước ảnh bìa hiện tại ở form đăng/sửa truyện ---- */
+.cover-preview {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px;
+}
+.cover-preview img {
+    width: 64px; aspect-ratio: 3/4; object-fit: cover;
+    border-radius: var(--r-sm); border: 1px solid var(--ink-700);
+}
+.cover-preview .muted { font-size: .84rem; }
+
+/* Ô chọn file: trình duyệt vẽ nút riêng của nó nên không tạo kiểu sâu được,
+   chỉ chỉnh phần khung cho khớp các ô nhập khác. */
+input[type=file] {
+    width: 100%; padding: 9px 12px;
+    background: var(--ink-900); color: var(--text-dim);
+    border: 1px dashed var(--ink-600); border-radius: var(--r-sm);
+    font-family: inherit; font-size: .86rem; cursor: pointer;
+}
+input[type=file]:hover { border-color: var(--ember-deep); }

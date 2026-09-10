@@ -48,6 +48,7 @@ public class CsrfFilter implements Filter {
          */
         String path = request.getRequestURI();
         if (path.startsWith(request.getContextPath() + "/assets")
+                || path.startsWith(request.getContextPath() + "/uploads")
                 || path.endsWith(".css") || path.endsWith(".js")
                 || path.endsWith(".ico") || path.endsWith(".png")) {
             chain.doFilter(req, res);

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -23,9 +24,25 @@ import truyen.model.Story;
 import truyen.model.User;
 import truyen.util.DBConnection;
 import truyen.util.SlugUtil;
+import truyen.util.UploadUtil;
 
-/** CASE 02, 03, 04, 05 — Truyện. */
+/**
+ * CASE 02, 03, 04, 05 — Truyện.
+ *
+ * @MultipartConfig BẮT BUỘC để nhận ảnh bìa tải lên. Thiếu nó thì
+ * request.getPart() ném IllegalStateException, và tệ hơn: mọi
+ * getParameter() trên form multipart đều trả null — form gửi lên trông như
+ * người dùng bỏ trống hết mọi ô, không có lỗi nào để lần ra.
+ *
+ * maxFileSize là chốt chặn THẬT (UploadUtil.MAX_BYTES chỉ để báo lỗi tử tế):
+ * Tomcat từ chối ngay khi đọc, không để file 500 MB kịp vào bộ nhớ.
+ * fileSizeThreshold: dưới ngưỡng thì giữ trong RAM, trên thì ghi ra đĩa tạm.
+ */
 @WebServlet("/story")
+@MultipartConfig(
+        fileSizeThreshold = 512 * 1024,      // 512 KB
+        maxFileSize       = 2L * 1024 * 1024,  // 2 MB mỗi file
+        maxRequestSize    = 3L * 1024 * 1024)  // 3 MB cả request
 public class StoryServlet extends HttpServlet {
 
     private StoryDAO storyDAO;
@@ -408,6 +425,7 @@ public class StoryServlet extends HttpServlet {
         String title = trim(request.getParameter("title"));
         String description = trim(request.getParameter("description"));
         String coverUrl = trim(request.getParameter("coverUrl"));
+
         String status = request.getParameter("status");
         String progress = request.getParameter("progress");
         String[] tagIds = request.getParameterValues("tagIds");
@@ -418,12 +436,37 @@ public class StoryServlet extends HttpServlet {
         story.setStatus("PUBLISHED".equals(status) ? "PUBLISHED" : "DRAFT");
         story.setProgress("COMPLETED".equals(progress) ? "COMPLETED" : "ONGOING");
 
+        /*
+         * ẢNH TẢI LÊN ĐÈ LÊN Ô DÁN LINK.
+         *
+         * Giữ CẢ HAI cách: dán link tiện khi ảnh đã có sẵn trên mạng, tải lên
+         * cần cho ảnh nằm trong máy. Người dùng làm cả hai thì FILE THẮNG — họ
+         * vừa chủ động chọn nó, còn ô link thường chỉ là giá trị cũ còn sót.
+         *
+         * Đặt SAU các lệnh story.setXxx() ở trên có chủ ý: lỗi tải ảnh thì
+         * form hiện lại vẫn còn nguyên tiêu đề và mô tả người dùng đã gõ. Bắt
+         * gõ lại cả bài mô tả chỉ vì chọn nhầm file là cách chắc chắn khiến
+         * người ta bỏ cuộc.
+         */
+        try {
+            String uploaded = UploadUtil.save(
+                    request.getPart("coverFile"), getServletContext());
+            if (uploaded != null) {
+                story.setCoverUrl(uploaded);
+            }
+        } catch (UploadUtil.UploadException e) {
+            // Lỗi người dùng sửa được: sai định dạng, quá nặng.
+            return backToForm(request, story, isCreate, e.getMessage());
+        } catch (Exception e) {
+            // Lỗi phía máy chủ: hết đĩa, không có quyền ghi...
+            log("Không lưu được ảnh bìa", e);
+            return backToForm(request, story, isCreate,
+                    "Không lưu được ảnh. Thử lại, hoặc dán link ảnh thay thế.");
+        }
+
         if (title.isEmpty()) {
-            request.setAttribute("message", "Tiêu đề không được để trống.");
-            request.setAttribute("story", story);
-            request.setAttribute("allTags", AppListener.tags(getServletContext()));
-            request.setAttribute("pageTitle", isCreate ? "Đăng truyện mới" : "Sửa truyện");
-            return "/WEB-INF/views/story/form.jsp";
+            return backToForm(request, story, isCreate,
+                    "Tiêu đề không được để trống.");
         }
 
         story.setSlug(uniqueSlug(title, story.getId()));
@@ -439,6 +482,22 @@ public class StoryServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + story.getId());
         return null;
+    }
+
+    /**
+     * Hiện lại form kèm một câu lỗi, GIỮ NGUYÊN mọi thứ người dùng đã gõ.
+     *
+     * Gom vào một chỗ vì ba nhánh lỗi đều cần đúng bốn thuộc tính này. Lặp ba
+     * lần thì sớm muộn có nhánh quên allTags, và danh sách thể loại biến mất
+     * đúng lúc người dùng đang bối rối vì lỗi.
+     */
+    private String backToForm(HttpServletRequest request, Story story,
+                              boolean isCreate, String message) {
+        request.setAttribute("message", message);
+        request.setAttribute("story", story);
+        request.setAttribute("allTags", AppListener.tags(getServletContext()));
+        request.setAttribute("pageTitle", isCreate ? "Đăng truyện mới" : "Sửa truyện");
+        return "/WEB-INF/views/story/form.jsp";
     }
 
     private String delete(HttpServletRequest request, HttpServletResponse response)

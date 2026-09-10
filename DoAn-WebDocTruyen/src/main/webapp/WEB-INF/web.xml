@@ -84,6 +84,16 @@
       của getRealPath() ở chương 5.
 
       Để ở đây thay vì viết cứng trong code: đổi máy chỉ cần sửa một dòng.
+
+      AI ĐỌC THAM SỐ NÀY
+        util/UploadUtil            — lưu file vào đây
+        controller/UploadedFileServlet — đọc file ra, map /uploads/*
+
+      Cần servlet riêng để đọc ra chính vì thư mục nằm NGOÀI webapp: Tomcat
+      chỉ tự phục vụ file bên trong webapp. Đó là cái giá của quyết định trên,
+      và trả là đúng — đổi lại ảnh không bốc hơi mỗi lần triển khai lại.
+
+      Thư mục KHÔNG có sẵn thì UploadUtil tự tạo ở lần tải ảnh đầu tiên.
     -->
     <context-param>
         <param-name>uploadDir</param-name>

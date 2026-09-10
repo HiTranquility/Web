@@ -58,6 +58,10 @@ public class NotificationFilter implements Filter {
          */
         String path = request.getRequestURI();
         if (path.startsWith(request.getContextPath() + "/assets")
+                // /uploads = anh bia nguoi dung tai len. Mot trang kho truyen
+                // keo theo hang chuc anh; dem thong bao cho tung anh la hang
+                // chuc cau SQL thua cho mot con so duy nhat.
+                || path.startsWith(request.getContextPath() + "/uploads")
                 || path.endsWith(".css") || path.endsWith(".js")
                 || path.endsWith(".ico") || path.endsWith(".png")) {
             chain.doFilter(req, res);

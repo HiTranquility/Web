@@ -10,7 +10,19 @@
     <p class="form-error"><c:out value="${message}"/></p>
 </c:if>
 
-<form action="${pageContext.request.contextPath}/story" method="post" class="wide-form">
+<%--
+  enctype="multipart/form-data" BẮT BUỘC khi form có <input type="file">.
+
+  Thiếu nó thì trình duyệt chỉ gửi TÊN file, không gửi nội dung — server nhận
+  được một chuỗi vô dụng, không có lỗi nào để lần ra. Đây là kiểu hỏng im
+  lặng: form gửi đi bình thường, chỉ ảnh không bao giờ tới nơi.
+
+  Đổi lại, mọi ô khác cũng chuyển sang dạng multipart, nên servlet BẮT BUỘC
+  phải có @MultipartConfig — không thì getParameter() trả null cho tất cả và
+  form trông như người dùng bỏ trống hết.
+--%>
+<form action="${pageContext.request.contextPath}/story" method="post"
+      class="wide-form" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action"
            value="${empty story.id or story.id eq 0 ? 'create' : 'edit'}">
@@ -24,7 +36,32 @@
     <label for="description">Giới thiệu</label>
     <textarea id="description" name="description" rows="5"><c:out value="${story.description}"/></textarea>
 
-    <label for="coverUrl">Link ảnh bìa</label>
+    <label>Ảnh bìa</label>
+
+    <%--
+      HAI CÁCH ĐẶT BÌA, giữ cả hai vì phục vụ hai tình huống khác nhau:
+        tải file  — ảnh nằm trong máy
+        dán link  — ảnh đã có sẵn trên mạng
+
+      Chọn cả hai thì FILE THẮNG (xem StoryServlet): người dùng vừa chủ động
+      chọn file, còn ô link thường chỉ là giá trị cũ còn sót lại.
+    --%>
+    <c:if test="${not empty story.coverUrl}">
+        <div class="cover-preview">
+            <img src="<c:out value='${story.coverUrl}'/>" alt="Ảnh bìa hiện tại">
+            <span class="muted">Bìa hiện tại. Chọn ảnh mới để thay.</span>
+        </div>
+    </c:if>
+
+    <%-- accept= chỉ LỌC hộp thoại chọn file cho đỡ vướng mắt. Nó KHÔNG phải
+         phép kiểm: người dùng đổi bộ lọc trong hộp thoại là chọn được file
+         bất kỳ. Chốt chặn thật nằm ở UploadUtil — đọc byte đầu file để biết
+         có đúng là ảnh không. --%>
+    <input type="file" id="coverFile" name="coverFile"
+           accept="image/png,image/jpeg,image/gif,image/webp">
+    <small class="muted-note">PNG, JPG, GIF hoặc WebP — tối đa 2 MB.</small>
+
+    <label for="coverUrl">…hoặc dán link ảnh</label>
     <input type="url" id="coverUrl" name="coverUrl"
            value="<c:out value='${story.coverUrl}'/>"
            placeholder="https://…  (để trống thì lấy chữ cái đầu làm bìa)">
