@@ -19,6 +19,7 @@
   không được nằm trên thanh địa chỉ. Quy tắc chọn GET/POST: standards §01.
 --%>
 <form action="${pageContext.request.contextPath}/auth" method="post">
+    <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action" value="login">
 
     <label for="username">Tên đăng nhập</label>

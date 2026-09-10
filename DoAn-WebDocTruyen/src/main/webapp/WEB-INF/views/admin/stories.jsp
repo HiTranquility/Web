@@ -36,6 +36,7 @@
                     <c:when test="${s.status eq 'DELETED'}">
                         <form action="${pageContext.request.contextPath}/admin/story"
                               method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="restore">
                             <input type="hidden" name="id" value="${s.id}">
                             <button type="submit" class="btn btn-ghost btn-sm">Khôi phục</button>
@@ -44,6 +45,7 @@
                     <c:otherwise>
                         <form action="${pageContext.request.contextPath}/admin/story"
                               method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="${s.id}">
                             <button type="submit" class="btn btn-danger btn-sm">Gỡ</button>

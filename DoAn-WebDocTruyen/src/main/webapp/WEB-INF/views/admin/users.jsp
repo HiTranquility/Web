@@ -71,6 +71,7 @@
                 <c:if test="${currentUser.id ne u.id}">
                     <form action="${pageContext.request.contextPath}/admin/user"
                           method="post" style="display:inline">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="role">
                         <input type="hidden" name="id" value="${u.id}">
                         <input type="hidden" name="q" value="<c:out value='${q}'/>">
@@ -102,6 +103,7 @@
                     <c:when test="${u.banned}">
                         <form action="${pageContext.request.contextPath}/admin/user"
                               method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="unban">
                             <input type="hidden" name="id" value="${u.id}">
                             <input type="hidden" name="q" value="<c:out value='${q}'/>">
@@ -112,6 +114,7 @@
                     <c:otherwise>
                         <form action="${pageContext.request.contextPath}/admin/user"
                               method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="ban">
                             <input type="hidden" name="id" value="${u.id}">
                             <input type="hidden" name="q" value="<c:out value='${q}'/>">

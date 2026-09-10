@@ -55,6 +55,7 @@
 <c:if test="${rsForm and not empty currentUser}">
     <form class="rating-form" method="post" id="rating"
           action="${pageContext.request.contextPath}/rating">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <input type="hidden" name="storyId" value="${rsStory.id}">
 
         <span class="rating-label">

@@ -47,6 +47,7 @@
 
         <c:otherwise>
             <form method="post" action="${pageContext.request.contextPath}/auth">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="action" value="forgot">
 
                 <div class="field">

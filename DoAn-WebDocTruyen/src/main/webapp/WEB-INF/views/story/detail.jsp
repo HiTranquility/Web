@@ -48,6 +48,7 @@
             <c:if test="${not empty currentUser and currentUser.id ne story.authorId}">
                 <form method="post" style="display:inline;margin-left:10px"
                       action="${pageContext.request.contextPath}/follow">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="do" value="${following ? 'unfollow' : 'follow'}">
                     <input type="hidden" name="authorId" value="${story.authorId}">
                     <button type="submit" class="btn btn-ghost btn-sm">
@@ -88,10 +89,12 @@
             </c:if>
 
             <%-- Nút lưu/bỏ lưu. Chỉ hiện khi đã đăng nhập.
-                 Dùng <form method="post"> vì đây là hành động GHI. --%>
+                 Dùng <form method="post">
+                     <input type="hidden" name="_csrf" value="${csrfToken}"> vì đây là hành động GHI. --%>
             <c:if test="${not empty currentUser}">
                 <form action="${pageContext.request.contextPath}/bookmark" method="post"
                       style="display:inline">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="${bookmarked ? 'remove' : 'add'}">
                     <input type="hidden" name="storyId" value="${story.id}">
                     <button type="submit" class="btn btn-ghost">
@@ -142,6 +145,7 @@
                 <details class="report-box">
                     <summary class="share-btn">⚠ Báo cáo</summary>
                     <form method="post" action="${pageContext.request.contextPath}/report">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="targetType" value="STORY">
                         <input type="hidden" name="targetId" value="${story.id}">
                         <input type="hidden" name="storyId" value="${story.id}">
@@ -243,6 +247,7 @@
     <c:when test="${not empty currentUser}">
         <form action="${pageContext.request.contextPath}/comment" method="post"
               class="comment-form">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action" value="add">
             <input type="hidden" name="storyId" value="${story.id}">
             <textarea name="content" rows="3" maxlength="1000" required

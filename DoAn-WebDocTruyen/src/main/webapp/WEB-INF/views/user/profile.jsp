@@ -54,6 +54,7 @@
         <c:if test="${not empty currentUser and currentUser.id ne author.id}">
             <form method="post" class="profile-follow"
                   action="${pageContext.request.contextPath}/follow">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="do" value="${isFollowing ? 'unfollow' : 'follow'}">
                 <input type="hidden" name="authorId" value="${author.id}">
                 <input type="hidden" name="back" value="profile">

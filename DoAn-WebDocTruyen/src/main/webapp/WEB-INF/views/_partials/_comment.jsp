@@ -50,6 +50,7 @@
                           and (currentUser.id eq cm.userId or currentUser.admin)}">
                 <form action="${pageContext.request.contextPath}/comment" method="post"
                       style="display:inline">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="${cm.id}">
                     <input type="hidden" name="storyId" value="${cmStoryId}">
@@ -74,6 +75,7 @@
                     <summary>↩ Trả lời</summary>
                     <form action="${pageContext.request.contextPath}/comment"
                           method="post" class="reply-form">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="add">
                         <input type="hidden" name="storyId" value="${cmStoryId}">
 
@@ -101,6 +103,7 @@
                 <details class="report-box report-inline">
                     <summary>⚠ báo cáo</summary>
                     <form method="post" action="${pageContext.request.contextPath}/report">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="targetType" value="COMMENT">
                         <input type="hidden" name="targetId" value="${cm.id}">
                         <input type="hidden" name="storyId" value="${cmStoryId}">
@@ -143,6 +146,7 @@
                                               and (currentUser.id eq rp.userId or currentUser.admin)}">
                                     <form action="${pageContext.request.contextPath}/comment"
                                           method="post" style="display:inline">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="${rp.id}">
                                         <input type="hidden" name="storyId" value="${cmStoryId}">

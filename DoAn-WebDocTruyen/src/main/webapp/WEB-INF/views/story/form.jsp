@@ -11,6 +11,7 @@
 </c:if>
 
 <form action="${pageContext.request.contextPath}/story" method="post" class="wide-form">
+    <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action"
            value="${empty story.id or story.id eq 0 ? 'create' : 'edit'}">
     <input type="hidden" name="id" value="${story.id}">

@@ -86,6 +86,7 @@
                         <form method="post" style="display:inline"
                               action="${pageContext.request.contextPath}/story"
                               onsubmit="return confirm('Gỡ truyện này khỏi kho truyện?')">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="${story.id}">
                             <button type="submit" class="btn btn-danger btn-sm">Gỡ</button>

@@ -62,6 +62,7 @@
                     <td class="col-actions">
                         <form method="post" style="display:inline"
                               action="${pageContext.request.contextPath}/admin/comment">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action"
                                    value="${cm.status eq 'HIDDEN' ? 'unhide' : 'hide'}">
                             <input type="hidden" name="id" value="${cm.id}">

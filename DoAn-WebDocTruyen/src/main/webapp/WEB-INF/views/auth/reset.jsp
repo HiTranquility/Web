@@ -23,6 +23,7 @@
     </c:if>
 
     <form method="post" action="${pageContext.request.contextPath}/auth">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <input type="hidden" name="action" value="reset">
         <input type="hidden" name="token" value="<c:out value='${token}'/>">
 

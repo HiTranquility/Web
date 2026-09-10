@@ -64,6 +64,7 @@
                              trang truyện — chi tiết nhỏ nhưng đỡ khó chịu. --%>
                         <form action="${pageContext.request.contextPath}/bookmark" method="post"
                               style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="remove">
                             <input type="hidden" name="storyId" value="${b.storyId}">
                             <input type="hidden" name="from" value="list">

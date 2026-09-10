@@ -12,6 +12,7 @@
 </c:if>
 
 <form action="${pageContext.request.contextPath}/chapter" method="post" class="wide-form">
+    <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action"
            value="${empty chapter.id or chapter.id eq 0 ? 'create' : 'edit'}">
     <input type="hidden" name="id" value="${chapter.id}">

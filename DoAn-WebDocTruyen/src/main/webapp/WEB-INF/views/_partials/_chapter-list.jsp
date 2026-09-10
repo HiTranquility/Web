@@ -47,6 +47,7 @@
                             <form method="post" style="display:inline"
                                   action="${pageContext.request.contextPath}/chapter"
                                   onsubmit="return confirm('Xoá chương này? Không khôi phục được.')">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="${ch.id}">
                                 <button type="submit" class="btn btn-danger btn-sm">Xoá</button>

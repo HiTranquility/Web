@@ -98,6 +98,7 @@
                              lại. from=history để servlet biết đường về. --%>
                         <form action="${pageContext.request.contextPath}/bookmark"
                               method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="storyId" value="${h.storyId}">
                             <input type="hidden" name="from" value="history">
@@ -133,6 +134,7 @@
                 </p>
                 <form method="post"
                       action="${pageContext.request.contextPath}/history">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="clear">
                     <button type="submit" class="btn btn-danger btn-sm">
                         Xoá toàn bộ lịch sử</button>

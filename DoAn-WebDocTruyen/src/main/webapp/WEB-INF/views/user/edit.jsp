@@ -21,6 +21,7 @@
 
 <form class="form-card" method="post"
       action="${pageContext.request.contextPath}/user">
+    <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action" value="save">
 
     <div class="field">
@@ -82,6 +83,7 @@
 
 <form class="form-card" method="post"
       action="${pageContext.request.contextPath}/user">
+    <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action" value="password">
 
     <div class="field">

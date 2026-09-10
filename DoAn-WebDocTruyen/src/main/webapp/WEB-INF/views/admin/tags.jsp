@@ -17,6 +17,7 @@
     <h3 class="panel-title">➕ Thêm thể loại</h3>
     <form method="post" class="inline-form"
           action="${pageContext.request.contextPath}/admin/tag">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
         <input type="hidden" name="action" value="create">
         <input type="text" name="name" maxlength="50" required
                placeholder="Tên thể loại, ví dụ: Huyền huyễn" class="inline-input">
@@ -42,6 +43,7 @@
                      một trang sửa riêng cho đúng một trường. --%>
                 <form method="post" class="inline-form"
                       action="${pageContext.request.contextPath}/admin/tag">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="update">
                     <input type="hidden" name="id" value="${t.id}">
                     <input type="text" name="name" maxlength="50" required
@@ -77,6 +79,7 @@
                         <form method="post" style="display:inline"
                               action="${pageContext.request.contextPath}/admin/tag"
                               onsubmit="return confirm('Xoá thể loại này?')">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="${t.id}">
                             <button type="submit" class="btn btn-danger btn-sm">Xoá</button>

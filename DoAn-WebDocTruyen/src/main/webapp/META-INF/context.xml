@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+================================================================================
+  META-INF/context.xml — cấu hình RIÊNG CỦA TOMCAT cho ứng dụng này
+================================================================================
+  KHÁC web.xml CHỖ NÀO
+    web.xml là chuẩn Servlet, server nào cũng hiểu.
+    File này là của riêng Tomcat, dùng cho thứ chuẩn Servlet chưa có.
+
+    SameSite của cookie đúng là một thứ như vậy: Servlet 4.0 (web.xml 3.1)
+    không có phần tử nào khai được nó, phải nhờ CookieProcessor của Tomcat.
+
+  Tomcat đọc file này khi nạp ứng dụng — cả khi chạy bằng tools/DevServer
+  (addWebapp đọc docBase) lẫn khi bung file .war lên Tomcat thật.
+  Sửa xong phải khởi động lại.
+================================================================================
+-->
+<Context>
+
+    <!--
+      SameSite=Lax — HÀNG RÀO THỨ HAI chống CSRF, do TRÌNH DUYỆT dựng.
+
+      Trình duyệt sẽ KHÔNG gửi kèm cookie phiên khi request do một site khác
+      tạo ra (form POST tự động từ trang lạ), nhưng VẪN gửi khi người dùng tự
+      bấm link đi tới đây. Nhờ vế sau mà Lax không làm phiền ai: chia sẻ link
+      truyện cho bạn bè, họ bấm vào vẫn còn đăng nhập.
+
+      VÌ SAO KHÔNG DÙNG strict
+        Strict chặn cả trường hợp bấm link: đang đăng nhập mà mở link truyện
+        từ Facebook vẫn hiện ra như khách chưa đăng nhập. Quá chặt cho một
+        web đọc truyện sống nhờ chia sẻ link.
+
+      VÌ SAO VẪN CẦN TOKEN Ở CsrfFilter DÙ ĐÃ CÓ DÒNG NÀY
+        Đây là hàng rào của trình duyệt. Trình duyệt cũ không hiểu thuộc tính
+        này thì lặng lẽ bỏ qua, và hàng rào biến mất mà server không hay biết.
+        Token là hàng rào của chính server, không phụ thuộc vào ai.
+        Hai lớp độc lập — hỏng một lớp vẫn còn lớp kia.
+    -->
+    <CookieProcessor
+        className="org.apache.tomcat.util.http.Rfc6265CookieProcessor"
+        sameSiteCookies="lax" />
+
+</Context>

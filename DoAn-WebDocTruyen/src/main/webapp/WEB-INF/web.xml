@@ -48,6 +48,35 @@
     </filter-mapping>
 
     <!--
+      CHỐNG CSRF — mọi POST phải mang token của phiên.
+
+      PHẢI ĐỨNG SAU EncodingFilter. Filter này gọi getParameter() để đọc
+      token, mà tham số một khi đã đọc thì setCharacterEncoding() gọi sau
+      không còn tác dụng — đúng cái bẫy đã làm mất dấu tiếng Việt khi gửi
+      form. Thứ tự <filter-mapping> trong web.xml được bảo đảm, nên khai ở
+      đây chứ không dùng @WebFilter.
+
+      PHẢI ĐỨNG TRƯỚC AuthFilter và AdminFilter (cả hai khai bằng annotation,
+      mà Tomcat chạy nhóm web.xml trước nhóm annotation). Request giả mạo nên
+      bị chặn từ trước khi tới chỗ kiểm quyền — chặn sớm nhất có thể.
+
+      Lỗ hổng nó vá: trình duyệt tự đính kèm cookie phiên vào mọi request,
+      kể cả request do một trang KHÁC tạo ra. Nên chỉ cần admin đang đăng
+      nhập lỡ mở một trang độc là trang đó gửi được lệnh khoá tài khoản, gỡ
+      truyện... mà admin không bấm gì. Xem util/CsrfUtil để hiểu vì sao token
+      chặn được: trang tấn công gửi request thì được, nhưng ĐỌC token thì bị
+      chính sách same-origin của trình duyệt cấm.
+    -->
+    <filter>
+        <filter-name>CsrfFilter</filter-name>
+        <filter-class>truyen.filter.CsrfFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!--
       Thư mục chứa ảnh bìa người dùng tải lên.
 
       PHẢI NẰM NGOÀI webapp. Để trong webapp thì mỗi lần deploy lại là Tomcat
@@ -137,6 +166,20 @@
         <cookie-config>
             <http-only>true</http-only>
         </cookie-config>
+
+        <!--
+          CHỈ theo dõi phiên bằng COOKIE, cấm nhét id phiên vào URL.
+
+          Không khai dòng này thì Tomcat được phép dùng cách dự phòng
+          ";jsessionid=..." gắn thẳng vào đường dẫn khi trình duyệt chưa nhận
+          cookie. Mà id phiên nằm trên URL là nó theo vào lịch sử trình duyệt,
+          vào header Referer gửi sang site khác, và vào link người dùng copy
+          cho bạn bè — đưa luôn cả phiên đăng nhập của mình cho người ta.
+
+          SameSite của cookie KHÔNG đặt được ở đây: web.xml phiên bản 3.1
+          không có phần tử nào cho nó. Xem META-INF/context.xml.
+        -->
+        <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 
 

@@ -79,6 +79,7 @@
                         <div class="report-actions">
                             <form method="post" style="display:inline"
                                   action="${pageContext.request.contextPath}/admin/report">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="resolve">
                                 <input type="hidden" name="id" value="${r.id}">
                                 <input type="hidden" name="status" value="${status}">
@@ -87,6 +88,7 @@
                             </form>
                             <form method="post" style="display:inline"
                                   action="${pageContext.request.contextPath}/admin/report">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="dismiss">
                                 <input type="hidden" name="id" value="${r.id}">
                                 <input type="hidden" name="status" value="${status}">

@@ -42,6 +42,7 @@
                          thay vì ném sang trang hồ sơ tác giả --%>
                     <form method="post" class="author-action"
                           action="${pageContext.request.contextPath}/follow">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="do" value="unfollow">
                         <input type="hidden" name="authorId" value="${f.authorId}">
                         <input type="hidden" name="back" value="list">

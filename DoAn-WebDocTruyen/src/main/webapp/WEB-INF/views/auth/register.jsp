@@ -13,6 +13,7 @@
 </c:if>
 
 <form action="${pageContext.request.contextPath}/auth" method="post">
+    <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action" value="register">
 
     <label for="username">Tên đăng nhập</label>
