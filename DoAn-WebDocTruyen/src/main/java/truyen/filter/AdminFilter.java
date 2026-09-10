@@ -29,6 +29,19 @@ public class AdminFilter implements Filter {
         User me = session == null ? null : (User) session.getAttribute("currentUser");
 
         if (me == null) {
+            /*
+             * Nhớ chỗ họ định vào, y như AuthFilter làm.
+             *
+             * Admin dán thẳng link /admin/report vào thanh địa chỉ lúc phiên đã
+             * hết hạn thì đăng nhập xong phải thấy đúng trang báo cáo. Thiếu
+             * hai dòng này thì họ rơi về bảng điều khiển và phải bấm lại.
+             */
+            String target = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                target += "?" + request.getQueryString();
+            }
+            request.getSession(true).setAttribute("redirectAfterLogin", target);
+
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
         }

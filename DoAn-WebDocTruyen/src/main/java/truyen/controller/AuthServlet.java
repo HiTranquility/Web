@@ -131,8 +131,20 @@ public class AuthServlet extends HttpServlet {
             return "/WEB-INF/views/auth/login.jsp";
         }
 
-        /* ĐỔI ID PHIÊN NGAY TRƯỚC KHI ĐĂNG NHẬP THÀNH CÔNG. */
+        /*
+         * LẤY ĐÍCH ĐẾN RA TRƯỚC KHI HUỶ PHIÊN.
+         *
+         * AuthFilter/AdminFilter lưu "redirectAfterLogin" vào phiên CŨ khi đá
+         * khách về đây. Ngay dưới là lệnh invalidate() — huỷ phiên là xoá sạch
+         * mọi thuộc tính trong đó, kể cả cái này. Đọc sau khi huỷ thì luôn
+         * nhận null và người dùng luôn bị ném về trang chủ.
+         *
+         * Không đổi được thứ tự: đổi id phiên PHẢI làm trước khi đặt
+         * currentUser, nếu không thì kẻ tấn công đã biết id phiên từ trước
+         * vẫn dùng lại được nó sau khi nạn nhân đăng nhập (session fixation).
+         */
         HttpSession old = request.getSession(false);
+        String target = old == null ? null : (String) old.getAttribute("redirectAfterLogin");
         if (old != null) {
             old.invalidate();
         }
@@ -148,8 +160,51 @@ public class AuthServlet extends HttpServlet {
          * thúc bằng redirect thì request cuối trong lịch sử là một GET vô hại.
          * F5 chỉ tải lại trang, không gửi lại form đăng nhập.
          */
-        response.sendRedirect(request.getContextPath() + "/");
+        response.sendRedirect(request.getContextPath() + landingPage(user, target));
         return null;
+    }
+
+    /**
+     * Đăng nhập xong thì thả người dùng xuống đâu?
+     *
+     * Thứ tự ưu tiên, dừng ở điều kiện đầu tiên đúng:
+     *
+     *   1. NƠI HỌ ĐỊNH ĐẾN. Ai đó bấm vào link một chương, bị đá về đăng nhập,
+     *      thì đăng nhập xong phải thấy đúng chương đó. Ném về trang chủ là bắt
+     *      họ tự mò lại từ đầu — mà thường là họ bỏ luôn.
+     *
+     *   2. ADMIN -> thẳng bảng điều khiển. Admin đăng nhập gần như luôn là để
+     *      làm việc quản trị, không phải để đọc truyện. Thả xuống trang chủ rồi
+     *      bắt tìm menu là thừa một bước cho mọi lần đăng nhập.
+     *
+     *   3. Còn lại -> trang chủ.
+     *
+     * KIỂM ĐÍCH ĐẾN TRƯỚC KHI DÙNG
+     *   target lấy từ getRequestURI() nên vốn đã là đường dẫn nội bộ. Nhưng
+     *   hàm này không tự biết điều đó, và chỉ cần sau này có ai truyền đích đến
+     *   qua tham số URL là lỗ hổng chuyển hướng mở (open redirect) xuất hiện:
+     *   trang đăng nhập của chính mình lại đẩy người dùng sang web lừa đảo.
+     *
+     *   Nên chặn ngay tại đây: bắt buộc bắt đầu bằng "/" và KHÔNG bắt đầu bằng
+     *   "//" — vì "//ac.com/x" là URL tuyệt đối hợp lệ trong trình duyệt, chỉ
+     *   là viết tắt phần giao thức.
+     */
+    private String landingPage(User user, String target) {
+        if (target != null
+                && target.startsWith("/")
+                && !target.startsWith("//")) {
+
+            /* Bỏ tiền tố context ra — chỗ gọi đã tự nối lại rồi, giữ nguyên
+               là nối hai lần thành "/app/app/chapter". */
+            String ctx = getServletContext().getContextPath();
+            if (!ctx.isEmpty() && target.startsWith(ctx)) {
+                target = target.substring(ctx.length());
+            }
+            if (target.startsWith("/") && !target.startsWith("//")) {
+                return target;
+            }
+        }
+        return user.isAdmin() ? "/admin/dashboard" : "/";
     }
 
     // ---- ĐĂNG KÝ -----------------------------------------------------------

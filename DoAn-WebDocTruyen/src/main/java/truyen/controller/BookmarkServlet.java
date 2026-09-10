@@ -56,6 +56,11 @@ public class BookmarkServlet extends HttpServlet {
          * Vẫn kiểm lại một lần cho chắc: nếu sau này ai đó sửa url-pattern của
          * filter mà quên servlet này, đoạn dưới vẫn chặn được thay vì ném
          * NullPointerException.
+         *
+         * VÀ NÓ ĐÃ THẬT SỰ CỨU MỘT LẦN. Có giai đoạn AuthFilter dùng chung một
+         * danh sách trắng cho cả bốn servlet, trong đó có "list" — nên
+         * /bookmark?action=list lọt thẳng qua filter, câu trên thành sai. Dữ
+         * liệu không lộ đúng nhờ mấy dòng "thừa" này.
          */
         User me = currentUser(request);
         if (me == null) {

@@ -26,12 +26,39 @@ public class AuthFilter implements Filter {
      *
      * Ngược lại (danh sách đen — chặn thứ có tên) là sai hướng: thêm action
      * mới mà quên bổ sung vào danh sách là nó lọt ra ngoài, không ai biết.
+     *
+     * TÁCH RIÊNG THEO TỪNG ĐƯỜNG DẪN, KHÔNG DÙNG CHUNG MỘT DANH SÁCH
+     *   Bản trước để chung một mảng cho cả bốn servlet. Nhưng cùng một chữ
+     *   "list" lại mang hai nghĩa khác hẳn nhau:
+     *       /story?action=list      kho truyện   -> ai cũng xem được
+     *       /bookmark?action=list   truyện đã lưu -> RIÊNG của từng người
+     *   Dùng chung nghĩa là mở công khai cho cả cái thứ hai. Không lộ dữ liệu
+     *   vì BookmarkServlet còn tự kiểm lại lần nữa, nhưng bộ lọc đã hết tác
+     *   dụng ở đó — và hậu quả nhìn thấy được là khách bị đá về đăng nhập mà
+     *   không ai nhớ họ định vào đâu, nên đăng nhập xong rơi về trang chủ.
+     *
+     *   Một tên action chỉ có nghĩa trong phạm vi servlet của nó. Danh sách
+     *   trắng cũng phải theo phạm vi đó.
      */
-    private static final String[] PUBLIC_ACTIONS =
-            { "list", "detail", "read", "search", "raw" };
-    // "raw" la ban khong khung cua "read", dung cho doc lien tuc.
-    // Thieu no o day thi fetch() bi da ve trang dang nhap va nhan lai
-    // NGUYEN mot trang HTML — noi vao giua trang dang doc la hong het.
+    private static String[] publicActionsFor(String path) {
+        switch (path) {
+            // Kho truyện, chi tiết truyện, tìm kiếm — nội dung công khai.
+            case "/story":
+                return new String[] { "list", "detail", "search" };
+
+            // "raw" la ban khong khung cua "read", dung cho doc lien tuc.
+            // Thieu no o day thi fetch() bi da ve trang dang nhap va nhan lai
+            // NGUYEN mot trang HTML — noi vao giua trang dang doc la hong het.
+            case "/chapter":
+                return new String[] { "read", "raw" };
+
+            // /comment và /bookmark: không có action nào công khai.
+            //   comment  — mọi action đều là ghi (thêm, xoá).
+            //   bookmark — kể cả xem danh sách cũng là dữ liệu riêng.
+            default:
+                return new String[0];
+        }
+    }
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
@@ -45,8 +72,13 @@ public class AuthFilter implements Filter {
             action = "list";
         }
 
+        /*
+         * getServletPath() chứ không phải getRequestURI(): cái sau còn kèm cả
+         * tiền tố context ("/DoAn/story"), nên so sánh với "/story" sẽ không
+         * bao giờ khớp và mọi thứ đều bị chặn.
+         */
         // Action công khai -> cho qua ngay, khỏi kiểm session
-        for (String pub : PUBLIC_ACTIONS) {
+        for (String pub : publicActionsFor(request.getServletPath())) {
             if (pub.equals(action)) {
                 chain.doFilter(req, res);
                 return;
