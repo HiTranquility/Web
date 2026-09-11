@@ -17,15 +17,10 @@
             <c:forEach var="b" items="${bookmarks}">
                 <div class="bookmark-item">
                     <div class="bm-cover">
-                        <c:choose>
-                            <c:when test="${not empty b.coverUrl}">
-                                <img src="<c:out value='${b.coverUrl}'/>"
-                                     alt="<c:out value='${b.storyTitle}'/>">
-                            </c:when>
-                            <c:otherwise>
-                                <div class="cover-fallback">${b.initial}</div>
-                            </c:otherwise>
-                        </c:choose>
+                        <c:set var="cvUrl"     value="${b.coverUrl}"/>
+                        <c:set var="cvAlt"     value="${b.storyTitle}"/>
+                        <c:set var="cvInitial" value="${b.initial}"/>
+                        <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
                     </div>
 
                     <div class="bm-info">

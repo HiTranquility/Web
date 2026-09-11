@@ -282,3 +282,29 @@ a.toc-link:hover .toc-no { color: var(--ember); }
 }
 .toc-here { flex: 0 0 auto; font-size: .72rem; color: var(--ember);
             text-transform: uppercase; letter-spacing: .03em; }
+
+/* ===========================================================================
+   THANH TIẾN ĐỘ ĐỌC
+   ======================================================================== */
+/* position: fixed chứ không sticky — vạch phải đứng yên tuyệt đối ở mép trên
+   màn hình, không trôi theo bất kỳ khối cha nào.
+
+   z-index cao hơn thanh điều hướng nhưng THẤP hơn bảng mục lục thả xuống
+   (z-index 40), để vạch không nằm đè lên danh sách chương. */
+.read-progress {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 3px; z-index: 30;
+    background: transparent;       /* nền trong suốt: chưa cuộn thì không thấy gì */
+    pointer-events: none;          /* không chắn chuột ở mép trên trang */
+}
+.read-progress i {
+    display: block; height: 100%; width: 0;
+    background: var(--ember);
+    /* Chuyển động rất ngắn để vạch không giật từng nấc khi cuộn nhanh,
+       nhưng vẫn bám sát tay người dùng. */
+    transition: width .08s linear;
+}
+
+/* Nền giấy và nền sáng: màu cam trên nền trắng hơi chói, giảm độ đậm một chút */
+[data-theme="light"] .read-progress i,
+[data-theme="sepia"] .read-progress i { background: var(--ember-deep); }

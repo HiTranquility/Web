@@ -29,6 +29,25 @@
 --%>
 <body class="reader-body" data-theme="dark" data-size="m" data-leading="normal">
 
+<%--
+  THANH TIẾN ĐỘ ĐỌC — vạch mảnh chạy ngang trên cùng.
+
+  VÌ SAO CẦN Ở ĐÚNG TRANG NÀY
+    Từ khi có đọc liên tục, trang không còn kết thúc ở cuối chương nữa: cuộn
+    tới đâu là nối thêm chương tới đó. Thanh cuộn của trình duyệt vì thế nói
+    dối — nó ngắn lại mỗi lần nạp thêm, nên không cho biết mình đang ở đâu.
+
+    Vạch này đo theo phần đã cuộn của TOÀN BỘ nội dung đang có, nên vẫn đúng
+    sau mỗi lần nối thêm chương.
+
+  Để TRỐNG khi chưa có JavaScript: không có script thì vạch đứng yên ở 0% và
+  gần như vô hình — không hỏng gì, chỉ là không có thêm thông tin.
+
+  aria-hidden: đây là thứ thuần trang trí. Trình đọc màn hình đã có cách báo
+  vị trí riêng, đọc thêm "thanh tiến độ 43%" chỉ gây nhiễu.
+--%>
+<div class="read-progress" aria-hidden="true"><i id="read-progress-fill"></i></div>
+
 <header class="reader-bar">
     <a class="reader-back"
        href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">
@@ -393,6 +412,65 @@ var CTX = '${pageContext.request.contextPath}';
                   + 'Xem ở trang truyện →</a></p>';
             });
     });
+})();
+
+
+/* ===========================================================================
+   THANH TIẾN ĐỘ ĐỌC
+   ===========================================================================
+   Đo phần đã cuộn trên TOÀN BỘ nội dung hiện có. Đọc liên tục nối thêm chương
+   liên tục nên chiều cao trang thay đổi suốt — vì vậy phải đo lại mỗi lần vẽ,
+   không được nhớ sẵn một con số lúc tải trang.
+
+   VÌ SAO DÙNG requestAnimationFrame CHỨ KHÔNG TÍNH THẲNG TRONG scroll
+     Sự kiện scroll bắn hàng trăm lần mỗi giây. Đọc scrollHeight trong đó là
+     ép trình duyệt tính lại bố cục từng lần một, và trang bắt đầu khựng đúng
+     lúc người ta đang cuộn.
+     Cách này gom lại: cuộn bao nhiêu lần cũng chỉ vẽ MỘT lần mỗi khung hình.
+
+   passive: true — hứa với trình duyệt là sẽ không gọi preventDefault, nhờ vậy
+   nó cuộn ngay chứ không chờ đoạn mã này chạy xong.
+   ======================================================================== */
+(function () {
+    var fill = document.getElementById('read-progress-fill');
+    if (!fill) return;
+
+    var cho = false;
+
+    function ve() {
+        cho = false;
+        var doc = document.documentElement;
+
+        /* Phần cuộn được = chiều cao toàn trang trừ chiều cao màn hình.
+           Trang ngắn hơn màn hình thì số này <= 0 -> coi như đã đọc hết,
+           vừa tránh chia cho 0 vừa tránh vạch nằm im ở 0% khó hiểu. */
+        var cuonDuoc = doc.scrollHeight - window.innerHeight;
+        var pct = cuonDuoc > 0
+                ? (window.scrollY || doc.scrollTop) / cuonDuoc * 100
+                : 100;
+
+        if (pct < 0) pct = 0;
+        if (pct > 100) pct = 100;
+        fill.style.width = pct.toFixed(1) + '%';
+    }
+
+    function hen() {
+        if (cho) return;
+        cho = true;
+        window.requestAnimationFrame(ve);
+    }
+
+    window.addEventListener('scroll', hen, { passive: true });
+    window.addEventListener('resize', hen);
+
+    /* Đọc liên tục nối thêm chương -> trang cao lên -> phần trăm cũ sai ngay.
+       Theo dõi chiều cao khối chứa chương để vẽ lại đúng lúc đó. */
+    var wrap = document.querySelector('.reader-wrap');
+    if (wrap && window.ResizeObserver) {
+        new ResizeObserver(hen).observe(wrap);
+    }
+
+    ve();
 })();
 </script>
 

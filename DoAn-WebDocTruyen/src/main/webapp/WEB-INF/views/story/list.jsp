@@ -104,6 +104,63 @@
     </div>
 </div>
 
+<%--
+================================================================================
+  HÀNG "ĐANG LỌC" — mỗi điều kiện là một thẻ có dấu × để gỡ riêng
+================================================================================
+  VÌ SAO CẦN dù các chip ở trên đã tô sáng cái đang chọn
+    Bốn điều kiện nằm ở BỐN chỗ khác nhau trên trang: từ khoá ở ô nhập, thể
+    loại ở hàng thẻ loại, tình trạng và sắp xếp ở hai nhóm chip. Muốn biết
+    "mình đang lọc những gì" phải đưa mắt quét cả bốn chỗ rồi tự ghép lại.
+
+    Hàng này gom tất cả về một dòng, và quan trọng hơn: cho gỡ TỪNG CÁI. Trước
+    đây muốn bỏ mỗi thể loại mà giữ nguyên từ khoá thì phải bấm lại chip "Tất
+    cả" ở đúng nhóm của nó — mà nhóm đó nằm cách xa nơi đang nhìn.
+
+  Chỉ hiện khi CÓ lọc. Không lọc gì mà vẫn chừa một hàng trống là chiếm chỗ vô ích.
+
+  Mỗi dấu × là một LINK dựng sẵn, bỏ đúng một tham số và giữ nguyên phần còn
+  lại — dùng lại các biến keepXxx đã tính ở trên, không tính lại lần nữa.
+================================================================================
+--%>
+<c:if test="${not empty keyword or not empty currentTag
+              or not empty progress or not empty sort}">
+    <div class="active-filters">
+        <span class="filter-label">Đang lọc</span>
+
+        <c:if test="${not empty keyword}">
+            <a class="chip chip-clear"
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepSort}${keepProg}">
+                Từ khoá: <b><c:out value="${keyword}"/></b> <span class="chip-x">×</span></a>
+        </c:if>
+
+        <c:if test="${not empty currentTag}">
+            <a class="chip chip-clear"
+               href="${pageContext.request.contextPath}/story?action=list${keepQ}${keepSort}${keepProg}">
+                Thể loại: <b><c:out value="${currentTag}"/></b> <span class="chip-x">×</span></a>
+        </c:if>
+
+        <c:if test="${not empty progress}">
+            <a class="chip chip-clear"
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}">
+                <b>${progress eq 'completed' ? 'Hoàn thành' : 'Đang ra'}</b>
+                <span class="chip-x">×</span></a>
+        </c:if>
+
+        <%-- Sắp xếp chỉ hiện khi KHÁC mặc định: "Mới cập nhật" là thứ tự vốn
+             có, gọi nó là một bộ lọc đang bật thì gây hiểu nhầm. --%>
+        <c:if test="${not empty sort and sort ne 'updated'}">
+            <a class="chip chip-clear"
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepProg}">
+                <b>${sort eq 'popular' ? 'Đọc nhiều' : 'Điểm cao'}</b>
+                <span class="chip-x">×</span></a>
+        </c:if>
+
+        <a class="link-clear-all"
+           href="${pageContext.request.contextPath}/story?action=list">Xoá tất cả</a>
+    </div>
+</c:if>
+
 <c:choose>
     <c:when test="${not empty stories}">
         <div class="story-grid">

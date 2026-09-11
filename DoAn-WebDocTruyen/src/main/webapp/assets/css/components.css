@@ -1222,3 +1222,88 @@ input[type=file] {
     font-family: inherit; font-size: .86rem; cursor: pointer;
 }
 input[type=file]:hover { border-color: var(--ember-deep); }
+
+/* ---- Hai thẻ Mục lục · Bình luận ở trang chi tiết (trang 3) ---- */
+.tab-bar {
+    display: flex; gap: 4px;
+    border-bottom: 1px solid var(--ink-700);
+    margin: 40px 0 20px;
+}
+.tab-btn {
+    padding: 10px 18px;
+    color: var(--text-mut); font-size: .95rem; font-weight: 600;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;          /* đè lên đường kẻ của .tab-bar */
+    transition: color .16s var(--ease), border-color .16s var(--ease);
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.is-on { color: var(--ember); border-bottom-color: var(--ember); }
+
+.tab-count {
+    display: inline-block; margin-left: 6px;
+    padding: 1px 8px; border-radius: 99px;
+    background: var(--ink-800); color: var(--text-mut);
+    font-size: .76rem; font-weight: 600;
+}
+.tab-btn.is-on .tab-count { background: var(--ember-ghost); color: var(--ember-lit); }
+
+/* KHÔNG có JavaScript thì .tabs-on không bao giờ được thêm vào, nên luật này
+   không chạy và cả hai khối hiện đầy đủ — trang lùi về đúng dạng cũ.
+   Khi có JavaScript, hai nút mới thật sự là "thẻ", nên mới cần con trỏ tay. */
+.tabs-on .tab-btn { cursor: pointer; }
+
+@media (max-width: 560px) {
+    .tab-btn { padding: 10px 12px; font-size: .9rem; }
+}
+
+/* ---- Cột bìa DÍNH khi cuộn (trang 3) ----
+   Mô tả truyện có thể dài vài trăm chữ. Không dính thì cuộn xuống đọc mô tả
+   là ảnh bìa trôi mất, người đọc không còn gì neo mắt vào.
+
+   align-self: start BẮT BUỘC với position: sticky trong CSS Grid. Mặc định
+   grid kéo ô con cao bằng hàng, mà một phần tử đã cao bằng cả hàng thì không
+   còn khoảng nào để "dính" — sticky im lặng không có tác dụng, không báo lỗi.
+
+   Tắt trên màn hẹp: ở đó bìa nằm TRÊN nội dung chứ không nằm cạnh, dính lại
+   thì nó chiếm mất nửa màn hình suốt lúc cuộn. */
+/* 701px khop voi diem ngat @media (max-width: 700px) o tren, noi luoi hai
+   cot xep thanh mot cot. Lech mot pixel la co mot khoang man hinh vua hai
+   cot vua khong dinh. */
+@media (min-width: 701px) {
+    .detail-cover { position: sticky; top: 84px; align-self: start; }
+}
+
+/* ---- Hàng "Đang lọc" ở kho truyện (trang 2) ---- */
+.active-filters {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin: 0 0 20px;
+    padding: 10px 12px;
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r);
+    background: var(--ink-850);
+}
+
+/* Khác chip lọc thường: chip này KHÔNG phải để bật, mà để GỠ. Viền cam nhạt
+   cho biết "đang bật", còn dấu × nói rõ bấm vào là bỏ. */
+.chip-clear {
+    background: var(--ember-ghost);
+    border-color: var(--ember-deep);
+    color: var(--text);
+}
+.chip-clear b { color: var(--ember-lit); font-weight: 600; }
+.chip-clear:hover { border-color: var(--rose); }
+.chip-clear:hover .chip-x { color: var(--rose); }
+
+.chip-x { margin-left: 4px; color: var(--text-mut); font-weight: 700; }
+
+/* Đẩy về cuối hàng, và làm nhạt hơn các chip — đây là lối thoát, không phải
+   hành động chính. */
+.link-clear-all {
+    margin-left: auto; color: var(--text-mut);
+    font-size: .84rem; text-decoration: underline;
+}
+.link-clear-all:hover { color: var(--rose); }
+
+@media (max-width: 560px) {
+    .link-clear-all { margin-left: 0; }
+}

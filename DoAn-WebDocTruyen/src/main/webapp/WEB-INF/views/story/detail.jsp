@@ -18,15 +18,10 @@
 --%>
 <div class="story-detail">
     <div class="detail-cover">
-        <c:choose>
-            <c:when test="${not empty story.coverUrl}">
-                <img src="<c:out value='${story.coverUrl}'/>"
-                     alt="<c:out value='${story.title}'/>">
-            </c:when>
-            <c:otherwise>
-                <div class="cover-fallback">${story.initial}</div>
-            </c:otherwise>
-        </c:choose>
+        <c:set var="cvUrl"     value="${story.coverUrl}"/>
+        <c:set var="cvAlt"     value="${story.title}"/>
+        <c:set var="cvInitial" value="${story.initial}"/>
+        <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
     </div>
 
     <div class="detail-info">
@@ -89,8 +84,7 @@
             </c:if>
 
             <%-- Nút lưu/bỏ lưu. Chỉ hiện khi đã đăng nhập.
-                 Dùng <form method="post">
-                     <input type="hidden" name="_csrf" value="${csrfToken}"> vì đây là hành động GHI. --%>
+                 Là form POST vì đây là hành động GHI, không phải link. --%>
             <c:if test="${not empty currentUser}">
                 <form action="${pageContext.request.contextPath}/bookmark" method="post"
                       style="display:inline">
@@ -160,6 +154,53 @@
     </div>
 </div>
 
+<%--
+  ĐẾM CẢ TRẢ LỜI, không chỉ bình luận gốc.
+
+  fn:length(comments) chỉ đếm phần tử ở cấp một — mà từ khi có trả lời lồng
+  nhau, mỗi phần tử còn mang theo một danh sách con. Truyện có 3 bình luận gốc
+  và 2 trả lời sẽ hiện "Bình luận (3)" trong khi trên màn hình đếm được 5
+  khối. Con số sai kiểu này không gây lỗi, chỉ làm người đọc nghi ngờ mọi con
+  số khác trên trang.
+
+  Tính Ở ĐÂY, trước thanh thẻ, vì cả nhãn trên thẻ lẫn tiêu đề bên dưới đều
+  cần. Tính ở chỗ cũ (trong phần bình luận) thì thanh thẻ nằm trên không thấy
+  biến — JSP chạy từ trên xuống.
+--%>
+<c:set var="nCmtTotal" value="0"/>
+<c:forEach var="x" items="${comments}">
+    <c:set var="nCmtTotal" value="${nCmtTotal + 1 + x.replyCount}"/>
+</c:forEach>
+
+<%--
+================================================================================
+  HAI THẺ: MỤC LỤC · BÌNH LUẬN
+================================================================================
+  VÌ SAO CẦN
+    Trang này dài nhất dự án. Mục lục 50 chương đẩy phần bình luận xuống tận
+    đáy — muốn đọc bình luận phải cuộn qua 50 dòng không liên quan.
+
+  CHẠY ĐƯỢC CẢ KHI TẮT JAVASCRIPT
+    Không có JavaScript: hai khối hiện ĐẦY ĐỦ như trước, và hai nút trên kia
+    là link neo thường, bấm là nhảy xuống đúng chỗ. Không mất gì.
+    Có JavaScript: chúng thành hai thẻ, mỗi lúc chỉ hiện một.
+
+    Đây là lý do dùng thẻ <a href="#..."> chứ không phải <button>: <button>
+    mà không có JavaScript thì bấm không ra gì cả.
+
+  hidden-khi-có-JS được đặt bằng chính JavaScript (thêm lớp .tabs-on), không
+  viết sẵn trong HTML. Viết sẵn thì người tắt JavaScript mất luôn phần bình
+  luận — hỏng nặng hơn là không có thẻ.
+--%>
+<div class="tab-bar" id="story-tabs">
+    <a class="tab-btn is-on" href="#muc-luc" data-panel="panel-chapters">
+        Mục lục <span class="tab-count">${chapterTotal}</span></a>
+    <a class="tab-btn" href="#comments" data-panel="panel-comments">
+        Bình luận <span class="tab-count">${nCmtTotal}</span></a>
+</div>
+
+<section id="panel-chapters" class="tab-panel">
+
 <%-- ---- Mục lục chương — MẢNH _chapter-list ---- --%>
 <%--
   id="muc-luc" là ĐÍCH NEO.
@@ -225,6 +266,10 @@
 <c:set var="pgHash"  value="#muc-luc" scope="request"/>
 <%@ include file="/WEB-INF/views/_partials/_pagination.jsp" %>
 
+</section>
+
+<section id="panel-comments" class="tab-panel">
+
 <%-- ---- Bình luận ---- --%>
 <div class="section-head" id="comments">
     <%--
@@ -236,11 +281,7 @@
       đếm được 5 khối. Con số sai kiểu này không gây lỗi, chỉ làm người đọc
       nghi ngờ mọi con số khác trên trang.
     --%>
-    <c:set var="nCmt" value="0"/>
-    <c:forEach var="x" items="${comments}">
-        <c:set var="nCmt" value="${nCmt + 1 + x.replyCount}"/>
-    </c:forEach>
-    <h2>Bình luận (${nCmt})</h2>
+    <h2>Bình luận (${nCmtTotal})</h2>
 </div>
 
 <c:choose>
@@ -275,6 +316,8 @@
     <c:set var="emText"  value="Hãy là người đầu tiên chia sẻ cảm nhận về truyện này."/>
     <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
 </c:if>
+
+</section>
 
 <%--
   ---- Gợi ý truyện tương tự ----
@@ -326,5 +369,87 @@
             }
         });
     } catch (e) { /* trình duyệt chặn lưu trữ — mục lục vẫn dùng bình thường */ }
+})();
+
+
+/* ===========================================================================
+   HAI THẺ: MỤC LỤC · BÌNH LUẬN
+   ===========================================================================
+   Đoạn này chỉ NÂNG CẤP. HTML gửi xuống đã đầy đủ và dùng được: hai khối hiện
+   hết, hai nút trên kia là link neo thường. Tắt JavaScript thì trang lùi về
+   đúng dạng đó, không mất chức năng nào.
+
+   Vì vậy lớp .tabs-on được THÊM BẰNG JAVASCRIPT chứ không viết sẵn trong
+   HTML — mọi luật CSS ẩn bớt khối đều nằm sau lớp này. Viết sẵn trong HTML
+   thì người tắt JavaScript mất hẳn phần bình luận.
+   ======================================================================== */
+(function () {
+    var bar = document.getElementById('story-tabs');
+    if (!bar) return;
+
+    var nut = [].slice.call(bar.querySelectorAll('.tab-btn'));
+    var panel = {};
+    nut.forEach(function (a) {
+        panel[a.getAttribute('data-panel')] =
+            document.getElementById(a.getAttribute('data-panel'));
+    });
+    /* Thiếu một panel nào đó thì thà không bật thẻ còn hơn ẩn nhầm nội dung */
+    if (nut.some(function (a) { return !panel[a.getAttribute('data-panel')]; })) return;
+
+    bar.classList.add('tabs-on');
+
+    function chon(ten) {
+        nut.forEach(function (a) {
+            var id = a.getAttribute('data-panel');
+            var on = id === ten;
+            a.classList.toggle('is-on', on);
+            /* .hidden thay vì style.display: thuộc tính chuẩn, và CSS của
+               trang không cần biết gì về nó */
+            panel[id].hidden = !on;
+        });
+    }
+
+    nut.forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            /*
+             * Chặn hành vi mặc định để trang KHÔNG nhảy.
+             *
+             * Nhưng vẫn ghi neo vào thanh địa chỉ bằng replaceState: người
+             * dùng sao chép link lúc đang mở thẻ Bình luận thì gửi cho bạn
+             * bè cũng mở đúng thẻ đó. Dùng replaceState chứ không pushState —
+             * đổi thẻ không phải là "đi tới trang khác", nhét vào lịch sử thì
+             * bấm Back mười lần vẫn quanh quẩn trong một trang.
+             */
+            e.preventDefault();
+            chon(a.getAttribute('data-panel'));
+            if (history.replaceState) {
+                history.replaceState(null, '', a.getAttribute('href'));
+            }
+        });
+    });
+
+    function theoNeo() {
+        chon(location.hash === '#comments' ? 'panel-comments' : 'panel-chapters');
+    }
+
+    /*
+     * Mở trang với sẵn một neo thì chọn đúng thẻ chứa neo đó.
+     * Quan trọng với phân trang mục lục: mọi link "Sau ›" đều kèm #muc-luc.
+     */
+    theoNeo();
+
+    /*
+     * VÀ PHẢI NGHE hashchange NỮA.
+     *
+     * Đổi neo trên CÙNG một trang thì trình duyệt KHÔNG tải lại trang, nên
+     * đoạn khởi tạo trên không chạy lần hai. Hậu quả bắt được lúc kiểm: đang
+     * mở thẻ Bình luận, đổi địa chỉ sang #muc-luc — thẻ vẫn nằm ở Bình luận,
+     * mà thanh địa chỉ lại ghi #muc-luc. Người dùng bấm nút Back cũng gặp
+     * đúng cảnh đó.
+     *
+     * Dòng này nối trạng thái hiển thị vào đúng một nguồn sự thật là cái neo,
+     * dù neo đổi bằng cách nào.
+     */
+    window.addEventListener('hashchange', theoNeo);
 })();
 </script>

@@ -36,15 +36,10 @@
 
     <a class="story-row-cover"
        href="${pageContext.request.contextPath}/story?action=detail&amp;id=${srStory.id}">
-        <c:choose>
-            <c:when test="${not empty srStory.coverUrl}">
-                <img src="<c:out value='${srStory.coverUrl}'/>"
-                     alt="<c:out value='${srStory.title}'/>" loading="lazy">
-            </c:when>
-            <c:otherwise>
-                <span class="cover-fallback">${srStory.initial}</span>
-            </c:otherwise>
-        </c:choose>
+        <c:set var="cvUrl"     value="${srStory.coverUrl}"/>
+        <c:set var="cvAlt"     value="${srStory.title}"/>
+        <c:set var="cvInitial" value="${srStory.initial}"/>
+        <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
     </a>
 
     <div class="story-row-body">

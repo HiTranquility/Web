@@ -25,19 +25,10 @@
    href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">
 
     <div class="story-cover">
-        <c:choose>
-            <c:when test="${not empty story.coverUrl}">
-                <%-- alt lấy từ tiêu đề: cần cho trình đọc màn hình, và hiện ra
-                     khi ảnh lỗi. Vẫn phải escape vì tiêu đề do người dùng nhập. --%>
-                <img src="<c:out value='${story.coverUrl}'/>"
-                     alt="<c:out value='${story.title}'/>" loading="lazy">
-            </c:when>
-            <c:otherwise>
-                <%-- Không có bìa thì lấy chữ cái đầu. Chữ này do model tính
-                     (story.getInitial()), không tính trong JSP. --%>
-                <div class="cover-fallback">${story.initial}</div>
-            </c:otherwise>
-        </c:choose>
+        <c:set var="cvUrl"     value="${story.coverUrl}"/>
+        <c:set var="cvAlt"     value="${story.title}"/>
+        <c:set var="cvInitial" value="${story.initial}"/>
+        <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
 
         <span class="badge ${story.completed ? 'badge-done' : 'badge-going'}">
             ${story.completed ? 'Hoàn thành' : 'Đang ra'}

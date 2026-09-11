@@ -68,15 +68,10 @@
                 <a class="resume-card"
                    href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${r.lastChapterId}">
                     <span class="resume-cover">
-                        <c:choose>
-                            <c:when test="${not empty r.coverUrl}">
-                                <img src="<c:out value='${r.coverUrl}'/>"
-                                     alt="<c:out value='${r.storyTitle}'/>">
-                            </c:when>
-                            <c:otherwise>
-                                <span class="cover-fallback">${r.initial}</span>
-                            </c:otherwise>
-                        </c:choose>
+                        <c:set var="cvUrl"     value="${r.coverUrl}"/>
+                        <c:set var="cvAlt"     value="${r.storyTitle}"/>
+                        <c:set var="cvInitial" value="${r.initial}"/>
+                        <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
                     </span>
 
                     <span class="resume-info">

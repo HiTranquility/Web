@@ -72,15 +72,10 @@
                     </span>
 
                     <div class="rank-cover">
-                        <c:choose>
-                            <c:when test="${not empty story.coverUrl}">
-                                <img src="<c:out value='${story.coverUrl}'/>"
-                                     alt="<c:out value='${story.title}'/>" loading="lazy">
-                            </c:when>
-                            <c:otherwise>
-                                <div class="cover-fallback">${story.initial}</div>
-                            </c:otherwise>
-                        </c:choose>
+                                                <c:set var="cvUrl"     value="${story.coverUrl}"/>
+                        <c:set var="cvAlt"     value="${story.title}"/>
+                        <c:set var="cvInitial" value="${story.initial}"/>
+                        <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
                     </div>
 
                     <div class="rank-info">
