@@ -18,6 +18,27 @@
             <span>Đọc<em>Truyện</em></span>
         </a>
 
+        <%--
+          Ô TICK ẨN làm công tắc cho menu điện thoại.
+
+          VÌ SAO KHÔNG DÙNG <details> NHƯ CÁC CHỖ KHÁC
+            Đã thử và HỎNG: bảng menu phải position:absolute để nổi lên trên
+            nội dung (đẩy nội dung xuống thì cả trang nhảy mỗi lần mở menu),
+            nhưng phần tử absolute lại THOÁT khỏi cơ chế ẩn của <details> —
+            đóng thẻ lại mà menu vẫn hiện nguyên.
+            Chỗ xoá lịch sử và mục lục lúc đọc không gặp lỗi này vì chúng
+            không cần nổi lên trên.
+
+          Cách này CSS điều khiển hoàn toàn: :checked ~ .nav là hiện, không
+          thì ẩn. Trên màn hình rộng thì luật đó bị tắt và .nav luôn hiện, nên
+          desktop không phụ thuộc vào trạng thái ô tick.
+
+          Ô tick KHÔNG display:none mà chỉ đẩy ra ngoài tầm nhìn — display:none
+          thì bàn phím không Tab tới được, người không dùng chuột mất menu.
+        --%>
+        <input type="checkbox" id="nav-open" class="nav-check" aria-label="Mở menu">
+        <label for="nav-open" class="nav-toggle" aria-hidden="true">☰</label>
+
         <nav class="nav">
             <a href="${pageContext.request.contextPath}/"
                class="${activeNav eq 'home' ? 'is-active' : ''}">Trang chủ</a>

@@ -6,6 +6,8 @@
 <h1>Quản trị truyện</h1>
 <p>Gỡ truyện vi phạm nội quy. Đây là <b>xoá mềm</b> — khôi phục lại được.</p>
 
+<c:choose>
+    <c:when test="${not empty stories}">
 <div class="admin-table-wrap">
 <table class="admin-table">
     <tr>
@@ -57,6 +59,18 @@
     </c:forEach>
 </table>
 </div>
+    </c:when>
+
+    <c:otherwise>
+        <%-- MẢNH: trạng thái rỗng, dùng chung với mọi trang danh sách.
+             Bảng rỗng chỉ còn hàng tiêu đề cột trông như trang hỏng;
+             một ô rỗng có thiết kế thì trông như chủ ý. --%>
+        <c:set var="emIcon"  value="📚"/>
+        <c:set var="emTitle" value="Không có truyện nào"/>
+        <c:set var="emText"  value="Chưa ai đăng truyện, hoặc bộ lọc hiện tại không khớp truyện nào."/>
+        <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
+    </c:otherwise>
+</c:choose>
 
 <c:if test="${empty stories}">
     <div class="empty" style="padding:40px"><p>Chưa có truyện nào.</p></div>

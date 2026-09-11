@@ -538,7 +538,40 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 /* ---- Thu nhỏ màn hình: giấu menu ngang, footer xếp dọc ---- */
 @media (max-width: 860px) {
     .footer-grid { grid-template-columns: 1fr; gap: 26px; }
-    .nav { display: none; }        /* sẽ thay bằng menu hamburger */
+    /* ---- MENU ĐIỆN THOẠI ----
+       Trước đây chỗ này là "display: none" kèm ghi chú "sẽ thay bằng menu
+       hamburger". Ẩn hẳn nghĩa là điện thoại KHÔNG có đường tới Kho truyện,
+       Xếp hạng hay Đã lưu — tệ hơn hẳn so với menu chật. Nay là menu thật. */
+
+    .nav-toggle {
+        display: block; cursor: pointer;
+        padding: 7px 11px; border-radius: var(--r-sm);
+        border: 1px solid var(--ink-600); color: var(--text-dim);
+        font-size: 1.05rem; line-height: 1;
+    }
+    .nav-check:checked ~ .nav-toggle,
+    .nav-check:focus-visible ~ .nav-toggle {
+        color: var(--ember); border-color: var(--ember);
+    }
+
+    /* Mặc định ĐÓNG trên điện thoại. Mở sẵn thì menu che mất nội dung ngay
+       khi vừa vào trang. */
+    .nav { display: none; }
+    .nav-check:checked ~ .nav { display: flex; }
+
+    /* Bảng đổ xuống NỔI LÊN TRÊN nội dung. Đẩy nội dung xuống thì cả trang
+       nhảy một đoạn mỗi lần mở menu. */
+    .nav {
+        position: absolute; z-index: 50;
+        top: 100%; left: 16px;
+        flex-direction: column; align-items: stretch;
+        min-width: 210px; padding: 6px;
+        background: var(--ink-900);
+        border: 1px solid var(--ink-600);
+        border-radius: var(--r-lg);
+        box-shadow: 0 12px 34px rgba(0,0,0,.45);
+    }
+    .nav a { padding: 10px 13px; }
 }
 @media (max-width: 520px) {
     .shell { padding: 0 16px; }
@@ -1306,4 +1339,57 @@ input[type=file]:hover { border-color: var(--ember-deep); }
 
 @media (max-width: 560px) {
     .link-clear-all { margin-left: 0; }
+}
+
+/* ===========================================================================
+   NHÓM Ô NHẬP CÓ TIÊU ĐỀ — form đăng/sửa truyện
+   ===========================================================================
+   Ở components.css chứ KHÔNG ở layout-editor.css.
+
+   story/form.jsp trông như trang soạn thảo nên rất dễ tưởng nó dùng layout
+   editor. Nhưng StoryServlet forward MỌI action về layout/main.jsp — chỉ
+   ChapterServlet mới dùng editor. Đặt nhầm file thì nhóm ô nhập mất sạch
+   viền và tiêu đề mà không có lỗi nào báo ra.
+
+   Đây đúng là loại nhầm đã làm hỏng .pill và .btn-danger trước đây.
+   ======================================================================== */
+/* <fieldset> mặc định có viền và padding rất cũ kỹ của trình duyệt, phải dọn
+   hết rồi dựng lại. */
+.form-group {
+    border: 0; padding: 0; margin: 0 0 28px;
+    border-top: 1px solid var(--ink-800);
+    padding-top: 18px;
+}
+/* Nhóm đầu tiên không cần đường kẻ phía trên — bên trên nó là tiêu đề trang,
+   thêm một vạch nữa thành hai đường song song sát nhau. */
+.form-group:first-of-type { border-top: 0; padding-top: 0; }
+
+.form-group > legend {
+    padding: 0 0 10px;
+    color: var(--ember); font-size: .8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+}
+
+/* ---- Ô tick công tắc menu ----
+   KHÔNG display:none: phần tử display:none thì bàn phím không Tab tới được,
+   người không dùng chuột mất hẳn menu. Đẩy ra ngoài tầm nhìn thì vẫn nhận
+   được tiêu điểm và bấm Space vẫn mở được. */
+.nav-check {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* ---- Màn hình RỘNG: không có menu đổ xuống ----
+   Trả .nav về hàng ngang và bỏ qua hoàn toàn trạng thái ô tick, nên desktop
+   không bao giờ phụ thuộc vào việc ai đó đã bấm ☰ hay chưa. */
+@media (min-width: 861px) {
+    .nav-toggle { display: none; }
+    .nav, .nav-check:checked ~ .nav {
+        display: flex; position: static;
+        flex-direction: row; align-items: center;
+        min-width: 0; padding: 0;
+        background: none; border: 0; box-shadow: none;
+    }
+    .nav a { padding: 7px 12px; }
 }

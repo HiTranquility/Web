@@ -87,5 +87,72 @@
 
 <%@ include file="parts/footer.jsp" %>
 
+<%--
+  CHỐNG BẤM GỬI HAI LẦN — cho MỌI form trong layout này.
+
+  VÌ SAO CẦN
+    Máy chậm hoặc mạng chậm thì bấm "Lưu truyện" xong trang đứng im vài giây.
+    Phản xạ tự nhiên là bấm lại. Hai request cùng bay lên, và với form "Đăng
+    truyện mới" là ra HAI truyện giống hệt nhau.
+
+    Vài chỗ đã an toàn sẵn nhờ khoá ở CSDL (chấm sao có khoá chính kép, lưu
+    truyện dùng INSERT ... ON DUPLICATE KEY). Nhưng thêm truyện, thêm chương,
+    gửi bình luận thì không có gì chặn.
+
+  ĐẶT Ở LAYOUT, không đặt ở từng trang: có hơn ba mươi form trong dự án, bỏ
+  sót một cái là lỗi quay lại. Ở đây thì mọi trang dùng layout main đều được
+  bảo vệ, kể cả trang thêm sau này.
+
+  Nghe sự kiện "submit" ở document chứ không gắn vào từng form: form nào được
+  JavaScript tạo ra sau cũng dính luật này, và chỉ tốn một trình xử lý.
+--%>
+<script>
+(function () {
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || form.tagName !== 'FORM') return;
+
+        /*
+         * Bỏ qua form TÌM KIẾM (method GET).
+         *
+         * Tìm kiếm chỉ đọc, gửi hai lần cũng không hỏng gì, mà khoá nút lại
+         * gây khó chịu: gõ từ khoá khác rồi Enter lại là nút đã xám.
+         */
+        if ((form.method || '').toLowerCase() !== 'post') return;
+
+        var nut = form.querySelector('button[type="submit"], button:not([type])');
+        if (!nut || nut.disabled) return;
+
+        /*
+         * KHÔNG disable ngay lập tức.
+         *
+         * Nút bị disable thì trình duyệt KHÔNG gửi kèm giá trị của nó — mà
+         * vài form trong dự án phân biệt hành động bằng name/value của nút.
+         * Hoãn sang vòng lặp sự kiện kế tiếp: lúc đó dữ liệu đã được thu thập
+         * xong, khoá nút không ảnh hưởng gì nữa.
+         */
+        setTimeout(function () {
+            nut.disabled = true;
+            nut.dataset.chuCu = nut.textContent;
+            nut.textContent = 'Đang gửi…';
+        }, 0);
+
+        /*
+         * Mở khoá lại nếu người dùng quay lại trang bằng nút Back.
+         *
+         * Trình duyệt khôi phục trang từ bộ nhớ đệm y nguyên trạng thái lúc
+         * rời đi — tức là nút vẫn đang xám và ghi "Đang gửi…". Không có đoạn
+         * này thì người dùng quay lại sửa một ô rồi không gửi lại được nữa.
+         */
+        window.addEventListener('pageshow', function (ev) {
+            if (ev.persisted && nut.disabled) {
+                nut.disabled = false;
+                if (nut.dataset.chuCu) nut.textContent = nut.dataset.chuCu;
+            }
+        });
+    });
+})();
+</script>
+
 </body>
 </html>

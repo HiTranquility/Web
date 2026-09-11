@@ -28,46 +28,74 @@
            value="${empty story.id or story.id eq 0 ? 'create' : 'edit'}">
     <input type="hidden" name="id" value="${story.id}">
 
-    <label for="title">Tiêu đề *</label>
-    <input type="text" id="title" name="title" maxlength="200" required
-           value="<c:out value='${story.title}'/>">
-    <small>Đường dẫn thân thiện (slug) tự sinh từ tiêu đề, trùng thì tự thêm số.</small>
-
-    <label for="description">Giới thiệu</label>
-    <textarea id="description" name="description" rows="5"><c:out value="${story.description}"/></textarea>
-
-    <label>Ảnh bìa</label>
-
     <%--
-      HAI CÁCH ĐẶT BÌA, giữ cả hai vì phục vụ hai tình huống khác nhau:
+      BA NHÓM CÓ TIÊU ĐỀ, thay cho một cột ô nhập xếp thẳng.
+
+      Form này có 7 ô thuộc ba loại việc khác hẳn nhau: viết nội dung, chọn
+      ảnh, phân loại. Xếp thẳng một mạch thì người dùng phải đọc hết mới biết
+      còn gì phía dưới, và lúc sửa lại một chi tiết nhỏ thì phải dò từ đầu.
+
+      <fieldset> + <legend> là thẻ HTML CÓ SẴN cho đúng việc này — trình đọc
+          màn hình đọc tên nhóm trước khi đọc từng ô, nên người khiếm thị cũng
+          nhận được cùng thông tin mà mắt thường thấy qua đường kẻ.
+        --%>
+    <fieldset class="form-group">
+        <legend>Nội dung</legend>
+
+        <label for="title">Tiêu đề *</label>
+        <input type="text" id="title" name="title" maxlength="200" required
+           value="<c:out value='${story.title}'/>">
+        <small>Đường dẫn thân thiện (slug) tự sinh từ tiêu đề, trùng thì tự thêm số.</small>
+
+        <label for="description">Giới thiệu</label>
+        <textarea id="description" name="description" rows="5"><c:out value="${story.description}"/></textarea>
+
+    </fieldset>
+
+    <fieldset class="form-group">
+        <legend>Ảnh bìa</legend>
+
+        <%--
+          HAI CÁCH ĐẶT BÌA, giữ cả hai vì phục vụ hai tình huống khác nhau:
         tải file  — ảnh nằm trong máy
         dán link  — ảnh đã có sẵn trên mạng
 
-      Chọn cả hai thì FILE THẮNG (xem StoryServlet): người dùng vừa chủ động
-      chọn file, còn ô link thường chỉ là giá trị cũ còn sót lại.
-    --%>
-    <c:if test="${not empty story.coverUrl}">
+          Chọn cả hai thì FILE THẮNG (xem StoryServlet): người dùng vừa chủ động
+          chọn file, còn ô link thường chỉ là giá trị cũ còn sót lại.
+        --%>
+        <c:if test="${not empty story.coverUrl}">
         <div class="cover-preview">
-            <img src="<c:out value='${story.coverUrl}'/>" alt="Ảnh bìa hiện tại">
+            <%-- Qua _cover.jsp chứ không vẽ thẳng ${story.coverUrl}: ảnh tải
+                 lên lưu dạng "/uploads/..." nên thiếu context path là chết
+                 khi web không nằm ở gốc. Đây là chỗ thứ tám cùng lỗi đó. --%>
+            <c:set var="cvUrl"     value="${story.coverUrl}"/>
+            <c:set var="cvAlt"     value="Ảnh bìa hiện tại"/>
+            <c:set var="cvInitial" value="?"/>
+            <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
             <span class="muted">Bìa hiện tại. Chọn ảnh mới để thay.</span>
         </div>
-    </c:if>
+        </c:if>
 
-    <%-- accept= chỉ LỌC hộp thoại chọn file cho đỡ vướng mắt. Nó KHÔNG phải
+        <%-- accept= chỉ LỌC hộp thoại chọn file cho đỡ vướng mắt. Nó KHÔNG phải
          phép kiểm: người dùng đổi bộ lọc trong hộp thoại là chọn được file
          bất kỳ. Chốt chặn thật nằm ở UploadUtil — đọc byte đầu file để biết
          có đúng là ảnh không. --%>
-    <input type="file" id="coverFile" name="coverFile"
+        <input type="file" id="coverFile" name="coverFile"
            accept="image/png,image/jpeg,image/gif,image/webp">
-    <small class="muted-note">PNG, JPG, GIF hoặc WebP — tối đa 2 MB.</small>
+        <small class="muted-note">PNG, JPG, GIF hoặc WebP — tối đa 2 MB.</small>
 
-    <label for="coverUrl">…hoặc dán link ảnh</label>
-    <input type="url" id="coverUrl" name="coverUrl"
+        <label for="coverUrl">…hoặc dán link ảnh</label>
+        <input type="url" id="coverUrl" name="coverUrl"
            value="<c:out value='${story.coverUrl}'/>"
            placeholder="https://…  (để trống thì lấy chữ cái đầu làm bìa)">
 
-    <label>Thể loại</label>
-    <div class="tag-picker">
+    </fieldset>
+
+    <fieldset class="form-group">
+        <legend>Phân loại &amp; trạng thái</legend>
+
+        <label>Thể loại</label>
+        <div class="tag-picker">
         <c:forEach var="t" items="${allTags}">
             <%--
               Đánh dấu tag đã chọn: duyệt selectedTags tìm id trùng.
@@ -85,9 +113,9 @@
                 <c:out value="${t.name}"/>
             </label>
         </c:forEach>
-    </div>
+        </div>
 
-    <div class="form-row">
+        <div class="form-row">
         <div>
             <label for="status">Trạng thái</label>
             <select id="status" name="status">
@@ -106,7 +134,8 @@
                     Hoàn thành</option>
             </select>
         </div>
-    </div>
+        </div>
+    </fieldset>
 
     <div class="form-actions">
         <button type="submit" class="btn btn-primary">Lưu truyện</button>

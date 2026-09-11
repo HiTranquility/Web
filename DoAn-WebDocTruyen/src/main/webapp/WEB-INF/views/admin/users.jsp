@@ -35,20 +35,23 @@
     </c:if>
 </form>
 
-<p class="muted-note" style="margin:-6px 0 16px">
-    <c:choose>
-        <c:when test="${empty users}">
-            Không có tài khoản nào khớp.
-        </c:when>
-        <c:when test="${not empty q or not empty statusFilter}">
-            Tìm thấy <b>${users.size()}</b> tài khoản.
-        </c:when>
-        <c:otherwise>
-            <b>${users.size()}</b> tài khoản, mới nhất trước (tối đa 200).
-        </c:otherwise>
-    </c:choose>
-</p>
+<%-- Chỉ đếm khi CÓ kết quả. Trường hợp rỗng đã có ô trạng thái rỗng bên
+     dưới lo, nói thêm ở đây là báo cùng một chuyện hai lần. --%>
+<c:if test="${not empty users}">
+    <p class="muted-note" style="margin:-6px 0 16px">
+        <c:choose>
+            <c:when test="${not empty q or not empty statusFilter}">
+                Tìm thấy <b>${users.size()}</b> tài khoản.
+            </c:when>
+            <c:otherwise>
+                <b>${users.size()}</b> tài khoản, mới nhất trước (tối đa 200).
+            </c:otherwise>
+        </c:choose>
+    </p>
+</c:if>
 
+<c:choose>
+    <c:when test="${not empty users}">
 <div class="admin-table-wrap">
 <table class="admin-table">
     <tr>
@@ -130,3 +133,15 @@
     </c:forEach>
 </table>
 </div>
+    </c:when>
+
+    <c:otherwise>
+        <%-- MẢNH: trạng thái rỗng, dùng chung với mọi trang danh sách.
+             Bảng rỗng chỉ còn hàng tiêu đề cột trông như trang hỏng;
+             một ô rỗng có thiết kế thì trông như chủ ý. --%>
+        <c:set var="emIcon"  value="👤"/>
+        <c:set var="emTitle" value="Không có tài khoản nào khớp"/>
+        <c:set var="emText"  value="Thử bỏ bớt điều kiện lọc, hoặc tìm bằng từ khoá khác."/>
+        <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
+    </c:otherwise>
+</c:choose>

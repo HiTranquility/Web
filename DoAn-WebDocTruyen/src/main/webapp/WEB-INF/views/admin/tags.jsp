@@ -25,6 +25,8 @@
     </form>
 </div>
 
+<c:choose>
+    <c:when test="${not empty tags}">
 <div class="admin-table-wrap">
 <table class="admin-table">
     <tr>
@@ -91,3 +93,15 @@
     </c:forEach>
 </table>
 </div>
+    </c:when>
+
+    <c:otherwise>
+        <%-- MẢNH: trạng thái rỗng, dùng chung với mọi trang danh sách.
+             Bảng rỗng chỉ còn hàng tiêu đề cột trông như trang hỏng;
+             một ô rỗng có thiết kế thì trông như chủ ý. --%>
+        <c:set var="emIcon"  value="🏷️"/>
+        <c:set var="emTitle" value="Chưa có thể loại nào"/>
+        <c:set var="emText"  value="Thêm thể loại đầu tiên bằng ô bên trên. Truyện cần thể loại để người đọc tìm ra."/>
+        <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
+    </c:otherwise>
+</c:choose>
