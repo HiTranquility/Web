@@ -21,7 +21,7 @@
   phải có @MultipartConfig — không thì getParameter() trả null cho tất cả và
   form trông như người dùng bỏ trống hết.
 --%>
-<form action="${pageContext.request.contextPath}/story" method="post"
+<form action="${pageContext.request.contextPath}/story?_csrf=${csrfToken}" method="post"
       class="wide-form" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action"
@@ -85,9 +85,9 @@
         <small class="muted-note">PNG, JPG, GIF hoặc WebP — tối đa 2 MB.</small>
 
         <label for="coverUrl">…hoặc dán link ảnh</label>
-        <input type="url" id="coverUrl" name="coverUrl"
+        <input type="text" id="coverUrl" name="coverUrl"
            value="<c:out value='${story.coverUrl}'/>"
-           placeholder="https://…  (để trống thì lấy chữ cái đầu làm bìa)">
+           placeholder="https://… hoặc /assets/images/covers/... (để trống lấy chữ cái đầu)">
 
     </fieldset>
 
@@ -144,11 +144,18 @@
 
         <c:if test="${not empty story.id and story.id ne 0}">
             <%-- Gỡ truyện là XOÁ MỀM nên khôi phục được — nói rõ trong lời hỏi
-                 để người dùng không hoảng. --%>
-            <a class="btn btn-danger" style="margin-left:auto"
-               href="${pageContext.request.contextPath}/story?action=delete&amp;id=${story.id}"
-               onclick="return confirm('Gỡ truyện này khỏi trang? Admin có thể khôi phục lại.')">
-                Gỡ truyện</a>
+                 để người dùng không hoảng. Dùng POST + token CSRF để bảo mật. --%>
+            <button type="submit" form="deleteStoryForm" class="btn btn-danger" style="margin-left:auto"
+                    onclick="return confirm('Gỡ truyện này khỏi trang? Admin có thể khôi phục lại.')">
+                Gỡ truyện</button>
         </c:if>
     </div>
 </form>
+
+<c:if test="${not empty story.id and story.id ne 0}">
+    <form id="deleteStoryForm" action="${pageContext.request.contextPath}/story" method="post" style="display:none">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="id" value="${story.id}">
+    </form>
+</c:if>

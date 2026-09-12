@@ -73,10 +73,38 @@
                         Người báo cáo: <c:out value="${r.reporterName}"/>
                     </p>
 
-                    <%-- Đã xử lý rồi thì không hiện nút nữa. Bấm lại lần hai
-                         chỉ ghi đè handled_at, không thêm ý nghĩa gì. --%>
+                    <%-- Đã xử lý rồi thì không hiện nút nữa. --%>
                     <c:if test="${r.pending}">
                         <div class="report-actions">
+                            <c:choose>
+                                <c:when test="${r.story}">
+                                    <form method="post" style="display:inline"
+                                          action="${pageContext.request.contextPath}/admin/report">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                                        <input type="hidden" name="action" value="resolve_delete">
+                                        <input type="hidden" name="id" value="${r.id}">
+                                        <input type="hidden" name="targetId" value="${r.targetId}">
+                                        <input type="hidden" name="status" value="${status}">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Bạn chắc chắn muốn gỡ truyện này và đóng báo cáo?')">
+                                            🚫 Gỡ truyện & Đóng báo cáo</button>
+                                    </form>
+                                </c:when>
+                                <c:otherwise>
+                                    <form method="post" style="display:inline"
+                                          action="${pageContext.request.contextPath}/admin/report">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                                        <input type="hidden" name="action" value="resolve_hide">
+                                        <input type="hidden" name="id" value="${r.id}">
+                                        <input type="hidden" name="targetId" value="${r.targetId}">
+                                        <input type="hidden" name="status" value="${status}">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Bạn chắc chắn muốn ẩn bình luận này và đóng báo cáo?')">
+                                            🚫 Ẩn bình luận & Đóng báo cáo</button>
+                                    </form>
+                                </c:otherwise>
+                            </c:choose>
+
                             <form method="post" style="display:inline"
                                   action="${pageContext.request.contextPath}/admin/report">
                                 <input type="hidden" name="_csrf" value="${csrfToken}">

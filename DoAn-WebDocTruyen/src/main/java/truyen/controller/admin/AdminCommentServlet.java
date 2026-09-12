@@ -40,11 +40,24 @@ public class AdminCommentServlet extends HttpServlet {
         String action = request.getParameter("action");
         String filter = request.getParameter("filter");
 
+        if ("hide".equals(action) || "unhide".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
+        }
+
         try {
             if ("hide".equals(action)) {
                 commentDAO.hide(parseIntOr(request.getParameter("id"), 0));
+                response.sendRedirect(request.getContextPath() + "/admin/comment"
+                        + (filter != null && !filter.isEmpty() ? "?filter=" + filter : ""));
+                return;
             } else if ("unhide".equals(action)) {
                 commentDAO.unhide(parseIntOr(request.getParameter("id"), 0));
+                response.sendRedirect(request.getContextPath() + "/admin/comment"
+                        + (filter != null && !filter.isEmpty() ? "?filter=" + filter : ""));
+                return;
             }
 
             boolean onlyHidden = "hidden".equals(filter);

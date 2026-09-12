@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%--
 ================================================================================
   _comment.jsp — MẢNH TÁI DÙNG: một bình luận và các trả lời của nó
@@ -63,12 +64,15 @@
         <p><c:out value="${cm.content}"/></p>
 
         <div class="comment-tools">
+            <%-- Nút yêu thích / thả tim bình luận --%>
+            <button type="button" class="comment-like-btn ${cm.liked ? 'is-liked' : ''}"
+                    data-id="${cm.id}" title="${cm.liked ? 'Bỏ thích' : 'Thích bình luận'}">
+                <span class="like-heart">${cm.liked ? '❤️' : '🤍'}</span>
+                <span class="like-count">${cm.likeCount gt 0 ? cm.likeCount : 'Thích'}</span>
+            </button>
+
             <%--
               Nút trả lời là thẻ <details>, không phải JavaScript.
-
-              Form trả lời nằm sẵn trong HTML nhưng bị gấp lại; bấm vào là
-              trình duyệt tự mở. Không cần một dòng script nào, và vẫn chạy
-              đúng khi người dùng tắt JavaScript.
             --%>
             <c:if test="${not empty currentUser}">
                 <details class="reply-box">
@@ -84,7 +88,7 @@
                         <input type="hidden" name="parentId" value="${cm.id}">
 
                         <textarea name="content" rows="2" maxlength="1000" required
-                                  placeholder="Trả lời <c:out value='${cm.name}'/>…"></textarea>
+                                  placeholder="Trả lời ${fn:escapeXml(cm.name)}…"></textarea>
                         <button type="submit" class="btn btn-primary btn-sm">Gửi</button>
                     </form>
                 </details>
@@ -92,10 +96,6 @@
 
             <%--
               Báo cáo bình luận vi phạm.
-
-              Không hiện với chính chủ bình luận (tự báo cáo mình thì vô nghĩa)
-              và không hiện với admin (admin đã có nút Ẩn ở khu quản trị, mạnh
-              hơn hẳn việc gửi báo cáo cho chính mình xử lý).
             --%>
             <c:if test="${not empty currentUser
                           and currentUser.id ne cm.userId
@@ -156,6 +156,14 @@
                             </div>
 
                             <p><c:out value="${rp.content}"/></p>
+
+                            <div class="comment-tools">
+                                <button type="button" class="comment-like-btn ${rp.liked ? 'is-liked' : ''}"
+                                        data-id="${rp.id}" title="${rp.liked ? 'Bỏ thích' : 'Thích'}">
+                                    <span class="like-heart">${rp.liked ? '❤️' : '🤍'}</span>
+                                    <span class="like-count">${rp.likeCount gt 0 ? rp.likeCount : 'Thích'}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </c:forEach>
@@ -163,3 +171,57 @@
         </c:if>
     </div>
 </div>
+
+<script>
+if (!window.__commentLikeSetup) {
+    window.__commentLikeSetup = true;
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.comment-like-btn');
+        if (!btn) return;
+        var commentId = btn.getAttribute('data-id');
+        if (!commentId) return;
+
+        btn.disabled = true;
+        fetch('${pageContext.request.contextPath}/comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': '${csrfToken}'
+            },
+            body: new URLSearchParams({
+                action: 'like',
+                id: commentId,
+                _csrf: '${csrfToken}'
+            })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            btn.disabled = false;
+            if (data.needLogin) {
+                if (typeof showToast === 'function') {
+                    showToast(data.message || 'Vui lòng đăng nhập để thích bình luận.');
+                } else {
+                    alert(data.message);
+                }
+                return;
+            }
+            if (data.success) {
+                btn.classList.toggle('is-liked', data.liked);
+                btn.setAttribute('title', data.liked ? 'Bỏ thích' : 'Thích bình luận');
+                var heart = btn.querySelector('.like-heart');
+                var count = btn.querySelector('.like-count');
+                if (heart) heart.textContent = data.liked ? '❤️' : '🤍';
+                if (count) count.textContent = data.count > 0 ? data.count : 'Thích';
+                if (typeof showToast === 'function') {
+                    showToast(data.message);
+                }
+            }
+        })
+        .catch(function (err) {
+            btn.disabled = false;
+            console.error(err);
+        });
+    });
+}
+</script>

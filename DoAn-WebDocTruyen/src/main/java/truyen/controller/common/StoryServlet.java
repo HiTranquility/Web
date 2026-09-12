@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.common;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -115,9 +115,10 @@ public class StoryServlet extends HttpServlet {
                 case "create": url = createOrEdit(request, response, true);  break;
                 case "edit":   url = createOrEdit(request, response, false); break;
                 case "delete": url = delete(request, response);  break;
-                case "stats":  url = stats(request);             break;
-                case "search": url = search(request);            break;
-                default:       url = list(request);              break;
+                case "stats":   url = stats(request);             break;
+                case "search":  url = search(request);            break;
+                case "suggest": suggest(request, response);       return;
+                default:        url = list(request);              break;
             }
         } catch (SQLException e) {
             log("StoryServlet: lỗi truy vấn, action=" + action, e);
@@ -274,13 +275,21 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("cTotalPages", totalPages);
         request.setAttribute("cDesc", desc);
 
-        request.setAttribute("comments", commentDAO.findByStory(id));
+        request.setAttribute("firstChapter", chapterDAO.findFirstChapter(id));
+        List<truyen.model.Comment> comments = commentDAO.findByStory(id);
+        commentDAO.populateLikes(comments, me != null ? me.getId() : 0);
+        request.setAttribute("comments", comments);
         request.setAttribute("canEdit", canEdit(me, story));
         if (me != null) {
             request.setAttribute("bookmarked", bookmarkDAO.exists(me.getId(), id));
             request.setAttribute("myRating", ratingDAO.findScore(me.getId(), id));
             request.setAttribute("following",
                     followDAO.isFollowing(me.getId(), story.getAuthorId()));
+            truyen.model.Bookmark progress = bookmarkDAO.findProgress(me.getId(), id);
+            if (progress != null && progress.getLastChapterId() > 0) {
+                request.setAttribute("resumeChapterId", progress.getLastChapterId());
+                request.setAttribute("resumeChapterNo", progress.getLastChapterNo());
+            }
         }
         // Gợi ý 4 truyện cùng thể loại. Hỏng thì bỏ qua — khối gợi ý biến
         // mất, trang chi tiết vẫn đọc được bình thường.
@@ -376,6 +385,61 @@ public class StoryServlet extends HttpServlet {
                 : "Tìm: " + keyword);
         request.setAttribute("activeNav", "browse");
         return "/WEB-INF/views/story/search.jsp";
+    }
+
+    /** Gợi ý tìm kiếm tức thì (Live Search Autocomplete) trả về JSON. */
+    private void suggest(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        String keyword = trim(request.getParameter("q"));
+        response.setContentType("application/json;charset=UTF-8");
+
+        if (keyword.length() < 2) {
+            response.getWriter().write("[]");
+            return;
+        }
+
+        List<Story> stories = storyDAO.findPage(null, keyword, "popular", null, 0, 5);
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < stories.size(); i++) {
+            Story s = stories.get(i);
+            if (i > 0) json.append(",");
+            json.append("{")
+                .append("\"id\":").append(s.getId()).append(",")
+                .append("\"title\":").append(jsonEscape(s.getTitle())).append(",")
+                .append("\"author\":").append(jsonEscape(s.getAuthorName())).append(",")
+                .append("\"cover\":").append(jsonEscape(s.getCoverUrl() != null ? s.getCoverUrl() : "")).append(",")
+                .append("\"chapters\":").append(s.getChapterCount()).append(",")
+                .append("\"completed\":").append(s.isCompleted())
+                .append("}");
+        }
+        json.append("]");
+        response.getWriter().write(json.toString());
+    }
+
+    private String jsonEscape(String s) {
+        if (s == null) return "\"\"";
+        StringBuilder sb = new StringBuilder("\"");
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                default:
+                    if (c < ' ') {
+                        String hex = "000" + Integer.toHexString(c);
+                        sb.append("\\u").append(hex.substring(hex.length() - 4));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        sb.append("\"");
+        return sb.toString();
     }
 
     // ---- CASE 05: đăng / sửa ----------------------------------------------
@@ -502,6 +566,11 @@ public class StoryServlet extends HttpServlet {
 
     private String delete(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
+
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            return null;
+        }
 
         Story story = storyDAO.findById(parseIntOr(request.getParameter("id"), 0));
         if (story == null) {

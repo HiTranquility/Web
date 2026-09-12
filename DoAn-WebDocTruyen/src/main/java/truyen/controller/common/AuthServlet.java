@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.common;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -72,6 +72,9 @@ public class AuthServlet extends HttpServlet {
                 case "reset":
                     url = reset(request, response);
                     break;
+                case "firebase-google":
+                    firebaseGoogleLogin(request, response);
+                    return;
                 default:
                     url = login(request, response);
                     break;
@@ -387,6 +390,118 @@ public class AuthServlet extends HttpServlet {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /**
+     * ĐĂNG NHẬP / ĐĂNG KÝ BẰNG GOOGLE QUA FIREBASE AUTH
+     */
+    private void firebaseGoogleLogin(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+
+        String email = trim(request.getParameter("email"));
+        String displayName = trim(request.getParameter("displayName"));
+        String photoUrl = trim(request.getParameter("photoUrl"));
+        String uid = trim(request.getParameter("uid"));
+
+        if (email.isEmpty() || !email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
+            sendJsonResponse(response, false, "Email tài khoản Google không hợp lệ.", null);
+            return;
+        }
+
+        User user = userDAO.findByEmail(email);
+
+        if (user == null) {
+            // Tự động tạo tài khoản mới từ thông tin Google
+            String baseUsername = email.substring(0, email.indexOf('@')).replaceAll("[^a-zA-Z0-9_]", "_");
+            if (baseUsername.length() < 3) {
+                baseUsername = "user_" + baseUsername;
+            }
+            if (baseUsername.length() > 40) {
+                baseUsername = baseUsername.substring(0, 40);
+            }
+
+            String username = baseUsername;
+            int attempts = 0;
+            while (userDAO.findByUsername(username) != null && attempts < 10) {
+                username = baseUsername + "_" + (RANDOM.nextInt(9000) + 1000);
+                attempts++;
+            }
+
+            user = new User();
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setDisplayName(displayName.isEmpty() ? username : displayName);
+            user.setAvatarUrl(photoUrl.isEmpty() ? null : photoUrl);
+            user.setRole("USER");
+            user.setStatus("ACTIVE");
+            // Mật khẩu ngẫu nhiên băm an toàn
+            user.setPasswordHash(PasswordUtil.hash("FIREBASE_" + newToken()));
+            userDAO.insert(user);
+        } else {
+            // Đã có tài khoản
+            if (user.isBanned()) {
+                String reason = (user.getBanReason() == null || user.getBanReason().isEmpty())
+                        ? "" : " Lý do: " + user.getBanReason();
+                sendJsonResponse(response, false, "Tài khoản của bạn đã bị khoá." + reason, null);
+                return;
+            }
+
+            // Cập nhật avatar nếu người dùng chưa có
+            if ((user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) && !photoUrl.isEmpty()) {
+                userDAO.updateAvatar(user.getId(), photoUrl);
+                user.setAvatarUrl(photoUrl);
+            }
+        }
+
+        // Tái tạo phiên đăng nhập (chống Session Fixation)
+        HttpSession old = request.getSession(false);
+        String target = old == null ? null : (String) old.getAttribute("redirectAfterLogin");
+        if (old != null) {
+            old.invalidate();
+        }
+        HttpSession session = request.getSession(true);
+
+        user.setPasswordHash(null);
+        session.setAttribute("currentUser", user);
+
+        String redirect = request.getContextPath() + landingPage(user, target);
+
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"))
+                || "1".equals(request.getParameter("ajax"));
+
+        if (isAjax) {
+            sendJsonResponse(response, true, "Đăng nhập Google thành công!", redirect);
+        } else {
+            response.sendRedirect(redirect);
+        }
+    }
+
+    private void sendJsonResponse(HttpServletResponse response, boolean success, String message, String redirect)
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"success\":").append(success).append(",");
+        sb.append("\"message\":\"").append(escapeJson(message)).append("\"");
+        if (redirect != null) {
+            sb.append(",\"redirect\":\"").append(escapeJson(redirect)).append("\"");
+        }
+        sb.append("}");
+        response.getWriter().write(sb.toString());
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 
     private String trim(String s) {

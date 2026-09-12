@@ -27,7 +27,7 @@
   data-theme và data-size đặt ngay trên <body>, giá trị mặc định ở đây.
   Đoạn script dưới cùng sẽ đọc lựa chọn đã lưu và ghi đè.
 --%>
-<body class="reader-body" data-theme="dark" data-size="m" data-leading="normal">
+<body class="reader-body" data-theme="dark" data-size="m" data-leading="normal" data-font="serif">
 
 <%--
   THANH TIẾN ĐỘ ĐỌC — vạch mảnh chạy ngang trên cùng.
@@ -56,6 +56,7 @@
 
     <span class="reader-meta">
         Chương ${chapter.chapterNo} &middot; ~${chapter.readMinutes} phút đọc
+        <span class="reader-pct-badge" id="read-pct-badge">0%</span>
     </span>
 
     <%--
@@ -88,6 +89,11 @@
             <button type="button" class="tool-btn" data-set="leading" data-val="loose" title="Dòng thưa">⩸</button>
         </div>
 
+        <div class="tool-group" role="group" aria-label="Font chữ">
+            <button type="button" class="tool-btn" data-set="font" data-val="serif" title="Font có chân (Serif)">Serif</button>
+            <button type="button" class="tool-btn" data-set="font" data-val="sans" title="Font không chân (Sans)">Sans</button>
+        </div>
+
         <div class="tool-group" role="group" aria-label="Nền">
             <button type="button" class="tool-btn" data-set="theme" data-val="dark"  title="Nền tối">🌙</button>
             <button type="button" class="tool-btn" data-set="theme" data-val="light" title="Nền sáng">☀️</button>
@@ -95,17 +101,13 @@
         </div>
 
         <%--
-          Bật / tắt đọc liên tục.
-
-          Nút này để RIÊNG một nhóm vì nó khác loại: ba nhóm trên chỉ đổi cách
-          trang TRÔNG ra sao, nút này đổi cách trang HOẠT ĐỘNG.
-
-          aria-pressed cho trình đọc màn hình biết đây là công tắc hai trạng
-          thái chứ không phải nút bấm một lần.
+          Bật / tắt đọc liên tục và Phím tắt trợ giúp.
         --%>
         <div class="tool-group">
             <button type="button" class="tool-btn" id="toggle-continuous"
                     aria-pressed="true" title="Đọc liên tục">∞</button>
+            <button type="button" class="tool-btn" id="toggle-shortcuts"
+                    title="Phím tắt đọc truyện (?)" aria-label="Phím tắt đọc truyện">⌨</button>
         </div>
     </div>
 </header>
@@ -113,6 +115,42 @@
 <main class="reader-wrap">
     <jsp:include page="${contentPage}" />
 </main>
+
+<%-- Hộp thoại hướng dẫn phím tắt --%>
+<dialog id="shortcuts-modal" class="reader-dialog">
+    <div class="dialog-card">
+        <div class="dialog-head">
+            <h3>⌨ Phím tắt đọc truyện</h3>
+            <button type="button" class="dialog-close" id="close-shortcuts" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="dialog-body">
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>→</kbd> hoặc <kbd>D</kbd></span>
+                <span>Chương kế tiếp</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>←</kbd> hoặc <kbd>A</kbd></span>
+                <span>Chương trước</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>T</kbd></span>
+                <span>Bật / tắt Mục lục</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>F</kbd></span>
+                <span>Bật / tắt Toàn màn hình</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>?</kbd></span>
+                <span>Hiện bảng phím tắt này</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>Esc</kbd></span>
+                <span>Đóng hộp thoại / mục lục</span>
+            </div>
+        </div>
+    </div>
+</dialog>
 
 <script>
 /*
@@ -133,7 +171,7 @@ var CTX = '${pageContext.request.contextPath}';
  */
 (function () {
     var body = document.body;
-    var KEYS = ['size', 'leading', 'theme'];
+    var KEYS = ['size', 'leading', 'theme', 'font'];
 
     /*
      * localStorage có thể NÉM LỖI chứ không chỉ trả về null: trình duyệt ở
@@ -158,7 +196,14 @@ var CTX = '${pageContext.request.contextPath}';
 
     // Khôi phục lựa chọn lần trước; chưa có thì giữ mặc định đã ghi trên <body>
     KEYS.forEach(function (k) {
-        apply(k, load(k) || body.getAttribute('data-' + k));
+        var val = load(k);
+        if (!val && k === 'theme') {
+            try {
+                var siteTheme = localStorage.getItem('site.theme') || document.documentElement.getAttribute('data-site-theme');
+                if (siteTheme === 'light') val = 'light';
+            } catch (e) { }
+        }
+        apply(k, val || body.getAttribute('data-' + k));
     });
 
     /*
@@ -452,6 +497,8 @@ var CTX = '${pageContext.request.contextPath}';
         if (pct < 0) pct = 0;
         if (pct > 100) pct = 100;
         fill.style.width = pct.toFixed(1) + '%';
+        var pctBadge = document.getElementById('read-pct-badge');
+        if (pctBadge) pctBadge.textContent = Math.round(pct) + '%';
     }
 
     function hen() {
@@ -472,7 +519,172 @@ var CTX = '${pageContext.request.contextPath}';
 
     ve();
 })();
+
+/* ===========================================================================
+   TỰ ĐỘNG ẨN / HIỆN THANH READER-BAR KHI CUỘN
+   ===========================================================================
+   - Cuộn xuống: ẩn thanh reader-bar để tối đa hoá diện tích đọc, không vướng mắt.
+   - Cuộn lên hoặc rê chuột lên đỉnh: hiện lại ngay lập tức.
+   - Khi bảng mục lục (details#toc-box) đang mở: KHÔNG tự ẩn.
+   ======================================================================== */
+(function () {
+    var bar = document.querySelector('.reader-bar');
+    if (!bar) return;
+
+    var lastY = window.scrollY || 0;
+    var ticking = false;
+    var minThreshold = 70;
+
+    function onScroll() {
+        var curY = window.scrollY || 0;
+        var diff = curY - lastY;
+
+        var toc = document.getElementById('toc-box');
+        var isTocOpen = toc && toc.open;
+
+        if (curY < minThreshold || diff < -12) {
+            bar.classList.remove('is-hidden');
+        } else if (diff > 12 && curY > minThreshold && !isTocOpen) {
+            bar.classList.add('is-hidden');
+        }
+        lastY = curY;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', function () {
+        if (!ticking) {
+            window.requestAnimationFrame(onScroll);
+            ticking = true;
+        }
+    }, { passive: true });
+
+    // Khi rê chuột lên mép trên màn hình (< 45px) thì luôn hiện thanh
+    window.addEventListener('mousemove', function (e) {
+        if (e.clientY < 45) {
+            bar.classList.remove('is-hidden');
+        }
+    }, { passive: true });
+})();
+
+/* ===========================================================================
+   PHÍM TẮT ĐỌC TRUYỆN (KEYBOARD SHORTCUTS)
+   ===========================================================================
+   - Mũi tên Phải / Phím D: Sang chương sau
+   - Mũi tên Trái / Phím A: Về chương trước
+   - Phím T: Bật / tắt bảng Mục lục
+   - Phím F: Bật / tắt toàn màn hình (Fullscreen)
+   - Phím ?: Mở hộp thoại hướng dẫn phím tắt
+   - Phím Esc: Đóng bảng mục lục / đóng hộp thoại
+   ======================================================================== */
+(function () {
+    var modal = document.getElementById('shortcuts-modal');
+    var openBtn = document.getElementById('toggle-shortcuts');
+    var closeBtn = document.getElementById('close-shortcuts');
+
+    function showModal() {
+        if (!modal) return;
+        if (modal.showModal) modal.showModal();
+        else modal.setAttribute('open', '');
+    }
+    function hideModal() {
+        if (!modal) return;
+        if (modal.close) modal.close();
+        else modal.removeAttribute('open');
+    }
+
+    if (openBtn) openBtn.addEventListener('click', showModal);
+    if (closeBtn) closeBtn.addEventListener('click', hideModal);
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) hideModal();
+        });
+    }
+
+    window.addEventListener('keydown', function (e) {
+        // Không nhận phím tắt nếu người dùng đang nhập văn bản
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) {
+            return;
+        }
+
+        var key = e.key;
+        var code = e.code;
+
+        // Phím ? mở trợ giúp
+        if (key === '?' || (e.shiftKey && (code === 'Slash' || key === '/'))) {
+            e.preventDefault();
+            if (modal && modal.open) hideModal();
+            else showModal();
+            return;
+        }
+
+        // Phím Esc đóng TOC nếu đang mở
+        if (key === 'Escape') {
+            var toc = document.getElementById('toc-box');
+            if (toc && toc.open) {
+                toc.open = false;
+            }
+            return;
+        }
+
+        // Mũi tên Trái hoặc phím A -> Chương trước
+        if (key === 'ArrowLeft' || code === 'KeyA') {
+            var prev = document.getElementById('nav-prev');
+            if (prev && prev.getAttribute('href')) {
+                window.location.href = prev.getAttribute('href');
+            }
+        }
+        // Mũi tên Phải hoặc phím D -> Chương sau
+        else if (key === 'ArrowRight' || code === 'KeyD') {
+            var next = document.getElementById('nav-next');
+            if (next && next.getAttribute('href')) {
+                window.location.href = next.getAttribute('href');
+            }
+        }
+        // Phím T -> Mở/đóng Mục lục
+        else if (code === 'KeyT') {
+            var tocBox = document.getElementById('toc-box');
+            if (tocBox) {
+                e.preventDefault();
+                tocBox.open = !tocBox.open;
+            }
+        }
+        // Phím F -> Toàn màn hình
+        else if (code === 'KeyF') {
+            e.preventDefault();
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(function () {});
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(function () {});
+                }
+            }
+        }
+    });
+
+    /* Nút Cuộn lên đầu trang trong trình đọc */
+    var rBttBtn = document.getElementById('reader-back-to-top');
+    if (!rBttBtn) {
+        rBttBtn = document.createElement('button');
+        rBttBtn.type = 'button';
+        rBttBtn.className = 'back-to-top';
+        rBttBtn.id = 'reader-back-to-top';
+        rBttBtn.title = 'Lên đầu trang';
+        rBttBtn.setAttribute('aria-label', 'Cuộn lên đầu trang');
+        rBttBtn.innerHTML = '<span>↑</span>';
+        document.body.appendChild(rBttBtn);
+    }
+    window.addEventListener('scroll', function () {
+        rBttBtn.classList.toggle('is-show', window.scrollY > 350);
+    }, { passive: true });
+    rBttBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
 </script>
 
 </body>
 </html>
+

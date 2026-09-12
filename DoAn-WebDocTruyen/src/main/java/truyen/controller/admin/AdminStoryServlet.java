@@ -39,18 +39,24 @@ public class AdminStoryServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
+        if ("delete".equals(action) || "restore".equals(action) || "publish".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
+        }
+
         try {
-            if ("delete".equals(action) || "restore".equals(action)) {
+            if ("delete".equals(action) || "restore".equals(action) || "publish".equals(action)) {
                 int id = parseIntOr(request.getParameter("id"), 0);
 
-                /*
-                 * Gỡ = đổi status sang DELETED. Khôi phục = đổi về PUBLISHED.
-                 * Không có DELETE FROM ở đâu cả — nhờ vậy admin bấm nhầm vẫn
-                 * lấy lại được, và bình luận/bookmark của truyện không mồ côi.
-                 */
-                storyDAO.updateStatus(id, "delete".equals(action) ? "DELETED" : "PUBLISHED");
+                String targetStatus = "DELETED";
+                if ("restore".equals(action) || "publish".equals(action)) {
+                    targetStatus = "PUBLISHED";
+                }
+                storyDAO.updateStatus(id, targetStatus);
 
-                // Post/Redirect/Get — F5 sau khi gỡ không gỡ lại lần nữa
+                // Post/Redirect/Get — F5 không gửi lại request
                 response.sendRedirect(request.getContextPath() + "/admin/story");
                 return;
             }

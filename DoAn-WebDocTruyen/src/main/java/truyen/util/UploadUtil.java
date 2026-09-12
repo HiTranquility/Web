@@ -55,22 +55,6 @@ public final class UploadUtil {
                     + (MAX_BYTES / 1024 / 1024) + " MB. Chọn ảnh nhỏ hơn.");
         }
 
-        String dir = ctx.getInitParameter("uploadDir");
-        if (dir == null || dir.trim().isEmpty()) {
-            throw new UploadException(
-                    "Máy chủ chưa cấu hình thư mục lưu ảnh (uploadDir trong web.xml).");
-        }
-
-        /*
-         * NHẬN DẠNG ẢNH BẰNG BYTE ĐẦU FILE, KHÔNG TIN Content-Type
-         *
-         * Content-Type và tên file đều do TRÌNH DUYỆT gửi lên, mà cái gì do
-         * phía kia gửi thì phía kia sửa được. Đặt tên "hack.jsp" rồi khai
-         * "image/png" là qua được mọi phép kiểm dựa trên hai thứ đó.
-         *
-         * Vài byte đầu file thì nằm trong chính nội dung — muốn giả phải làm
-         * ra một file mở lên đúng là ảnh thật.
-         */
         String ext;
         try (InputStream in = part.getInputStream()) {
             ext = sniff(in);
@@ -80,10 +64,7 @@ public final class UploadUtil {
                     "File này không phải ảnh PNG, JPG, GIF hay WebP.");
         }
 
-        File folder = new File(dir);
-        if (!folder.isDirectory() && !folder.mkdirs()) {
-            throw new UploadException("Không tạo được thư mục lưu ảnh: " + dir);
-        }
+        File folder = resolveUploadFolder(ctx);
 
         /*
          * TÊN FILE DO MÌNH SINH, TUYỆT ĐỐI KHÔNG DÙNG TÊN NGƯỜI DÙNG GỬI LÊN.
@@ -141,5 +122,25 @@ public final class UploadUtil {
             return ".webp";
         }
         return null;
+    }
+
+    /**
+     * Xác định thư mục lưu ảnh, tự động fallback an toàn nếu đường dẫn cấu hình
+     * trong web.xml không khả dụng (ví dụ: Windows hardcode C:/ khi chạy trên macOS/Linux).
+     */
+    public static File resolveUploadFolder(ServletContext ctx) throws UploadException {
+        String dir = ctx.getInitParameter("uploadDir");
+        File folder = null;
+        if (dir != null && !dir.trim().isEmpty()) {
+            folder = new File(dir.trim());
+        }
+        if (folder == null || (!folder.exists() && !folder.mkdirs())) {
+            String fallback = System.getProperty("user.home") + File.separator + "truyen-uploads";
+            folder = new File(fallback);
+            if (!folder.isDirectory() && !folder.mkdirs()) {
+                throw new UploadException("Không tạo được thư mục lưu ảnh: " + folder.getAbsolutePath());
+            }
+        }
+        return folder;
     }
 }

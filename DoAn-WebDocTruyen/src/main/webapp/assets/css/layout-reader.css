@@ -10,39 +10,48 @@
    phải mở file JS ra tìm.
    ========================================================================= */
 
-/* ---- Bảng màu ba chế độ nền ----
-   Khai bằng biến để phần dưới viết một lần, ba nền dùng chung.
-   Nền tối là mặc định. */
-.reader-body {
-    --rd-bg:    var(--ink-950);
-    --rd-text:  #d9dde6;      /* hơi dịu hơn trắng thuần, đỡ chói */
-    --rd-dim:   var(--text-mut);
-    --rd-line:  var(--ink-700);
-    --rd-bar:   rgba(16,18,25,.85);
+/* ---- Bảng màu ba chế độ nền đọc (Định nghĩa độc lập với toàn trang) ----
+   Nền và màu chữ được gán tường minh để không bao giờ bị xung đột hoặc hòa lẫn
+   màu chữ vào màu nền khi trang bật chế độ Light Mode. */
 
-    background: var(--rd-bg);
-    color: var(--rd-text);
-    transition: background .25s var(--ease), color .25s var(--ease);
+.reader-body,
+.reader-body[data-theme="dark"] {
+    --rd-bg:       #0f1117;
+    --rd-text:     #e2e8f0;      /* Chữ sáng rõ nét trên nền tối */
+    --rd-dim:      #94a3b8;
+    --rd-line:     #1e293b;
+    --rd-bar:      rgba(15, 17, 23, .94);
+    --rd-toc-bg:   #151822;
+    --rd-toc-line: #252a38;
 }
 
-/* Nền sáng — cho người đọc ban ngày, ngoài trời */
+/* Nền sáng — cho người đọc ban ngày, độ tương phản cao, êm mắt */
 .reader-body[data-theme="light"] {
-    --rd-bg:   #ffffff;
-    --rd-text: #1b1d23;
-    --rd-dim:  #6b7280;
-    --rd-line: #e3e6ec;
-    --rd-bar:  rgba(255,255,255,.9);
+    --rd-bg:       #ffffff;
+    --rd-text:     #0f172a;      /* Chữ tối rõ nét trên nền trắng */
+    --rd-dim:      #475569;
+    --rd-line:     #e2e8f0;
+    --rd-bar:      rgba(255, 255, 255, .95);
+    --rd-toc-bg:   #ffffff;
+    --rd-toc-line: #e2e8f0;
 }
 
-/* Nền giấy (sepia) — vàng ngà, ít tương phản nhất trong ba chế độ.
-   Không phải trang trí: giảm tương phản là cách giảm mỏi mắt khi đọc hàng
-   giờ, cùng lý do sách in không dùng giấy trắng tinh. */
+/* Nền giấy (sepia) — vàng ngà cổ điển, giảm mỏi mắt khi đọc lâu */
 .reader-body[data-theme="sepia"] {
-    --rd-bg:   #f4ecd8;
-    --rd-text: #43382a;
-    --rd-dim:  #8a7a63;
-    --rd-line: #ddd0b4;
-    --rd-bar:  rgba(244,236,216,.92);
+    --rd-bg:       #f4ecd8;
+    --rd-text:     #2d2417;      /* Chữ nâu đậm trên nền giấy ngà */
+    --rd-dim:      #786951;
+    --rd-line:     #dfd2b8;
+    --rd-bar:      rgba(244, 236, 216, .95);
+    --rd-toc-bg:   #f9f4ea;
+    --rd-toc-line: #dfd2b8;
+}
+
+body.reader-body {
+    background-color: var(--rd-bg) !important;
+    background-image: none !important;
+    color: var(--rd-text) !important;
+    transition: background-color .25s var(--ease), color .25s var(--ease);
 }
 
 /* ---- Thanh trên tối giản, dính lại khi cuộn ---- */
@@ -50,38 +59,43 @@
     position: sticky; top: 0; z-index: 40;
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
     padding: 10px 24px;
-    background: var(--rd-bar);
+    background: var(--rd-bar) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--rd-line);
+    border-bottom: 1px solid var(--rd-line) !important;
     font-size: .86rem;
+    transition: transform .28s var(--ease), background .25s var(--ease);
 }
+.reader-bar.is-hidden {
+    transform: translateY(-100%);
+}
+
 .reader-back {
-    color: var(--rd-dim); font-weight: 500; flex: none;
+    color: var(--rd-dim) !important; font-weight: 500; flex: none;
     transition: color .16s var(--ease);
 }
-.reader-back:hover { color: var(--ember); }
-.reader-meta { color: var(--rd-dim); flex: 1; }
+.reader-back:hover { color: var(--ember) !important; }
+.reader-meta { color: var(--rd-dim) !important; flex: 1; }
 
 /* ---- Bảng tuỳ chỉnh đọc ---- */
 .reader-tools { display: flex; gap: 8px; flex: none; }
 
 .tool-group {
     display: flex;
-    border: 1px solid var(--rd-line);
+    border: 1px solid var(--rd-line) !important;
     border-radius: var(--r-sm);
     overflow: hidden;
 }
 .tool-btn {
     border: 0; background: transparent; cursor: pointer;
     padding: 5px 10px;
-    color: var(--rd-dim); font-size: .85rem; line-height: 1.4;
+    color: var(--rd-dim) !important; font-size: .85rem; line-height: 1.4;
     font-family: inherit;
     transition: background .15s var(--ease), color .15s var(--ease);
 }
-.tool-btn + .tool-btn { border-left: 1px solid var(--rd-line); }
-.tool-btn:hover { color: var(--rd-text); }
-.tool-btn.is-on  { background: var(--ember); color: #1a0f06; font-weight: 600; }
+.tool-btn + .tool-btn { border-left: 1px solid var(--rd-line) !important; }
+.tool-btn:hover { color: var(--rd-text) !important; }
+.tool-btn.is-on  { background: var(--ember) !important; color: #ffffff !important; font-weight: 600; }
 .tool-btn small  { font-size: .7em; vertical-align: super; }
 
 /* ---- Vùng đọc ----
@@ -123,6 +137,10 @@
 .reader-body[data-leading="tight"]  .chapter-content { line-height: 1.65; }
 .reader-body[data-leading="normal"] .chapter-content { line-height: 1.95; }
 .reader-body[data-leading="loose"]  .chapter-content { line-height: 2.25; }
+
+.reader-body[data-font="serif"] .chapter-content { font-family: 'Lora', Georgia, serif; }
+.reader-body[data-font="sans"]  .chapter-content { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+
 
 /* ---- Điều hướng chương ---- */
 .reader-nav {
@@ -240,21 +258,23 @@
     position: absolute; z-index: 40;
     bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
     width: min(420px, calc(100vw - 32px));
-    background: var(--ink-900);
-    border: 1px solid var(--ink-600);
+    background: var(--rd-toc-bg);
+    border: 1px solid var(--rd-toc-line);
     border-radius: var(--r-lg);
-    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    box-shadow: 0 12px 40px rgba(0,0,0,.35);
     overflow: hidden;
+    color: var(--rd-text);
 }
 
 .toc-head {
     display: flex; align-items: baseline; justify-content: space-between;
     gap: 12px; padding: 11px 14px;
-    border-bottom: 1px solid var(--ink-700);
+    border-bottom: 1px solid var(--rd-toc-line);
     font-size: .85rem;
+    color: var(--rd-text);
 }
-.toc-head b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.toc-head a { color: var(--text-mut); white-space: nowrap; }
+.toc-head b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--rd-text); }
+.toc-head a { color: var(--rd-dim); white-space: nowrap; }
 .toc-head a:hover { color: var(--ember); }
 
 /* Cuộn TRONG bảng, không cuộn cả trang. 60vh để trên màn hình thấp vẫn còn
@@ -266,9 +286,10 @@
     display: flex; align-items: baseline; gap: 9px;
     padding: 8px 10px; border-radius: var(--r-sm);
     font-size: .87rem; line-height: 1.4;
+    color: var(--rd-text);
 }
-a.toc-link:hover { background: var(--ink-800); }
-.toc-no { flex: 0 0 auto; color: var(--text-mut); font-weight: 600;
+a.toc-link:hover { background: var(--rd-line); }
+.toc-no { flex: 0 0 auto; color: var(--rd-dim); font-weight: 600;
           font-size: .8rem; }
 a.toc-link:hover .toc-no { color: var(--ember); }
 .toc-title { flex: 1; min-width: 0;
@@ -299,12 +320,168 @@ a.toc-link:hover .toc-no { color: var(--ember); }
 }
 .read-progress i {
     display: block; height: 100%; width: 0;
-    background: var(--ember);
+    background: linear-gradient(90deg, #ea580c, #f59e0b, #fbbf24);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+    border-radius: 0 2px 2px 0;
     /* Chuyển động rất ngắn để vạch không giật từng nấc khi cuộn nhanh,
        nhưng vẫn bám sát tay người dùng. */
     transition: width .08s linear;
 }
 
-/* Nền giấy và nền sáng: màu cam trên nền trắng hơi chói, giảm độ đậm một chút */
+/* Nền giấy và nền sáng */
 [data-theme="light"] .read-progress i,
-[data-theme="sepia"] .read-progress i { background: var(--ember-deep); }
+[data-theme="sepia"] .read-progress i {
+    background: linear-gradient(90deg, #c2410c, #d97706, #f59e0b);
+    box-shadow: 0 0 8px rgba(217, 119, 6, 0.5);
+}
+
+.reader-pct-badge {
+    display: inline-block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.16);
+    color: var(--ember);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    margin-left: 6px;
+    vertical-align: middle;
+}
+[data-theme="light"] .reader-pct-badge {
+    background: #fef3c7;
+    color: #b45309;
+    border-color: #fde68a;
+}
+[data-theme="sepia"] .reader-pct-badge {
+    background: #f7e6cd;
+    color: #92400e;
+    border-color: #e5cdb0;
+}
+
+/* ===========================================================================
+   HỘP THOẠI PHÍM TẮT (SHORTCUTS MODAL)
+   ======================================================================== */
+.reader-dialog {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    margin: auto;
+    max-width: 420px;
+    width: calc(100% - 32px);
+    border-radius: var(--r-lg);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+.reader-dialog::backdrop {
+    background: rgba(11, 12, 16, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.dialog-card {
+    background: var(--rd-toc-bg);
+    border: 1px solid var(--rd-toc-line);
+    border-radius: var(--r-lg);
+    color: var(--rd-text);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+.dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--rd-toc-line);
+}
+.dialog-head h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--rd-text);
+}
+.dialog-close {
+    border: 0;
+    background: transparent;
+    color: var(--rd-dim);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: var(--r-sm);
+    transition: color .15s var(--ease);
+}
+.dialog-close:hover {
+    color: var(--ember);
+}
+.dialog-body {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.shortcut-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: var(--rd-dim);
+    border-bottom: 1px solid var(--rd-toc-line);
+    padding-bottom: 8px;
+}
+.key-combo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+.key-combo kbd {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    background: var(--rd-bg);
+    color: var(--rd-text);
+    border: 1px solid var(--rd-toc-line);
+    border-radius: var(--r-sm);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+kbd {
+    display: inline-block;
+    padding: 3px 8px;
+    background: var(--ink-800);
+    border: 1px solid var(--ink-600);
+    border-radius: var(--r-sm);
+    color: var(--ember-lit);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    box-shadow: 0 2px 0 var(--ink-600);
+}
+
+.reader-body[data-theme="light"] .dialog-card {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+.reader-body[data-theme="light"] .dialog-head {
+    border-bottom-color: #e2e8f0;
+}
+.reader-body[data-theme="light"] kbd {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 0 #cbd5e1;
+    color: var(--ember-deep);
+}
+
+.reader-body[data-theme="sepia"] .dialog-card {
+    background: #f4ecd8;
+    border-color: #ddd0b4;
+    color: #43382a;
+}
+.reader-body[data-theme="sepia"] .dialog-head {
+    border-bottom-color: #ddd0b4;
+}
+.reader-body[data-theme="sepia"] kbd {
+    background: #e8deca;
+    border-color: #cfc2a8;
+    box-shadow: 0 2px 0 #cfc2a8;
+    color: #7b441a;
+}
+

@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.user;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -70,10 +70,25 @@ public class BookmarkServlet extends HttpServlet {
 
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
 
+        if ("add".equals(action) || "remove".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
+        }
+
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || "json".equalsIgnoreCase(request.getParameter("format"));
+
         try {
             switch (action) {
                 case "add":
                     bookmarkDAO.add(me.getId(), storyId);
+                    if (isAjax) {
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"success\":true,\"bookmarked\":true,\"message\":\"Đã lưu truyện vào tủ sách!\"}");
+                        return;
+                    }
                     // Lưu từ trang lịch sử đọc thì ở lại đó — người ta đang
                     // lướt lại truyện cũ, ném sang trang truyện là mất chỗ.
                     if ("history".equals(request.getParameter("from"))) {
@@ -86,6 +101,11 @@ public class BookmarkServlet extends HttpServlet {
 
                 case "remove":
                     bookmarkDAO.remove(me.getId(), storyId);
+                    if (isAjax) {
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"success\":true,\"bookmarked\":false,\"message\":\"Đã bỏ lưu truyện.\" }");
+                        return;
+                    }
                     // Gỡ từ trang danh sách thì quay về danh sách, gỡ từ trang
                     // truyện thì quay về truyện — dựa vào tham số "from"
                     if ("list".equals(request.getParameter("from"))) {
@@ -94,6 +114,7 @@ public class BookmarkServlet extends HttpServlet {
                         backToStory(request, response, storyId);
                     }
                     return;
+
 
                 default:
                     request.setAttribute("bookmarks", bookmarkDAO.findByUser(me.getId()));

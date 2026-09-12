@@ -45,11 +45,18 @@
            href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">Huỷ</a>
 
         <c:if test="${not empty chapter.id and chapter.id ne 0}">
-            <%-- Chương xoá THẬT (khác truyện) nên phải cảnh báo rõ. --%>
-            <a class="btn btn-danger" style="margin-left:auto"
-               href="${pageContext.request.contextPath}/chapter?action=delete&amp;id=${chapter.id}"
-               onclick="return confirm('Xoá hẳn chương này? Không khôi phục được.')">
-                Xoá chương</a>
+            <%-- Chương xoá THẬT (khác truyện) nên phải cảnh báo rõ. Dùng POST + token CSRF để bảo mật. --%>
+            <button type="submit" form="deleteChapterForm" class="btn btn-danger" style="margin-left:auto"
+                    onclick="return confirm('Xoá hẳn chương này? Không khôi phục được.')">
+                Xoá chương</button>
         </c:if>
     </div>
 </form>
+
+<c:if test="${not empty chapter.id and chapter.id ne 0}">
+    <form id="deleteChapterForm" action="${pageContext.request.contextPath}/chapter" method="post" style="display:none">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="id" value="${chapter.id}">
+    </form>
+</c:if>

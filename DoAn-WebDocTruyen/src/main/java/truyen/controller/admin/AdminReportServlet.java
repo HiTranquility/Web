@@ -40,13 +40,35 @@ public class AdminReportServlet extends HttpServlet {
         String action = request.getParameter("action");
         String status = request.getParameter("status");
 
+        if ("resolve".equals(action) || "dismiss".equals(action)
+                || "resolve_hide".equals(action) || "resolve_delete".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
+        }
+
         try {
+            int reportId = parseIntOr(request.getParameter("id"), 0);
+            int targetId = parseIntOr(request.getParameter("targetId"), 0);
+
             if ("resolve".equals(action)) {
-                reportDAO.updateStatus(parseIntOr(request.getParameter("id"), 0),
-                                       "RESOLVED");
+                reportDAO.updateStatus(reportId, "RESOLVED");
             } else if ("dismiss".equals(action)) {
-                reportDAO.updateStatus(parseIntOr(request.getParameter("id"), 0),
-                                       "DISMISSED");
+                reportDAO.updateStatus(reportId, "DISMISSED");
+            } else if ("resolve_hide".equals(action)) {
+                reportDAO.updateStatus(reportId, "RESOLVED");
+                if (targetId > 0) new truyen.dao.CommentDAO().hide(targetId);
+            } else if ("resolve_delete".equals(action)) {
+                reportDAO.updateStatus(reportId, "RESOLVED");
+                if (targetId > 0) new truyen.dao.StoryDAO().updateStatus(targetId, "DELETED");
+            }
+
+            // Post-Redirect-Get — F5 không gửi lại thao tác
+            if ("POST".equalsIgnoreCase(request.getMethod()) && action != null) {
+                String qs = status != null && !status.isEmpty() ? "?status=" + status : "";
+                response.sendRedirect(request.getContextPath() + "/admin/report" + qs);
+                return;
             }
 
             request.setAttribute("reports", reportDAO.findAll(status));

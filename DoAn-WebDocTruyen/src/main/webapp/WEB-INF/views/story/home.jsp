@@ -47,6 +47,74 @@
         </section>
     </c:if>
 
+    <%-- ---- BANNER TIÊU ĐIỂM (Featured Story Spotlight) ------------------- --%>
+    <c:if test="${not empty popular}">
+        <c:set var="featured" value="${popular[0]}"/>
+        <section class="featured-showcase" aria-label="Truyện tiêu điểm">
+            <div class="featured-card">
+                <a class="featured-cover-box"
+                   href="${pageContext.request.contextPath}/story?action=detail&amp;id=${featured.id}">
+                    <c:set var="cvUrl"     value="${featured.coverUrl}"/>
+                    <c:set var="cvAlt"     value="${featured.title}"/>
+                    <c:set var="cvInitial" value="${featured.initial}"/>
+                    <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
+                    <span class="badge badge-hot featured-badge">🔥 Tiêu điểm hôm nay</span>
+                </a>
+
+                <div class="featured-content">
+                    <div class="featured-eyebrow">
+                        <span>⭐ TRUYỆN ĐƯỢC ĐỌC NHIỀU NHẤT</span>
+                        <c:choose>
+                            <c:when test="${featured.completed}">
+                                <span class="badge badge-done">Trọn bộ</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge badge-going">Đang ra</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+
+                    <h2 class="featured-title">
+                        <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${featured.id}">
+                            <c:out value="${featured.title}"/>
+                        </a>
+                    </h2>
+
+                    <div class="featured-meta">
+                        <span>✍️ <b><c:out value="${featured.authorName}"/></b></span>
+                        <span>📄 ${featured.chapterCount} chương</span>
+                        <span>👁️ <fmt:formatNumber pattern="#,##0" value="${featured.viewCount}"/> lượt xem</span>
+                        <c:if test="${featured.rated}">
+                            <span>⭐ ${featured.ratingAvg} / 5.0</span>
+                        </c:if>
+                    </div>
+
+                    <p class="featured-desc">
+                        <c:choose>
+                            <c:when test="${not empty featured.description}">
+                                <c:out value="${featured.description}"/>
+                            </c:when>
+                            <c:otherwise>
+                                Tác phẩm đang nhận được sự quan tâm và yêu thích nồng nhiệt từ đông đảo bạn đọc. Bấm để khám phá ngay!
+                            </c:otherwise>
+                        </c:choose>
+                    </p>
+
+                    <div class="featured-actions">
+                        <a class="btn btn-primary"
+                           href="${pageContext.request.contextPath}/story?action=detail&amp;id=${featured.id}">
+                            ▶ Đọc ngay
+                        </a>
+                        <a class="btn btn-ghost"
+                           href="${pageContext.request.contextPath}/story?action=list&amp;sort=popular">
+                            Khám phá bảng xếp hạng →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </c:if>
+
     <%-- ---- Đọc tiếp (chỉ người đã đăng nhập, và phải có truyện dở) ------- --%>
     <c:if test="${not empty resume}">
         <div class="section-head" style="margin-top:26px">

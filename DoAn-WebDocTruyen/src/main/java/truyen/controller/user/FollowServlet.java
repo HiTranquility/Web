@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.user;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -76,16 +76,24 @@ public class FollowServlet extends HttpServlet {
             log("FollowServlet: không đổi được trạng thái theo dõi", e);
         }
 
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || "json".equalsIgnoreCase(request.getParameter("format"));
+        if (isAjax) {
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":true,\"following\":" + (!unfollow)
+                    + ",\"message\":\"" + (!unfollow ? "Đã theo dõi tác giả!" : "Đã bỏ theo dõi tác giả.") + "\"}");
+            return;
+        }
+
         /*
          * Quay lại đúng chỗ người dùng vừa bấm.
-         *
-         * Nút theo dõi xuất hiện ở hai nơi: trang tác giả và trang "Đang theo
-         * dõi". Bấm bỏ theo dõi ở danh sách mà bị ném sang trang hồ sơ tác giả
-         * là mất mạch. Form gửi kèm "back" để controller biết đường về.
          */
         String back = request.getParameter("back");
         if ("list".equals(back)) {
             response.sendRedirect(request.getContextPath() + "/follow?action=list");
+        } else if ("story".equals(back) && request.getParameter("storyId") != null) {
+            response.sendRedirect(request.getContextPath()
+                    + "/story?action=detail&id=" + request.getParameter("storyId"));
         } else {
             response.sendRedirect(request.getContextPath()
                     + "/user?action=profile&id=" + authorId);

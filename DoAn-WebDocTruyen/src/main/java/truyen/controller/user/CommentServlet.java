@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.user;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -39,6 +39,21 @@ public class CommentServlet extends HttpServlet {
         }
 
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
+
+        if ("like".equals(action)) {
+            User me = currentUser(request);
+            response.setContentType("application/json;charset=UTF-8");
+            if (me == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"success\":false,\"needLogin\":true,\"message\":\"Vui lòng đăng nhập để thích bình luận.\"}");
+                return;
+            }
+            int commentId = parseIntOr(request.getParameter("id"), 0);
+            int count = commentDAO.toggleLike(commentId, me.getId());
+            boolean liked = commentDAO.isLiked(commentId, me.getId());
+            response.getWriter().write("{\"success\":true,\"liked\":" + liked + ",\"count\":" + count + ",\"message\":\"" + (liked ? "Đã thích bình luận!" : "Đã bỏ thích.") + "\"}");
+            return;
+        }
 
         try {
             if ("delete".equals(action)) {
@@ -110,6 +125,27 @@ public class CommentServlet extends HttpServlet {
         c.setUserId(me.getId());
         c.setContent(content);
         commentDAO.insert(c);
+
+        // Gửi thông báo cho người viết bình luận cha hoặc tác giả truyện
+        try {
+            truyen.dao.NotificationDAO notifDAO = new truyen.dao.NotificationDAO();
+            truyen.dao.StoryDAO sDAO = new truyen.dao.StoryDAO();
+            truyen.model.Story s = sDAO.findById(storyId);
+            String sTitle = s != null ? s.getTitle() : "truyện";
+
+            if (c.getParentId() != null) {
+                Comment parent = commentDAO.findById(c.getParentId());
+                if (parent != null && parent.getUserId() != me.getId()) {
+                    String msg = me.getName() + " đã trả lời bình luận của bạn trong truyện \"" + sTitle + "\"";
+                    notifDAO.sendNotification(parent.getUserId(), storyId, null, "SYSTEM", msg);
+                }
+            } else if (s != null && s.getAuthorId() != me.getId()) {
+                String msg = me.getName() + " đã bình luận về truyện \"" + sTitle + "\"";
+                notifDAO.sendNotification(s.getAuthorId(), storyId, null, "SYSTEM", msg);
+            }
+        } catch (Exception e) {
+            log("CommentServlet: không gửi được thông báo bình luận", e);
+        }
     }
 
     /**

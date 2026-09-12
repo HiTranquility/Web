@@ -50,6 +50,7 @@ $cp = (Get-ChildItem $libs -Filter *.jar | ForEach-Object { $_.FullName }) -join
 
 # ---- 2. Compile -------------------------------------------------------------
 Write-Host 'Compiling application classes ...'
+Remove-Item -Recurse -Force "$classes\*" -ErrorAction SilentlyContinue
 $sources = Get-ChildItem -Recurse -Path 'src\main\java' -Filter *.java | ForEach-Object { $_.FullName }
 & javac -encoding UTF-8 -cp $cp -d $classes @sources
 if ($LASTEXITCODE -ne 0) { throw 'Compile src/main/java that bai.' }

@@ -79,8 +79,8 @@ public class UserDAO {
     /** Thêm tài khoản mới, gán luôn id vừa sinh vào object user. */
     public void insert(User user) throws SQLException {
         String sql = "INSERT INTO users "
-                   + "(username, email, password_hash, display_name, role, status) "
-                   + "VALUES (?, ?, ?, ?, 'USER', 'ACTIVE')";
+                   + "(username, email, password_hash, display_name, avatar_url, role, status) "
+                   + "VALUES (?, ?, ?, ?, ?, 'USER', 'ACTIVE')";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -88,6 +88,7 @@ public class UserDAO {
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPasswordHash());
             ps.setString(4, user.getDisplayName());
+            ps.setString(5, user.getAvatarUrl());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -95,6 +96,17 @@ public class UserDAO {
                     user.setId(keys.getInt(1));
                 }
             }
+        }
+    }
+
+    /** Cập nhật ảnh đại diện người dùng. */
+    public void updateAvatar(int userId, String avatarUrl) throws SQLException {
+        String sql = "UPDATE users SET avatar_url = ? WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, avatarUrl);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
         }
     }
 

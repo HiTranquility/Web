@@ -16,7 +16,12 @@ import javax.servlet.http.HttpSession;
         "/story",       // đăng, sửa, xoá truyện
         "/chapter",     // thêm, sửa chương
         "/comment",     // bình luận
-        "/bookmark"     // đánh dấu
+        "/bookmark",    // đánh dấu
+        "/history",     // lịch sử đọc
+        "/follow",      // theo dõi tác giả
+        "/notification",// thông báo
+        "/report",      // báo cáo vi phạm
+        "/user"         // hồ sơ người dùng
 })
 public class AuthFilter implements Filter {
 
@@ -42,9 +47,9 @@ public class AuthFilter implements Filter {
      */
     private static String[] publicActionsFor(String path) {
         switch (path) {
-            // Kho truyện, chi tiết truyện, tìm kiếm — nội dung công khai.
+            // Kho truyện, chi tiết truyện, tìm kiếm, gợi ý tự động — nội dung công khai.
             case "/story":
-                return new String[] { "list", "detail", "search" };
+                return new String[] { "list", "detail", "search", "suggest" };
 
             // "raw" la ban khong khung cua "read", dung cho doc lien tuc.
             // "toc" la muc luc tran, cho bang tha xuong o thanh doc.
@@ -55,9 +60,12 @@ public class AuthFilter implements Filter {
             case "/chapter":
                 return new String[] { "read", "raw", "toc" };
 
-            // /comment và /bookmark: không có action nào công khai.
-            //   comment  — mọi action đều là ghi (thêm, xoá).
-            //   bookmark — kể cả xem danh sách cũng là dữ liệu riêng.
+            // Hồ sơ tác giả công khai. me, edit, save, password thì cần đăng nhập.
+            case "/user":
+                return new String[] { "profile" };
+
+            // /comment, /bookmark, /history, /follow, /notification, /report:
+            // không có action nào công khai cho khách.
             default:
                 return new String[0];
         }
@@ -70,9 +78,16 @@ public class AuthFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
+        String path = request.getServletPath();
         String action = request.getParameter("action");
         if (action == null) {
-            action = "list";
+            if ("/chapter".equals(path)) {
+                action = "read";
+            } else if ("/user".equals(path)) {
+                action = "profile";
+            } else {
+                action = "list";
+            }
         }
 
         /*

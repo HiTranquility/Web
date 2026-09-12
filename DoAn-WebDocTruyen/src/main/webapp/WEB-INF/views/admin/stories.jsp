@@ -44,6 +44,22 @@
                             <button type="submit" class="btn btn-ghost btn-sm">Khôi phục</button>
                         </form>
                     </c:when>
+                    <c:when test="${s.status eq 'DRAFT'}">
+                        <form action="${pageContext.request.contextPath}/admin/story"
+                              method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
+                            <input type="hidden" name="action" value="publish">
+                            <input type="hidden" name="id" value="${s.id}">
+                            <button type="submit" class="btn btn-primary btn-sm">✓ Duyệt đăng</button>
+                        </form>
+                        <form action="${pageContext.request.contextPath}/admin/story"
+                              method="post" style="display:inline">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="${s.id}">
+                            <button type="submit" class="btn btn-danger btn-sm">Gỡ</button>
+                        </form>
+                    </c:when>
                     <c:otherwise>
                         <form action="${pageContext.request.contextPath}/admin/story"
                               method="post" style="display:inline">
@@ -62,16 +78,10 @@
     </c:when>
 
     <c:otherwise>
-        <%-- MẢNH: trạng thái rỗng, dùng chung với mọi trang danh sách.
-             Bảng rỗng chỉ còn hàng tiêu đề cột trông như trang hỏng;
-             một ô rỗng có thiết kế thì trông như chủ ý. --%>
+        <%-- MẢNH: trạng thái rỗng, dùng chung với mọi trang danh sách. --%>
         <c:set var="emIcon"  value="📚"/>
         <c:set var="emTitle" value="Không có truyện nào"/>
         <c:set var="emText"  value="Chưa ai đăng truyện, hoặc bộ lọc hiện tại không khớp truyện nào."/>
         <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
     </c:otherwise>
 </c:choose>
-
-<c:if test="${empty stories}">
-    <div class="empty" style="padding:40px"><p>Chưa có truyện nào.</p></div>
-</c:if>

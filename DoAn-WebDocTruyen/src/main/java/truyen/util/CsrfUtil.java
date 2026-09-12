@@ -87,7 +87,11 @@ public final class CsrfUtil {
         if (!(expected instanceof String)) {
             return false;
         }
-        return equalsConstantTime((String) expected, request.getParameter(FIELD));
+        String token = request.getParameter(FIELD);
+        if (token == null || token.isEmpty()) {
+            token = request.getHeader("X-CSRF-Token");
+        }
+        return equalsConstantTime((String) expected, token);
     }
 
     /**

@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.user;
 
 import java.io.IOException;
 import java.sql.SQLException;

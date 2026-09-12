@@ -18,8 +18,8 @@ class ReadHistoryTest {
 
     private static ReadHistory doc(int soNgayTruoc) {
         ReadHistory h = new ReadHistory();
-        // trừ thêm 2 giờ để không rơi đúng ranh giới nửa đêm
-        h.setLastViewed(LocalDateTime.now().minusDays(soNgayTruoc).minusHours(2));
+        // Cố định lúc 12 giờ trưa của ngày mục tiêu để không phụ thuộc giờ chạy test trong ngày
+        h.setLastViewed(java.time.LocalDate.now().minusDays(soNgayTruoc).atTime(12, 0));
         return h;
     }
 

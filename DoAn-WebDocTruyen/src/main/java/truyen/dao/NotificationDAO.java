@@ -75,6 +75,28 @@ public class NotificationDAO {
         }
     }
 
+    /** Gửi thông báo đơn lẻ cho một người dùng. */
+    public void sendNotification(int userId, Integer storyId, Integer chapterId,
+                                 String type, String message) throws SQLException {
+        if (!DBConnection.isReady()) return;
+
+        String sql = "INSERT INTO notifications (user_id, story_id, chapter_id, type, message) "
+                   + "VALUES (?, ?, ?, ?, ?)";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            if (storyId != null && storyId > 0) ps.setInt(2, storyId);
+            else ps.setNull(2, java.sql.Types.INTEGER);
+
+            if (chapterId != null && chapterId > 0) ps.setInt(3, chapterId);
+            else ps.setNull(3, java.sql.Types.INTEGER);
+
+            ps.setString(4, type != null ? type : "SYSTEM");
+            ps.setString(5, message);
+            ps.executeUpdate();
+        }
+    }
+
     /** Gửi CÙNG MỘT thông báo cho nhiều người — tác giả đăng chương mới. */
     public void notifyFollowers(List<Integer> userIds, int storyId, int chapterId,
                                 String message) throws SQLException {
@@ -88,8 +110,12 @@ public class NotificationDAO {
              PreparedStatement ps = con.prepareStatement(sql)) {
             for (Integer uid : userIds) {
                 ps.setInt(1, uid);
-                ps.setInt(2, storyId);
-                ps.setInt(3, chapterId);
+                if (storyId > 0) ps.setInt(2, storyId);
+                else ps.setNull(2, java.sql.Types.INTEGER);
+
+                if (chapterId > 0) ps.setInt(3, chapterId);
+                else ps.setNull(3, java.sql.Types.INTEGER);
+
                 ps.setString(4, message);
                 ps.addBatch();
             }

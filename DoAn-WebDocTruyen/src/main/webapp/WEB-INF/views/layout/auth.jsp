@@ -47,5 +47,14 @@
     </p>
 </div>
 
+<script>
+    window.APP_CONTEXT = '${pageContext.request.contextPath}';
+</script>
+<!-- Firebase App & Auth SDK (v10 compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<!-- Tích hợp Google Authentication -->
+<script src="${pageContext.request.contextPath}/assets/js/firebase-auth.js"></script>
+
 </body>
 </html>

@@ -19,12 +19,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${empty pageTitle ? 'ĐọcTruyện' : pageTitle}</title>
 
+<%-- Chống nháy sáng/tối (FOUC): đọc theme đã lưu trước khi CSS vẽ màn hình --%>
+<script>
+    (function () {
+        try {
+            var theme = localStorage.getItem('site_theme');
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-site-theme', 'light');
+            }
+        } catch (e) {}
+    })();
+</script>
+
 <%-- contextPath: đổi tên lúc deploy vẫn chạy, không cần sửa link --%>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css?v=1.1">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=1.1">
 <c:if test="${not empty layoutCss}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${layoutCss}.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${layoutCss}.css?v=1.1">
 </c:if>
 <c:if test="${not empty pageCss}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${pageCss}.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${pageCss}.css?v=1.1">
 </c:if>

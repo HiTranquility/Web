@@ -76,6 +76,33 @@ public class BookmarkDAO {
         }
     }
 
+    /** Lấy tiến độ đọc của người dùng với một truyện (chương đang đọc dở). */
+    public Bookmark findProgress(int userId, int storyId) throws SQLException {
+        if (!DBConnection.isReady()) return null;
+        String sql =
+            "SELECT b.user_id, b.story_id, b.last_chapter_id, "
+          + "       COALESCE(c.chapter_no, 0) AS last_chapter_no "
+          + "FROM bookmarks b "
+          + "JOIN chapters c ON c.id = b.last_chapter_id "
+          + "WHERE b.user_id = ? AND b.story_id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Bookmark b = new Bookmark();
+                    b.setUserId(rs.getInt("user_id"));
+                    b.setStoryId(rs.getInt("story_id"));
+                    b.setLastChapterId(rs.getInt("last_chapter_id"));
+                    b.setLastChapterNo(rs.getInt("last_chapter_no"));
+                    return b;
+                }
+                return null;
+            }
+        }
+    }
+
     /**
      * Thêm bookmark. Đã có rồi thì bỏ qua, KHÔNG báo lỗi.
      *
@@ -101,6 +128,21 @@ public class BookmarkDAO {
             ps.setInt(2, storyId);
             ps.executeUpdate();
         }
+    }
+
+    /** Lấy danh sách ID người dùng đã lưu truyện này vào tủ sách để gửi thông báo chương mới. */
+    public List<Integer> findBookmarkedUserIds(int storyId) throws SQLException {
+        if (!DBConnection.isReady()) return java.util.Collections.emptyList();
+        String sql = "SELECT user_id FROM bookmarks WHERE story_id = ?";
+        List<Integer> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(rs.getInt("user_id"));
+            }
+        }
+        return list;
     }
 
     /**

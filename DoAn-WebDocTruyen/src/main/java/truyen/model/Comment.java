@@ -40,6 +40,10 @@ public class Comment implements Serializable {
     /** Ten truyen — lay kem khi JOIN, chi trang quan tri dung. */
     private String storyTitle;
 
+    /** So luot thich / yeu thich binh luan */
+    private int likeCount = 0;
+    private boolean liked = false;
+
     public Comment() { }
 
     public int getId() { return id; }
@@ -92,4 +96,10 @@ public class Comment implements Serializable {
         String n = getName();
         return (n == null || n.isEmpty()) ? "?" : n.substring(0, 1).toUpperCase();
     }
+
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
+
+    public boolean isLiked() { return liked; }
+    public void setLiked(boolean liked) { this.liked = liked; }
 }

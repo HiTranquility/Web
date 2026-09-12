@@ -192,9 +192,21 @@ public final class DemoData {
         int count = Math.max(3, views / 900);
         s.setRatingCount(count);
         s.setRatingSum(count * 4 + (id % 3));
-        // Không đặt coverUrl: thẻ truyện sẽ rơi vào nhánh chữ cái đầu. Đúng
-        // trường hợp thật nhất — phần lớn truyện mới đăng đều chưa có ảnh bìa.
+
+        // Ảnh bìa minh họa sắc nét, chuẩn phong cách theo từng tác phẩm
+        switch (id) {
+            case 1: s.setCoverUrl("/assets/images/covers/cover-2.svg"); break; // Mùa hạ năm ấy
+            case 2: s.setCoverUrl("/assets/images/covers/cover-8.svg"); break; // Người ở lại
+            case 3: s.setCoverUrl("/assets/images/covers/cover-4.svg"); break; // Cà phê tầng bốn
+            case 4: s.setCoverUrl("/assets/images/covers/cover-3.svg"); break; // Đêm không trăng
+            case 5: s.setCoverUrl("/assets/images/covers/cover-5.svg"); break; // Mật mã sông Hàn
+            case 6: s.setCoverUrl("/assets/images/covers/cover-6.svg"); break; // Kiếm khách vô danh
+            case 7: s.setCoverUrl("/assets/images/covers/cover-7.svg"); break; // Trấn yêu lục
+            case 8: s.setCoverUrl("/assets/images/covers/cover-8.svg"); break; // Thư gửi mười năm sau
+            default: s.setCoverUrl("/assets/images/covers/cover-1.svg"); break;
+        }
         return s;
+
     }
 
     /** 8 truyện đã xuất bản, thứ tự trong danh sách là thứ tự id. */

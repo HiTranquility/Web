@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.common;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -358,6 +358,11 @@ public class ChapterServlet extends HttpServlet {
     private String delete(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
 
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            return null;
+        }
+
         Chapter chapter = chapterDAO.findById(parseIntOr(request.getParameter("id"), 0));
         if (chapter == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -388,16 +393,20 @@ public class ChapterServlet extends HttpServlet {
     }
 
 
-    /** Báo cho những người đang theo dõi tác giả rằng có chương mới. */
+    /** Báo cho những người đang theo dõi tác giả và những người đã lưu truyện rằng có chương mới. */
     private void notifyFollowers(Story story, Chapter chapter) {
         try {
-            List<Integer> followers = followDAO.findFollowerIds(story.getAuthorId());
-            if (followers.isEmpty()) {
-                return;   // không ai theo dõi thì khỏi mở kết nối
+            java.util.Set<Integer> recipients = new java.util.LinkedHashSet<>();
+            recipients.addAll(followDAO.findFollowerIds(story.getAuthorId()));
+            recipients.addAll(bookmarkDAO.findBookmarkedUserIds(story.getId()));
+            recipients.remove(story.getAuthorId());
+
+            if (recipients.isEmpty()) {
+                return;   // không ai theo dõi hoặc lưu thì thôi
             }
             String message = story.getAuthorName() + " vừa đăng chương "
                            + chapter.getChapterNo() + " của \"" + story.getTitle() + "\"";
-            notificationDAO.notifyFollowers(followers, story.getId(),
+            notificationDAO.notifyFollowers(new java.util.ArrayList<>(recipients), story.getId(),
                                             chapter.getId(), message);
         } catch (SQLException e) {
             log("Không gửi được thông báo chương mới cho truyện " + story.getId(), e);

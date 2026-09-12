@@ -42,12 +42,14 @@
             <%-- Nút theo dõi tác giả. Không hiện trên hồ sơ của chính mình. --%>
             <c:if test="${not empty currentUser and currentUser.id ne story.authorId}">
                 <form method="post" style="display:inline;margin-left:10px"
-                      action="${pageContext.request.contextPath}/follow">
+                      action="${pageContext.request.contextPath}/follow" id="author-follow-form">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
-                    <input type="hidden" name="do" value="${following ? 'unfollow' : 'follow'}">
+                    <input type="hidden" name="do" id="author-follow-do" value="${following ? 'unfollow' : 'follow'}">
                     <input type="hidden" name="authorId" value="${story.authorId}">
-                    <button type="submit" class="btn btn-ghost btn-sm">
-                        ${following ? '✓ Đang theo dõi' : '+ Theo dõi'}
+                    <input type="hidden" name="back" value="story">
+                    <input type="hidden" name="storyId" value="${story.id}">
+                    <button type="submit" class="btn btn-ghost btn-sm" id="author-follow-btn">
+                        <span id="author-follow-label">${following ? '✓ Đang theo dõi' : '+ Theo dõi'}</span>
                     </button>
                 </form>
             </c:if>
@@ -77,22 +79,37 @@
         <p class="detail-desc"><c:out value="${story.description}"/></p>
 
         <div class="detail-actions">
-            <c:if test="${not empty chapters}">
+            <%-- Đọc tiếp nếu đã có tiến độ --%>
+            <c:if test="${not empty resumeChapterId and resumeChapterId gt 0}">
                 <a class="btn btn-primary"
-                   href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${chapters[0].id}">
-                    Đọc từ đầu</a>
+                   href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${resumeChapterId}">
+                    ▶ Đọc tiếp (Chương ${resumeChapterNo})</a>
             </c:if>
+
+            <%-- Đọc từ đầu: cố định vào chương 1 (firstChapter) thay vì lấy theo trang/thứ tự mục lục --%>
+            <c:choose>
+                <c:when test="${not empty firstChapter}">
+                    <a class="btn ${empty resumeChapterId ? 'btn-primary' : 'btn-ghost'}"
+                       href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${firstChapter.id}">
+                        Đọc từ đầu</a>
+                </c:when>
+                <c:when test="${not empty chapters}">
+                    <a class="btn ${empty resumeChapterId ? 'btn-primary' : 'btn-ghost'}"
+                       href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${chapters[0].id}">
+                        Đọc từ đầu</a>
+                </c:when>
+            </c:choose>
 
             <%-- Nút lưu/bỏ lưu. Chỉ hiện khi đã đăng nhập.
                  Là form POST vì đây là hành động GHI, không phải link. --%>
             <c:if test="${not empty currentUser}">
                 <form action="${pageContext.request.contextPath}/bookmark" method="post"
-                      style="display:inline">
+                      style="display:inline" id="bookmark-form">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
-                    <input type="hidden" name="action" value="${bookmarked ? 'remove' : 'add'}">
+                    <input type="hidden" name="action" id="bookmark-action" value="${bookmarked ? 'remove' : 'add'}">
                     <input type="hidden" name="storyId" value="${story.id}">
-                    <button type="submit" class="btn btn-ghost">
-                        ${bookmarked ? '★ Đã lưu' : '☆ Lưu truyện'}
+                    <button type="submit" class="btn btn-ghost" id="bookmark-btn">
+                        <span id="bookmark-label">${bookmarked ? '★ Đã lưu' : '☆ Lưu truyện'}</span>
                     </button>
                 </form>
             </c:if>
@@ -452,4 +469,97 @@
      */
     window.addEventListener('hashchange', theoNeo);
 })();
+
+/*
+ * AJAX BOOKMARK & FOLLOW — Lưu truyện & Theo dõi tác giả tức thì
+ */
+(function () {
+    var toastFn = window.showToast || function (msg) {
+        var old = document.getElementById('global-toast');
+        if (old) old.remove();
+        var toast = document.createElement('div');
+        toast.id = 'global-toast';
+        toast.className = 'toast-bubble';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('is-show'); }, 20);
+        setTimeout(function () {
+            toast.classList.remove('is-show');
+            setTimeout(function () { toast.remove(); }, 280);
+        }, 2800);
+    };
+
+    var bForm = document.getElementById('bookmark-form');
+    var bBtn = document.getElementById('bookmark-btn');
+    var bLabel = document.getElementById('bookmark-label');
+    var bAction = document.getElementById('bookmark-action');
+    if (bForm && bBtn && bLabel && bAction && window.fetch) {
+        bForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            bBtn.disabled = true;
+            var data = new URLSearchParams(new FormData(bForm));
+            fetch(bForm.action, {
+                method: 'POST',
+                body: data,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Lỗi HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (res) {
+                bBtn.disabled = false;
+                if (res.bookmarked) {
+                    bAction.value = 'remove';
+                    bLabel.textContent = '★ Đã lưu';
+                    toastFn('✨ Đã thêm truyện vào tủ sách!');
+                } else {
+                    bAction.value = 'add';
+                    bLabel.textContent = '☆ Lưu truyện';
+                    toastFn('Đã bỏ lưu truyện.');
+                }
+            })
+            .catch(function () {
+                bForm.submit();
+            });
+        });
+    }
+
+    var fForm = document.getElementById('author-follow-form');
+    var fBtn = document.getElementById('author-follow-btn');
+    var fLabel = document.getElementById('author-follow-label');
+    var fDo = document.getElementById('author-follow-do');
+    if (fForm && fBtn && fLabel && fDo && window.fetch) {
+        fForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fBtn.disabled = true;
+            var data = new URLSearchParams(new FormData(fForm));
+            fetch(fForm.action, {
+                method: 'POST',
+                body: data,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Lỗi HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (res) {
+                fBtn.disabled = false;
+                if (res.following) {
+                    fDo.value = 'unfollow';
+                    fLabel.textContent = '✓ Đang theo dõi';
+                    toastFn(res.message || '✨ Đã theo dõi tác giả!');
+                } else {
+                    fDo.value = 'follow';
+                    fLabel.textContent = '+ Theo dõi';
+                    toastFn(res.message || 'Đã bỏ theo dõi tác giả.');
+                }
+            })
+            .catch(function () {
+                fForm.submit();
+            });
+        });
+    }
+})();
 </script>
+

@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.common;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +29,17 @@ public class UploadedFileServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String dir = getServletContext().getInitParameter("uploadDir");
+        File folder;
+        try {
+            folder = truyen.util.UploadUtil.resolveUploadFolder(getServletContext());
+        } catch (truyen.util.UploadUtil.UploadException e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
         String rest = request.getPathInfo();        // "/abc123.png"
 
-        if (dir == null || rest == null || rest.length() < 2) {
+        if (rest == null || rest.length() < 2) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -51,7 +58,7 @@ public class UploadedFileServlet extends HttpServlet {
          * dẫn tuyệt đối đã rút gọn (normalize) rồi HỎI: nó có còn nằm trong
          * thư mục ảnh không? Câu hỏi đó không né được.
          */
-        Path root = new File(dir).toPath().toAbsolutePath().normalize();
+        Path root = folder.toPath().toAbsolutePath().normalize();
         Path file = root.resolve(rest.substring(1)).toAbsolutePath().normalize();
 
         if (!file.startsWith(root) || !Files.isRegularFile(file)) {

@@ -44,11 +44,32 @@
                             <c:if test="${not n.read}"><span class="notif-dot"></span></c:if>
                         </a>
                     </c:when>
+                    <c:when test="${not empty n.storyId}">
+                        <a class="notif ${n.read ? '' : 'notif-new'}"
+                           href="${pageContext.request.contextPath}/story?action=detail&amp;id=${n.storyId}#comments">
+                            <span class="notif-icon">${n.icon}</span>
+                            <span class="notif-body">
+                                <span class="notif-text"><c:out value="${n.message}"/></span>
+                                <span class="notif-time">
+                                    <c:if test="${not empty n.createdAt}">
+                                        ${n.createdAt.dayOfMonth}/${n.createdAt.monthValue}
+                                        lúc ${n.createdAt.hour}:${n.createdAt.minute lt 10 ? '0' : ''}${n.createdAt.minute}
+                                    </c:if>
+                                </span>
+                            </span>
+                            <c:if test="${not n.read}"><span class="notif-dot"></span></c:if>
+                        </a>
+                    </c:when>
                     <c:otherwise>
                         <div class="notif ${n.read ? '' : 'notif-new'}">
                             <span class="notif-icon">${n.icon}</span>
                             <span class="notif-body">
                                 <span class="notif-text"><c:out value="${n.message}"/></span>
+                                <span class="notif-time">
+                                    <c:if test="${not empty n.createdAt}">
+                                        ${n.createdAt.dayOfMonth}/${n.createdAt.monthValue}
+                                    </c:if>
+                                </span>
                             </span>
                         </div>
                     </c:otherwise>

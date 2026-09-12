@@ -129,6 +129,23 @@ public class ChapterDAO {
         }
     }
 
+    /** Chương đầu tiên của truyện — cố định cho nút 'Đọc từ đầu'. */
+    public Chapter findFirstChapter(int storyId) throws SQLException {
+        if (!DBConnection.isReady()) {
+            List<Chapter> all = DemoData.chapters(storyId);
+            return all.isEmpty() ? null : all.get(0);
+        }
+        String sql = "SELECT id, story_id, chapter_no, title FROM chapters "
+                   + "WHERE story_id = ? ORDER BY chapter_no ASC LIMIT 1";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapRow(rs, false) : null;
+            }
+        }
+    }
+
     /** Chương liền trước / liền sau — cho nút điều hướng ở trang đọc. */
     public Chapter findNeighbour(int storyId, int chapterNo, int direction) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.

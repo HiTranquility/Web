@@ -1,25 +1,32 @@
 <%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%--
-  _error403.jsp — MẢNH nội dung trang 403.
-  TẦNG: views/
-
-  KHI NÀO NGƯỜI DÙNG THẤY TRANG NÀY:
-    - Thành viên thường mở URL /admin/*            (AdminFilter chặn)
-    - Sửa truyện người khác bằng cách đổi ?id=     (StoryServlet chặn)
-    - Gỡ bình luận không phải của mình             (CommentServlet chặn)
-
-  PHÂN BIỆT 401 / 403 / 404:
-    401 = chưa đăng nhập     -> hệ thống đá về trang đăng nhập
-    403 = ĐÃ đăng nhập nhưng KHÔNG ĐỦ QUYỀN
-    404 = không có gì ở đây
-
-  Riêng truyện ở chế độ nháp cố ý trả 404 chứ không phải 403 — vì 403 vô tình
-  xác nhận "truyện này CÓ tồn tại", còn 404 thì không tiết lộ gì cả.
+  _error403.jsp — MẢNH nội dung trang lỗi 403 nghệ thuật.
 --%>
-<div class="empty" style="margin-top:60px">
-    <div class="empty-icon">🔒</div>
-    <h3>Bạn không có quyền vào trang này</h3>
-    <p>Trang này dành cho quản trị viên, hoặc cho chủ sở hữu của nội dung.
-       Nếu bạn nghĩ đây là nhầm lẫn, hãy liên hệ quản trị viên.</p>
-    <a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a>
+<div class="error-hero-card">
+    <div class="error-hero-badge">🛡️</div>
+    <div class="error-hero-code">403</div>
+    <h2 class="error-hero-title">Khu Vực Giới Hạn Quyền</h2>
+    <p class="error-hero-desc">
+        Trang này dành riêng cho quản trị viên hoặc tác giả sở hữu nội dung.
+        Nếu bạn cho rằng đây là sự nhầm lẫn, hãy đăng nhập với tài khoản có quyền phù hợp.
+    </p>
+
+    <div class="error-hero-actions">
+        <a class="btn btn-primary" href="${pageContext.request.contextPath}/">
+            🏠 Về trang chủ
+        </a>
+        <c:choose>
+            <c:when test="${empty currentUser}">
+                <a class="btn btn-ghost" href="${pageContext.request.contextPath}/auth?action=login">
+                    🔑 Đăng nhập ngay
+                </a>
+            </c:when>
+            <c:otherwise>
+                <a class="btn btn-ghost" href="${pageContext.request.contextPath}/auth?action=logout">
+                    🔄 Đổi tài khoản
+                </a>
+            </c:otherwise>
+        </c:choose>
+    </div>
 </div>

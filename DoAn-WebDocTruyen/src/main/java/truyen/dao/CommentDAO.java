@@ -202,4 +202,48 @@ public class CommentDAO {
         }
         return c;
     }
+
+    /* =========================================================================
+     *  Quản lý yêu thích / thả tim bình luận (Thread-safe In-Memory Store)
+     * ========================================================================= */
+    private static final java.util.Map<Integer, java.util.Set<Integer>> COMMENT_LIKES =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    public int getLikeCount(int commentId) {
+        java.util.Set<Integer> users = COMMENT_LIKES.get(commentId);
+        return users != null ? users.size() : 0;
+    }
+
+    public boolean isLiked(int commentId, int userId) {
+        if (userId <= 0) return false;
+        java.util.Set<Integer> users = COMMENT_LIKES.get(commentId);
+        return users != null && users.contains(userId);
+    }
+
+    public int toggleLike(int commentId, int userId) {
+        if (commentId <= 0 || userId <= 0) return 0;
+        java.util.Set<Integer> users = COMMENT_LIKES.computeIfAbsent(
+                commentId, k -> java.util.concurrent.ConcurrentHashMap.newKeySet());
+        if (users.contains(userId)) {
+            users.remove(userId);
+        } else {
+            users.add(userId);
+        }
+        return users.size();
+    }
+
+    /** Gắn thông tin likeCount và trạng thái liked vào danh sách bình luận (cả gốc và reply) */
+    public void populateLikes(List<Comment> list, int currentUserId) {
+        if (list == null) return;
+        for (Comment c : list) {
+            c.setLikeCount(getLikeCount(c.getId()));
+            c.setLiked(isLiked(c.getId(), currentUserId));
+            if (c.getReplies() != null) {
+                for (Comment r : c.getReplies()) {
+                    r.setLikeCount(getLikeCount(r.getId()));
+                    r.setLiked(isLiked(r.getId(), currentUserId));
+                }
+            }
+        }
+    }
 }

@@ -48,6 +48,13 @@ public class AdminTagServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
+        if ("create".equals(action) || "update".equals(action) || "delete".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
+        }
+
         try {
             if ("create".equals(action) || "update".equals(action)) {
                 save(request, "update".equals(action));

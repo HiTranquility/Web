@@ -70,3 +70,201 @@
 }
 .auth-card label.check input { width: auto; margin: 2px 0 0; flex: none; }
 .auth-card label.check a { color: var(--ember); }
+
+/* ---- ĐĂNG NHẬP GOOGLE & FIREBASE AUTHENTICATION ---- */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0 16px;
+    color: var(--text-mut);
+    font-size: .82rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--ink-700);
+}
+.auth-divider span {
+    padding: 0 12px;
+}
+
+.btn-google-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    background: #ffffff;
+    color: #1f2937 !important;
+    border: 1px solid #d1d5db;
+    border-radius: var(--r-sm);
+    font-size: .92rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.btn-google-login:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+.btn-google-login svg {
+    flex-shrink: 0;
+}
+.google-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #9ca3af;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modal Google Selector */
+.google-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+    animation: fadeIn .2s ease;
+}
+.google-modal-dialog {
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+.google-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--ink-700);
+}
+.google-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.google-logo-row h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.google-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-mut);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.google-modal-close:hover { color: var(--text); }
+.google-modal-body {
+    padding: 20px;
+}
+.google-modal-desc {
+    font-size: .88rem;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+}
+.google-acc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.google-acc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--ink-900);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.google-acc-item:hover {
+    background: var(--ink-800);
+    border-color: var(--ember);
+    transform: translateX(3px);
+}
+.google-acc-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285F4, #34A853);
+    color: #fff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+.google-acc-info {
+    flex: 1;
+    overflow: hidden;
+}
+.google-acc-name {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.google-acc-email {
+    font-size: .8rem;
+    color: var(--text-dim);
+}
+.google-custom-login {
+    background: var(--ink-900);
+    padding: 14px;
+    border-radius: var(--r-md);
+    border: 1px dashed var(--ink-700);
+    margin-bottom: 14px;
+}
+.google-subhead {
+    font-size: .82rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.google-custom-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.google-custom-inputs input {
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    font-size: .85rem !important;
+}
+.google-ecosystem-note {
+    font-size: .78rem;
+    color: var(--text-mut);
+    line-height: 1.45;
+    background: rgba(234, 179, 8, 0.08);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    padding: 10px;
+    border-radius: var(--r-sm);
+}
+.google-ecosystem-note code {
+    color: var(--ember);
+}
+

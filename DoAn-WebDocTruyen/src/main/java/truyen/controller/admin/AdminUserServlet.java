@@ -41,6 +41,14 @@ public class AdminUserServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
+        // Các hành động thay đổi trạng thái người dùng BẮT BUỘC phải qua POST để chống CSRF
+        if ("ban".equals(action) || "unban".equals(action) || "role".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
+        }
+
         try {
             if ("ban".equals(action) || "unban".equals(action)) {
                 int id = parseIntOr(request.getParameter("id"), 0);

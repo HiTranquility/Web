@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.user;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -60,6 +60,13 @@ public class UserServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action == null) {
             action = "profile";
+        }
+
+        if ("save".equals(action) || "password".equals(action)) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
+                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                return;
+            }
         }
 
         String url;

@@ -151,6 +151,41 @@
             }
         });
     });
+
+    /* Global Toast Notification */
+    window.showToast = function (msg) {
+        var old = document.getElementById('global-toast');
+        if (old) old.remove();
+        var toast = document.createElement('div');
+        toast.id = 'global-toast';
+        toast.className = 'toast-bubble';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('is-show'); }, 20);
+        setTimeout(function () {
+            toast.classList.remove('is-show');
+            setTimeout(function () { toast.remove(); }, 280);
+        }, 2800);
+    };
+
+    /* Nút Cuộn lên đầu trang (Back to Top) */
+    var bttBtn = document.getElementById('site-back-to-top');
+    if (!bttBtn) {
+        bttBtn = document.createElement('button');
+        bttBtn.type = 'button';
+        bttBtn.className = 'back-to-top';
+        bttBtn.id = 'site-back-to-top';
+        bttBtn.title = 'Lên đầu trang';
+        bttBtn.setAttribute('aria-label', 'Cuộn lên đầu trang');
+        bttBtn.innerHTML = '<span>↑</span>';
+        document.body.appendChild(bttBtn);
+    }
+    window.addEventListener('scroll', function () {
+        bttBtn.classList.toggle('is-show', window.scrollY > 350);
+    }, { passive: true });
+    bttBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 })();
 </script>
 

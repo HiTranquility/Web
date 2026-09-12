@@ -40,6 +40,8 @@ public class Notification {
 
     /** Biểu tượng theo loại — để JSP không phải viết chuỗi if. */
     public String getIcon() {
-        return "NEW_CHAPTER".equals(type) ? "📖" : "🔔";
+        if ("NEW_CHAPTER".equals(type)) return "📖";
+        if (message != null && (message.contains("bình luận") || message.contains("trả lời"))) return "💬";
+        return "🔔";
     }
 }

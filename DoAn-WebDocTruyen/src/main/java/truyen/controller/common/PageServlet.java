@@ -1,4 +1,4 @@
-package truyen.controller;
+package truyen.controller.common;
 
 import java.io.IOException;
 import java.util.Arrays;

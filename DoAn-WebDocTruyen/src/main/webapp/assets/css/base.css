@@ -56,6 +56,27 @@
     --ease: cubic-bezier(.4, 0, .2, 1);
 }
 
+/* ============================================================================
+   CHẾ ĐỘ SÁNG (LIGHT MODE) TOÀN TRANG
+   ========================================================================= */
+html[data-site-theme="light"] {
+    --ink-950:  #f8fafc;
+    --ink-900:  #ffffff;
+    --ink-850:  #ffffff;
+    --ink-800:  #f1f5f9;
+    --ink-700:  #e2e8f0;
+    --ink-600:  #cbd5e1;
+
+    --text:     #0f172a;
+    --text-dim: #334155;
+    --text-mut: #64748b;
+
+    --ember-ghost: rgba(240, 134, 58, 0.12);
+
+    --shadow:    0 4px 16px rgba(15, 23, 42, .06);
+    --shadow-lg: 0 16px 36px rgba(15, 23, 42, .09);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -92,3 +113,18 @@ a { color: inherit; text-decoration: none; }
     outline-offset: 2px;
     border-radius: var(--r-sm);
 }
+
+/* Tinh chỉnh riêng cho chế độ sáng */
+html[data-site-theme="light"] body {
+    background-image:
+        radial-gradient(900px 400px at 12% -8%,  rgba(240,134,58,.07), transparent 60%),
+        radial-gradient(700px 380px at 88% -12%, rgba(139,124,246,.05), transparent 60%);
+}
+html[data-site-theme="light"] ::selection {
+    color: #ffffff;
+}
+html[data-site-theme="light"] ::-webkit-scrollbar-track  { background: var(--ink-850); }
+html[data-site-theme="light"] ::-webkit-scrollbar-thumb  { background: var(--ink-700);
+                             border: 3px solid var(--ink-850); }
+html[data-site-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--ink-600); }
+
