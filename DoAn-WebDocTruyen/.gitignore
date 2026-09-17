@@ -10,3 +10,6 @@ build/
 *.iml
 nbproject/private/
 uploads/
+
+# ── Private docs (không push lên git) ─────────────────────
+docs/_private/

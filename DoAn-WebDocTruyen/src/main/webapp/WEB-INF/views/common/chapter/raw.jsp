@@ -16,4 +16,4 @@
 
   contentType đặt ngay ở đây, KHÔNG có <!DOCTYPE>, KHÔNG có <html>.
   Cả file chỉ nhả ra đúng một thẻ <article>.
---%><%@ include file="/WEB-INF/views/chapter/_block.jsp" %>
+--%><%@ include file="/WEB-INF/views/common/chapter/_block.jsp" %>

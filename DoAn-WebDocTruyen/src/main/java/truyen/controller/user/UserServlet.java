@@ -16,6 +16,9 @@ import truyen.dao.UserDAO;
 import truyen.model.Story;
 import truyen.model.User;
 import truyen.util.PasswordUtil;
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.currentUser;
+import static truyen.util.ServletHelper.trimOrEmpty;
 
 /** TRANG 4 · 14 · 15 — Hồ sơ người dùng. */
 @WebServlet("/user")
@@ -151,7 +154,7 @@ public class UserServlet extends HttpServlet {
          * KHÔNG phải hồ sơ của chính mình — hai trường hợp còn lại không hiện
          * nút nên hỏi cũng vô ích, chỉ tốn thêm một câu SQL.
          */
-        User me = (User) request.getSession().getAttribute("currentUser");
+        User me = currentUser(request);
         if (me != null && me.getId() != id) {
             request.setAttribute("isFollowing",
                     followDAO.isFollowing(me.getId(), id));
@@ -217,10 +220,10 @@ public class UserServlet extends HttpServlet {
         User me = requireLogin(request, response);
         if (me == null) return null;
 
-        String name  = trim(request.getParameter("displayName"));
-        String email = trim(request.getParameter("email"));
-        String bio   = trim(request.getParameter("bio"));
-        String avatar = trim(request.getParameter("avatarUrl"));
+        String name  = trimOrEmpty(request.getParameter("displayName"));
+        String email = trimOrEmpty(request.getParameter("email"));
+        String bio   = trimOrEmpty(request.getParameter("bio"));
+        String avatar = trimOrEmpty(request.getParameter("avatarUrl"));
 
         String error = null;
         if (name.isEmpty()) {
@@ -231,6 +234,11 @@ public class UserServlet extends HttpServlet {
             error = "Email không hợp lệ.";
         } else if (bio.length() > 500) {
             error = "Giới thiệu tối đa 500 ký tự.";
+        } else {
+            User existing = userDAO.findByEmail(email);
+            if (existing != null && existing.getId() != me.getId()) {
+                error = "Email này đã được sử dụng bởi tài khoản khác.";
+            }
         }
 
         if (error != null) {
@@ -328,23 +336,10 @@ public class UserServlet extends HttpServlet {
      */
     private User requireLogin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        User me = (User) request.getSession().getAttribute("currentUser");
+        User me = currentUser(request);
         if (me == null) {
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
         }
         return me;
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
-    }
-
-    /** ?id=abc không được làm sập trang — trả về giá trị mặc định. */
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
     }
 }

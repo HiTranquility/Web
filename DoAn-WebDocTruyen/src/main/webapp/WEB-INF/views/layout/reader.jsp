@@ -254,6 +254,20 @@ var CTX = '${pageContext.request.contextPath}';
     var busy    = false;
     var on      = true;
 
+    function hideLoading() {
+        if (loading) {
+            loading.hidden = true;
+            loading.style.display = 'none';
+        }
+    }
+    function showLoading() {
+        if (loading) {
+            loading.hidden = false;
+            loading.style.display = 'flex';
+        }
+    }
+    hideLoading();
+
     try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) { }
 
     /* ------------------------------------------------------ đánh dấu đã đọc */
@@ -276,13 +290,16 @@ var CTX = '${pageContext.request.contextPath}';
         var last = wrap.lastElementChild;
         var nextId = last && last.getAttribute('data-next-id');
         if (!nextId) {                       // hết truyện
-            if (done) done.hidden = false;
-            if (loading) loading.hidden = true;
+            if (done) {
+                done.hidden = false;
+                done.style.display = 'block';
+            }
+            hideLoading();
             return;
         }
 
         busy = true;
-        if (loading) loading.hidden = false;
+        showLoading();
 
         fetch(CTX + '/chapter?action=raw&id=' + encodeURIComponent(nextId), {
             credentials: 'same-origin'       // gửi kèm cookie phiên, để server
@@ -305,7 +322,7 @@ var CTX = '${pageContext.request.contextPath}';
                 wrap.appendChild(block);
                 watch(block);
                 syncNav(block);
-                if (loading) loading.hidden = true;
+                hideLoading();
                 busy = false;
             })
             .catch(function (err) {
@@ -314,7 +331,7 @@ var CTX = '${pageContext.request.contextPath}';
                  * Thử lại vô hạn khi máy chủ đang lỗi chỉ làm mọi thứ tệ hơn;
                  * người đọc vẫn còn nút bấm để đi tiếp.
                  */
-                if (loading) loading.hidden = true;
+                hideLoading();
                 busy = false;
                 on = false;
                 if (nav) nav.scrollIntoView({ block: 'nearest' });
@@ -391,6 +408,7 @@ var CTX = '${pageContext.request.contextPath}';
             try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) { }
             paint();
             if (on) loadNext();
+            else hideLoading();
         });
         paint();
     }

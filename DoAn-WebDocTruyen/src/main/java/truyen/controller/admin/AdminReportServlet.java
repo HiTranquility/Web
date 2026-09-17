@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.ReportDAO;
+import static truyen.util.ServletHelper.parseIntOr;
 
 /** TRANG 30 — Xử lý báo cáo vi phạm. */
 @WebServlet("/admin/report")
@@ -88,13 +89,5 @@ public class AdminReportServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/admin.jsp")
                 .forward(request, response);
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
     }
 }

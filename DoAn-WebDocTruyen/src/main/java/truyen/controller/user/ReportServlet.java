@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.ReportDAO;
 import truyen.model.Report;
 import truyen.model.User;
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.currentUser;
+import static truyen.util.ServletHelper.trimOrEmpty;
 
 /** Người dùng gửi báo cáo vi phạm. */
 @WebServlet("/report")
@@ -29,7 +32,7 @@ public class ReportServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        User me = (User) request.getSession().getAttribute("currentUser");
+        User me = currentUser(request);
         if (me == null) {
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
@@ -38,7 +41,7 @@ public class ReportServlet extends HttpServlet {
         String type   = request.getParameter("targetType");
         int targetId  = parseIntOr(request.getParameter("targetId"), 0);
         int storyId   = parseIntOr(request.getParameter("storyId"), targetId);
-        String reason = trim(request.getParameter("reason"));
+        String reason = trimOrEmpty(request.getParameter("reason"));
 
         if (reason.isEmpty()) {
             reason = "Không nêu lý do";
@@ -67,17 +70,5 @@ public class ReportServlet extends HttpServlet {
 
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + storyId);
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
     }
 }

@@ -29,7 +29,10 @@
            value="<c:out value='${username}'/>" autofocus required>
 
     <label for="password">Mật khẩu</label>
-    <input type="password" id="password" name="password" required>
+    <div class="password-wrap">
+        <input type="password" id="password" name="password" required>
+        <button type="button" class="pwd-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="togglePassword('password', this)" tabindex="-1">👁️</button>
+    </div>
 
     <button type="submit" class="btn btn-primary">Đăng nhập</button>
 </form>

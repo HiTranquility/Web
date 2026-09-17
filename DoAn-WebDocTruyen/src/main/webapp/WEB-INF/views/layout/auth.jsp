@@ -49,6 +49,17 @@
 
 <script>
     window.APP_CONTEXT = '${pageContext.request.contextPath}';
+    function togglePassword(inputId, btn) {
+        var input = document.getElementById(inputId);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            btn.textContent = '👁️';
+        }
+    }
 </script>
 <!-- Firebase App & Auth SDK (v10 compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>

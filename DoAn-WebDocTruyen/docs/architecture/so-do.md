@@ -382,7 +382,7 @@ flowchart TD
 
 `${dem}` không ghi rõ scope → EL tìm từ **trong ra ngoài**: page → request → session → application, gặp trước lấy trước. Đó là lý do người đăng nhập đặt tên `currentUser` chứ không phải `user` — tránh đụng với `user` ai đó lỡ đặt ở request.
 
-Giải thích đầy đủ: [`giai-thich.md`](giai-thich.md) khu 1.
+Giải thích đầy đủ: [`giai-thich.md`](../guides/giai-thich.md) khu 1.
 
 ---
 

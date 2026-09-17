@@ -7,7 +7,7 @@
   Đây là "layout": nó dựng khung HTML đầy đủ, rồi CHÈN nội dung trang vào giữa.
 
   CÁCH DÙNG — servlet gọi như sau:
-      request.setAttribute("contentPage", "/WEB-INF/views/story/home.jsp");
+      request.setAttribute("contentPage", "/WEB-INF/views/common/home.jsp");
       forward("/WEB-INF/views/layout/main.jsp");
 
   Trang nội dung (home.jsp, list.jsp...) chỉ là MẢNH: không có <html>, không có

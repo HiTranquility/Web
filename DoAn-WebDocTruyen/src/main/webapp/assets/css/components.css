@@ -79,13 +79,14 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
     overflow: hidden;
     background: var(--ink-850);
     border: 1px solid var(--ink-700);
-    transition: transform .22s var(--ease), border-color .22s var(--ease),
-                box-shadow .22s var(--ease);
+    transition: transform .28s var(--ease), border-color .28s var(--ease),
+                box-shadow .28s var(--ease);
+    position: relative;
 }
 .story-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--ember-deep);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-5px);
+    border-color: rgba(240, 134, 58, 0.45);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 20px rgba(240, 134, 58, 0.1);
 }
 
 .story-cover {
@@ -96,9 +97,9 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 }
 .story-cover img {
     width: 100%; height: 100%; object-fit: cover; display: block;
-    transition: transform .4s var(--ease);
+    transition: transform .45s var(--ease);
 }
-.story-card:hover .story-cover img { transform: scale(1.05); }
+.story-card:hover .story-cover img { transform: scale(1.06); }
 
 /* Không có ảnh bìa thì lấy chữ cái đầu làm bìa — đỡ hơn hẳn một ô xám trống */
 .cover-fallback {
@@ -111,12 +112,33 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 
 .badge {
     position: absolute; top: 10px; right: 10px;
-    padding: 3px 9px; border-radius: 99px;
+    padding: 3px 10px; border-radius: 99px;
     font-size: .7rem; font-weight: 700; letter-spacing: .02em;
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+    white-space: nowrap;
 }
-.badge-done  { background: rgba(43,183,137,.9);  color: #04241a; }
-.badge-going { background: rgba(240,134,58,.9);  color: #1a0f06; }
+.badge-done  { background: rgba(43,183,137,.92);  color: #04241a; }
+.badge-going { background: rgba(240,134,58,.92);  color: #1a0f06; }
+
+/* Trạng thái ở góc trên bên trái của thẻ truyện */
+.badge-status {
+    top: 10px; left: 10px; right: auto;
+}
+
+/* Cụm nhãn nổi bật xếp dọc ở góc trên bên phải */
+.story-badges {
+    position: absolute; top: 10px; right: 10px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    z-index: 2;
+    pointer-events: none;
+}
+.story-badges .badge {
+    position: static;
+    top: auto; right: auto; bottom: auto; left: auto;
+    margin: 0;
+}
 
 .story-body { padding: 13px 15px 15px; display: flex; flex-direction: column;
               gap: 7px; flex: 1; }
@@ -1202,11 +1224,8 @@ html[data-site-theme="light"] .bell-badge {
 }
 .share-btn:hover { border-color: var(--ember-deep); color: var(--ember); }
 
-/* ---- Nhãn Hot trên thẻ truyện ----
-   Nằm dưới nhãn tình trạng, cùng góc phải. top tính bằng chiều cao nhãn kia
-   cộng khoảng hở. */
+/* ---- Nhãn Hot trên thẻ truyện ---- */
 .badge-hot {
-    top: 42px;
     background: linear-gradient(135deg, #ff6b35, #f7411d);
     color: #fff;
 }
@@ -1227,11 +1246,8 @@ html[data-site-theme="light"] .bell-badge {
     .filter-bar { gap: 14px; }
 }
 
-/* ---- Nhãn "Mới" trên thẻ truyện ----
-   Xếp chồng dọc cùng cột với hai nhãn kia. Truyện vừa Mới vừa Hot thì nhãn
-   này rơi xuống hàng thứ ba — hiếm, nhưng phải có chỗ chứ không đè lên nhau. */
+/* ---- Nhãn "Mới" trên thẻ truyện ---- */
 .badge-new {
-    top: 76px;
     background: linear-gradient(135deg, var(--violet), #6d5ce0);
     color: #fff;
 }
@@ -1731,10 +1747,16 @@ input[type=file]:hover { border-color: var(--ember-deep); }
 }
 .featured-badge {
     position: absolute;
-    bottom: 10px;
-    left: 10px;
+    top: auto !important;
+    right: auto !important;
+    bottom: 12px !important;
+    left: 12px !important;
     z-index: 2;
-    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    border-radius: 99px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
 .featured-content {
@@ -2203,5 +2225,67 @@ html[data-site-theme="light"] .error-hero-desc {
     color: #64748b;
 }
 
+/* ============================================================================
+   NÂNG CẤP UI: Filter Panel, Chi tiết truyện & Báo cáo
+   ========================================================================= */
+.filter-panel {
+    background: var(--ink-900);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-xl);
+    padding: 20px 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+html[data-site-theme="light"] .filter-panel {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
 
+.report-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: var(--r-sm);
+    border: 1px solid rgba(229, 87, 111, 0.4);
+    background: rgba(229, 87, 111, 0.08);
+    color: #f87171;
+    font-size: .84rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s var(--ease);
+}
+.report-trigger-btn:hover {
+    background: rgba(229, 87, 111, 0.2);
+    border-color: #f87171;
+    color: #ff9da8;
+    transform: translateY(-1px);
+}
+html[data-site-theme="light"] .report-trigger-btn {
+    border-color: #fda4af;
+    background: #fff1f2;
+    color: #e11d48;
+}
 
+.detail-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    margin-bottom: 16px;
+}
+.detail-actions .btn-primary {
+    background: linear-gradient(135deg, var(--ember), var(--ember-lit));
+    box-shadow: 0 4px 14px rgba(240, 134, 58, 0.35);
+    border: none;
+    font-weight: 600;
+}
+.detail-actions .btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(240, 134, 58, 0.5);
+    transform: translateY(-2px);
+}

@@ -78,6 +78,7 @@ html[data-site-theme="light"] {
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 html { scroll-behavior: smooth; }
 
@@ -127,4 +128,26 @@ html[data-site-theme="light"] ::-webkit-scrollbar-track  { background: var(--ink
 html[data-site-theme="light"] ::-webkit-scrollbar-thumb  { background: var(--ink-700);
                              border: 3px solid var(--ink-850); }
 html[data-site-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--ink-600); }
+
+/* Chống trình duyệt ghi đè màu nền sáng chói khi autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--ink-900) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    caret-color: var(--text) !important;
+    border-color: var(--ink-600) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+html[data-site-theme="light"] input:-webkit-autofill,
+html[data-site-theme="light"] input:-webkit-autofill:hover, 
+html[data-site-theme="light"] input:-webkit-autofill:focus, 
+html[data-site-theme="light"] input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--ink-900) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    caret-color: var(--text) !important;
+    border-color: var(--ink-600) !important;
+}
 

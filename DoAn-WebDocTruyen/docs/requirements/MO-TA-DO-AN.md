@@ -91,7 +91,7 @@ kể cả khi tự sửa tham số trên URL.
 | `comments` | Bình luận |
 | `bookmarks` | Đánh dấu truyện và vị trí đọc |
 
-**Sơ đồ ERD** và các sơ đồ luồng xử lý: xem `docs/so-do.md`.
+**Sơ đồ ERD** và các sơ đồ luồng xử lý: xem [`docs/architecture/so-do.md`](../architecture/so-do.md).
 
 ---
 

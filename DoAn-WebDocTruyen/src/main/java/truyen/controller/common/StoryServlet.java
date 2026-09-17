@@ -23,8 +23,12 @@ import truyen.util.AppListener;
 import truyen.model.Story;
 import truyen.model.User;
 import truyen.util.DBConnection;
+import truyen.util.ServletHelper;
 import truyen.util.SlugUtil;
 import truyen.util.UploadUtil;
+
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.trimOrEmpty;
 
 /**
  * CASE 02, 03, 04, 05 — Truyện.
@@ -141,7 +145,7 @@ public class StoryServlet extends HttpServlet {
             request.setAttribute("totalStories", 0);
             request.setAttribute("page", 1);
             request.setAttribute("totalPages", 1);
-            url = "/WEB-INF/views/story/list.jsp";
+            url = "/WEB-INF/views/common/story/list.jsp";
         }
 
         if (url == null) {
@@ -158,7 +162,7 @@ public class StoryServlet extends HttpServlet {
 
     private String list(HttpServletRequest request) throws SQLException {
         String tag = request.getParameter("tag");
-        String keyword = trim(request.getParameter("q"));
+        String keyword = trimOrEmpty(request.getParameter("q"));
         String sort = request.getParameter("sort");
 
         /*
@@ -200,7 +204,7 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("totalStories", total);
         request.setAttribute("pageTitle", "Kho truyện");
         request.setAttribute("activeNav", "browse");
-        return "/WEB-INF/views/story/list.jsp";
+        return "/WEB-INF/views/common/story/list.jsp";
     }
 
     // ---- CASE 04: chi tiết -------------------------------------------------
@@ -221,7 +225,7 @@ public class StoryServlet extends HttpServlet {
          * Trả 404 chứ không phải 403 — cố ý. 403 vô tình xác nhận "truyện này
          * CÓ tồn tại", còn 404 thì không tiết lộ gì cả.
          */
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -301,16 +305,16 @@ public class StoryServlet extends HttpServlet {
 
         request.setAttribute("pageTitle", story.getTitle());
         request.setAttribute("activeNav", "browse");
-        return "/WEB-INF/views/story/detail.jsp";
+        return "/WEB-INF/views/common/story/detail.jsp";
     }
 
     /** Truyện của tôi — gồm cả bản nháp. */
     private String mine(HttpServletRequest request) throws SQLException {
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         request.setAttribute("stories", storyDAO.findByAuthor(me.getId()));
         request.setAttribute("pageTitle", "Truyện của tôi");
         request.setAttribute("mine", true);
-        return "/WEB-INF/views/story/mine.jsp";
+        return "/WEB-INF/views/user/story/mine.jsp";
     }
 
     /**
@@ -322,7 +326,7 @@ public class StoryServlet extends HttpServlet {
      * SQL duy nhất — ghi lại đây để người sau biết chỗ cần sửa.
      */
     private String stats(HttpServletRequest request) throws SQLException {
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         List<Story> stories = storyDAO.findByAuthor(me.getId());
 
         /*
@@ -368,12 +372,12 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("totalSaves", totalSaves);
         request.setAttribute("totalComments", totalComments);
         request.setAttribute("pageTitle", "Thống kê truyện của tôi");
-        return "/WEB-INF/views/story/stats.jsp";
+        return "/WEB-INF/views/user/story/stats.jsp";
     }
 
     /** TRANG 2b — Tim kiem SAU trong noi dung chuong. */
     private String search(HttpServletRequest request) throws SQLException {
-        String keyword = trim(request.getParameter("q"));
+        String keyword = trimOrEmpty(request.getParameter("q"));
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("results", keyword.isEmpty()
@@ -384,13 +388,13 @@ public class StoryServlet extends HttpServlet {
                 ? "Tìm trong nội dung"
                 : "Tìm: " + keyword);
         request.setAttribute("activeNav", "browse");
-        return "/WEB-INF/views/story/search.jsp";
+        return "/WEB-INF/views/common/story/search.jsp";
     }
 
     /** Gợi ý tìm kiếm tức thì (Live Search Autocomplete) trả về JSON. */
     private void suggest(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
-        String keyword = trim(request.getParameter("q"));
+        String keyword = trimOrEmpty(request.getParameter("q"));
         response.setContentType("application/json;charset=UTF-8");
 
         if (keyword.length() < 2) {
@@ -447,7 +451,7 @@ public class StoryServlet extends HttpServlet {
     private String createOrEdit(HttpServletRequest request, HttpServletResponse response,
                                 boolean isCreate) throws SQLException, IOException {
 
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         Story story;
 
         if (isCreate) {
@@ -482,13 +486,13 @@ public class StoryServlet extends HttpServlet {
                     ? java.util.Collections.emptyList()
                     : tagDAO.findByStory(story.getId()));
             request.setAttribute("pageTitle", isCreate ? "Đăng truyện mới" : "Sửa truyện");
-            return "/WEB-INF/views/story/form.jsp";
+            return "/WEB-INF/views/user/story/form.jsp";
         }
 
         // POST = lưu
-        String title = trim(request.getParameter("title"));
-        String description = trim(request.getParameter("description"));
-        String coverUrl = trim(request.getParameter("coverUrl"));
+        String title = trimOrEmpty(request.getParameter("title"));
+        String description = trimOrEmpty(request.getParameter("description"));
+        String coverUrl = trimOrEmpty(request.getParameter("coverUrl"));
 
         String status = request.getParameter("status");
         String progress = request.getParameter("progress");
@@ -532,6 +536,18 @@ public class StoryServlet extends HttpServlet {
             return backToForm(request, story, isCreate,
                     "Tiêu đề không được để trống.");
         }
+        if (title.length() > 200) {
+            return backToForm(request, story, isCreate,
+                    "Tiêu đề truyện tối đa 200 ký tự.");
+        }
+        if (description.length() > 5000) {
+            return backToForm(request, story, isCreate,
+                    "Mô tả truyện tối đa 5000 ký tự.");
+        }
+        if (progress != null && !progress.isEmpty() && !"ONGOING".equals(progress) && !"COMPLETED".equals(progress)) {
+            return backToForm(request, story, isCreate,
+                    "Tiến độ truyện không hợp lệ.");
+        }
 
         story.setSlug(uniqueSlug(title, story.getId()));
 
@@ -561,7 +577,7 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("story", story);
         request.setAttribute("allTags", AppListener.tags(getServletContext()));
         request.setAttribute("pageTitle", isCreate ? "Đăng truyện mới" : "Sửa truyện");
-        return "/WEB-INF/views/story/form.jsp";
+        return "/WEB-INF/views/user/story/form.jsp";
     }
 
     private String delete(HttpServletRequest request, HttpServletResponse response)
@@ -577,7 +593,7 @@ public class StoryServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
-        if (!canEdit(currentUser(request), story)) {
+        if (!canEdit(ServletHelper.currentUser(request), story)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return null;
         }
@@ -612,21 +628,4 @@ public class StoryServlet extends HttpServlet {
                 && (user.getId() == story.getAuthorId() || user.isAdmin());
     }
 
-    private User currentUser(HttpServletRequest request) {
-        return request.getSession(false) == null
-                ? null
-                : (User) request.getSession(false).getAttribute("currentUser");
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;    // ?id=abc không được làm sập trang
-        }
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
-    }
 }

@@ -23,5 +23,7 @@ nbproject/private/
 
 # Hệ điều hành
 Thumbs.db
-Desktop.ini
 *.docx
+
+# ── Private docs (không push lên git) ─────────────────────
+**/docs/_private/

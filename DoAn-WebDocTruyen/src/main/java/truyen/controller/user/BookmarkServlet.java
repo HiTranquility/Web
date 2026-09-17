@@ -9,6 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.util.DBConnection;
+import truyen.util.ServletHelper;
+
+import static truyen.util.ServletHelper.parseIntOr;
 import truyen.dao.BookmarkDAO;
 import truyen.model.User;
 
@@ -62,7 +65,7 @@ public class BookmarkServlet extends HttpServlet {
          * /bookmark?action=list lọt thẳng qua filter, câu trên thành sai. Dữ
          * liệu không lộ đúng nhờ mấy dòng "thừa" này.
          */
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         if (me == null) {
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
@@ -77,8 +80,7 @@ public class BookmarkServlet extends HttpServlet {
             }
         }
 
-        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
-                || "json".equalsIgnoreCase(request.getParameter("format"));
+        boolean isAjax = ServletHelper.isAjax(request);
 
         try {
             switch (action) {
@@ -149,17 +151,4 @@ public class BookmarkServlet extends HttpServlet {
                 + "/story?action=detail&id=" + storyId);
     }
 
-    private User currentUser(HttpServletRequest request) {
-        return request.getSession(false) == null
-                ? null
-                : (User) request.getSession(false).getAttribute("currentUser");
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
 }

@@ -60,7 +60,7 @@ public class RankServlet extends HttpServlet {
 
         request.setAttribute("pageTitle", "Bảng xếp hạng");
         request.setAttribute("activeNav", "rank");
-        request.setAttribute("contentPage", "/WEB-INF/views/story/rank.jsp");
+        request.setAttribute("contentPage", "/WEB-INF/views/common/rank.jsp");
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/main.jsp")
                 .forward(request, response);

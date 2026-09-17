@@ -32,11 +32,11 @@
 </script>
 
 <%-- contextPath: đổi tên lúc deploy vẫn chạy, không cần sửa link --%>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css?v=1.1">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=1.1">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css?v=2.1">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=2.1">
 <c:if test="${not empty layoutCss}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${layoutCss}.css?v=1.1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${layoutCss}.css?v=2.1">
 </c:if>
 <c:if test="${not empty pageCss}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${pageCss}.css?v=1.1">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${pageCss}.css?v=2.1">
 </c:if>

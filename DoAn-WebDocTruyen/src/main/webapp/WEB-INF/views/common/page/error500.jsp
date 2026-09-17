@@ -8,5 +8,5 @@
 <c:set var="pageTitle" value="Có lỗi xảy ra" scope="request"/>
 <c:set var="errType" value="${pageContext.exception['class']}" scope="request"/>
 <c:set var="errMsg" value="${pageContext.exception.message}" scope="request"/>
-<c:set var="contentPage" value="/WEB-INF/views/page/_error500.jsp" scope="request"/>
+<c:set var="contentPage" value="/WEB-INF/views/common/page/_error500.jsp" scope="request"/>
 <jsp:include page="/WEB-INF/views/layout/main.jsp"/>

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.CommentDAO;
+import static truyen.util.ServletHelper.parseIntOr;
 
 /** TRANG 29 — Quản lý bình luận. */
 @WebServlet("/admin/comment")
@@ -77,13 +78,5 @@ public class AdminCommentServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/admin.jsp")
                 .forward(request, response);
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
     }
 }

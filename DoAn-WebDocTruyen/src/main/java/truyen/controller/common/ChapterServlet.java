@@ -10,6 +10,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.util.DBConnection;
+import truyen.util.ServletHelper;
+
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.trimOrEmpty;
 import truyen.dao.BookmarkDAO;
 import truyen.dao.ChapterDAO;
 import truyen.dao.FollowDAO;
@@ -149,8 +153,15 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
+        User me = ServletHelper.currentUser(request);
+
+        // Chương của truyện NHÁP chỉ tác giả và admin được đọc.
+        if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
         /* Tự động ghi lại vị trí đọc cho người đã đăng nhập. */
-        User me = currentUser(request);
         if (me != null) {
             try {
                 bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
@@ -167,7 +178,7 @@ public class ChapterServlet extends HttpServlet {
                 chapterDAO.findNeighbour(story.getId(), chapter.getChapterNo(), +1));
         request.setAttribute("pageTitle",
                 "Chương " + chapter.getChapterNo() + " — " + story.getTitle());
-        return "/WEB-INF/views/chapter/read.jsp";
+        return "/WEB-INF/views/common/chapter/read.jsp";
     }
     /**
      * Tra ve CHI noi dung mot chuong, khong co khung trang.
@@ -209,7 +220,7 @@ public class ChapterServlet extends HttpServlet {
         // Chuong cua truyen NHAP chi tac gia va admin duoc doc.
         // Kiem lai o day chu khong tin rang JS chi goi nhung id hop le —
         // duong dan nay go thang vao thanh dia chi cung goi duoc.
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -229,7 +240,7 @@ public class ChapterServlet extends HttpServlet {
                 chapterDAO.findNeighbour(story.getId(), chapter.getChapterNo(), +1));
 
         getServletContext()
-                .getRequestDispatcher("/WEB-INF/views/chapter/raw.jsp")
+                .getRequestDispatcher("/WEB-INF/views/common/chapter/raw.jsp")
                 .forward(request, response);
         return null;
     }
@@ -263,7 +274,7 @@ public class ChapterServlet extends HttpServlet {
 
         // Truyen nhap: chi tac gia va admin. Kiem lai y het raw() — duong dan
         // nay go thang vao thanh dia chi cung goi duoc.
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -276,7 +287,7 @@ public class ChapterServlet extends HttpServlet {
         request.setAttribute("currentId", parseIntOr(request.getParameter("current"), 0));
 
         getServletContext()
-                .getRequestDispatcher("/WEB-INF/views/chapter/toc.jsp")
+                .getRequestDispatcher("/WEB-INF/views/common/chapter/toc.jsp")
                 .forward(request, response);
         return null;
     }
@@ -287,7 +298,7 @@ public class ChapterServlet extends HttpServlet {
     private String createOrEdit(HttpServletRequest request, HttpServletResponse response,
                                 boolean isCreate) throws SQLException, IOException {
 
-        User me = currentUser(request);
+        User me = ServletHelper.currentUser(request);
         Chapter chapter;
         Story story;
 
@@ -321,10 +332,10 @@ public class ChapterServlet extends HttpServlet {
             request.setAttribute("pageTitle", isCreate ? "Thêm chương" : "Sửa chương");
             request.setAttribute("editorBack",
                     "/story?action=detail&id=" + story.getId());
-            return "/WEB-INF/views/chapter/form.jsp";
+            return "/WEB-INF/views/user/chapter/form.jsp";
         }
 
-        String title = trim(request.getParameter("title"));
+        String title = trimOrEmpty(request.getParameter("title"));
         String content = request.getParameter("content");
         int chapterNo = parseIntOr(request.getParameter("chapterNo"), chapter.getChapterNo());
 
@@ -332,12 +343,22 @@ public class ChapterServlet extends HttpServlet {
         chapter.setContent(content == null ? "" : content);
         chapter.setChapterNo(chapterNo);
 
+        String error = null;
         if (title.isEmpty() || chapter.getContent().trim().isEmpty()) {
-            request.setAttribute("message", "Tiêu đề và nội dung chương không được để trống.");
+            error = "Tiêu đề và nội dung chương không được để trống.";
+        } else if (title.length() > 200) {
+            error = "Tiêu đề chương tối đa 200 ký tự.";
+        } else if (chapterNo <= 0) {
+            error = "Số thứ tự chương phải là số nguyên dương lớn hơn 0.";
+        }
+
+        if (error != null) {
+            request.setAttribute("message", error);
             request.setAttribute("chapter", chapter);
             request.setAttribute("story", story);
+            request.setAttribute("editorBack", "/story?action=detail&id=" + story.getId());
             request.setAttribute("pageTitle", isCreate ? "Thêm chương" : "Sửa chương");
-            return "/WEB-INF/views/chapter/form.jsp";
+            return "/WEB-INF/views/user/chapter/form.jsp";
         }
 
         if (isCreate) {
@@ -369,7 +390,7 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
         Story story = storyDAO.findById(chapter.getStoryId());
-        if (!canEdit(currentUser(request), story)) {
+        if (!canEdit(ServletHelper.currentUser(request), story)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return null;
         }
@@ -385,13 +406,6 @@ public class ChapterServlet extends HttpServlet {
         return user != null && story != null
                 && (user.getId() == story.getAuthorId() || user.isAdmin());
     }
-
-    private User currentUser(HttpServletRequest request) {
-        return request.getSession(false) == null
-                ? null
-                : (User) request.getSession(false).getAttribute("currentUser");
-    }
-
 
     /** Báo cho những người đang theo dõi tác giả và những người đã lưu truyện rằng có chương mới. */
     private void notifyFollowers(Story story, Chapter chapter) {
@@ -411,17 +425,5 @@ public class ChapterServlet extends HttpServlet {
         } catch (SQLException e) {
             log("Không gửi được thông báo chương mới cho truyện " + story.getId(), e);
         }
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
     }
 }

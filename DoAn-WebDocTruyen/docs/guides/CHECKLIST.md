@@ -104,7 +104,7 @@ Với **database sạch** (chạy lại `schema.sql` + `sample_data.sql`):
 ## 6. Tài liệu
 
 - [ ] `README.md` — hướng dẫn cài đặt chạy được với người chưa từng thấy dự án
-- [ ] `docs/cau-truc.md` khớp với thư mục thật
+- [ ] `docs/architecture/cau-truc.md` khớp với thư mục thật
 - [ ] `docs/standards/` — code thật tuân theo, không mâu thuẫn
 - [ ] Có ERD trong `docs/`
 - [ ] Xoá doc nói về thứ chưa làm

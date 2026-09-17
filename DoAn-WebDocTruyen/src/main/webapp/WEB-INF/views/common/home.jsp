@@ -176,7 +176,7 @@
         </div>
         <div class="story-grid">
             <c:forEach var="story" items="${popular}">
-                <%@ include file="/WEB-INF/views/story/_card.jsp" %>
+                <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
             </c:forEach>
         </div>
     </c:if>
@@ -193,7 +193,7 @@
         <c:when test="${not empty latest}">
             <div class="story-grid">
                 <c:forEach var="story" items="${latest}">
-                    <%@ include file="/WEB-INF/views/story/_card.jsp" %>
+                    <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
                 </c:forEach>
             </div>
         </c:when>

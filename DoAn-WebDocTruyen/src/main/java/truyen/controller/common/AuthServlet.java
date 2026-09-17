@@ -17,6 +17,8 @@ import truyen.dao.UserDAO;
 import truyen.model.User;
 import truyen.util.PasswordUtil;
 
+import static truyen.util.ServletHelper.trimOrEmpty;
+
 /** CASE 01 — Đăng ký / Đăng nhập / Đăng xuất. */
 @WebServlet("/auth")
 public class AuthServlet extends HttpServlet {
@@ -108,7 +110,7 @@ public class AuthServlet extends HttpServlet {
             return "/WEB-INF/views/auth/login.jsp";
         }
 
-        String username = trim(request.getParameter("username"));
+        String username = trimOrEmpty(request.getParameter("username"));
         String password = request.getParameter("password");
 
         if (username.isEmpty() || password == null || password.isEmpty()) {
@@ -221,8 +223,8 @@ public class AuthServlet extends HttpServlet {
             return "/WEB-INF/views/auth/register.jsp";
         }
 
-        String username = trim(request.getParameter("username"));
-        String email    = trim(request.getParameter("email"));
+        String username = trimOrEmpty(request.getParameter("username"));
+        String email    = trimOrEmpty(request.getParameter("email"));
         String password = request.getParameter("password");
         String confirm  = request.getParameter("confirm");
         String agree    = request.getParameter("agree");
@@ -315,7 +317,7 @@ public class AuthServlet extends HttpServlet {
 
     /** TRANG 21 — Xin cấp vé đặt lại mật khẩu. */
     private String forgot(HttpServletRequest request) throws SQLException {
-        String email = trim(request.getParameter("email"));
+        String email = trimOrEmpty(request.getParameter("email"));
 
         if (!email.isEmpty()) {
             User u = userDAO.findByEmail(email);
@@ -344,7 +346,7 @@ public class AuthServlet extends HttpServlet {
     private String reset(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
 
-        String token = trim(request.getParameter("token"));
+        String token = trimOrEmpty(request.getParameter("token"));
         int userId = resetDAO.findValidUserId(token);
 
         if (userId == 0) {
@@ -403,10 +405,10 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        String email = trim(request.getParameter("email"));
-        String displayName = trim(request.getParameter("displayName"));
-        String photoUrl = trim(request.getParameter("photoUrl"));
-        String uid = trim(request.getParameter("uid"));
+        String email = trimOrEmpty(request.getParameter("email"));
+        String displayName = trimOrEmpty(request.getParameter("displayName"));
+        String photoUrl = trimOrEmpty(request.getParameter("photoUrl"));
+        String uid = trimOrEmpty(request.getParameter("uid"));
 
         if (email.isEmpty() || !email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
             sendJsonResponse(response, false, "Email tài khoản Google không hợp lệ.", null);
@@ -444,6 +446,17 @@ public class AuthServlet extends HttpServlet {
             userDAO.insert(user);
         } else {
             // Đã có tài khoản
+            /*
+             * BẢO MẬT: Chặn tuyệt đối tài khoản ADMIN đăng nhập nhanh qua Google.
+             * Tránh trường hợp kẻ tấn công biết email của admin và giả mạo đăng nhập
+             * để chiếm quyền hệ thống (Account Takeover). Admin bắt buộc dùng mật khẩu.
+             */
+            if (user.isAdmin()) {
+                sendJsonResponse(response, false,
+                        "Tài khoản Quản trị viên (ADMIN) không được phép đăng nhập qua Google. Vui lòng đăng nhập bằng mật khẩu.", null);
+                return;
+            }
+
             if (user.isBanned()) {
                 String reason = (user.getBanReason() == null || user.getBanReason().isEmpty())
                         ? "" : " Lý do: " + user.getBanReason();
@@ -504,7 +517,4 @@ public class AuthServlet extends HttpServlet {
                 .replace("\r", "\\r");
     }
 
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
-    }
 }

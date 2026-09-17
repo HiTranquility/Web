@@ -9,6 +9,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.util.DBConnection;
+import truyen.util.ServletHelper;
+
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.currentUser;
+import static truyen.util.ServletHelper.trimOrEmpty;
 import truyen.dao.CommentDAO;
 import truyen.model.Comment;
 import truyen.model.User;
@@ -41,7 +46,7 @@ public class CommentServlet extends HttpServlet {
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
 
         if ("like".equals(action)) {
-            User me = currentUser(request);
+            User me = ServletHelper.currentUser(request);
             response.setContentType("application/json;charset=UTF-8");
             if (me == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -98,8 +103,8 @@ public class CommentServlet extends HttpServlet {
      * "/comment?action=add&content=spam" cho người khác bấm nhầm.
      */
     private void add(HttpServletRequest request, int storyId) throws SQLException {
-        User me = currentUser(request);
-        String content = trim(request.getParameter("content"));
+        User me = ServletHelper.currentUser(request);
+        String content = trimOrEmpty(request.getParameter("content"));
 
         // Rỗng thì bỏ qua lặng lẽ — không cần báo lỗi cho một ô trống
         if (me == null || storyId <= 0 || content.isEmpty()) {
@@ -171,21 +176,4 @@ public class CommentServlet extends HttpServlet {
         commentDAO.hide(c.getId());   // XOÁ MỀM — giữ lại làm bằng chứng
     }
 
-    private User currentUser(HttpServletRequest request) {
-        return request.getSession(false) == null
-                ? null
-                : (User) request.getSession(false).getAttribute("currentUser");
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
-    }
 }

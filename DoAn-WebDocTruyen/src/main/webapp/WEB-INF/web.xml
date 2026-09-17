@@ -141,7 +141,7 @@
     -->
     <error-page>
         <error-code>404</error-code>
-        <location>/WEB-INF/views/page/error404.jsp</location>
+        <location>/WEB-INF/views/common/page/error404.jsp</location>
     </error-page>
 
     <!--
@@ -153,11 +153,11 @@
     -->
     <error-page>
         <error-code>403</error-code>
-        <location>/WEB-INF/views/page/error403.jsp</location>
+        <location>/WEB-INF/views/common/page/error403.jsp</location>
     </error-page>
     <error-page>
         <exception-type>java.lang.Throwable</exception-type>
-        <location>/WEB-INF/views/page/error500.jsp</location>
+        <location>/WEB-INF/views/common/page/error500.jsp</location>
     </error-page>
 
 

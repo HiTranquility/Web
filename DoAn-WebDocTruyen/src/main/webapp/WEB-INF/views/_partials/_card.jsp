@@ -30,42 +30,25 @@
         <c:set var="cvInitial" value="${story.initial}"/>
         <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
 
-        <span class="badge ${story.completed ? 'badge-done' : 'badge-going'}">
+        <span class="badge badge-status ${story.completed ? 'badge-done' : 'badge-going'}">
             ${story.completed ? 'Hoàn thành' : 'Đang ra'}
         </span>
 
-        <%--
-          NHÃN "HOT" — ngưỡng đặt cứng 10.000 lượt xem.
+        <div class="story-badges">
+            <%--
+              NHÃN "HOT" — ngưỡng đặt cứng 10.000 lượt xem.
+            --%>
+            <c:if test="${story.viewCount ge 10000}">
+                <span class="badge badge-hot">🔥 Hot</span>
+            </c:if>
 
-          Số này là quy ước, không phải phép tính. Cách "đúng" hơn là so với
-          trung bình của cả kho, nhưng như vậy thì lúc kho mới có ba truyện,
-          truyện nào cũng thành Hot — nhãn mất hết ý nghĩa. Một mốc cố định
-          dễ giải thích và không đổi theo ngày.
-
-          Đặt trong _card.jsp nên năm trang dùng thẻ này đều có nhãn, không
-          phải nhớ chép lại chỗ nào.
-        --%>
-        <c:if test="${story.viewCount ge 10000}">
-            <span class="badge badge-hot">🔥 Hot</span>
-        </c:if>
-
-        <%--
-          NHÃN "MỚI" — truyện đăng trong 14 ngày gần đây.
-
-          isNew() tính trong model chứ không tính ở đây. EL không có phép trừ
-          ngày tháng: so sánh LocalDateTime trong JSP sẽ phải viết một chuỗi
-          biểu thức dài và không ai đọc nổi. Model có sẵn java.time thì để
-          model làm.
-
-          Một truyện có thể vừa Mới vừa Hot — hiếm, nhưng nếu xảy ra thì đó
-          đúng là truyện đáng chú ý nhất, cho hiện cả hai.
-
-          Getter tên isRecent() chứ không phải isNew(): `new` là từ khoá của
-          EL, ${story.new} làm cả trang lỗi 500. Xem ghi chú ở model/Story.java.
-        --%>
-        <c:if test="${story.recent}">
-            <span class="badge badge-new">✨ Mới</span>
-        </c:if>
+            <%--
+              NHÃN "MỚI" — truyện đăng trong 14 ngày gần đây.
+            --%>
+            <c:if test="${story.recent}">
+                <span class="badge badge-new">✨ Mới</span>
+            </c:if>
+        </div>
     </div>
 
     <div class="story-body">

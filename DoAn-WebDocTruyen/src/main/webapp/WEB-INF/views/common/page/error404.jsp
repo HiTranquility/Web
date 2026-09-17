@@ -10,5 +10,5 @@
   Nội dung thật nằm ở _error404.jsp.
 --%>
 <c:set var="pageTitle" value="Không tìm thấy trang" scope="request"/>
-<c:set var="contentPage" value="/WEB-INF/views/page/_error404.jsp" scope="request"/>
+<c:set var="contentPage" value="/WEB-INF/views/common/page/_error404.jsp" scope="request"/>
 <jsp:include page="/WEB-INF/views/layout/main.jsp"/>

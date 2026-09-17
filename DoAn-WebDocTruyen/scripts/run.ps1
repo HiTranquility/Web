@@ -37,7 +37,11 @@ $jars = @(
     @{ path = "javax/servlet/jstl/1.2";                                     file = "jstl-1.2.jar" },
     @{ path = "taglibs/standard/1.1.2";                                     file = "standard-1.1.2.jar" },
     # Driver MySQL
-    @{ path = "com/mysql/mysql-connector-j/8.4.0";                          file = "mysql-connector-j-8.4.0.jar" }
+    @{ path = "com/mysql/mysql-connector-j/8.4.0";                          file = "mysql-connector-j-8.4.0.jar" },
+    # Connection Pool HikariCP & SLF4J
+    @{ path = "com/zaxxer/HikariCP/4.0.3";                                 file = "HikariCP-4.0.3.jar" },
+    @{ path = "org/slf4j/slf4j-api/1.7.36";                                file = "slf4j-api-1.7.36.jar" },
+    @{ path = "org/slf4j/slf4j-simple/1.7.36";                             file = "slf4j-simple-1.7.36.jar" }
 )
 foreach ($jar in $jars) {
     $dest = Join-Path $libs $jar.file

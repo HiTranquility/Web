@@ -20,11 +20,11 @@
 
 <%-- Nơi JavaScript nối thêm chương. Chương đầu server dựng sẵn. --%>
 <div id="chapters">
-    <%@ include file="/WEB-INF/views/chapter/_block.jsp" %>
+    <%@ include file="/WEB-INF/views/common/chapter/_block.jsp" %>
 </div>
 
 <%-- Vòng quay báo đang tải chương sau. Ẩn cho tới khi JS bật lên. --%>
-<div id="loading" class="chapter-loading" hidden>
+<div id="loading" class="chapter-loading" hidden style="display:none">
     <span class="spinner" aria-hidden="true"></span> Đang tải chương tiếp…
 </div>
 
@@ -96,7 +96,7 @@
 </div>
 
 <%-- Hiện khi đã nối tới chương cuối cùng --%>
-<p class="chapter-done" id="chapter-done" hidden>
+<p class="chapter-done" id="chapter-done" hidden style="display:none">
     Hết truyện. Cảm ơn bạn đã đọc tới đây.
 </p>
 

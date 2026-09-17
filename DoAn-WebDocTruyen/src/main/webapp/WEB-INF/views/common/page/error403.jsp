@@ -8,5 +8,5 @@
   nên không ai đặt hộ contentPage. File này tự đặt rồi gọi layout.
 --%>
 <c:set var="pageTitle" value="Không có quyền truy cập" scope="request"/>
-<c:set var="contentPage" value="/WEB-INF/views/page/_error403.jsp" scope="request"/>
+<c:set var="contentPage" value="/WEB-INF/views/common/page/_error403.jsp" scope="request"/>
 <jsp:include page="/WEB-INF/views/layout/main.jsp"/>

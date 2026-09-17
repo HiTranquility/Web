@@ -27,10 +27,16 @@
            value="<c:out value='${email}'/>" required>
 
     <label for="password">Mật khẩu</label>
-    <input type="password" id="password" name="password" minlength="6" required>
+    <div class="password-wrap">
+        <input type="password" id="password" name="password" minlength="6" required>
+        <button type="button" class="pwd-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="togglePassword('password', this)" tabindex="-1">👁️</button>
+    </div>
 
     <label for="confirm">Nhập lại mật khẩu</label>
-    <input type="password" id="confirm" name="confirm" minlength="6" required>
+    <div class="password-wrap">
+        <input type="password" id="confirm" name="confirm" minlength="6" required>
+        <button type="button" class="pwd-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="togglePassword('confirm', this)" tabindex="-1">👁️</button>
+    </div>
 
     <%--
       Mục tiêu đồ án yêu cầu có "điều dẫn sử dụng và luật cho người dùng".

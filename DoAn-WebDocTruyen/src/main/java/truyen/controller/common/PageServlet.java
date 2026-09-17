@@ -31,7 +31,7 @@ public class PageServlet extends HttpServlet {
         request.setAttribute("pageTitle",
                 "rules".equals(name) ? "Nội quy cộng đồng" : "Hướng dẫn sử dụng");
         request.setAttribute("activeNav", "rules".equals(name) ? "rules" : null);
-        request.setAttribute("contentPage", "/WEB-INF/views/page/" + name + ".jsp");
+        request.setAttribute("contentPage", "/WEB-INF/views/common/page/" + name + ".jsp");
 
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/main.jsp")

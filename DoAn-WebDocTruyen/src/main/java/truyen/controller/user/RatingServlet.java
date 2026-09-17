@@ -9,17 +9,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.RatingDAO;
+import truyen.dao.StoryDAO;
+import truyen.model.Story;
 import truyen.model.User;
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.currentUser;
 
 /** Chấm sao truyện. */
 @WebServlet("/rating")
 public class RatingServlet extends HttpServlet {
 
     private RatingDAO ratingDAO;
+    private StoryDAO storyDAO;
 
     @Override
     public void init() throws ServletException {
         ratingDAO = new RatingDAO();
+        storyDAO = new StoryDAO();
     }
 
     @Override
@@ -28,7 +34,7 @@ public class RatingServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        User me = (User) request.getSession().getAttribute("currentUser");
+        User me = currentUser(request);
         if (me == null) {
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
@@ -37,31 +43,22 @@ public class RatingServlet extends HttpServlet {
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
         int score   = parseIntOr(request.getParameter("score"), 0);
 
-        try {
-            ratingDAO.rate(me.getId(), storyId, score);
-        } catch (SQLException e) {
-            log("RatingServlet: không chấm được, storyId=" + storyId, e);
-            // Không dựng trang lỗi cho việc này. Người dùng quay lại trang
-            // truyện và thấy sao chưa đổi là đủ hiểu.
+        if (score >= 1 && score <= 5 && storyId > 0) {
+            try {
+                Story story = storyDAO.findById(storyId);
+                // Chặn tác giả tự chấm điểm truyện của chính mình
+                if (story != null && story.getAuthorId() != me.getId()) {
+                    ratingDAO.rate(me.getId(), storyId, score);
+                }
+            } catch (SQLException e) {
+                log("RatingServlet: không chấm được, storyId=" + storyId, e);
+            }
         }
 
         /*
          * Redirect sau POST (mẫu Post/Redirect/Get).
-         *
-         * Nếu forward thẳng tới JSP, thanh địa chỉ vẫn là /rating với method
-         * POST. Người dùng bấm F5 là trình duyệt hỏi "gửi lại biểu mẫu?" và
-         * chấm thêm một lần nữa. Redirect biến trang sau đó thành một GET
-         * bình thường, F5 bao nhiêu lần cũng vô hại.
          */
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + storyId + "#rating");
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
     }
 }

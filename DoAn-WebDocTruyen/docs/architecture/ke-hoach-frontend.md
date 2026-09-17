@@ -6,7 +6,7 @@ Tài liệu này trả lời ba câu:
 3. **Trang nào dùng layout nào, phục vụ chức năng nào?**
 
 Kế hoạch database ở tài liệu riêng: [`ke-hoach-database.md`](ke-hoach-database.md).
-Danh sách chức năng gốc: [`DANG-KY-DE-TAI.md`](DANG-KY-DE-TAI.md).
+Danh sách chức năng gốc: [`DANG-KY-DE-TAI.md`](../requirements/DANG-KY-DE-TAI.md).
 
 ---
 

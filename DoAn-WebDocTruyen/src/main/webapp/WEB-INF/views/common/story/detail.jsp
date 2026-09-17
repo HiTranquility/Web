@@ -153,8 +153,8 @@
                  chuyển trang — bắt đổi trang để tố cáo là cách chắc chắn
                  khiến không ai buồn báo cáo. --%>
             <c:if test="${not empty currentUser}">
-                <details class="report-box">
-                    <summary class="share-btn">⚠ Báo cáo</summary>
+                <details class="report-box" style="margin-left:auto">
+                    <summary class="report-trigger-btn">🚩 Báo cáo vi phạm</summary>
                     <form method="post" action="${pageContext.request.contextPath}/report">
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="targetType" value="STORY">
@@ -357,7 +357,7 @@
 
     <div class="story-grid">
         <c:forEach var="story" items="${similar}">
-            <%@ include file="/WEB-INF/views/story/_card.jsp" %>
+            <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
         </c:forEach>
     </div>
 </c:if>

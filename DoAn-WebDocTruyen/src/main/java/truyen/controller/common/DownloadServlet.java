@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.util.DBConnection;
+
+import static truyen.util.ServletHelper.parseIntOr;
 import truyen.dao.ChapterDAO;
 import truyen.dao.StoryDAO;
 import truyen.model.Chapter;
@@ -125,11 +127,4 @@ public class DownloadServlet extends HttpServlet {
         return sb.toString();
     }
 
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
 }

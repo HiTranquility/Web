@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.FollowDAO;
 import truyen.model.Follow;
 import truyen.model.User;
+import truyen.util.ServletHelper;
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.currentUser;
 
 /** TRANG 17 — Theo dõi tác giả. */
 @WebServlet("/follow")
@@ -29,7 +32,7 @@ public class FollowServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        User me = (User) request.getSession().getAttribute("currentUser");
+        User me = currentUser(request);
         if (me == null) {
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
@@ -57,13 +60,31 @@ public class FollowServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        User me = (User) request.getSession().getAttribute("currentUser");
+        User me = currentUser(request);
+        boolean isAjax = ServletHelper.isAjax(request);
+
         if (me == null) {
+            if (isAjax) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"success\":false,\"message\":\"Vui lòng đăng nhập để thực hiện.\"}");
+                return;
+            }
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
         }
 
         int authorId = parseIntOr(request.getParameter("authorId"), 0);
+        if (authorId <= 0 || authorId == me.getId()) {
+            if (isAjax) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"success\":false,\"message\":\"Không thể tự theo dõi chính mình.\"}");
+                return;
+            }
+            response.sendRedirect(request.getContextPath() + "/user?action=profile&id=" + authorId);
+            return;
+        }
+
         boolean unfollow = "unfollow".equals(request.getParameter("do"));
 
         try {
@@ -74,10 +95,13 @@ public class FollowServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log("FollowServlet: không đổi được trạng thái theo dõi", e);
+            if (isAjax) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"success\":false,\"message\":\"Lỗi hệ thống khi cập nhật theo dõi.\"}");
+                return;
+            }
         }
 
-        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
-                || "json".equalsIgnoreCase(request.getParameter("format"));
         if (isAjax) {
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"success\":true,\"following\":" + (!unfollow)
@@ -97,14 +121,6 @@ public class FollowServlet extends HttpServlet {
         } else {
             response.sendRedirect(request.getContextPath()
                     + "/user?action=profile&id=" + authorId);
-        }
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
         }
     }
 }

@@ -64,7 +64,12 @@ public class AuthFilter implements Filter {
             case "/user":
                 return new String[] { "profile" };
 
-            // /comment, /bookmark, /history, /follow, /notification, /report:
+            // "like" là thao tác AJAX — CommentServlet tự trả JSON needLogin nếu khách chưa đăng nhập.
+            // Để qua filter để fetch() không bị 302 redirect về trang HTML gây lỗi cú pháp JSON ở client.
+            case "/comment":
+                return new String[] { "like" };
+
+            // /bookmark, /history, /follow, /notification, /report:
             // không có action nào công khai cho khách.
             default:
                 return new String[0];

@@ -1,7 +1,7 @@
 # 🎨 Quy ước View — JSP / EL / Scope / CSS
 
 Áp dụng cho `src/main/webapp/`.
-Cấu trúc thư mục xem [`../cau-truc.md`](../cau-truc.md).
+Cấu trúc thư mục xem [`../architecture/cau-truc.md`](../architecture/cau-truc.md).
 
 ---
 
@@ -179,7 +179,7 @@ Câu 5 quan trọng nhất: mặc định là `main`, **không phải** "tạo l
 Servlet dùng layout:
 
 ```java
-request.setAttribute("contentPage", "/WEB-INF/views/story/list.jsp");
+request.setAttribute("contentPage", "/WEB-INF/views/common/story/list.jsp");
 getServletContext()
     .getRequestDispatcher("/WEB-INF/views/layout/main.jsp")
     .forward(request, response);

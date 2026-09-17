@@ -53,6 +53,10 @@
             <div class="panel panel-ok"><c:out value="${flash}"/></div>
             <c:remove var="flash" scope="session"/>
         </c:if>
+        <c:if test="${not empty flashWarn}">
+            <div class="panel panel-warn"><c:out value="${flashWarn}"/></div>
+            <c:remove var="flashWarn" scope="session"/>
+        </c:if>
 
         <c:if test="${not empty message}">
             <div class="panel panel-warn"><c:out value="${message}"/></div>

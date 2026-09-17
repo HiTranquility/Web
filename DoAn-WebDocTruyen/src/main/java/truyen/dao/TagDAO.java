@@ -217,6 +217,21 @@ public class TagDAO {
         }
     }
 
+    /** Kiểm tra trùng tên thể loại trước khi thêm/sửa. exceptId = 0 khi thêm mới. */
+    public boolean nameExists(String name, int exceptId) throws SQLException {
+        if (!DBConnection.isReady() || name == null) return false;
+
+        String sql = "SELECT 1 FROM tags WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND id <> ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setInt(2, exceptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     /** Gán lại toàn bộ thể loại cho một truyện: xoá hết rồi thêm mới. */
     public void setTagsForStory(int storyId, String[] tagIds) throws SQLException {
         try (Connection con = DBConnection.get()) {

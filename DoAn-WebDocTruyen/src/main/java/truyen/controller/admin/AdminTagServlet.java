@@ -12,6 +12,8 @@ import truyen.dao.TagDAO;
 import truyen.model.Tag;
 import truyen.util.AppListener;
 import truyen.util.SlugUtil;
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.trimOrEmpty;
 
 /**
  * TRANG 28 — Quản lý thể loại.
@@ -73,6 +75,21 @@ public class AdminTagServlet extends HttpServlet {
                 AppListener.refresh(getServletContext());
             }
 
+            // Post-Redirect-Get — F5 không gửi lại request
+            if ("POST".equalsIgnoreCase(request.getMethod()) && action != null) {
+                if (request.getAttribute("message") != null) {
+                    request.getSession().setAttribute("flashWarn", request.getAttribute("message"));
+                } else if ("create".equals(action)) {
+                    request.getSession().setAttribute("flash", "Đã thêm thể loại mới.");
+                } else if ("update".equals(action)) {
+                    request.getSession().setAttribute("flash", "Đã cập nhật thể loại.");
+                } else if ("delete".equals(action)) {
+                    request.getSession().setAttribute("flash", "Đã xoá thể loại.");
+                }
+                response.sendRedirect(request.getContextPath() + "/admin/tag");
+                return;
+            }
+
             // Trang nay doc THANG tu CSDL, khong qua cache — admin vua sua
             // xong phai thay ngay ket qua that, khong phai ban da nap.
             request.setAttribute("tags", tagDAO.findAllWithCount());
@@ -93,9 +110,19 @@ public class AdminTagServlet extends HttpServlet {
 
     /** Thêm mới hoặc đổi tên. */
     private void save(HttpServletRequest request, boolean isUpdate) throws SQLException {
-        String name = trim(request.getParameter("name"));
+        String name = trimOrEmpty(request.getParameter("name"));
         if (name.isEmpty()) {
             request.setAttribute("message", "Tên thể loại không được để trống.");
+            return;
+        }
+        if (name.length() > 50) {
+            request.setAttribute("message", "Tên thể loại tối đa 50 ký tự.");
+            return;
+        }
+
+        int id = isUpdate ? parseIntOr(request.getParameter("id"), 0) : 0;
+        if (tagDAO.nameExists(name, id)) {
+            request.setAttribute("message", "Tên thể loại \"" + name + "\" đã tồn tại.");
             return;
         }
 
@@ -103,7 +130,7 @@ public class AdminTagServlet extends HttpServlet {
         tag.setName(name);
 
         if (isUpdate) {
-            tag.setId(parseIntOr(request.getParameter("id"), 0));
+            tag.setId(id);
             tagDAO.update(tag);          // TagDAO.update chỉ sửa cột name
         } else {
             String slug = SlugUtil.toSlug(name);
@@ -134,17 +161,5 @@ public class AdminTagServlet extends HttpServlet {
             }
         }
         tagDAO.delete(id);
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
     }
 }

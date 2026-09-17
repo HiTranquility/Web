@@ -98,7 +98,7 @@ public class HomeServlet extends HttpServlet {
     private void forward(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        request.setAttribute("contentPage", "/WEB-INF/views/story/home.jsp");
+        request.setAttribute("contentPage", "/WEB-INF/views/common/home.jsp");
 
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/main.jsp")

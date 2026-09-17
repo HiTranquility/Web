@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.UserDAO;
 import truyen.model.User;
+import static truyen.util.ServletHelper.parseIntOr;
+import static truyen.util.ServletHelper.currentUser;
+import static truyen.util.ServletHelper.trimOrEmpty;
 
 /** TRANG 27 — Quản trị tài khoản: khoá, mở khoá, đổi vai trò. */
 @WebServlet("/admin/user")
@@ -52,7 +55,7 @@ public class AdminUserServlet extends HttpServlet {
         try {
             if ("ban".equals(action) || "unban".equals(action)) {
                 int id = parseIntOr(request.getParameter("id"), 0);
-                User me = (User) request.getSession().getAttribute("currentUser");
+                User me = currentUser(request);
 
                 /*
                  * KHÔNG cho admin tự ban chính mình.
@@ -62,17 +65,19 @@ public class AdminUserServlet extends HttpServlet {
                  * ban — phải vào tận MySQL sửa tay mới cứu được.
                  */
                 if (me != null && me.getId() == id) {
-                    request.setAttribute("message", "Bạn không thể tự khoá tài khoản của mình.");
+                    request.getSession().setAttribute("flashWarn", "Bạn không thể tự khoá tài khoản của mình.");
                 } else if ("ban".equals(action)) {
-                    String reason = trim(request.getParameter("reason"));
+                    String reason = trimOrEmpty(request.getParameter("reason"));
                     userDAO.updateStatus(id, "BANNED",
                             reason.isEmpty() ? "Vi phạm nội quy cộng đồng" : reason);
+                    request.getSession().setAttribute("flash", "Đã khoá tài khoản.");
                 } else {
                     userDAO.updateStatus(id, "ACTIVE", null);
+                    request.getSession().setAttribute("flash", "Đã mở khoá tài khoản.");
                 }
             } else if ("role".equals(action)) {
                 int id = parseIntOr(request.getParameter("id"), 0);
-                User me = (User) request.getSession().getAttribute("currentUser");
+                User me = currentUser(request);
 
                 /*
                  * KHÔNG cho admin tự hạ quyền chính mình — cùng lý do với ban:
@@ -80,20 +85,31 @@ public class AdminUserServlet extends HttpServlet {
                  * trong. Muốn rời ghế thì nhờ một admin khác hạ giúp.
                  */
                 if (me != null && me.getId() == id) {
-                    request.setAttribute("message",
+                    request.getSession().setAttribute("flashWarn",
                             "Bạn không thể tự đổi vai trò của chính mình.");
                 } else {
                     String role = "ADMIN".equals(request.getParameter("role"))
                                 ? "ADMIN" : "USER";
                     userDAO.updateRole(id, role);
+                    request.getSession().setAttribute("flash", "Đã đổi vai trò tài khoản.");
                 }
+            }
 
-                /*
-                 * Ban xong thì TRUYỆN CỦA HỌ VẪN CÒN trên web — quyết định
-                 * thiết kế, không phải thiếu sót. Ẩn luôn truyện thì độc giả
-                 * đang đọc dở mất trắng.
-                 * Muốn gỡ truyện thì admin vào /admin/story gỡ riêng.
-                 */
+            // Post-Redirect-Get — F5 không gửi lại request
+            if ("POST".equalsIgnoreCase(request.getMethod()) && action != null) {
+                String q = trimOrEmpty(request.getParameter("q"));
+                String status = trimOrEmpty(request.getParameter("status"));
+                StringBuilder qs = new StringBuilder();
+                if (!q.isEmpty()) {
+                    qs.append("q=").append(java.net.URLEncoder.encode(q, "UTF-8"));
+                }
+                if (!status.isEmpty()) {
+                    if (qs.length() > 0) qs.append("&");
+                    qs.append("status=").append(java.net.URLEncoder.encode(status, "UTF-8"));
+                }
+                response.sendRedirect(request.getContextPath() + "/admin/user"
+                        + (qs.length() > 0 ? "?" + qs : ""));
+                return;
             }
 
             /*
@@ -102,8 +118,8 @@ public class AdminUserServlet extends HttpServlet {
              * bảng nhảy về toàn bộ danh sách — admin phải gõ lại từ đầu cho
              * mỗi người muốn xử lý.
              */
-            String q = trim(request.getParameter("q"));
-            String status = trim(request.getParameter("status"));
+            String q = trimOrEmpty(request.getParameter("q"));
+            String status = trimOrEmpty(request.getParameter("status"));
             request.setAttribute("q", q);
             request.setAttribute("statusFilter", status);
             request.setAttribute("users", userDAO.searchWithStoryCount(q, status));
@@ -120,17 +136,5 @@ public class AdminUserServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/admin.jsp")
                 .forward(request, response);
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
-    }
-
-    private String trim(String s) {
-        return s == null ? "" : s.trim();
     }
 }

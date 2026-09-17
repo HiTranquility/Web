@@ -1,7 +1,7 @@
 # 🧱 Quy ước code Java — Servlet / DAO / Model
 
 Áp dụng cho toàn bộ `src/main/java/truyen/`.
-Cấu trúc thư mục xem [`../cau-truc.md`](../cau-truc.md).
+Cấu trúc thư mục xem [`../architecture/cau-truc.md`](../architecture/cau-truc.md).
 
 ---
 

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.StoryDAO;
+import static truyen.util.ServletHelper.parseIntOr;
 
 /** CASE 10 — Quản trị truyện: gỡ và khôi phục. */
 @WebServlet("/admin/story")
@@ -75,13 +76,5 @@ public class AdminStoryServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/admin.jsp")
                 .forward(request, response);
-    }
-
-    private int parseIntOr(String s, int fallback) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException | NullPointerException e) {
-            return fallback;
-        }
     }
 }
