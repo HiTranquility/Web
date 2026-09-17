@@ -20,6 +20,7 @@ docs/
 │   └── ke-hoach-database.md          13 bảng CSDL · chuẩn hoá + phi chuẩn hoá
 │
 ├── guides/                           ← HƯỚNG DẪN & GIẢI THÍCH CƠ CHẾ
+│   ├── huong-dan-code.md             HƯỚNG DẪN CODE BẰNG TAY — luồng CSDL → DAO → Servlet → JSP từ A-Z
 │   ├── giai-thich.md                 VÌ SAO nó chạy như vậy — 7 khu, giảng từ đầu
 │   └── CHECKLIST.md                  danh sách tick kiểm tra trước khi nộp bài
 │
@@ -46,6 +47,10 @@ docs/
 
 | Câu hỏi trong đầu | Mở file |
 |-------------------|---------|
+| **"Tự tay code một tính năng từ DAO tới JSP"** | **[guides/huong-dan-code.md](guides/huong-dan-code.md)** |
+| "Cách dùng getParameter, getSession, setAttribute?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §2 |
+| "Cách viết try-catch, mở kết nối DAO?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §1 |
+| "Cách lặp forEach, if/choose, in c:out trong JSP?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §3 |
 | **"Nộp bản đăng ký đề tài"** | **[requirements/DANG-KY-DE-TAI.md](requirements/DANG-KY-DE-TAI.md)** |
 | **"Gửi cô bản mô tả đồ án"** | **[requirements/MO-TA-DO-AN.md](requirements/MO-TA-DO-AN.md)** |
 | "File này bỏ vào thư mục nào?" | [architecture/cau-truc.md](architecture/cau-truc.md) |
