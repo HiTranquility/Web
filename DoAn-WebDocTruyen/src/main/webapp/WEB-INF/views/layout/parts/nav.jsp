@@ -26,34 +26,6 @@
                    class="${activeNav eq 'rank' ? 'is-active' : ''}">Xếp hạng</a>
                 <a href="${pageContext.request.contextPath}/page?name=rules"
                    class="${activeNav eq 'rules' ? 'is-active' : ''}">Nội quy</a>
-
-                <c:if test="${not empty currentUser}">
-                    <div class="nav-dropdown" id="nav-bookshelf-dropdown">
-                        <button type="button" class="nav-dropdown-btn ${(activeNav eq 'mine' or activeNav eq 'bookmark' or activeNav eq 'history' or activeNav eq 'follow') ? 'is-active' : ''}" id="nav-bookshelf-btn" aria-haspopup="true">
-                            <span>Tủ sách</span>
-                            <span class="dropdown-caret">▾</span>
-                        </button>
-                        <div class="dropdown-panel nav-dropdown-panel" id="nav-bookshelf-panel">
-                            <a href="${pageContext.request.contextPath}/bookmark" class="${activeNav eq 'bookmark' ? 'is-active' : ''}">
-                                <span class="dropdown-item-icon">🔖</span>
-                                <span>Truyện đã lưu</span>
-                            </a>
-                            <a href="${pageContext.request.contextPath}/history" class="${activeNav eq 'history' ? 'is-active' : ''}">
-                                <span class="dropdown-item-icon">🕒</span>
-                                <span>Lịch sử đọc</span>
-                            </a>
-                            <a href="${pageContext.request.contextPath}/follow?action=list" class="${activeNav eq 'follow' ? 'is-active' : ''}">
-                                <span class="dropdown-item-icon">💖</span>
-                                <span>Đang theo dõi</span>
-                            </a>
-                            <div class="dropdown-sep"></div>
-                            <a href="${pageContext.request.contextPath}/story?action=mine" class="${activeNav eq 'mine' ? 'is-active' : ''}">
-                                <span class="dropdown-item-icon">✍️</span>
-                                <span>Truyện của tôi</span>
-                            </a>
-                        </div>
-                    </div>
-                </c:if>
             </nav>
         </div>
 
@@ -89,38 +61,78 @@
                     <%-- Menu Người Dùng Thả Xuống (User Dropdown Menu) --%>
                     <div class="user-menu" id="user-menu-wrap">
                         <button type="button" class="user-chip" id="user-chip-btn" aria-haspopup="true" aria-expanded="false" title="<c:out value='${currentUser.name}'/>">
-                            <span class="user-avatar">${currentUser.initial}</span>
+                            <c:set var="avUrl" value="${currentUser.avatarUrl}"/>
+                            <c:set var="avAlt" value="${currentUser.name}"/>
+                            <c:set var="avInitial" value="${currentUser.initial}"/>
+                            <c:set var="avClass" value="user-avatar"/>
+                            <%@ include file="/WEB-INF/views/_partials/_avatar.jsp" %>
                             <span class="user-name"><c:out value="${currentUser.name}"/></span>
                             <span class="dropdown-caret">▾</span>
                         </button>
                         <div class="dropdown-panel user-dropdown-panel" id="user-dropdown-panel">
                             <div class="user-dropdown-header">
-                                <span class="user-avatar-lg">${currentUser.initial}</span>
+                                <c:set var="avUrl" value="${currentUser.avatarUrl}"/>
+                                <c:set var="avAlt" value="${currentUser.name}"/>
+                                <c:set var="avInitial" value="${currentUser.initial}"/>
+                                <c:set var="avClass" value="user-avatar-lg"/>
+                                <%@ include file="/WEB-INF/views/_partials/_avatar.jsp" %>
                                 <div class="user-info-text">
                                     <div class="user-fullname"><c:out value="${currentUser.name}"/></div>
                                     <div class="user-username">@<c:out value="${currentUser.username}"/></div>
                                 </div>
                             </div>
                             <div class="dropdown-sep"></div>
-                            <a href="${pageContext.request.contextPath}/user?action=me" class="dropdown-item">
+
+                            <%-- Mục 1: Tủ sách & Đọc truyện --%>
+                            <div class="dropdown-section-title">Tủ sách &amp; Đọc truyện</div>
+                            <a href="${pageContext.request.contextPath}/bookmark" class="dropdown-item ${activeNav eq 'bookmark' ? 'is-active' : ''}">
+                                <span class="dropdown-item-icon">🔖</span>
+                                <span>Truyện đã lưu</span>
+                            </a>
+                            <a href="${pageContext.request.contextPath}/history" class="dropdown-item ${activeNav eq 'history' ? 'is-active' : ''}">
+                                <span class="dropdown-item-icon">🕒</span>
+                                <span>Lịch sử đọc</span>
+                            </a>
+                            <a href="${pageContext.request.contextPath}/follow?action=list" class="dropdown-item ${activeNav eq 'follow' ? 'is-active' : ''}">
+                                <span class="dropdown-item-icon">💖</span>
+                                <span>Đang theo dõi</span>
+                            </a>
+
+                            <div class="dropdown-sep"></div>
+
+                            <%-- Mục 2: Sáng tác & Quản lý truyện --%>
+                            <div class="dropdown-section-title">Khu vực Tác giả</div>
+                            <a href="${pageContext.request.contextPath}/story?action=mine" class="dropdown-item ${activeNav eq 'mine' ? 'is-active' : ''}">
+                                <span class="dropdown-item-icon">✍️</span>
+                                <span>Truyện của tôi</span>
+                            </a>
+                            <a href="${pageContext.request.contextPath}/story?action=create" class="dropdown-item">
+                                <span class="dropdown-item-icon">➕</span>
+                                <span>Đăng truyện mới</span>
+                            </a>
+
+                            <div class="dropdown-sep"></div>
+
+                            <%-- Mục 3: Tài khoản --%>
+                            <div class="dropdown-section-title">Tài khoản</div>
+                            <a href="${pageContext.request.contextPath}/user?action=me" class="dropdown-item ${activeNav eq 'me' ? 'is-active' : ''}">
                                 <span class="dropdown-item-icon">👤</span>
                                 <span>Hồ sơ cá nhân</span>
                             </a>
-                            <a href="${pageContext.request.contextPath}/bookmark" class="dropdown-item">
-                                <span class="dropdown-item-icon">🔖</span>
-                                <span>Tủ sách của tôi</span>
+                            <a href="${pageContext.request.contextPath}/user?action=edit" class="dropdown-item">
+                                <span class="dropdown-item-icon">⚙️</span>
+                                <span>Cài đặt &amp; Sửa hồ sơ</span>
                             </a>
-                            <a href="${pageContext.request.contextPath}/story?action=mine" class="dropdown-item">
-                                <span class="dropdown-item-icon">✍️</span>
-                                <span>Quản lý truyện</span>
-                            </a>
+
                             <c:if test="${currentUser.admin}">
                                 <div class="dropdown-sep"></div>
+                                <div class="dropdown-section-title">Hệ thống</div>
                                 <a href="${pageContext.request.contextPath}/admin/dashboard" class="dropdown-item admin-item">
                                     <span class="dropdown-item-icon">🛡️</span>
                                     <span>Khu vực Quản trị</span>
                                 </a>
                             </c:if>
+
                             <div class="dropdown-sep"></div>
                             <a href="${pageContext.request.contextPath}/auth?action=logout" class="dropdown-item logout-item">
                                 <span class="dropdown-item-icon">🚪</span>

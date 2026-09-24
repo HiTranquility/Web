@@ -4,17 +4,25 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 import truyen.util.DBConnection;
+import truyen.util.UploadUtil;
 import truyen.dao.FollowDAO;
 import truyen.dao.StoryDAO;
+import truyen.dao.IdentityDAO;
 import truyen.dao.UserDAO;
+import truyen.dao.WalletDAO;
 import truyen.model.Story;
 import truyen.model.User;
+import truyen.model.UserIdentity;
+import truyen.util.GoogleConfig;
+import truyen.util.GoogleTokenVerifier;
 import truyen.util.PasswordUtil;
 import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.currentUser;
@@ -22,11 +30,18 @@ import static truyen.util.ServletHelper.trimOrEmpty;
 
 /** TRANG 4 · 14 · 15 — Hồ sơ người dùng. */
 @WebServlet("/user")
+@MultipartConfig(
+        fileSizeThreshold = 512 * 1024,        // 512 KB
+        maxFileSize       = 2L * 1024 * 1024,  // 2 MB mỗi file
+        maxRequestSize    = 4L * 1024 * 1024)  // 4 MB cả request
 public class UserServlet extends HttpServlet {
 
     private UserDAO userDAO;
     private StoryDAO storyDAO;
     private FollowDAO followDAO;
+    private IdentityDAO identityDAO;
+    private WalletDAO walletDAO;
+    private GoogleTokenVerifier googleTokenVerifier;
 
     /** Số truyện mỗi trang trên hồ sơ tác giả. */
     private static final int PAGE_SIZE = 12;
@@ -37,6 +52,21 @@ public class UserServlet extends HttpServlet {
         userDAO = new UserDAO();
         storyDAO = new StoryDAO();
         followDAO = new FollowDAO();
+        identityDAO = new IdentityDAO();
+        walletDAO = new WalletDAO();
+        googleTokenVerifier = new GoogleTokenVerifier();
+    }
+
+    public void setGoogleTokenVerifier(GoogleTokenVerifier verifier) {
+        this.googleTokenVerifier = verifier;
+    }
+
+    public void setUserDAO(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
+
+    public void setIdentityDAO(IdentityDAO identityDAO) {
+        this.identityDAO = identityDAO;
     }
 
     /*
@@ -65,7 +95,8 @@ public class UserServlet extends HttpServlet {
             action = "profile";
         }
 
-        if ("save".equals(action) || "password".equals(action)) {
+        if ("save".equals(action) || "password".equals(action) || "link-google".equals(action)
+                || "unlink-google".equals(action) || "set-password".equals(action)) {
             if (!"POST".equalsIgnoreCase(request.getMethod())) {
                 response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                 return;
@@ -75,11 +106,14 @@ public class UserServlet extends HttpServlet {
         String url;
         try {
             switch (action) {
-                case "me":       url = me(request, response);       break;
-                case "edit":     url = edit(request, response);     break;
-                case "save":     url = save(request, response);     break;
-                case "password": url = password(request, response); break;
-                default:         url = profile(request, response);  break;
+                case "me":            url = me(request, response);            break;
+                case "edit":          url = edit(request, response);          break;
+                case "save":          url = save(request, response);          break;
+                case "password":      url = password(request, response);      break;
+                case "set-password":  url = setPassword(request, response);   break;
+                case "link-google":   linkGoogle(request, response);          return;
+                case "unlink-google": unlinkGoogle(request, response);        return;
+                default:              url = profile(request, response);       break;
             }
         } catch (SQLException e) {
             log("UserServlet: lỗi truy vấn, action=" + action, e);
@@ -190,8 +224,12 @@ public class UserServlet extends HttpServlet {
         fresh.setStoryCount(storyDAO.countPublishedByAuthor(fresh.getId()));
         fresh.setFollowerCount(followDAO.countFollowers(fresh.getId()));
 
+        UserIdentity googleIdentity = identityDAO.findByUserAndProvider(fresh.getId(), "GOOGLE");
+        request.setAttribute("googleIdentity", googleIdentity);
+
         request.setAttribute("me", fresh);
         request.setAttribute("totalViews", storyDAO.totalViewsByAuthor(fresh.getId()));
+        request.setAttribute("walletBalance", walletDAO.getBalance(fresh.getId()));
         request.setAttribute("pageTitle", "Hồ sơ của tôi");
         request.setAttribute("activeNav", "me");
         return "/WEB-INF/views/user/me.jsp";
@@ -206,6 +244,17 @@ public class UserServlet extends HttpServlet {
 
         User fresh = userDAO.findById(me.getId());
         if (fresh != null) fresh.setPasswordHash(null);
+
+        UserIdentity googleIdentity = identityDAO.findByUserAndProvider(fresh.getId(), "GOOGLE");
+        boolean hasPassword = userDAO.hasPassword(fresh.getId());
+
+        request.setAttribute("googleIdentity", googleIdentity);
+        request.setAttribute("hasPassword", hasPassword);
+        request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
+        request.setAttribute("googleApiKey", GoogleConfig.getApiKey());
+        request.setAttribute("googleAuthDomain", GoogleConfig.getAuthDomain());
+        request.setAttribute("googleProjectId", GoogleConfig.getProjectId());
+        request.setAttribute("googleAppId", GoogleConfig.getAppId());
 
         request.setAttribute("me", fresh);
         request.setAttribute("pageTitle", "Sửa hồ sơ");
@@ -226,35 +275,72 @@ public class UserServlet extends HttpServlet {
         String avatar = trimOrEmpty(request.getParameter("avatarUrl"));
 
         String error = null;
-        if (name.isEmpty()) {
-            error = "Tên hiển thị không được để trống.";
-        } else if (name.length() > 100) {
-            error = "Tên hiển thị tối đa 100 ký tự.";
-        } else if (!email.contains("@") || email.length() > 150) {
-            error = "Email không hợp lệ.";
-        } else if (bio.length() > 500) {
-            error = "Giới thiệu tối đa 500 ký tự.";
-        } else {
-            User existing = userDAO.findByEmail(email);
-            if (existing != null && existing.getId() != me.getId()) {
-                error = "Email này đã được sử dụng bởi tài khoản khác.";
+
+        // Xử lý tải ảnh đại diện từ máy
+        Part avatarPart = null;
+        try {
+            avatarPart = request.getPart("avatarFile");
+        } catch (IllegalStateException | ServletException e) {
+            error = "File ảnh đại diện quá lớn (tối đa 2 MB) hoặc không hợp lệ.";
+        }
+
+        String removeAvatar = request.getParameter("removeAvatar");
+        if ("1".equals(removeAvatar)) {
+            avatar = "";
+        } else if (avatarPart != null && avatarPart.getSize() > 0 && error == null) {
+            try {
+                String uploaded = UploadUtil.save(avatarPart, getServletContext());
+                if (uploaded != null) {
+                    avatar = uploaded;
+                }
+            } catch (UploadUtil.UploadException e) {
+                error = e.getMessage();
+            }
+        }
+
+        if (error == null) {
+            if (name.isEmpty()) {
+                error = "Tên hiển thị không được để trống.";
+            } else if (name.length() > 100) {
+                error = "Tên hiển thị tối đa 100 ký tự.";
+            } else if (!email.contains("@") || email.length() > 150) {
+                error = "Email không hợp lệ.";
+            } else if (bio.length() > 500) {
+                error = "Giới thiệu tối đa 500 ký tự.";
+            } else {
+                User existing = userDAO.findByEmail(email);
+                if (existing != null && existing.getId() != me.getId()) {
+                    error = "Email này đã được sử dụng bởi tài khoản khác.";
+                }
             }
         }
 
         if (error != null) {
-            // Trả lại form kèm lỗi VÀ kèm những gì người dùng vừa gõ. Xoá
-            // trắng form rồi bắt gõ lại từ đầu là cách nhanh nhất làm người
-            // ta bỏ cuộc.
-            User back = new User();
+            User back = userDAO.findById(me.getId());
+            if (back != null) back.setPasswordHash(null);
+            else back = new User();
             back.setId(me.getId());
             back.setUsername(me.getUsername());
             back.setDisplayName(name);
             back.setEmail(email);
             back.setBio(bio);
             back.setAvatarUrl(avatar);
+
+            UserIdentity googleIdentity = identityDAO.findByUserAndProvider(me.getId(), "GOOGLE");
+            boolean hasPassword = userDAO.hasPassword(me.getId());
+
+            request.setAttribute("googleIdentity", googleIdentity);
+            request.setAttribute("hasPassword", hasPassword);
+            request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
+            request.setAttribute("googleApiKey", GoogleConfig.getApiKey());
+            request.setAttribute("googleAuthDomain", GoogleConfig.getAuthDomain());
+            request.setAttribute("googleProjectId", GoogleConfig.getProjectId());
+            request.setAttribute("googleAppId", GoogleConfig.getAppId());
+
             request.setAttribute("me", back);
             request.setAttribute("message", error);
             request.setAttribute("pageTitle", "Sửa hồ sơ");
+            request.setAttribute("activeNav", "me");
             return "/WEB-INF/views/user/edit.jsp";
         }
 
@@ -342,4 +428,189 @@ public class UserServlet extends HttpServlet {
         }
         return me;
     }
+
+    /**
+     * Tạo mật khẩu lần đầu cho tài khoản đăng ký qua Google (chưa có mật khẩu).
+     */
+    private String setPassword(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+
+        User me = requireLogin(request, response);
+        if (me == null) return null;
+
+        boolean hasPassword = userDAO.hasPassword(me.getId());
+        if (hasPassword) {
+            request.getSession().setAttribute("flashError", "Tài khoản đã có mật khẩu. Vui lòng sử dụng tính năng Đổi mật khẩu.");
+            response.sendRedirect(request.getContextPath() + "/user?action=edit");
+            return null;
+        }
+
+        String newPass = request.getParameter("newPassword");
+        String confirm = request.getParameter("confirmPassword");
+        String error = null;
+
+        if (newPass == null || newPass.length() < 6) {
+            error = "Mật khẩu mới phải từ 6 ký tự trở lên.";
+        } else if (!newPass.equals(confirm)) {
+            error = "Hai lần nhập mật khẩu không khớp.";
+        }
+
+        if (error != null) {
+            User fresh = userDAO.findById(me.getId());
+            if (fresh != null) fresh.setPasswordHash(null);
+            request.setAttribute("me", fresh);
+            request.setAttribute("googleIdentity", identityDAO.findByUserAndProvider(me.getId(), "GOOGLE"));
+            request.setAttribute("hasPassword", false);
+            request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
+            request.setAttribute("googleApiKey", GoogleConfig.getApiKey());
+            request.setAttribute("googleAuthDomain", GoogleConfig.getAuthDomain());
+            request.setAttribute("googleProjectId", GoogleConfig.getProjectId());
+            request.setAttribute("googleAppId", GoogleConfig.getAppId());
+            request.setAttribute("message", error);
+            request.setAttribute("pageTitle", "Sửa hồ sơ");
+            request.setAttribute("activeNav", "me");
+            return "/WEB-INF/views/user/edit.jsp";
+        }
+
+        userDAO.updatePassword(me.getId(), PasswordUtil.hash(newPass));
+        request.getSession().setAttribute("flash", "Đã tạo mật khẩu thành công! Giờ đây bạn có thể đăng nhập bằng tên đăng nhập và mật khẩu.");
+        response.sendRedirect(request.getContextPath() + "/user?action=me");
+        return null;
+    }
+
+    /**
+     * Liên kết tài khoản Google với tài khoản hiện tại.
+     * Nhận Google idToken qua POST, xác thực và lưu vào user_identities.
+     */
+    private void linkGoogle(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+
+        User me = currentUser(request);
+        if (me == null) {
+            sendJsonResponse(response, HttpServletResponse.SC_UNAUTHORIZED, false, "Vui lòng đăng nhập để thực hiện.");
+            return;
+        }
+
+        if (!GoogleConfig.isEnabled()) {
+            sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, false, "Chức năng Google chưa được cấu hình.");
+            return;
+        }
+
+        String idToken = request.getParameter("idToken");
+        if (idToken == null || idToken.trim().isEmpty()) {
+            sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, false, "Thiếu idToken từ Google.");
+            return;
+        }
+
+        GoogleTokenVerifier.GoogleUser gUser = googleTokenVerifier.verify(idToken.trim());
+        if (gUser == null) {
+            sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, false, "Google token không hợp lệ hoặc đã hết hạn.");
+            return;
+        }
+
+        String sub = gUser.getSub();
+        String email = gUser.getEmail();
+
+        // Kiểm tra xem tài khoản Google này đã gắn với ai chưa
+        UserIdentity existing = identityDAO.findByProviderUid("GOOGLE", sub);
+        if (existing != null) {
+            if (existing.getUserId() == me.getId()) {
+                sendJsonResponse(response, HttpServletResponse.SC_OK, true, "Tài khoản của bạn đã được gắn với Google này rồi.");
+            } else {
+                sendJsonResponse(response, HttpServletResponse.SC_CONFLICT, false,
+                        "Tài khoản Google này (" + email + ") đã được gắn với một người dùng khác.");
+            }
+            return;
+        }
+
+        // Kiểm tra xem tài khoản hiện tại đã gắn Google khác chưa
+        UserIdentity currentGoogle = identityDAO.findByUserAndProvider(me.getId(), "GOOGLE");
+        if (currentGoogle != null) {
+            sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, false,
+                    "Tài khoản của bạn đã liên kết với Google (" + currentGoogle.getEmail() + "). Vui lòng hủy liên kết cũ trước.");
+            return;
+        }
+
+        UserIdentity newIdentity = new UserIdentity(me.getId(), "GOOGLE", sub, email);
+        identityDAO.insert(newIdentity);
+
+        sendJsonResponse(response, HttpServletResponse.SC_OK, true, "Đã liên kết tài khoản Google (" + email + ") thành công!");
+    }
+
+    /**
+     * Hủy liên kết tài khoản Google.
+     * Chặn tuyệt đối nếu tài khoản CHƯA có mật khẩu (hasPassword == false).
+     */
+    private void unlinkGoogle(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+
+        User me = currentUser(request);
+        if (me == null) {
+            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            return;
+        }
+
+        boolean isAjax = isAjax(request);
+
+        // Security gate: nếu tài khoản chưa có mật khẩu thì cấm gỡ
+        if (!userDAO.hasPassword(me.getId())) {
+            String errorMsg = "Bạn chưa tạo mật khẩu cho tài khoản. Vui lòng tạo mật khẩu trước khi hủy liên kết Google để tránh mất quyền đăng nhập!";
+            if (isAjax) {
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, false, errorMsg);
+            } else {
+                request.getSession().setAttribute("flashError", errorMsg);
+                response.sendRedirect(request.getContextPath() + "/user?action=edit");
+            }
+            return;
+        }
+
+        UserIdentity google = identityDAO.findByUserAndProvider(me.getId(), "GOOGLE");
+        if (google == null) {
+            String errorMsg = "Tài khoản của bạn hiện không có liên kết Google nào.";
+            if (isAjax) {
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, false, errorMsg);
+            } else {
+                request.getSession().setAttribute("flashError", errorMsg);
+                response.sendRedirect(request.getContextPath() + "/user?action=edit");
+            }
+            return;
+        }
+
+        identityDAO.deleteByUserAndProvider(me.getId(), "GOOGLE");
+
+        String successMsg = "Đã hủy liên kết tài khoản Google thành công.";
+        if (isAjax) {
+            sendJsonResponse(response, HttpServletResponse.SC_OK, true, successMsg);
+        } else {
+            request.getSession().setAttribute("flash", successMsg);
+            response.sendRedirect(request.getContextPath() + "/user?action=edit");
+        }
+    }
+
+    private boolean isAjax(HttpServletRequest request) {
+        return "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"))
+                || "1".equals(request.getParameter("ajax"));
+    }
+
+    private void sendJsonResponse(HttpServletResponse response, int statusCode, boolean success, String message)
+            throws IOException {
+        response.setStatus(statusCode);
+        response.setContentType("application/json;charset=UTF-8");
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"success\":").append(success).append(",");
+        sb.append("\"message\":\"").append(escapeJson(message)).append("\"");
+        sb.append("}");
+        response.getWriter().write(sb.toString());
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
+    }
 }
+

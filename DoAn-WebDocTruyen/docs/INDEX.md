@@ -5,6 +5,9 @@ Bản đồ tài liệu của đồ án. Mở file này khi không nhớ nên tr
 ```text
 docs/
 ├── INDEX.md                          ← bạn đang ở đây (mục lục trung tâm)
+├── TONG-HOP-HE-THONG.md              ⭐ TỔNG HỢP TOÀN BỘ HỆ THỐNG (33 trang, 18 modules, CSDL, Test)
+├── reindex.ps1                       ← quét docs/ → mã số kế tiếp + trạng thái (PowerShell)
+├── reindex.sh                        ← quét docs/ → mã số kế tiếp + trạng thái (Bash)
 │
 ├── _private/                         ← 🔒 Ghi chú cá nhân (được .gitignore, chỉ lưu ở local)
 │   └── README.md
@@ -32,14 +35,17 @@ docs/
 │
 ├── projects/                         ← QUẢN LÝ CÔNG VIỆC — ai đang làm gì, lỗi nào chưa sửa
 │   ├── README.md                     luật: ISSUE hay bug · đánh số · giao việc
-│   ├── issues/README.md              bảng theo dõi việc cần làm & các phase
-│   └── bugs/README.md                bảng theo dõi lỗi + 3 mức độ nghiêm trọng
+│   ├── issues/ISSUE-NNN-slug/        thư mục issue: issue.md + phase-N.md + review-N.md
+│   └── bugs/bug-NNN-slug/            thư mục bug: bug.md
 │
 └── templates/                        ← KHUÔN MẪU — copy ra rồi điền
-    ├── issue-template.md             khuôn một việc
-    ├── phase-template.md             khuôn một đợt, khi việc lớn phải chia
-    └── bug-template.md               khuôn một lỗi
+    ├── issue-template.md             khuôn một việc (thư mục: issue.md)
+    ├── phase-template.md             khuôn một đợt (phase-N.md)
+    ├── review-template.md            khuôn nghiệm thu đối chiếu (review-N.md)
+    └── bug-template.md               khuôn một lỗi (thư mục: bug.md)
 ```
+
+> **[TIP] Trước khi tạo doc mới:** Chạy `powershell -ExecutionPolicy Bypass -File docs\reindex.ps1` để xem mã số tiếp theo (chống trùng ID) và liệt kê toàn bộ doc theo trạng thái.
 
 ---
 
@@ -47,6 +53,7 @@ docs/
 
 | Câu hỏi trong đầu | Mở file |
 |-------------------|---------|
+| ⭐ **"Xem tổng hợp toàn bộ hệ thống (33 trang, 18 modules, CSDL)"** | **[TONG-HOP-HE-THONG.md](TONG-HOP-HE-THONG.md)** |
 | **"Tự tay code một tính năng từ DAO tới JSP"** | **[guides/huong-dan-code.md](guides/huong-dan-code.md)** |
 | "Cách dùng getParameter, getSession, setAttribute?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §2 |
 | "Cách viết try-catch, mở kết nối DAO?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §1 |
@@ -103,11 +110,20 @@ Ba điều, để `docs/` không phình thành thứ không ai đọc:
 
 > **Vì sao `projects/` chỉ có hai loại doc, không phải mười bốn.**
 > Đồ án này cố ý **không** bê nguyên bộ doc cấp production (ADR · postmortem ·
-> spike · audit · usecase · thư mục theo tháng · script sinh mã số). Quy mô ở đây
-> là 59 file, một kỳ — bê đủ bộ thì thời gian viết doc vượt thời gian viết code,
-> và phần lớn khuôn sẽ không bao giờ đụng tới.
+> spike · audit · usecase · thư mục theo tháng). Quy mô ở đây là 59 file, một kỳ —
+> bê đủ bộ thì thời gian viết doc vượt thời gian viết code, và phần lớn khuôn sẽ
+> không bao giờ đụng tới.
 >
 > `projects/` sinh ra **chỉ vì** đồ án chuyển từ một người sang nhiều người: hai
 > người trở lên mà không ghi ai làm gì thì sẽ có hai người cùng sửa một `Servlet`.
-> Đúng hai loại — **ISSUE** và **bug** — cộng khuôn **phase** cho việc lớn phải chia
-> đợt. Thấy thiếu thật thì thêm, nhưng thêm vì đang vướng, không phải vì "cho đủ bộ".
+> Đúng hai loại — **ISSUE** và **bug** — cộng hai khuôn **phase** và **review** cho
+> việc lớn phải chia đợt.
+>
+> Hai thứ đã thêm **vì đang vướng thật**, không phải "cho đủ bộ":
+>
+> | Thêm | Vì đang vướng gì |
+> |---|---|
+> | `reindex.ps1` / `reindex.sh` | Đếm tay số kế tiếp thì hai người cùng tạo `ISSUE-004` trong một buổi — đã có tiền lệ. Script quét cả `docs/` nên còn tiện để nhìn trạng thái mọi việc trong một màn hình. |
+> | `review-N.md` | Phase tự chấm điểm cho phase thì không ai phát hiện phần bỏ sót. Review đối chiếu **baseline đo trước** với **kết quả đo sau**, và Action Items của nó là đầu vào của phase kế. |
+>
+> Thấy thiếu thật thì thêm, nhưng thêm vì đang vướng, không phải vì "cho đủ bộ".

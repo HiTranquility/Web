@@ -18,8 +18,8 @@ Chỉ có **hai loại**. Đừng đẻ thêm loại thứ ba.
 
 | Tình huống | Loại | Đặt ở | Khuôn |
 |---|---|---|---|
-| Làm một việc mới, hoặc sửa/mở rộng thứ đang chạy đúng | **ISSUE** | [`issues/`](issues/) | [`templates/issue-template.md`](../templates/issue-template.md) |
-| Thứ đang chạy **sai** so với điều nó đáng ra phải làm | **bug** | [`bugs/`](bugs/) | [`templates/bug-template.md`](../templates/bug-template.md) |
+| Làm một việc mới, hoặc sửa/mở rộng thứ đang chạy đúng | **ISSUE** | [`issues/`](issues/) | [`templates/issue-template.md`](../templates/issue-template.md) *(thư mục: `issue.md` + `phase` + `review`)* |
+| Thứ đang chạy **sai** so với điều nó đáng ra phải làm | **bug** | [`bugs/`](bugs/) | [`templates/bug-template.md`](../templates/bug-template.md) *(thư mục: `bug.md`)* |
 
 **Phân biệt:** *"chưa có"* là ISSUE, *"có rồi nhưng hỏng"* là bug.
 Thiếu nút Xoá bình luận → ISSUE. Bấm Xoá mà nó xoá nhầm bình luận khác → bug.
@@ -29,15 +29,17 @@ Không chắc thì mở ISSUE — sai loại không chết ai, không ghi mới 
 ### Việc lớn thì chia đợt (phase)
 
 **Phase không phải loại thứ ba** — nó là ISSUE được cắt thành nhiều đợt, mỗi đợt
-một file nằm cạnh file gốc:
+một file `phase-N.md` nằm **TRONG thư mục issue**:
 
 ```text
-ISSUE-004-them-he-thong-bao-cao.md          ← việc gốc
-ISSUE-004-them-he-thong-bao-cao-phase-1.md  ← đợt 1: sửa schema
-ISSUE-004-them-he-thong-bao-cao-phase-2.md  ← đợt 2: DAO + Servlet + JSP
+docs/projects/issues/ISSUE-004-them-he-thong-bao-cao/
+├── issue.md                                  ← việc gốc
+├── phase-1.md                                 ← đợt 1: sửa schema
+├── phase-2.md                                 ← đợt 2: DAO + Servlet + JSP
+└── review-1.md                                ← nghiệm thu sau đợt 1
 ```
 
-Khuôn: [`templates/phase-template.md`](../templates/phase-template.md).
+Khuôn: [`templates/phase-template.md`](../templates/phase-template.md) & [`templates/review-template.md`](../templates/review-template.md).
 
 > **[MUST] Chia đợt theo RỦI RO, không theo khối lượng.** Tách khi trộn vào thì
 > *hỏng là không biết hỏng do đâu* — cụ thể: có sửa `database/schema.sql`, có đụng
@@ -45,19 +47,19 @@ Khuôn: [`templates/phase-template.md`](../templates/phase-template.md).
 > và làm trước**.
 >
 > **Đa số việc KHÔNG cần chia đợt.** Việc gọn, một mình, không đụng schema/filter
-> thì viết thẳng trong ISSUE là đủ — đẻ thêm file chỉ tốn công.
+> thì viết thẳng trong `issue.md` là đủ — đẻ thêm file chỉ tốn công.
 
 ---
 
 ## Đặt tên và đánh số
 
 ```text
-docs/projects/issues/ISSUE-001-them-nut-bao-cao-truyen.md
-docs/projects/bugs/bug-001-xoa-nham-binh-luan.md
+docs/projects/issues/ISSUE-001-tich-hop-google/issue.md
+docs/projects/bugs/bug-001-dang-nhap-google-gia-mao-bat-ky-tai-khoan/bug.md
 ```
 
 - Số **chạy liên tục**, không chia theo tháng, không reset.
-- Lấy số kế tiếp: mở thư mục, nhìn số lớn nhất, cộng một. Xong.
+- Lấy số kế tiếp: chạy `powershell -ExecutionPolicy Bypass -File docs\reindex.ps1` hoặc mở thư mục nhìn số lớn nhất + 1.
 - Phần chữ: **tiếng Việt không dấu, chữ thường, gạch ngang** — giống luật đặt tên
   nhánh ở [`04-GIT_CONVENTIONS.md §1`](../standards/04-GIT_CONVENTIONS.md).
 

@@ -16,10 +16,12 @@ import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.trimOrEmpty;
 import truyen.dao.BookmarkDAO;
 import truyen.dao.ChapterDAO;
+import truyen.dao.CommentDAO;
 import truyen.dao.FollowDAO;
 import truyen.dao.NotificationDAO;
 import truyen.dao.StoryDAO;
 import truyen.model.Chapter;
+import truyen.model.Comment;
 import truyen.model.Story;
 import truyen.model.User;
 
@@ -35,6 +37,7 @@ import truyen.model.User;
 public class ChapterServlet extends HttpServlet {
 
     private ChapterDAO chapterDAO;
+    private CommentDAO commentDAO;
     private FollowDAO followDAO;
     private NotificationDAO notificationDAO;
     private StoryDAO storyDAO;
@@ -43,6 +46,7 @@ public class ChapterServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         chapterDAO = new ChapterDAO();
+        commentDAO = new CommentDAO();
         followDAO = new FollowDAO();
         notificationDAO = new NotificationDAO();
         storyDAO = new StoryDAO();
@@ -169,6 +173,12 @@ public class ChapterServlet extends HttpServlet {
                 log("Không lưu được vị trí đọc, userId=" + me.getId(), e);
             }
         }
+
+        /* Nạp danh sách bình luận của chương */
+        List<Comment> chapterComments = commentDAO.findByChapter(chapter.getId());
+        commentDAO.populateLikes(chapterComments, me != null ? me.getId() : 0);
+        request.setAttribute("chapterComments", chapterComments);
+        request.setAttribute("chapterCommentCount", commentDAO.countByChapter(chapter.getId()));
 
         request.setAttribute("chapter", chapter);
         request.setAttribute("story", story);

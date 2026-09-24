@@ -26,19 +26,45 @@ public class CommentDAO {
     public List<Comment> findByStory(int storyId) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.comments(storyId);
-        /* MOT cau SQL lay HET, roi xep cay trong bo nho. */
+        /* MOT cau SQL lay HET, roi xep cay trong bo nho. Chi lay binh luan cap truyen */
         String sql =
-            "SELECT c.id, c.story_id, c.user_id, c.content, c.status, "
+            "SELECT c.id, c.story_id, c.chapter_id, c.user_id, c.content, c.status, "
           + "       c.parent_id, c.created_at, "
           + "       u.username, u.display_name "
           + "FROM comments c JOIN users u ON u.id = c.user_id "
-          + "WHERE c.story_id = ? AND c.status = 'VISIBLE' "
+          + "WHERE c.story_id = ? AND c.chapter_id IS NULL AND c.status = 'VISIBLE' "
           + "ORDER BY c.created_at ASC";
 
         List<Comment> flat = new ArrayList<>();
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    flat.add(mapRow(rs));
+                }
+            }
+        }
+        return buildTree(flat);
+    }
+
+    /**
+     * Bình luận riêng của một chương cụ thể.
+     */
+    public List<Comment> findByChapter(int chapterId) throws SQLException {
+        if (!DBConnection.isReady()) return new ArrayList<>();
+        String sql =
+            "SELECT c.id, c.story_id, c.chapter_id, c.user_id, c.content, c.status, "
+          + "       c.parent_id, c.created_at, "
+          + "       u.username, u.display_name "
+          + "FROM comments c JOIN users u ON u.id = c.user_id "
+          + "WHERE c.chapter_id = ? AND c.status = 'VISIBLE' "
+          + "ORDER BY c.created_at ASC";
+
+        List<Comment> flat = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, chapterId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     flat.add(mapRow(rs));
@@ -71,7 +97,7 @@ public class CommentDAO {
 
     public Comment findById(int id) throws SQLException {
         String sql =
-            "SELECT c.id, c.story_id, c.user_id, c.content, c.status, "
+            "SELECT c.id, c.story_id, c.chapter_id, c.user_id, c.content, c.status, "
           + "       c.parent_id, c.created_at, "
           + "       u.username, u.display_name "
           + "FROM comments c JOIN users u ON u.id = c.user_id WHERE c.id = ?";
@@ -94,19 +120,27 @@ public class CommentDAO {
             } else if (p.isReply()) {
                 parent = p.getParentId();            // tra loi cua tra loi -> ve goc
             }
+            if (c.getChapterId() == null && p != null && p.getChapterId() != null) {
+                c.setChapterId(p.getChapterId());
+            }
         }
 
-        String sql = "INSERT INTO comments (story_id, user_id, content, parent_id, status) "
-                   + "VALUES (?, ?, ?, ?, 'VISIBLE')";
+        String sql = "INSERT INTO comments (story_id, chapter_id, user_id, content, parent_id, status) "
+                   + "VALUES (?, ?, ?, ?, ?, 'VISIBLE')";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, c.getStoryId());
-            ps.setInt(2, c.getUserId());
-            ps.setString(3, c.getContent());
-            if (parent == null) {
-                ps.setNull(4, java.sql.Types.INTEGER);
+            if (c.getChapterId() == null || c.getChapterId() <= 0) {
+                ps.setNull(2, java.sql.Types.INTEGER);
             } else {
-                ps.setInt(4, parent);
+                ps.setInt(2, c.getChapterId());
+            }
+            ps.setInt(3, c.getUserId());
+            ps.setString(4, c.getContent());
+            if (parent == null) {
+                ps.setNull(5, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(5, parent);
             }
             ps.executeUpdate();
         }
@@ -172,10 +206,22 @@ public class CommentDAO {
     public int countByStory(int storyId) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.comments(storyId).size();
-        String sql = "SELECT COUNT(*) FROM comments WHERE story_id = ? AND status = 'VISIBLE'";
+        String sql = "SELECT COUNT(*) FROM comments WHERE story_id = ? AND chapter_id IS NULL AND status = 'VISIBLE'";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    public int countByChapter(int chapterId) throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+        String sql = "SELECT COUNT(*) FROM comments WHERE chapter_id = ? AND status = 'VISIBLE'";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, chapterId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
@@ -186,6 +232,10 @@ public class CommentDAO {
         Comment c = new Comment();
         c.setId(rs.getInt("id"));
         c.setStoryId(rs.getInt("story_id"));
+        try {
+            int chId = rs.getInt("chapter_id");
+            c.setChapterId(rs.wasNull() ? null : chId);
+        } catch (SQLException ignored) { }
         c.setUserId(rs.getInt("user_id"));
         c.setContent(rs.getString("content"));
         c.setStatus(rs.getString("status"));

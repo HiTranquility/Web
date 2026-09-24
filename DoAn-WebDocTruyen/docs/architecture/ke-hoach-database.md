@@ -1,7 +1,7 @@
 # Kế hoạch Database — Chuẩn hoá và Phi chuẩn hoá
 
 Đi kèm [`ke-hoach-frontend.md`](ke-hoach-frontend.md).
-Lược đồ hiện tại: [`../database/schema.sql`](../database/schema.sql).
+Lược đồ hiện tại: [`../../database/schema.sql`](../../database/schema.sql).
 
 **Tóm tắt:** 7 bảng hiện có → **13 bảng** khi làm hết chức năng đề xuất.
 Thiết kế ở **3NF**, cộng **6 cột phi chuẩn hoá có chủ ý** để tránh đếm lại

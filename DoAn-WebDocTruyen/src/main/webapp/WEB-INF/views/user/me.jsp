@@ -16,7 +16,11 @@
 ================================================================================
 --%>
 <div class="profile-head">
-    <span class="profile-avatar">${me.initial}</span>
+    <c:set var="avUrl" value="${me.avatarUrl}"/>
+    <c:set var="avAlt" value="${me.name}"/>
+    <c:set var="avInitial" value="${me.initial}"/>
+    <c:set var="avClass" value="profile-avatar"/>
+    <%@ include file="/WEB-INF/views/_partials/_avatar.jsp" %>
 
     <div class="profile-info">
         <h1><c:out value="${me.name}"/></h1>
@@ -58,6 +62,26 @@
 
         <dt>Email</dt>
         <dd><c:out value="${me.email}"/></dd>
+
+        <dt>Liên kết Google</dt>
+        <dd>
+            <c:choose>
+                <c:when test="${not empty googleIdentity}">
+                    <span class="pill pill-ok">Đã liên kết</span>
+                    <span><c:out value="${googleIdentity.email}"/></span>
+                </c:when>
+                <c:otherwise>
+                    <span class="muted">Chưa liên kết</span>
+                    <a href="${pageContext.request.contextPath}/user?action=edit#link-google" style="font-size:0.85em; margin-left:8px;">Liên kết ngay →</a>
+                </c:otherwise>
+            </c:choose>
+        </dd>
+
+        <dt>Ví xu ảo</dt>
+        <dd>
+            <span class="pill pill-ok" style="font-size: 0.9em;">🪙 <b><fmt:formatNumber pattern="#,##0" value="${walletBalance}"/></b> xu</span>
+            <span class="muted" style="font-size: 0.85em; margin-left: 8px;">(Dùng tặng hoa và ủng hộ tác giả)</span>
+        </dd>
 
         <dt>Vai trò</dt>
         <dd>${me.admin ? 'Quản trị viên' : 'Thành viên'}</dd>

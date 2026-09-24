@@ -1,0 +1,22 @@
+# =============================================================================
+#  Cấu hình máy chủ gửi thư điện tử (SMTP) - ISSUE-002
+# =============================================================================
+#  - mail.enabled = false: Chế độ Mô phỏng (Dev Mode), in link reset vào Console.
+#  - mail.enabled = true : Gửi email thật qua máy chủ SMTP bên dưới.
+# =============================================================================
+
+mail.enabled=false
+
+# Cấu hình SMTP (Ví dụ dùng Gmail: smtp.gmail.com:587 STARTTLS)
+mail.smtp.host=smtp.gmail.com
+mail.smtp.port=587
+mail.smtp.auth=true
+mail.smtp.starttls.enable=true
+
+# Thông tin tài khoản SMTP (Với Gmail, dùng Mật khẩu ứng dụng - App Password 16 ký tự)
+mail.smtp.username=
+mail.smtp.password=
+
+# Thông tin người gửi hiển thị
+mail.from=noreply@webdoctruyen.com
+mail.from.name=Web Đọc Truyện

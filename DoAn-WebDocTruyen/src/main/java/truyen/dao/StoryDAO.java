@@ -525,6 +525,51 @@ public class StoryDAO {
         return list;
     }
 
+    /**
+     * Gợi ý truyện: "Độc giả đọc truyện này cũng đọc..." (Collaborative Filtering).
+     * Phân tích hành vi tương tác chung từ view_logs và bookmarks.
+     *
+     * @param storyId ID truyện đang xem
+     * @param limit số lượng truyện tối đa
+     */
+    public List<Story> findAlsoRead(int storyId, int limit) throws SQLException {
+        if (!DBConnection.isReady()) return new ArrayList<>();
+
+        String sql = SELECT_BASE
+                   + "JOIN ( "
+                   + "    SELECT other_story_id, COUNT(DISTINCT uid) AS co_count "
+                   + "    FROM ( "
+                   + "        SELECT v2.user_id AS uid, v2.story_id AS other_story_id "
+                   + "        FROM view_logs v1 "
+                   + "        JOIN view_logs v2 ON v1.user_id = v2.user_id "
+                   + "        WHERE v1.story_id = ? AND v2.story_id <> ? AND v1.user_id IS NOT NULL "
+                   + "        UNION ALL "
+                   + "        SELECT b2.user_id AS uid, b2.story_id AS other_story_id "
+                   + "        FROM bookmarks b1 "
+                   + "        JOIN bookmarks b2 ON b1.user_id = b2.user_id "
+                   + "        WHERE b1.story_id = ? AND b2.story_id <> ? "
+                   + "    ) pairs "
+                   + "    GROUP BY other_story_id "
+                   + ") co ON co.other_story_id = s.id "
+                   + "WHERE s.status = 'PUBLISHED' "
+                   + "ORDER BY co.co_count DESC, s.view_count DESC "
+                   + "LIMIT ?";
+
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            ps.setInt(2, storyId);
+            ps.setInt(3, storyId);
+            ps.setInt(4, storyId);
+            ps.setInt(5, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
     /** Bang xep hang THEO KHOANG THOI GIAN — trang 5. */
     public List<Story> findTopByPeriod(int days, int limit) throws SQLException {
         if (!DBConnection.isReady()) return DemoData.topByPeriod(days, limit);

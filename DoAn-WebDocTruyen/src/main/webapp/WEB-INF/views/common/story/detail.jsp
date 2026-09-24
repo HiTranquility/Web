@@ -125,6 +125,13 @@
                 <a class="btn btn-ghost"
                    href="${pageContext.request.contextPath}/chapter?action=create&amp;storyId=${story.id}">+ Thêm chương</a>
             </c:if>
+            <c:if test="${googleDriveEnabled and not empty currentUser and currentUser.id eq story.authorId}">
+                <button type="button" class="btn btn-ghost btn-drive-backup"
+                        data-story-id="${story.id}"
+                        data-story-title="<c:out value='${story.title}'/>"
+                        title="Sao lưu toàn bộ chương truyện lên Google Drive cá nhân">
+                    ☁️ Sao lưu Drive</button>
+            </c:if>
         </div>
 
         <%--
@@ -142,6 +149,9 @@
             <span class="share-label">Chia sẻ:</span>
             <c:set var="shareUrl"
                    value="${pageContext.request.scheme}://${pageContext.request.serverName}:${pageContext.request.serverPort}${pageContext.request.contextPath}/story?action=detail&id=${story.id}"/>
+            <button type="button" class="share-btn" id="btn-copy-link" style="cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-family:inherit;" title="Sao chép liên kết truyện">
+                <span>🔗 Sao chép link</span>
+            </button>
             <a class="share-btn" target="_blank" rel="noopener"
                href="https://www.facebook.com/sharer/sharer.php?u=${fn:escapeXml(shareUrl)}">Facebook</a>
             <a class="share-btn" target="_blank" rel="noopener"
@@ -308,6 +318,7 @@
             <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action" value="add">
             <input type="hidden" name="storyId" value="${story.id}">
+            <input type="hidden" name="g-recaptcha-token" class="recaptcha-token">
             <textarea name="content" rows="3" maxlength="1000" required
                       placeholder="Viết bình luận… Nhớ giữ lời lẽ văn minh."></textarea>
             <button type="submit" class="btn btn-primary btn-sm">Gửi bình luận</button>
@@ -357,6 +368,23 @@
 
     <div class="story-grid">
         <c:forEach var="story" items="${similar}">
+            <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
+        </c:forEach>
+    </div>
+</c:if>
+
+<%--
+  ---- Gợi ý truyện: Độc giả đọc truyện này cũng đọc ----
+  Thuật toán Collaborative Filtering đo lường mức độ đồng tương tác từ view_logs và bookmarks.
+--%>
+<c:if test="${not empty alsoRead}">
+    <div class="section-head" style="margin-top:44px">
+        <h2>Độc giả đọc truyện này cũng đọc</h2>
+        <span class="more">gợi ý thông minh</span>
+    </div>
+
+    <div class="story-grid">
+        <c:forEach var="story" items="${alsoRead}">
             <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
         </c:forEach>
     </div>
@@ -560,6 +588,32 @@
             });
         });
     }
+
+    /* Sao chép liên kết truyện (ISSUE-018) */
+    var copyBtn = document.getElementById('btn-copy-link');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var url = window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    toastFn('🔗 Đã sao chép liên kết truyện vào bộ nhớ tạm!');
+                }).catch(function () {
+                    prompt('Sao chép liên kết:', url);
+                });
+            } else {
+                prompt('Sao chép liên kết:', url);
+            }
+        });
+    }
 })();
 </script>
+
+<c:if test="${googleDriveEnabled and not empty currentUser and currentUser.id eq story.authorId}">
+    <script>
+        window.APP_CONTEXT = '${pageContext.request.contextPath}';
+        window.GOOGLE_CLIENT_ID = '<c:out value="${googleClientId}"/>';
+        window.CSRF_TOKEN = '<c:out value="${csrfToken}"/>';
+    </script>
+    <script src="${pageContext.request.contextPath}/assets/js/drive-backup.js" defer></script>
+</c:if>
 

@@ -50,6 +50,18 @@ public class AppListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent e) {
         refresh(e.getServletContext());
         e.getServletContext().log("AppListener: đã nạp danh sách thể loại");
+
+        // Dọn dẹp view_logs định kỳ chạy ngầm (ISSUE-013)
+        new Thread(() -> {
+            try {
+                int cleaned = new truyen.dao.ViewLogDAO().cleanOldLogs(90);
+                if (cleaned > 0) {
+                    e.getServletContext().log("AppListener: đã dọn dẹp " + cleaned + " bản ghi view_logs cũ (>90 ngày)");
+                }
+            } catch (Exception ex) {
+                e.getServletContext().log("AppListener: dọn dẹp view_logs lỗi", ex);
+            }
+        }, "viewlogs-cleaner").start();
     }
 
     /**

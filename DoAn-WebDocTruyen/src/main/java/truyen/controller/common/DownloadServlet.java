@@ -87,44 +87,8 @@ public class DownloadServlet extends HttpServlet {
 
         // getWriter() phải gọi SAU khi đặt xong header
         try (PrintWriter out = response.getWriter()) {
-            out.println(story.getTitle());
-            out.println("Tác giả: " + story.getAuthorName());
-            if (story.getDescription() != null && !story.getDescription().isEmpty()) {
-                out.println();
-                out.println(story.getDescription());
-            }
-            out.println();
-            out.println(repeat('=', 60));
-            out.println();
-
-            if (chapters.isEmpty()) {
-                out.println("(Truyện chưa có chương nào.)");
-            }
-            for (Chapter c : chapters) {
-                out.println();
-                out.println("Chương " + c.getChapterNo() + ": " + c.getTitle());
-                out.println(repeat('-', 60));
-                out.println();
-                out.println(c.getContent());
-                out.println();
-            }
-
-            out.println(repeat('=', 60));
-            out.println("Tải từ web Đọc Truyện — đồ án môn Lập trình Web");
+            out.print(truyen.util.ChapterToTxt.formatStory(story, chapters));
         }
-    }
-
-    /**
-     * Java 8 không có String.repeat() (đó là Java 11+). Dự án đặt
-     * maven.compiler.target = 11 nên dùng được, nhưng viết tay thì chắc chắn
-     * chạy trên mọi phiên bản, kể cả khi ai đó hạ target xuống 8.
-     */
-    private String repeat(char c, int n) {
-        StringBuilder sb = new StringBuilder(n);
-        for (int i = 0; i < n; i++) {
-            sb.append(c);
-        }
-        return sb.toString();
     }
 
 }

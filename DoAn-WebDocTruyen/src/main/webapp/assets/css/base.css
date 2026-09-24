@@ -151,3 +151,34 @@ html[data-site-theme="light"] input:-webkit-autofill:active {
     border-color: var(--ink-600) !important;
 }
 
+/* ============================================================================
+   A11Y TRỢ NĂNG & DI ĐỘNG (ISSUE-015)
+   ========================================================================= */
+/* Skip link cho độc giả dùng bàn phím */
+.skip-link {
+    position: absolute;
+    top: -60px;
+    left: 12px;
+    background: var(--ember);
+    color: #1a0f06;
+    padding: 10px 18px;
+    z-index: 99999;
+    font-weight: 700;
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-md);
+    transition: top 0.2s ease;
+}
+.skip-link:focus {
+    top: 12px;
+}
+
+/* Kích thước chạm tối thiểu 44px trên thiết bị di động (WCAG 2.1 Target Size) */
+@media (max-width: 640px) {
+    .btn, .pagination a, .tab-btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+

@@ -1,0 +1,36 @@
+# =============================================================================
+#  Cấu hình Google Services (OAuth 2.0 / Firebase Auth & reCAPTCHA v3) — BẢN MẪU
+# =============================================================================
+#  Chép file này thành  google.properties  (cùng thư mục) rồi điền thông tin thật:
+#
+#      cp google.properties.example google.properties
+#
+#  File google.properties đã nằm trong .gitignore nên KHÔNG bị đẩy lên GitHub.
+#  [NEVER] Commit khoá bí mật (Client Secret, reCAPTCHA secret key) lên remote.
+# =============================================================================
+
+# Bật/tắt tính năng đăng nhập Google (true/false)
+google.auth.enabled=false
+
+# Google OAuth 2.0 Web Client ID (dùng cho Firebase Web / OIDC verification)
+google.client_id=YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com
+google.client_secret=YOUR_GOOGLE_CLIENT_SECRET_HERE
+
+# Cấu hình Firebase Web App (lấy từ Firebase Console -> Project Settings -> General)
+firebase.api_key=YOUR_FIREBASE_API_KEY_HERE
+firebase.auth_domain=YOUR_PROJECT_ID.firebaseapp.com
+firebase.project_id=YOUR_PROJECT_ID
+firebase.app_id=YOUR_FIREBASE_APP_ID_HERE
+
+# -----------------------------------------------------------------------------
+#  Google reCAPTCHA v3
+# -----------------------------------------------------------------------------
+# Bật/tắt kiểm tra bot bằng reCAPTCHA v3 (true/false)
+google.recaptcha.enabled=false
+
+# Lấy từ Google reCAPTCHA Admin Console (loại v3, domain localhost)
+google.recaptcha.site_key=YOUR_RECAPTCHA_SITE_KEY_HERE
+google.recaptcha.secret_key=YOUR_RECAPTCHA_SECRET_KEY_HERE
+
+# Ngưỡng điểm chấp nhận là người thật (0.0 đến 1.0, mặc định 0.5)
+google.recaptcha.threshold=0.5

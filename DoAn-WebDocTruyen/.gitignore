@@ -1,5 +1,8 @@
-# Mật khẩu database — TUYỆT ĐỐI không commit
+# Mật khẩu database & Secret — TUYỆT ĐỐI không commit
 src/main/resources/db.properties
+src/main/resources/google.properties
+src/main/resources/mail.properties
+firebase-service-account.json
 
 target/
 build/

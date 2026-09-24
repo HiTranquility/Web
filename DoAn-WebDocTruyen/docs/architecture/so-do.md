@@ -297,6 +297,28 @@ Nhánh cuối quan trọng nhất: **không rơi vào đâu thì dùng `main`**,
 sequenceDiagram
     autonumber
     participant B as 🌐 Trình duyệt
+    participant C as CsrfFilter
+    participant R as RecaptchaFilter
+    participant G as Google reCAPTCHA v3
+    participant A as AuthServlet
+
+    Note over B,A: Gửi form Đăng nhập / Đăng ký / Bình luận
+    B->>C: POST /auth (CSRF Token, g-recaptcha-token)
+    C->>C: Kiểm tra CSRF Token trong bộ nhớ
+    C->>R: chain.doFilter()
+    R->>G: siteverify(token, action, timeout 2s)
+    alt Điểm bot < ngưỡng quy định
+        R-->>B: 400 Bad Request / Từ chối (chặn bot)
+    else Điểm hợp lệ hoặc Mạng lỗi (Fail-open 2s)
+        R->>A: chain.doFilter()
+        A->>A: Xử lý nghiệp vụ Servlet
+    end
+```
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 🌐 Trình duyệt
     participant F as AuthFilter
     participant A as AuthServlet
     participant D as UserDAO

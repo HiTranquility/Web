@@ -32,10 +32,12 @@ CREATE TABLE users (
 
     -- Lưu chuỗi BĂM, tuyệt đối không lưu mật khẩu gốc.
     -- 255 ký tự để chứa thoải mái chuỗi băm BCrypt (60) hoặc dài hơn sau này.
-    password_hash VARCHAR(255) NOT NULL,
+    -- Cho phép NULL từ ISSUE-001 phase 1: tài khoản chỉ đăng nhập bằng Google
+    -- thì KHÔNG CÓ mật khẩu để mà băm. NULL thể hiện đúng bản chất: chưa có mật khẩu.
+    password_hash VARCHAR(255) NULL,
 
     display_name  VARCHAR(100),
-    avatar_url    VARCHAR(255),
+    avatar_url    VARCHAR(1000),
     bio           VARCHAR(500),
 
     -- Chỉ hai vai trò. Không cần AUTHOR — xem ghi chú đầu bảng.
@@ -54,6 +56,51 @@ CREATE TABLE users (
 
 
 -- =============================================================================
+--  user_identities — tài khoản này đăng nhập được bằng những đường nào
+-- =============================================================================
+--  MỘT NGƯỜI, NHIỀU ĐƯỜNG VÀO. Cùng một tài khoản có thể vào bằng mật khẩu,
+--  bằng Google, và sau này bằng đường khác nữa.
+--
+--  VÌ SAO KHÔNG NHÉT google_sub THÀNH MỘT CỘT TRONG users
+--    Nhét cột thì mỗi nhà cung cấp mới là một cột mới, và 99% số dòng để rỗng.
+--    Thêm Facebook là thêm facebook_id, thêm GitHub là thêm github_id — bảng
+--    users phình ra vì thứ chẳng liên quan gì tới người dùng.
+--    Bảng nối thì thêm nhà cung cấp chỉ là thêm một giá trị vào ENUM.
+--
+--  provider_uid LÀ sub CỦA GOOGLE, KHÔNG PHẢI EMAIL.
+--    Người ta đổi được email trong tài khoản Google của họ. sub thì không đổi
+--    bao giờ. Khoá theo email nghĩa là hôm nào họ đổi email là mất tài khoản.
+--    Email vẫn lưu, nhưng chỉ để HIỂN THỊ, không dùng để tra.
+-- =============================================================================
+CREATE TABLE user_identities (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    user_id      INT NOT NULL,
+
+    -- Hiện chỉ có GOOGLE. ENUM để thêm nhà cung cấp sau chỉ là sửa một dòng.
+    provider     ENUM('GOOGLE') NOT NULL,
+
+    -- Định danh do nhà cung cấp cấp. Với Google là trường `sub` trong idToken.
+    -- 255 vì Google không cam kết độ dài, chỉ cam kết không quá 255.
+    provider_uid VARCHAR(255) NOT NULL,
+
+    -- Email lúc gắn. CHỈ ĐỂ HIỂN THỊ ở trang hồ sơ — không tra cứu theo cột này.
+    email        VARCHAR(150),
+
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Một tài khoản Google chỉ gắn được vào ĐÚNG MỘT tài khoản trên web.
+    -- Ràng buộc ở CSDL chứ không chỉ ở code: hai request gửi cùng lúc thì
+    -- code kiểm trước-rồi-chèn vẫn lọt cả hai, CSDL thì không.
+    UNIQUE KEY uq_identity_provider (provider, provider_uid),
+
+    -- Một tài khoản cũng chỉ gắn được MỘT tài khoản Google, không phải ba.
+    UNIQUE KEY uq_identity_user (user_id, provider)
+) ENGINE=InnoDB;
+
+
+-- =============================================================================
 --  stories — truyện
 -- =============================================================================
 CREATE TABLE stories (
@@ -65,7 +112,7 @@ CREATE TABLE stories (
     slug         VARCHAR(220) NOT NULL UNIQUE,
 
     description  TEXT,
-    cover_url    VARCHAR(255),
+    cover_url    VARCHAR(1000),
 
     author_id    INT NOT NULL,
 
@@ -509,6 +556,31 @@ CREATE TABLE password_resets (
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_reset_user (user_id)
+) ENGINE=InnoDB;
+
+
+-- =============================================================================
+--  wallets & transactions — Ví xu ảo & ủng hộ tác giả (ISSUE-008)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS wallets (
+    user_id     INT PRIMARY KEY,
+    balance     INT NOT NULL DEFAULT 100,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    from_user_id INT NULL,
+    to_user_id   INT NOT NULL,
+    story_id     INT NULL,
+    amount       INT NOT NULL,
+    message      VARCHAR(255) NULL,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (to_user_id)   REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (story_id)     REFERENCES stories(id) ON DELETE SET NULL,
+    INDEX idx_tx_to (to_user_id, created_at)
 ) ENGINE=InnoDB;
 
 

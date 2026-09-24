@@ -8,8 +8,11 @@ target/
 # Thư viện tải về
 *.jar
 
-# Cấu hình có mật khẩu
+# Cấu hình có mật khẩu & Secret
 **/src/main/resources/db.properties
+**/src/main/resources/google.properties
+**/src/main/resources/mail.properties
+**/firebase-service-account.json
 
 # Dữ liệu do app sinh ra lúc chạy
 **/WEB-INF/EmailList.txt

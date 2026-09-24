@@ -39,7 +39,7 @@ kể cả khi tự sửa tham số trên URL.
 
 ---
 
-## 3. Danh sách chức năng — 16 chức năng
+## 3. Danh sách chức năng — 17 chức năng
 
 ### A. Nhóm chức năng đọc truyện (không cần đăng nhập)
 
@@ -57,25 +57,26 @@ kể cả khi tự sửa tham số trên URL.
 
 | # | Chức năng | Mô tả |
 |:-:|-----------|-------|
-| 8 | **Quản lý tài khoản** | Đăng ký, đăng nhập, đăng xuất. Mật khẩu được băm PBKDF2 trước khi lưu |
+| 8 | **Quản lý tài khoản** | Đăng ký, đăng nhập (hỗ trợ cả mật khẩu PBKDF2 và đăng nhập Google OIDC an toàn qua Firebase), đăng xuất, gắn/gỡ tài khoản Google |
 | 9 | **Đăng và sửa truyện** | Tạo truyện, chọn thể loại, lưu nháp hoặc công khai. Chỉ tác giả sửa được truyện của mình |
 | 10 | **Quản lý chương** | Thêm, sửa, xoá chương. Hệ thống tự đề xuất số chương kế tiếp |
 | 11 | **Bình luận** | Bình luận truyện; tự gỡ được bình luận của mình |
 | 12 | **Đánh dấu truyện** | Lưu truyện để đọc sau. Hệ thống **tự ghi nhớ vị trí đọc** — mở lại có nút "Đọc tiếp" đưa đúng chương đang dở |
+| 13 | **Sao lưu Google Drive** | Tác giả sao lưu toàn bộ chương truyện sang Google Drive cá nhân (scope `drive.file`, tự động ghi đè, tên file chuẩn `001 - <chương>.txt`) |
 
 ### C. Nhóm chức năng quản trị
 
 | # | Chức năng | Mô tả |
 |:-:|-----------|-------|
-| 13 | **Quản lý truyện** | Xem toàn bộ truyện kể cả bản nháp; gỡ truyện vi phạm và khôi phục lại |
-| 14 | **Quản lý tài khoản** | Xem danh sách tài khoản; khoá/mở khoá kèm lý do |
+| 14 | **Quản lý truyện** | Xem toàn bộ truyện kể cả bản nháp; gỡ truyện vi phạm và khôi phục lại |
+| 15 | **Quản lý tài khoản** | Xem danh sách tài khoản; khoá/mở khoá kèm lý do |
 
 ### D. Trang thông tin
 
 | # | Chức năng | Mô tả |
 |:-:|-----------|-------|
-| 15 | **Hướng dẫn sử dụng** | Hướng dẫn từng chức năng cho người dùng mới |
-| 16 | **Nội quy cộng đồng** | Quy định nội dung, ứng xử, và mức xử lý vi phạm |
+| 16 | **Hướng dẫn sử dụng** | Hướng dẫn từng chức năng cho người dùng mới |
+| 17 | **Nội quy cộng đồng** | Quy định nội dung, ứng xử, và mức xử lý vi phạm |
 
 ---
 
@@ -111,8 +112,10 @@ câu lệnh, giá trị luôn đi qua tham số.
 **Chống XSS.** Mọi dữ liệu người dùng nhập đều được mã hoá ký tự đặc biệt trước
 khi hiển thị bằng thẻ `<c:out>`.
 
-**Bảo mật mật khẩu.** Băm PBKDF2 với 120.000 vòng lặp và chuỗi ngẫu nhiên riêng
-cho từng tài khoản. So sánh chuỗi băm bằng thuật toán thời gian cố định.
+**Bảo mật mật khẩu & Đăng nhập Google.** Mật khẩu được băm PBKDF2 với 120.000 vòng lặp
+và chuỗi muối (salt) ngẫu nhiên riêng cho từng tài khoản. Đăng nhập Google xác thực trực
+tiếp chữ ký số `idToken` qua Google OIDC máy chủ, tuyệt đối không tin client, chống giả
+mạo và chống chiếm đoạt tài khoản (Anti-Account Takeover) cùng chống Session Fixation.
 
 **Xoá mềm.** Truyện, bình luận và tài khoản khi bị gỡ chỉ đổi trạng thái, không
 xoá khỏi cơ sở dữ liệu — khôi phục được và giữ dữ liệu liên quan không bị mồ côi.

@@ -1,5 +1,6 @@
 package truyen.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -10,7 +11,9 @@ import java.time.LocalDateTime;
  * Không có trường id: khoá chính là cặp (userId, storyId). Mỗi người chấm một
  * truyện đúng một lần, chấm lại thì sửa dòng cũ.
  */
-public class Rating {
+public class Rating implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int userId;
     private int storyId;

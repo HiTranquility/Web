@@ -60,6 +60,26 @@
             <version>1.7.36</version>
         </dependency>
 
+        <!-- Firebase Admin SDK (ISSUE-001 Phase 2) -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.2.0</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JavaMail & Activation (ISSUE-002: Gửi email đặt lại mật khẩu) -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
         <!-- JUnit 5: Kiểm thử tự động -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -110,6 +110,33 @@ public final class DemoData {
         return null;
     }
 
+    /**
+     * Bảng xếp hạng tác giả nổi bật theo tổng lượt xem và người theo dõi — bản giả lập.
+     */
+    public static List<User> topAuthors(int limit) {
+        List<User> all = users();
+        List<User> authors = new ArrayList<>();
+        for (User u : all) {
+            if ("BANNED".equals(u.getStatus())) continue;
+            List<Story> stList = storiesByAuthor(u.getId());
+            if (stList.isEmpty()) continue;
+            long totalViews = 0;
+            for (Story s : stList) {
+                totalViews += s.getViewCount();
+            }
+            u.setStoryCount(stList.size());
+            u.setTotalViews(totalViews);
+            u.setFollowerCount(followerCount(u.getId()));
+            authors.add(u);
+        }
+        authors.sort((a, b) -> {
+            int cmp = Long.compare(b.getTotalViews(), a.getTotalViews());
+            if (cmp != 0) return cmp;
+            return Integer.compare(b.getFollowerCount(), a.getFollowerCount());
+        });
+        return slice(authors, 0, limit);
+    }
+
     // ========================================================================
     //  THỂ LOẠI
     // ========================================================================

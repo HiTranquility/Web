@@ -77,6 +77,24 @@
     </filter-mapping>
 
     <!--
+      CHỐNG BOT BẰNG GOOGLE reCAPTCHA v3 (ISSUE-001 Phase 4).
+
+      PHẢI ĐỨNG SAU CsrfFilter: request thiếu CSRF token là rác, loại nó ra
+      bằng bộ nhớ trước khi tốn một lượt gọi mạng sang Google.
+
+      Bảo vệ 3 cửa nhạy cảm: POST /auth?action=register (0.5), POST /auth?action=login (0.3),
+      và POST /comment?action=add (0.5).
+    -->
+    <filter>
+        <filter-name>RecaptchaFilter</filter-name>
+        <filter-class>truyen.filter.RecaptchaFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>RecaptchaFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!--
       Thư mục chứa ảnh bìa người dùng tải lên.
 
       PHẢI NẰM NGOÀI webapp. Để trong webapp thì mỗi lần deploy lại là Tomcat
@@ -136,32 +154,6 @@
 
 
     <!--
-      Trang lỗi tuỳ biến.
-      Trong lúc phát triển có thể comment lại để thấy stack trace thật.
-    -->
-    <error-page>
-        <error-code>404</error-code>
-        <location>/WEB-INF/views/common/page/error404.jsp</location>
-    </error-page>
-
-    <!--
-      403 Forbidden — TRANG 9.
-      Kich hoat khi AdminFilter chan nguoi khong phai admin, hoac khi servlet
-      goi sendError(403) vi nguoi dung sua noi dung khong phai cua minh.
-      Phai la sendError, khong phai setStatus - setStatus KHONG kich hoat
-      error-page.
-    -->
-    <error-page>
-        <error-code>403</error-code>
-        <location>/WEB-INF/views/common/page/error403.jsp</location>
-    </error-page>
-    <error-page>
-        <exception-type>java.lang.Throwable</exception-type>
-        <location>/WEB-INF/views/common/page/error500.jsp</location>
-    </error-page>
-
-
-    <!--
       Phiên đăng nhập sống 60 phút không hoạt động.
       CASE 01 sẽ dùng session để lưu người đang đăng nhập.
     -->
@@ -194,10 +186,38 @@
 
 
     <!--
-      KHÔNG khai <welcome-file-list>.
+      TRANG BÁO LỖI TUỲ BIẾN (ISSUE-016, dọn lại ở bug-002).
 
-      Trang chủ do HomeServlet map vào "" phụ trách. Nếu khai welcome-file thì
-      Tomcat sẽ tìm file tĩnh trước và servlet không bao giờ chạy.
+      MỘT CỬA DUY NHẤT: mọi mã lỗi đều đi qua ErrorServlet, nó chọn mảnh nội
+      dung rồi lắp vào layout/main.jsp. Giữ nguyên thanh menu và chân trang,
+      và không lộ stack trace ra cho người dùng.
+
+      [NEVER] khai cùng một <error-code> hoặc <exception-type> hai lần.
+        Đặc tả Servlet 3.1 §14.4 nói mô tả triển khai như vậy là KHÔNG HỢP LỆ.
+        Tomcat dễ tính: nó ghi cảnh báo rồi dùng khai báo cuối — nên bản trùng
+        trước bug-002 vẫn "chạy đúng", nhưng đúng do MAY, không do mình chỉ
+        định. Container khác được phép từ chối triển khai thẳng.
+
+      403 Forbidden: kích hoạt khi AdminFilter chặn người không phải admin,
+        hoặc khi servlet gọi sendError(403) vì người dùng sửa nội dung không
+        phải của mình. Phải là sendError, KHÔNG phải setStatus — setStatus
+        không kích hoạt error-page.
     -->
+    <error-page>
+        <error-code>403</error-code>
+        <location>/error?code=403</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error?code=404</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error?code=500</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/error?code=500</location>
+    </error-page>
 
 </web-app>

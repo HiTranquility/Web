@@ -12,10 +12,15 @@ import javax.servlet.http.HttpSession;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import truyen.dao.IdentityDAO;
 import truyen.dao.PasswordResetDAO;
 import truyen.dao.UserDAO;
 import truyen.model.User;
+import truyen.model.UserIdentity;
+import truyen.util.GoogleConfig;
+import truyen.util.GoogleTokenVerifier;
 import truyen.util.PasswordUtil;
+import truyen.util.RateLimiter;
 
 import static truyen.util.ServletHelper.trimOrEmpty;
 
@@ -25,6 +30,8 @@ public class AuthServlet extends HttpServlet {
 
     private UserDAO userDAO;
     private PasswordResetDAO resetDAO;
+    private IdentityDAO identityDAO;
+    private GoogleTokenVerifier googleTokenVerifier;
 
     /* SecureRandom, KHÔNG phải Random. */
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -33,6 +40,12 @@ public class AuthServlet extends HttpServlet {
     public void init() throws ServletException {
         userDAO = new UserDAO();
         resetDAO = new PasswordResetDAO();
+        identityDAO = new IdentityDAO();
+        googleTokenVerifier = new GoogleTokenVerifier();
+    }
+
+    public void setGoogleTokenVerifier(GoogleTokenVerifier verifier) {
+        this.googleTokenVerifier = verifier;
     }
 
     // GET: hiện form. POST: xử lý form. Cả hai vào chung handle().
@@ -83,6 +96,10 @@ public class AuthServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log("AuthServlet: lỗi truy vấn khi action=" + action, e);
+            if ("firebase-google".equals(action) || "1".equals(request.getParameter("ajax"))) {
+                sendJsonResponse(response, false, "Lỗi máy chủ (" + e.getMessage() + "). Vui lòng thử lại.", null);
+                return;
+            }
             request.setAttribute("message", "Hệ thống đang bận, vui lòng thử lại.");
             url = "/WEB-INF/views/auth/login.jsp";
         }
@@ -93,6 +110,11 @@ public class AuthServlet extends HttpServlet {
         }
 
         request.setAttribute("contentPage", url);
+        request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
+        request.setAttribute("googleApiKey", GoogleConfig.getApiKey());
+        request.setAttribute("googleAuthDomain", GoogleConfig.getAuthDomain());
+        request.setAttribute("googleProjectId", GoogleConfig.getProjectId());
+        request.setAttribute("googleAppId", GoogleConfig.getAppId());
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/auth.jsp")
                 .forward(request, response);
@@ -112,6 +134,17 @@ public class AuthServlet extends HttpServlet {
 
         String username = trimOrEmpty(request.getParameter("username"));
         String password = request.getParameter("password");
+        String clientIp = RateLimiter.getClientIp(request);
+
+        // Kiểm tra xem IP + username có đang bị tạm khóa do brute-force không
+        if (RateLimiter.isLoginBlocked(clientIp, username)) {
+            long remainingMin = RateLimiter.getLoginBlockedRemainingMinutes(clientIp, username);
+            request.setAttribute("message", "Bạn đã thử đăng nhập sai quá nhiều lần ("
+                    + RateLimiter.MAX_LOGIN_ATTEMPTS + " lần). Vui lòng thử lại sau "
+                    + remainingMin + " phút.");
+            request.setAttribute("username", username);
+            return "/WEB-INF/views/auth/login.jsp";
+        }
 
         if (username.isEmpty() || password == null || password.isEmpty()) {
             request.setAttribute("message", "Vui lòng nhập đủ tên đăng nhập và mật khẩu.");
@@ -123,10 +156,16 @@ public class AuthServlet extends HttpServlet {
 
         /* MỘT THÔNG BÁO CHUNG CHO CẢ HAI TRƯỜNG HỢP SAI. */
         if (user == null || !PasswordUtil.verify(password, user.getPasswordHash())) {
-            request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng.");
+            RateLimiter.recordLoginFailure(clientIp, username);
+            int remaining = RateLimiter.getRemainingAttempts(clientIp, username);
+            String warn = remaining > 0 ? " (Bạn còn " + remaining + " lần thử)" : " (Tài khoản bị tạm khóa 15 phút)";
+            request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng." + warn);
             request.setAttribute("username", username);
             return "/WEB-INF/views/auth/login.jsp";
         }
+
+        // Đăng nhập thành công -> xóa lịch sử thất bại của IP + username
+        RateLimiter.resetLoginAttempts(clientIp, username);
 
         // Bị ban thì chặn đăng nhập, nhưng truyện của họ vẫn còn trên web
         if (user.isBanned()) {
@@ -315,7 +354,7 @@ public class AuthServlet extends HttpServlet {
 
     // ---- QUÊN MẬT KHẨU -----------------------------------------------------
 
-    /** TRANG 21 — Xin cấp vé đặt lại mật khẩu. */
+    /** TRANG 21 — Xin cấp vé đặt lại mật khẩu (ISSUE-002: gửi qua email, không in ra màn hình). */
     private String forgot(HttpServletRequest request) throws SQLException {
         String email = trimOrEmpty(request.getParameter("email"));
 
@@ -325,16 +364,18 @@ public class AuthServlet extends HttpServlet {
                 String token = newToken();
                 resetDAO.create(token, u.getId());
 
-                /*
-                 * ĐỒ ÁN KHÔNG CÓ MÁY CHỦ GỬI THƯ nên đường dẫn hiện thẳng ra
-                 * màn hình. Trong hệ thống thật, dòng dưới đây được thay bằng
-                 * lệnh gửi email và TUYỆT ĐỐI không hiện token cho người đang
-                 * đứng trước màn hình — ai mở trang cũng đổi được mật khẩu của
-                 * người khác chỉ bằng cách gõ email của họ.
-                 */
-                request.setAttribute("devLink",
-                        request.getContextPath() + "/auth?action=reset&token=" + token);
+                // Dựng liên kết đầy đủ gửi đến hòm thư người dùng
+                String scheme = request.getScheme();
+                String serverName = request.getServerName();
+                int serverPort = request.getServerPort();
+                String portPart = (serverPort == 80 || serverPort == 443) ? "" : (":" + serverPort);
+                String resetUrl = scheme + "://" + serverName + portPart
+                        + request.getContextPath() + "/auth?action=reset&token=" + token;
+
+                // Gửi thư ngầm (không làm chậm trang web)
+                truyen.util.MailSender.sendPasswordResetEmailAsync(u.getEmail(), u.getName(), resetUrl);
             }
+            // Luôn báo sent = true để không lộ thông tin email có tồn tại hay không (OWASP recommendation)
             request.setAttribute("sent", true);
         }
 
@@ -395,7 +436,24 @@ public class AuthServlet extends HttpServlet {
     }
 
     /**
-     * ĐĂNG NHẬP / ĐĂNG KÝ BẰNG GOOGLE QUA FIREBASE AUTH
+     * ĐĂNG NHẬP / ĐĂNG KÝ BẰNG GOOGLE QUA FIREBASE AUTH (ISSUE-001 Phase 2)
+     *
+     * Thứ tự kiểm tra nghiêm ngặt (chặn đứng bug-001):
+     *   1. Không phải POST                      -> 405
+     *   2. GoogleConfig.isEnabled() == false    -> JSON success:false
+     *   3. idToken rỗng                         -> JSON success:false
+     *   4. verifier.verify(idToken) == null     -> JSON success:false (Chặn giả mạo)
+     *   -- từ dòng này trở xuống, KHÔNG đọc request.getParameter("email"|"uid") --
+     *   5. sub, email, name, picture := lấy từ GoogleUser đã verify
+     *   6. identity := IdentityDAO.findByProviderUid("GOOGLE", sub)
+     *      6a. có   -> user := UserDAO.findById(identity.getUserId())
+     *      6b. chưa -> UserDAO.findByEmail(email)
+     *          - ra user -> JSON success:false (Không tự gắn - chống Account Takeover)
+     *          - null    -> tạo user mới (password_hash = NULL) + IdentityDAO.insert(...)
+     *   7. user.isAdmin()  -> JSON success:false
+     *   8. user.isBanned() -> JSON success:false + lý do
+     *   9. session.invalidate() rồi getSession(true) (chống Session Fixation)
+     *   10. đặt currentUser vào phiên, JSON success:true
      */
     private void firebaseGoogleLogin(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
@@ -405,20 +463,60 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        String email = trimOrEmpty(request.getParameter("email"));
-        String displayName = trimOrEmpty(request.getParameter("displayName"));
-        String photoUrl = trimOrEmpty(request.getParameter("photoUrl"));
-        String uid = trimOrEmpty(request.getParameter("uid"));
-
-        if (email.isEmpty() || !email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
-            sendJsonResponse(response, false, "Email tài khoản Google không hợp lệ.", null);
+        if (!GoogleConfig.isEnabled()) {
+            sendJsonResponse(response, false, "Đăng nhập Google hiện chưa được kích hoạt.", null);
             return;
         }
 
-        User user = userDAO.findByEmail(email);
+        String idToken = trimOrEmpty(request.getParameter("idToken"));
+        if (idToken.isEmpty()) {
+            sendJsonResponse(response, false, "Thiếu mã xác thực Google (idToken).", null);
+            return;
+        }
 
-        if (user == null) {
-            // Tự động tạo tài khoản mới từ thông tin Google
+        // BẢO MẬT: Kiểm tra chữ ký số idToken qua máy chủ OIDC của Google (Chặn đứng bug-001)
+        GoogleTokenVerifier.GoogleUser googleUser = googleTokenVerifier.verify(idToken);
+        if (googleUser == null) {
+            sendJsonResponse(response, false, "Xác minh tài khoản Google thất bại hoặc phiên đã hết hạn. Vui lòng thử lại.", null);
+            return;
+        }
+
+        // TUYỆT ĐỐI KHÔNG đọc request.getParameter("email") hay ("uid")
+        String sub = googleUser.getSub();
+        String email = googleUser.getEmail();
+        String displayName = googleUser.getName() != null ? googleUser.getName() : "";
+        String photoUrl = googleUser.getPicture() != null ? googleUser.getPicture() : "";
+        if (photoUrl.length() > 1000) {
+            photoUrl = photoUrl.substring(0, 1000);
+        }
+
+        UserIdentity identity = identityDAO.findByProviderUid("GOOGLE", sub);
+        User user = null;
+
+        if (identity != null) {
+            // Đã liên kết trước đó: đăng nhập lần 2 trở đi
+            user = userDAO.findById(identity.getUserId());
+            if (user == null) {
+                sendJsonResponse(response, false, "Không tìm thấy thông tin tài khoản người dùng.", null);
+                return;
+            }
+            // Cập nhật avatar nếu người dùng chưa có
+            if ((user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) && !photoUrl.isEmpty()) {
+                userDAO.updateAvatar(user.getId(), photoUrl);
+                user.setAvatarUrl(photoUrl);
+            }
+        } else {
+            // Chưa có liên kết Google: kiểm tra xem email đã có tài khoản mật khẩu chưa
+            User existingUser = userDAO.findByEmail(email);
+            if (existingUser != null) {
+                // TUYỆT ĐỐI KHÔNG tự gắn Google vào tài khoản đã có (Chống Account Takeover - bug-001)
+                sendJsonResponse(response, false,
+                        "Email này (" + email + ") đã có tài khoản trên hệ thống. " +
+                        "Vui lòng đăng nhập bằng mật khẩu, sau đó vào trang Hồ sơ cá nhân để liên kết tài khoản Google.", null);
+                return;
+            }
+
+            // Tạo tài khoản mới: password_hash = NULL (vì chỉ dùng Google)
             String baseUsername = email.substring(0, email.indexOf('@')).replaceAll("[^a-zA-Z0-9_]", "_");
             if (baseUsername.length() < 3) {
                 baseUsername = "user_" + baseUsername;
@@ -441,34 +539,28 @@ public class AuthServlet extends HttpServlet {
             user.setAvatarUrl(photoUrl.isEmpty() ? null : photoUrl);
             user.setRole("USER");
             user.setStatus("ACTIVE");
-            // Mật khẩu ngẫu nhiên băm an toàn
-            user.setPasswordHash(PasswordUtil.hash("FIREBASE_" + newToken()));
+            user.setPasswordHash(null); // NULL: Tài khoản Google không cần chuỗi băm rác
+
             userDAO.insert(user);
-        } else {
-            // Đã có tài khoản
-            /*
-             * BẢO MẬT: Chặn tuyệt đối tài khoản ADMIN đăng nhập nhanh qua Google.
-             * Tránh trường hợp kẻ tấn công biết email của admin và giả mạo đăng nhập
-             * để chiếm quyền hệ thống (Account Takeover). Admin bắt buộc dùng mật khẩu.
-             */
-            if (user.isAdmin()) {
-                sendJsonResponse(response, false,
-                        "Tài khoản Quản trị viên (ADMIN) không được phép đăng nhập qua Google. Vui lòng đăng nhập bằng mật khẩu.", null);
-                return;
-            }
+            int newUserId = user.getId();
 
-            if (user.isBanned()) {
-                String reason = (user.getBanReason() == null || user.getBanReason().isEmpty())
-                        ? "" : " Lý do: " + user.getBanReason();
-                sendJsonResponse(response, false, "Tài khoản của bạn đã bị khoá." + reason, null);
-                return;
-            }
+            // Ghi nhận liên kết vào user_identities
+            UserIdentity newIdentity = new UserIdentity(newUserId, "GOOGLE", sub, email);
+            identityDAO.insert(newIdentity);
+        }
 
-            // Cập nhật avatar nếu người dùng chưa có
-            if ((user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) && !photoUrl.isEmpty()) {
-                userDAO.updateAvatar(user.getId(), photoUrl);
-                user.setAvatarUrl(photoUrl);
-            }
+        // BẢO MẬT: Chặn tuyệt đối tài khoản ADMIN đăng nhập qua Google
+        if (user.isAdmin()) {
+            sendJsonResponse(response, false,
+                    "Tài khoản Quản trị viên (ADMIN) không được phép đăng nhập qua Google. Vui lòng đăng nhập bằng mật khẩu.", null);
+            return;
+        }
+
+        if (user.isBanned()) {
+            String reason = (user.getBanReason() == null || user.getBanReason().isEmpty())
+                    ? "" : " Lý do: " + user.getBanReason();
+            sendJsonResponse(response, false, "Tài khoản của bạn đã bị khoá." + reason, null);
+            return;
         }
 
         // Tái tạo phiên đăng nhập (chống Session Fixation)

@@ -41,7 +41,10 @@ $jars = @(
     # Connection Pool HikariCP & SLF4J
     @{ path = "com/zaxxer/HikariCP/4.0.3";                                 file = "HikariCP-4.0.3.jar" },
     @{ path = "org/slf4j/slf4j-api/1.7.36";                                file = "slf4j-api-1.7.36.jar" },
-    @{ path = "org/slf4j/slf4j-simple/1.7.36";                             file = "slf4j-simple-1.7.36.jar" }
+    @{ path = "org/slf4j/slf4j-simple/1.7.36";                             file = "slf4j-simple-1.7.36.jar" },
+    # JavaMail / SMTP (ISSUE-002)
+    @{ path = "com/sun/mail/javax.mail/1.6.2";                             file = "javax.mail-1.6.2.jar" },
+    @{ path = "com/sun/activation/javax.activation/1.2.0";                 file = "javax.activation-1.2.0.jar" }
 )
 foreach ($jar in $jars) {
     $dest = Join-Path $libs $jar.file

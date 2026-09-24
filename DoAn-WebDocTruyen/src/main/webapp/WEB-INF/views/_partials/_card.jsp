@@ -56,7 +56,10 @@
         <div class="story-title"><c:out value="${story.title}"/></div>
 
         <div class="story-meta">
-            <span>✍️ <c:out value="${story.authorName}"/></span>
+            <span class="card-author"
+                  onclick="event.preventDefault(); event.stopPropagation(); window.location.href='${pageContext.request.contextPath}/user?action=profile&amp;id=${story.authorId}';"
+                  title="Xem trang tác giả"
+                  style="cursor:pointer;transition:color .15s">✍️ <c:out value="${story.authorName}"/></span>
         </div>
         <div class="story-meta">
             <span>📄 ${story.chapterCount} chương</span>

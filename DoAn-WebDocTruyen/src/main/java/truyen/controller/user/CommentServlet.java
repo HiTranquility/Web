@@ -44,6 +44,7 @@ public class CommentServlet extends HttpServlet {
         }
 
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
+        int chapterId = parseIntOr(request.getParameter("chapterId"), 0);
 
         if ("like".equals(action)) {
             User me = ServletHelper.currentUser(request);
@@ -64,7 +65,7 @@ public class CommentServlet extends HttpServlet {
             if ("delete".equals(action)) {
                 delete(request, response);
             } else {
-                add(request, storyId);
+                add(request, storyId, chapterId);
             }
         } catch (SQLException e) {
             log("CommentServlet: lỗi truy vấn, action=" + action, e);
@@ -83,16 +84,26 @@ public class CommentServlet extends HttpServlet {
                 request.getSession().setAttribute("flash",
                         "Chưa nối cơ sở dữ liệu nên chưa lưu được. "
                         + "Chạy scripts\\setup-db.ps1 rồi tạo db.properties.");
-                response.sendRedirect(request.getContextPath()
-                        + "/story?action=detail&id=" + storyId);
+                if (chapterId > 0) {
+                    response.sendRedirect(request.getContextPath()
+                            + "/chapter?action=read&id=" + chapterId);
+                } else {
+                    response.sendRedirect(request.getContextPath()
+                            + "/story?action=detail&id=" + storyId);
+                }
                 return;
             }
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
 
-        response.sendRedirect(request.getContextPath()
-                + "/story?action=detail&id=" + storyId + "#comments");
+        if (chapterId > 0) {
+            response.sendRedirect(request.getContextPath()
+                    + "/chapter?action=read&id=" + chapterId + "#comments");
+        } else {
+            response.sendRedirect(request.getContextPath()
+                    + "/story?action=detail&id=" + storyId + "#comments");
+        }
     }
 
     /**
@@ -102,7 +113,7 @@ public class CommentServlet extends HttpServlet {
      * standards 01. Để GET thì người ta gửi được link
      * "/comment?action=add&content=spam" cho người khác bấm nhầm.
      */
-    private void add(HttpServletRequest request, int storyId) throws SQLException {
+    private void add(HttpServletRequest request, int storyId, int chapterId) throws SQLException {
         User me = ServletHelper.currentUser(request);
         String content = trimOrEmpty(request.getParameter("content"));
 
@@ -110,12 +121,24 @@ public class CommentServlet extends HttpServlet {
         if (me == null || storyId <= 0 || content.isEmpty()) {
             return;
         }
+
+        // Kiểm tra chống spam bình luận (Rate Limiting / Cooldown)
+        if (truyen.util.RateLimiter.isCommentSpam(me.getId())) {
+            long remainingSec = truyen.util.RateLimiter.getCommentCooldownRemainingSeconds(me.getId());
+            request.getSession().setAttribute("flashWarn",
+                    "Bạn gửi bình luận quá nhanh. Vui lòng chờ " + remainingSec + " giây trước khi gửi tiếp.");
+            return;
+        }
+
         if (content.length() > MAX_LENGTH) {
             content = content.substring(0, MAX_LENGTH);
         }
 
         Comment c = new Comment();
         c.setStoryId(storyId);
+        if (chapterId > 0) {
+            c.setChapterId(chapterId);
+        }
 
         /*
          * parentId co thi day la TRA LOI, khong co thi la binh luan goc.
@@ -131,6 +154,9 @@ public class CommentServlet extends HttpServlet {
         c.setContent(content);
         commentDAO.insert(c);
 
+        // Ghi nhận mốc thời gian bình luận thành công
+        truyen.util.RateLimiter.recordComment(me.getId());
+
         // Gửi thông báo cho người viết bình luận cha hoặc tác giả truyện
         try {
             truyen.dao.NotificationDAO notifDAO = new truyen.dao.NotificationDAO();
@@ -138,15 +164,25 @@ public class CommentServlet extends HttpServlet {
             truyen.model.Story s = sDAO.findById(storyId);
             String sTitle = s != null ? s.getTitle() : "truyện";
 
+            Integer notifChapterId = c.getChapterId();
+            String chapterDesc = "";
+            if (notifChapterId != null && notifChapterId > 0) {
+                truyen.dao.ChapterDAO chDAO = new truyen.dao.ChapterDAO();
+                truyen.model.Chapter ch = chDAO.findById(notifChapterId);
+                if (ch != null) {
+                    chapterDesc = " trong chương " + ch.getChapterNo();
+                }
+            }
+
             if (c.getParentId() != null) {
                 Comment parent = commentDAO.findById(c.getParentId());
                 if (parent != null && parent.getUserId() != me.getId()) {
-                    String msg = me.getName() + " đã trả lời bình luận của bạn trong truyện \"" + sTitle + "\"";
-                    notifDAO.sendNotification(parent.getUserId(), storyId, null, "SYSTEM", msg);
+                    String msg = me.getName() + " đã trả lời bình luận của bạn" + chapterDesc + " trong truyện \"" + sTitle + "\"";
+                    notifDAO.sendNotification(parent.getUserId(), storyId, notifChapterId, "SYSTEM", msg);
                 }
             } else if (s != null && s.getAuthorId() != me.getId()) {
-                String msg = me.getName() + " đã bình luận về truyện \"" + sTitle + "\"";
-                notifDAO.sendNotification(s.getAuthorId(), storyId, null, "SYSTEM", msg);
+                String msg = me.getName() + " đã bình luận" + chapterDesc + " về truyện \"" + sTitle + "\"";
+                notifDAO.sendNotification(s.getAuthorId(), storyId, notifChapterId, "SYSTEM", msg);
             }
         } catch (Exception e) {
             log("CommentServlet: không gửi được thông báo bình luận", e);

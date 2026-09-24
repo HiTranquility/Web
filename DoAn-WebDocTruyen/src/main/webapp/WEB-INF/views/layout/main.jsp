@@ -69,6 +69,16 @@
         <c:remove var="flash" scope="session"/>
     </c:if>
 
+    <c:if test="${not empty flashWarn}">
+        <div class="panel panel-warn" style="margin-bottom:22px"><c:out value="${flashWarn}"/></div>
+        <c:remove var="flashWarn" scope="session"/>
+    </c:if>
+
+    <c:if test="${not empty flashError}">
+        <div class="panel panel-err" style="margin-bottom:22px"><c:out value="${flashError}"/></div>
+        <c:remove var="flashError" scope="session"/>
+    </c:if>
+
     <c:if test="${not empty message}">
         <div class="panel panel-warn" style="margin-bottom:22px">
             <c:out value="${message}"/>

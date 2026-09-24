@@ -59,7 +59,7 @@ src/main/java/truyen/
 │   ├── RatingDAO.java   FollowDAO.java   ReportDAO.java
 │   ├── NotificationDAO.java ViewLogDAO.java PasswordResetDAO.java
 │
-├── controller/     22 servlet — chia 3 package theo vai trò & quyền hạn (Role-based)
+├── controller/     23 servlet — chia 4 package theo vai trò & quyền hạn (Role-based)
 │   │
 │   ├── common/     8 servlet — công khai, trang chủ, đọc truyện, xác thực, tải file
 │   │   ├── HomeServlet.java          /            trang chủ
@@ -81,6 +81,9 @@ src/main/java/truyen/
 │   │   ├── RatingServlet.java        /rating      chấm điểm sao truyện
 │   │   └── ReportServlet.java        /report      báo cáo vi phạm nội dung
 │   │
+│   ├── story/      1 servlet — tác giả sao lưu dữ liệu
+│   │   └── DriveBackupServlet.java   /drive       sao lưu truyện lên Google Drive cho tác giả
+│   │
 │   └── admin/      6 servlet — quản trị viên (AdminFilter bảo vệ)
 │       ├── AdminDashboardServlet.java /admin/dashboard thống kê tổng quan
 │       ├── AdminStoryServlet.java     /admin/story     quản lý, duyệt, gỡ truyện
@@ -89,18 +92,24 @@ src/main/java/truyen/
 │       ├── AdminCommentServlet.java   /admin/comment   kiểm duyệt bình luận
 │       └── AdminReportServlet.java    /admin/report    xử lý đơn báo cáo
 │
-├── filter/         5 filter — bộ lọc bảo mật & tiền xử lý request
+├── filter/         6 filter — bộ lọc bảo mật & tiền xử lý request
 │   ├── EncodingFilter.java      ép chuẩn UTF-8 mọi request/response
 │   ├── CsrfFilter.java          chặn tấn công CSRF trên mọi form POST
-│   ├── AuthFilter.java          bảo vệ các URL yêu cầu đăng nhập (`/user/*`, `/bookmark`, ...)
+│   ├── RecaptchaFilter.java     chặn bot reCAPTCHA v3 ở 3 cửa (đăng ký, đăng nhập, bình luận)
+│   ├── AuthFilter.java          bảo vệ các URL yêu cầu đăng nhập (`/user/*`, `/bookmark`, `/drive`, ...)
 │   ├── AdminFilter.java         bảo vệ vùng `/admin/*` chỉ dành cho role ADMIN
 │   └── NotificationFilter.java  tự nạp số lượng thông báo chưa đọc vào request
 │
-└── util/           8 file — tiện ích dùng chung
+└── util/           13 file — tiện ích dùng chung
     ├── DBConnection.java        mở kết nối MySQL qua Connection Pool
     ├── PasswordUtil.java        băm mật khẩu PBKDF2WithHmacSHA256 kèm muối ngẫu nhiên
     ├── SlugUtil.java            chuẩn hoá URL thân thiện (bỏ dấu tiếng Việt, ký tự lạ)
     ├── CsrfUtil.java            sinh và xác thực CSRF Token
+    ├── GoogleConfig.java        đọc cấu hình Google OAuth, Firebase & reCAPTCHA an toàn
+    ├── GoogleTokenVerifier.java xác thực chữ ký số idToken Google OIDC (chống giả mạo)
+    ├── RecaptchaVerifier.java   xác minh điểm số bot Google reCAPTCHA v3 (fail-open 2s)
+    ├── DriveClient.java         kết nối Google Drive REST API v3 tải & ghi đè file
+    ├── ChapterToTxt.java        định dạng chương truyện & toàn bộ truyện sang .txt chuẩn
     ├── UploadUtil.java          kiểm tra đuôi ảnh, chống path traversal khi tải lên
     ├── ServletHelper.java       tiện ích lấy tham số an toàn, redirect, trả JSON
     ├── DemoData.java            dữ liệu mẫu khi chạy thử nghiệm

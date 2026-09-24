@@ -21,7 +21,8 @@ import javax.servlet.http.HttpSession;
         "/follow",      // theo dõi tác giả
         "/notification",// thông báo
         "/report",      // báo cáo vi phạm
-        "/user"         // hồ sơ người dùng
+        "/user",        // hồ sơ người dùng
+        "/drive"        // sao lưu truyện lên Google Drive (tác giả)
 })
 public class AuthFilter implements Filter {
 

@@ -23,6 +23,7 @@ import truyen.util.AppListener;
 import truyen.model.Story;
 import truyen.model.User;
 import truyen.util.DBConnection;
+import truyen.util.GoogleConfig;
 import truyen.util.ServletHelper;
 import truyen.util.SlugUtil;
 import truyen.util.UploadUtil;
@@ -303,6 +304,15 @@ public class StoryServlet extends HttpServlet {
             log("Không lấy được truyện tương tự cho truyện " + id, e);
         }
 
+        // Gợi ý 4 truyện "độc giả đọc truyện này cũng đọc" (Collaborative Filtering)
+        try {
+            request.setAttribute("alsoRead", storyDAO.findAlsoRead(id, 4));
+        } catch (SQLException e) {
+            log("Không lấy được gợi ý đồng độc giả cho truyện " + id, e);
+        }
+
+        request.setAttribute("googleClientId", GoogleConfig.getClientId());
+        request.setAttribute("googleDriveEnabled", GoogleConfig.isDriveEnabled());
         request.setAttribute("pageTitle", story.getTitle());
         request.setAttribute("activeNav", "browse");
         return "/WEB-INF/views/common/story/detail.jsp";
@@ -312,6 +322,8 @@ public class StoryServlet extends HttpServlet {
     private String mine(HttpServletRequest request) throws SQLException {
         User me = ServletHelper.currentUser(request);
         request.setAttribute("stories", storyDAO.findByAuthor(me.getId()));
+        request.setAttribute("googleClientId", GoogleConfig.getClientId());
+        request.setAttribute("googleDriveEnabled", GoogleConfig.isDriveEnabled());
         request.setAttribute("pageTitle", "Truyện của tôi");
         request.setAttribute("mine", true);
         return "/WEB-INF/views/user/story/mine.jsp";

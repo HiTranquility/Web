@@ -16,7 +16,11 @@
 ================================================================================
 --%>
 <div class="profile-head">
-    <span class="profile-avatar">${author.initial}</span>
+    <c:set var="avUrl" value="${author.avatarUrl}"/>
+    <c:set var="avAlt" value="${author.name}"/>
+    <c:set var="avInitial" value="${author.initial}"/>
+    <c:set var="avClass" value="profile-avatar"/>
+    <%@ include file="/WEB-INF/views/_partials/_avatar.jsp" %>
 
     <div class="profile-info">
         <h1><c:out value="${author.name}"/></h1>

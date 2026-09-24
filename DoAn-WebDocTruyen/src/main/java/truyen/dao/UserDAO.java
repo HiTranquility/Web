@@ -86,9 +86,13 @@ public class UserDAO {
 
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
-            ps.setString(3, user.getPasswordHash());
+            if (user.getPasswordHash() != null) {
+                ps.setString(3, user.getPasswordHash());
+            } else {
+                ps.setNull(3, java.sql.Types.VARCHAR);
+            }
             ps.setString(4, user.getDisplayName());
-            ps.setString(5, user.getAvatarUrl());
+            ps.setString(5, safeTruncate(user.getAvatarUrl(), 1000));
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -99,15 +103,43 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Kiểm tra tài khoản có mật khẩu chưa (password_hash IS NOT NULL).
+     * Phục vụ kiểm tra an toàn: không cho phép gỡ Google nếu chưa đặt mật khẩu.
+     */
+    public boolean hasPassword(int userId) throws SQLException {
+        if (!DBConnection.isReady()) {
+            User u = findById(userId);
+            return u != null && u.hasPassword();
+        }
+        String sql = "SELECT password_hash FROM users WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String hash = rs.getString("password_hash");
+                    return hash != null && !hash.trim().isEmpty();
+                }
+                return false;
+            }
+        }
+    }
+
     /** Cập nhật ảnh đại diện người dùng. */
     public void updateAvatar(int userId, String avatarUrl) throws SQLException {
         String sql = "UPDATE users SET avatar_url = ? WHERE id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, avatarUrl);
+            ps.setString(1, safeTruncate(avatarUrl, 1000));
             ps.setInt(2, userId);
             ps.executeUpdate();
         }
+    }
+
+    private static String safeTruncate(String val, int maxLen) {
+        if (val == null) return null;
+        return val.length() > maxLen ? val.substring(0, maxLen) : val;
     }
 
     /** Admin ban / bỏ ban một tài khoản (CASE 10). */
@@ -269,6 +301,45 @@ public class UserDAO {
                 return rs.next() ? mapRow(rs) : null;
             }
         }
+    }
+
+    /**
+     * Bảng xếp hạng tác giả nổi bật dựa trên tổng lượt xem và số người theo dõi (ISSUE-006).
+     */
+    public List<User> findTopAuthors(int limit) throws SQLException {
+        if (!DBConnection.isReady()) {
+            return DemoData.topAuthors(limit);
+        }
+
+        String sql =
+            "SELECT u.id, u.username, u.email, u.password_hash, u.display_name, u.avatar_url, "
+          + "       u.bio, u.role, u.status, u.ban_reason, u.created_at, "
+          + "       COUNT(DISTINCT s.id) AS story_count, "
+          + "       COALESCE(SUM(s.view_count), 0) AS total_views, "
+          + "       (SELECT COUNT(*) FROM follows f WHERE f.author_id = u.id) AS follower_count "
+          + "FROM users u "
+          + "JOIN stories s ON s.author_id = u.id AND s.status = 'PUBLISHED' "
+          + "WHERE u.status = 'ACTIVE' "
+          + "GROUP BY u.id, u.username, u.email, u.password_hash, u.display_name, u.avatar_url, "
+          + "         u.bio, u.role, u.status, u.ban_reason, u.created_at "
+          + "ORDER BY total_views DESC, follower_count DESC "
+          + "LIMIT ?";
+
+        List<User> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, Math.max(1, limit));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User u = mapRow(rs);
+                    u.setStoryCount(rs.getInt("story_count"));
+                    u.setTotalViews(rs.getLong("total_views"));
+                    u.setFollowerCount(rs.getInt("follower_count"));
+                    list.add(u);
+                }
+            }
+        }
+        return list;
     }
 
     /* Đổi MỘT dòng ResultSet thành MỘT object User. Thêm cột mới thì sửa

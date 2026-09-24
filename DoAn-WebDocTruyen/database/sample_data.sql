@@ -45,6 +45,7 @@ DELETE FROM story_tags;
 DELETE FROM chapters;
 DELETE FROM stories;
 DELETE FROM tags;
+DELETE FROM user_identities;
 DELETE FROM users;
 
 -- =============================================================================
@@ -852,6 +853,24 @@ INSERT INTO view_logs (story_id, user_id, viewed_at) VALUES
 
 
 -- =============================================================================
+--  wallets & transactions (ISSUE-008)
+-- =============================================================================
+INSERT INTO wallets (user_id, balance) VALUES
+(1, 500),
+(2, 250),
+(3, 180),
+(4, 320),
+(5, 100),
+(6, 100)
+ON DUPLICATE KEY UPDATE balance = VALUES(balance);
+
+INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message, created_at) VALUES
+(5, 4, 1, 20, 'Ủng hộ tác giả ra chương mới nhanh nhé!', NOW() - INTERVAL 2 DAY),
+(6, 2, 2, 50, 'Truyện rất cảm động, tặng tác giả đóa hoa!', NOW() - INTERVAL 1 DAY),
+(5, 3, 4, 10, 'Ủng hộ trà đá cho tác giả', NOW() - INTERVAL 5 HOUR);
+
+
+-- =============================================================================
 --  KIỂM TRA
 -- =============================================================================
 SELECT 'users'      AS bang, COUNT(*) AS so_dong FROM users
@@ -865,7 +884,9 @@ UNION ALL SELECT 'ratings',    COUNT(*) FROM ratings
 UNION ALL SELECT 'follows',    COUNT(*) FROM follows
 UNION ALL SELECT 'notifications', COUNT(*) FROM notifications
 UNION ALL SELECT 'reports',    COUNT(*) FROM reports
-UNION ALL SELECT 'view_logs',  COUNT(*) FROM view_logs;
+UNION ALL SELECT 'view_logs',  COUNT(*) FROM view_logs
+UNION ALL SELECT 'wallets',    COUNT(*) FROM wallets
+UNION ALL SELECT 'transactions', COUNT(*) FROM transactions;
 
 SELECT '=== TÀI KHOẢN ĐĂNG NHẬP ===' AS '';
 SELECT username AS tai_khoan,

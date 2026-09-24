@@ -1,0 +1,19 @@
+{
+  "name": "ĐọcTruyện — Nền tảng Đọc truyện Online",
+  "short_name": "ĐọcTruyện",
+  "description": "Nền tảng đọc và sáng tác truyện online miễn phí",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#f97316",
+  "icons": [
+    {
+      "src": "assets/images/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -73,6 +73,13 @@
                     <%@ include file="/WEB-INF/views/_partials/_story-row.jsp" %>
 
                     <div class="mine-actions">
+                        <c:if test="${googleDriveEnabled}">
+                            <button type="button" class="btn btn-ghost btn-sm btn-drive-backup"
+                                    data-story-id="${story.id}"
+                                    data-story-title="<c:out value='${story.title}'/>"
+                                    title="Sao lưu toàn bộ chương lên Google Drive cá nhân">
+                                ☁️ Sao lưu Drive</button>
+                        </c:if>
                         <a class="btn btn-ghost btn-sm"
                            href="${pageContext.request.contextPath}/chapter?action=create&amp;storyId=${story.id}">
                             + Chương</a>
@@ -107,3 +114,12 @@
         <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
     </c:otherwise>
 </c:choose>
+
+<c:if test="${googleDriveEnabled}">
+    <script>
+        window.APP_CONTEXT = '${pageContext.request.contextPath}';
+        window.GOOGLE_CLIENT_ID = '<c:out value="${googleClientId}"/>';
+        window.CSRF_TOKEN = '<c:out value="${csrfToken}"/>';
+    </script>
+    <script src="${pageContext.request.contextPath}/assets/js/drive-backup.js" defer></script>
+</c:if>

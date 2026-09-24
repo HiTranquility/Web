@@ -1,9 +1,12 @@
 package truyen.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /** Quan hệ theo dõi: followerId theo dõi authorId. */
-public class Follow {
+public class Follow implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int followerId;
     private int authorId;

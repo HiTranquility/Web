@@ -55,6 +55,14 @@ public class User implements Serializable {
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 
+    /**
+     * Tài khoản này đã đặt mật khẩu chưa.
+     * Tài khoản đăng ký qua Google có passwordHash là null (chưa có mật khẩu).
+     */
+    public boolean hasPassword() {
+        return passwordHash != null && !passwordHash.trim().isEmpty();
+    }
+
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
 
@@ -78,6 +86,12 @@ public class User implements Serializable {
 
     public int getFollowerCount() { return followerCount; }
     public void setFollowerCount(int followerCount) { this.followerCount = followerCount; }
+
+    /** Tổng lượt xem của tất cả truyện do tác giả này sáng tác. */
+    private long totalViews;
+
+    public long getTotalViews() { return totalViews; }
+    public void setTotalViews(long totalViews) { this.totalViews = totalViews; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

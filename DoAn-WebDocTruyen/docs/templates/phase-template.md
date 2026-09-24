@@ -1,22 +1,19 @@
 # 🚀 ISSUE-NNN — Phase N: [Tên đợt]
 
-> Khuôn này copy thành `docs/projects/issues/ISSUE-NNN-ten-viec-phase-N.md`,
-> nằm ngay cạnh file issue gốc. Luật chung: [`projects/README.md`](../README.md).
-> **Xoá dòng trích dẫn này sau khi copy.**
+> **Đích:** `docs/projects/issues/ISSUE-NNN-slug/phase-N.md` — nằm TRONG thư mục issue. · **Luật chung:** [projects/README](../../README.md)
 >
-> **[GOTCHA]** Đường dẫn trong khuôn tính từ **chỗ file copy ra sẽ nằm**, không phải
-> từ `templates/`. Mở khuôn ở đây mà bấm link thì hỏng — đúng như vậy, đừng "sửa".
+> **[GOTCHA]** Đường dẫn trong khuôn tính từ **chỗ file copy ra sẽ nằm** (`docs/projects/issues/ISSUE-NNN-slug/`). Mở khuôn ở `templates/` mà bấm link thì hỏng — đúng như vậy, đừng "sửa".
 
 ## 📌 Meta
 
 | | |
 |---|---|
-| **Thuộc việc** | [ISSUE-NNN](ISSUE-NNN-ten-viec.md) — *cùng thư mục* |
+| **Thuộc việc** | [issue.md](issue.md) — *cùng thư mục* |
 | **Đợt** | Phase N / tổng M đợt |
 | **Người làm** | *(một người thôi)* |
 | **Trạng thái** | 📝 Chưa nhận / 🚧 Đang làm / ✅ Xong / ⛔ Bỏ — **chọn một** |
 | **Ngày bắt đầu** | YYYY-MM-DD |
-| **Đụng vào** | `XxxServlet` · `XxxDAO` · `views/…` — **ghi tên file thật** |
+| **Đụng vào** | `XxxServlet` · `XxxDAO` · `views/...` — **ghi tên file thật** |
 
 ---
 
@@ -31,8 +28,7 @@
 
 > **[MUST] Chia đợt theo RỦI RO, không theo khối lượng.**
 
-Không phải "việc dài quá nên cắt đôi cho dễ thở". Tách khi trộn vào thì **hỏng là
-không biết hỏng do đâu**:
+Không phải "việc dài quá nên cắt đôi cho dễ thở". Tách khi trộn vào thì **hỏng là không biết hỏng do đâu**:
 
 | Tách ra khi | Vì |
 |---|---|
@@ -41,8 +37,7 @@ không biết hỏng do đâu**:
 | Có đổi thứ đang chạy đúng | Trộn "thêm mới" với "sửa cái cũ" → test đỏ không biết tại nhánh nào. |
 | Hai người phải làm nối tiếp nhau | Người sau cần người trước xong hẳn mới bắt đầu được. |
 
-Việc gọn, một mình, không đụng schema/filter thì **đừng chia đợt** — viết thẳng
-trong ISSUE là đủ.
+Việc gọn, một mình, không đụng schema/filter thì **đừng chia đợt** — viết thẳng trong `issue.md` là đủ.
 
 **Lý do tách của đợt này:** …
 
@@ -53,8 +48,7 @@ trong ISSUE là đủ.
 - **Phải xong trước mới làm được:** [Phase / ISSUE nào, hoặc "không có"]
 - **Xong đợt này mới mở khoá được:** [Phase / ISSUE nào, hoặc "không có"]
 
-> Có ô nào không trống thì **nói cho người kia biết** — đừng để họ ngồi chờ mà
-> không biết mình đang chờ ai.
+> Có ô nào không trống thì **nói cho người kia biết** — đừng để họ ngồi chờ mà không biết mình đang chờ ai.
 
 ---
 
@@ -71,21 +65,19 @@ trong ISSUE là đủ.
 
 > **[MUST] Điền số thật.** Ghi "OK" hay "chạy được" là vô dụng.
 
-| Lệnh | Kết quả **trước** đợt này |
+| Lệnh kiểm tra | Kết quả **trước** đợt này |
 |---|---|
-| `mvn test` | [vd: 28 pass / 0 fail] |
-| `mvn -q compile` | [vd: biên dịch sạch, 0 lỗi] |
+| `powershell -ExecutionPolicy Bypass -File scripts\test.ps1` | [vd: 28 pass / 0 fail] |
+| Biên dịch code (`scripts\run.ps1` hoặc `javac`) | [vd: biên dịch sạch, 0 lỗi] |
 | Mở site chạy thử | [vd: trang chủ + đăng nhập + đọc chương đều bình thường] |
 
-**[GOTCHA]** Không có baseline thì lúc xong đợt sẽ không phân biệt được **lỗi mình
-vừa gây ra** với **lỗi vốn đã có sẵn**. Đến lúc đó phải `git stash` để đo ngược lại
-— mất thời gian gấp đôi so với việc gõ ba dòng ở trên ngay bây giờ.
+**[GOTCHA]** Không có baseline thì lúc xong đợt sẽ không phân biệt được **lỗi mình vừa gây ra** với **lỗi vốn đã có sẵn**. Đến lúc đó phải `git stash` để đo ngược lại — mất thời gian gấp đôi so với việc ghi nhận ngay bây giờ.
 
 ---
 
 ## 5. Kiểm lại khi xong
 
-- [ ] **Tự động:** `mvn test` — đo lại, **không được tụt** so với bảng §4
+- [ ] **Tự động:** `powershell -ExecutionPolicy Bypass -File scripts\test.ps1` — đo lại, **không được tụt** so với bảng §4
 - [ ] **Bằng tay:** đi đúng luồng vừa sửa
   1. …
   2. …
@@ -98,17 +90,12 @@ vừa gây ra** với **lỗi vốn đã có sẵn**. Đến lúc đó phải `g
 ## 6. Đóng đợt — đủ ba điều này mới được ✅
 
 - [ ] Mọi số ở bảng Baseline đo lại **bằng hoặc tốt hơn** trước đợt.
-- [ ] Đã commit, dòng đầu ghi mã: `ISSUE-NNN phase-N — [đã làm gì]`
-      *(mẫu message: [`04-GIT §2`](../../standards/04-GIT_CONVENTIONS.md))*.
-- [ ] **Ghi rõ phần CHƯA làm được**, nếu có — ở §7 và trong commit message.
-      Im lặng bỏ qua là cách chắc chắn nhất để người sau vấp lại.
-
-> Có sửa `database/schema.sql` thì **báo cả nhóm ngay khi commit**. Người khác
-> đang chạy schema cũ, pull về là lỗi ngay — và họ sẽ tưởng do code của mình.
+- [ ] Đã commit, dòng đầu ghi mã: `ISSUE-NNN phase-N — <mô tả ngắn>`, ghi rõ những gì **chưa** làm được (nếu có) — không im lặng bỏ qua.
+- [ ] Viết file `review-N.md` đối chiếu baseline & Acceptance Criteria trước khi chuyển sang phase kế.
+- [ ] Cập nhật bảng đợt ở [`issue.md`](issue.md) thành ✅.
 
 ---
 
-## 7. Còn vướng / chưa làm
+## 7. Ghi chú
 
-*Chỗ mắc, thứ cố tình để lại, câu hỏi cần người khác trả lời. Để trống được —
-nhưng đừng để trống chỉ vì ngại viết.*
+*Chỗ mắc, thứ cố tình chưa làm, thứ người sau cần biết. Để trống được.*

@@ -36,12 +36,17 @@
        href="${pageContext.request.contextPath}/rank?by=chapters">📄 Nhiều chương</a>
     <a class="tag ${by eq 'newest' ? 'is-on' : ''}"
        href="${pageContext.request.contextPath}/rank?by=newest">✨ Mới đăng</a>
+    <a class="tag ${by eq 'authors' ? 'is-on' : ''}"
+       href="${pageContext.request.contextPath}/rank?by=authors">✍️ Tác giả nổi bật</a>
 </div>
 
 <%-- Giải thích cách tính cho tab đang xem. Bảng xếp hạng mà không nói rõ
      xếp theo cái gì thì người đọc chỉ đoán, và thường đoán sai. --%>
 <p class="muted-note" style="margin-bottom:22px">
     <c:choose>
+        <c:when test="${by eq 'authors'}">
+            Xếp hạng những cây bút sáng tác nổi bật nhất dựa trên <b>tổng lượt xem</b> tác phẩm và số lượng người theo dõi.
+        </c:when>
         <c:when test="${by eq 'week'}">
             Đếm lượt xem thật trong <b>7 ngày</b> gần nhất, từ nhật ký
             <code>view_logs</code> — không phải tổng tích luỹ.
@@ -61,6 +66,52 @@
 </p>
 
 <c:choose>
+    <c:when test="${by eq 'authors'}">
+        <c:choose>
+            <c:when test="${not empty topAuthors}">
+                <ol class="rank-list">
+                    <c:forEach var="author" items="${topAuthors}" varStatus="st">
+                        <li class="rank-item" style="align-items:center">
+                            <span class="rank-no ${st.index lt 3 ? 'rank-top' : ''}">
+                                ${st.index + 1}
+                            </span>
+
+                            <div class="profile-avatar" style="width:50px;height:50px;font-size:1.25rem;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--ember,#f59e0b),var(--ember-dark,#d97706));color:#fff;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12)">
+                                ${author.initial}
+                            </div>
+
+                            <div class="rank-info" style="margin-left:14px;flex:1">
+                                <a class="rank-title"
+                                   href="${pageContext.request.contextPath}/user?action=profile&amp;id=${author.id}">
+                                    <c:out value="${author.name}"/>
+                                </a>
+                                <p class="rank-meta">
+                                    <span>@<c:out value="${author.username}"/></span>
+                                    &middot; 📚 ${author.storyCount} truyện
+                                    &middot; 👁️ <fmt:formatNumber pattern="#,##0" value="${author.totalViews}"/> lượt xem
+                                    &middot; ❤️ ${author.followerCount} theo dõi
+                                </p>
+                            </div>
+
+                            <a class="btn btn-ghost btn-sm"
+                               href="${pageContext.request.contextPath}/user?action=profile&amp;id=${author.id}">
+                                Xem hồ sơ
+                            </a>
+                        </li>
+                    </c:forEach>
+                </ol>
+            </c:when>
+            <c:otherwise>
+                <c:set var="emIcon"  value="✍️"/>
+                <c:set var="emTitle" value="Chưa có tác giả nào để xếp hạng"/>
+                <c:set var="emText"  value="Chưa có tác giả nào đăng truyện trên hệ thống."/>
+                <c:set var="emUrl"   value="/story?action=list"/>
+                <c:set var="emBtn"   value="Xem kho truyện"/>
+                <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
+            </c:otherwise>
+        </c:choose>
+    </c:when>
+
     <c:when test="${not empty stories}">
         <ol class="rank-list">
             <c:forEach var="story" items="${stories}" varStatus="st">
@@ -72,7 +123,7 @@
                     </span>
 
                     <div class="rank-cover">
-                                                <c:set var="cvUrl"     value="${story.coverUrl}"/>
+                        <c:set var="cvUrl"     value="${story.coverUrl}"/>
                         <c:set var="cvAlt"     value="${story.title}"/>
                         <c:set var="cvInitial" value="${story.initial}"/>
                         <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>

@@ -213,4 +213,23 @@ public class ViewLogDAO {
             }
         }
     }
+
+    /**
+     * Dọn dẹp định kỳ (ISSUE-013):
+     * Xóa các lượt xem vô danh (user_id IS NULL) đã quá số ngày chỉ định (mặc định 90 ngày)
+     * để tránh phình to bảng view_logs không cần thiết.
+     *
+     * @param days số ngày lưu giữ tối đa
+     * @return số dòng đã được dọn dẹp
+     */
+    public int cleanOldLogs(int days) throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+
+        String sql = "DELETE FROM view_logs WHERE user_id IS NULL AND viewed_at < NOW() - INTERVAL ? DAY";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, days);
+            return ps.executeUpdate();
+        }
+    }
 }

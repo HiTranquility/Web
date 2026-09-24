@@ -66,12 +66,14 @@
         <li>Bình luận của mình thì <b>gỡ được</b>. Quản trị viên gỡ được của mọi người.</li>
     </ul>
 
-    <h2>7. Tài khoản</h2>
+    <h2>7. Tài khoản &amp; Liên kết Google</h2>
     <ul>
         <li>Đăng ký cần tên đăng nhập (chữ, số, gạch dưới), email và mật khẩu
             từ 6 ký tự.</li>
         <li>Mật khẩu được <b>băm</b> trước khi lưu — kể cả quản trị viên cũng
             không đọc được mật khẩu của bạn.</li>
+        <li><b>Đăng nhập bằng Google:</b> Bạn có thể đăng nhập hoặc tạo tài khoản nhanh chóng chỉ với 1 cú nhấp chuột.</li>
+        <li><b>Gắn tài khoản Google:</b> Bạn có thể vào <i>Hồ sơ → Sửa hồ sơ → Tài khoản liên kết</i> để gắn Google, giúp đăng nhập nhanh hơn. Khi muốn hủy liên kết Google, hệ thống luôn yêu cầu bạn phải có sẵn mật khẩu để bảo vệ an toàn cho tài khoản.</li>
         <li>Tài khoản bị khoá thì không đăng nhập được, nhưng
             <b>truyện đã đăng vẫn còn</b> trên trang.</li>
     </ul>

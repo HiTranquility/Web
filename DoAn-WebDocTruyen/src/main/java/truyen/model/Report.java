@@ -1,9 +1,12 @@
 package truyen.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /** Một báo cáo vi phạm do người dùng gửi. */
-public class Report {
+public class Report implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int id;
     private int reporterId;

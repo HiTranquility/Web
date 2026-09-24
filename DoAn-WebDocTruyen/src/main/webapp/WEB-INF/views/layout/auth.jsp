@@ -61,11 +61,21 @@
         }
     }
 </script>
-<!-- Firebase App & Auth SDK (v10 compat) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<!-- Tích hợp Google Authentication -->
-<script src="${pageContext.request.contextPath}/assets/js/firebase-auth.js"></script>
+<c:if test="${googleEnabled}">
+    <script>
+        window.FIREBASE_CONFIG = {
+            apiKey: '<c:out value="${googleApiKey}"/>',
+            authDomain: '<c:out value="${googleAuthDomain}"/>',
+            projectId: '<c:out value="${googleProjectId}"/>',
+            appId: '<c:out value="${googleAppId}"/>'
+        };
+    </script>
+    <!-- Firebase App & Auth SDK (v10 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- Tích hợp Google Authentication -->
+    <script src="${pageContext.request.contextPath}/assets/js/firebase-auth.js"></script>
+</c:if>
 
 </body>
 </html>

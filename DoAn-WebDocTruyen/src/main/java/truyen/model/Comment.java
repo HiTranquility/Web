@@ -15,6 +15,9 @@ public class Comment implements Serializable {
 
     private int id;
     private int storyId;
+    /** null = bình luận ở cấp truyện; có giá trị = bình luận riêng của một chương. */
+    private Integer chapterId;
+    private Integer chapterNo;
     private int userId;
     private String content;
 
@@ -51,6 +54,14 @@ public class Comment implements Serializable {
 
     public int getStoryId() { return storyId; }
     public void setStoryId(int storyId) { this.storyId = storyId; }
+
+    public Integer getChapterId() { return chapterId; }
+    public void setChapterId(Integer chapterId) { this.chapterId = chapterId; }
+
+    public Integer getChapterNo() { return chapterNo; }
+    public void setChapterNo(Integer chapterNo) { this.chapterNo = chapterNo; }
+
+    public boolean isChapterComment() { return chapterId != null && chapterId > 0; }
 
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }

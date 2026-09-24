@@ -26,23 +26,11 @@
               Báo "email này chưa đăng ký" là biến trang thành công cụ dò xem
               ai có tài khoản ở đây. Xem ghi chú trong AuthServlet.forgot().
             --%>
-            <div class="panel panel-ok">
-                Nếu email đó có tài khoản, liên kết đặt lại đã được gửi đi.
-                Kiểm tra hộp thư trong 30 phút tới.
+            <div class="panel panel-ok" style="line-height: 1.6;">
+                <b>Đã gửi thư thành công!</b><br>
+                Nếu địa chỉ email này tồn tại trên hệ thống, chúng tôi đã gửi thư kèm liên kết hướng dẫn đặt lại mật khẩu.<br>
+                Vui lòng kiểm tra hộp thư đến (và thư mục Spam/Quảng cáo nếu chưa thấy) trong vòng 30 phút tới.
             </div>
-
-            <c:if test="${not empty devLink}">
-                <div class="panel panel-warn">
-                    <b>Chế độ đồ án — không có máy chủ gửi thư.</b><br>
-                    Liên kết lẽ ra nằm trong email, ở đây hiện thẳng ra:
-                    <a href="${devLink}">Đặt lại mật khẩu ngay</a>
-                    <p class="muted-note" style="margin-top:8px">
-                        Trong hệ thống thật, hiện liên kết này ra màn hình là
-                        lỗ hổng nghiêm trọng — ai gõ email của người khác cũng
-                        chiếm được tài khoản của họ.
-                    </p>
-                </div>
-            </c:if>
         </c:when>
 
         <c:otherwise>

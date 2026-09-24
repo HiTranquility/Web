@@ -55,6 +55,9 @@
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="${cm.id}">
                     <input type="hidden" name="storyId" value="${cmStoryId}">
+                    <c:if test="${not empty cmChapterId or not empty cm.chapterId}">
+                        <input type="hidden" name="chapterId" value="${not empty cmChapterId ? cmChapterId : cm.chapterId}">
+                    </c:if>
                     <button type="submit" class="link-danger">gỡ</button>
                 </form>
             </c:if>
@@ -82,6 +85,9 @@
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="add">
                         <input type="hidden" name="storyId" value="${cmStoryId}">
+                        <c:if test="${not empty cmChapterId or not empty cm.chapterId}">
+                            <input type="hidden" name="chapterId" value="${not empty cmChapterId ? cmChapterId : cm.chapterId}">
+                        </c:if>
 
                         <%-- parentId: khoá nối cả chuỗi trả lời về đúng bình
                              luận gốc này. DAO còn ép lại một lần nữa. --%>
@@ -150,6 +156,9 @@
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="${rp.id}">
                                         <input type="hidden" name="storyId" value="${cmStoryId}">
+                                        <c:if test="${not empty cmChapterId or not empty cm.chapterId}">
+                                            <input type="hidden" name="chapterId" value="${not empty cmChapterId ? cmChapterId : cm.chapterId}">
+                                        </c:if>
                                         <button type="submit" class="link-danger">gỡ</button>
                                     </form>
                                 </c:if>

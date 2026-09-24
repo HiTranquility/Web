@@ -1,9 +1,12 @@
 package truyen.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /** Một thông báo gửi tới một người dùng. */
-public class Notification {
+public class Notification implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int id;
     private int userId;
