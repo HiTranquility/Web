@@ -8,7 +8,7 @@
 |---|---|
 | **Mã** | ISSUE-013 |
 | **Người làm** | Dev C — Database & Performance |
-| **Trạng thái** | 🟡 Đang làm |
+| **Trạng thái** | ✅ Xong |
 | **Ngày mở** | 2026-09-18 |
 | **CASE liên quan** | Bảo trì hệ thống — Hiệu năng CSDL |
 | **Đụng vào** | `src/main/java/truyen/dao/ViewLogDAO.java` · `src/main/java/truyen/util/AppListener.java` |

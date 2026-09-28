@@ -8,7 +8,7 @@
 |---|---|
 | **Mã** | ISSUE-010 |
 | **Người làm** | Dev D — Frontend & PWA |
-| **Trạng thái** | 🟡 Đang làm |
+| **Trạng thái** |✅ Xong |
 | **Ngày mở** | 2026-09-18 |
 | **CASE liên quan** | Toàn bộ hệ thống — Trải nghiệm di động & Offline |
 | **Đụng vào** | `src/main/webapp/manifest.json` · `src/main/webapp/sw.js` · `src/main/webapp/WEB-INF/views/layout/parts/head.jsp` |

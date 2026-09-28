@@ -8,7 +8,7 @@
 |---|---|
 | **Mã** | ISSUE-012 |
 | **Người làm** | Dev D — SEO & Web |
-| **Trạng thái** | 🟡 Đang làm |
+| **Trạng thái** | ✅ Xong |
 | **Ngày mở** | 2026-09-18 |
 | **CASE liên quan** | Toàn bộ hệ thống — Định danh & SEO |
 | **Đụng vào** | `src/main/webapp/WEB-INF/views/layout/parts/head.jsp` · `src/main/java/truyen/controller/common/SitemapServlet.java` · `src/main/webapp/robots.txt` |
