@@ -62,3 +62,13 @@
     <script src="https://www.google.com/recaptcha/api.js?render=<c:out value='${recaptchaSiteKey}'/>" async defer></script>
     <script src="${pageContext.request.contextPath}/assets/js/recaptcha.js" defer></script>
 </c:if>
+
+<%--
+  Hỗ trợ form báo cáo vi phạm (ISSUE-025): đếm ảnh, kiểm dung lượng, nhắc mô
+  tả khi chọn "Khác". Chỉ là TIỆN NGHI — hàng rào thật nằm ở ReportServlet và
+  @MultipartConfig. Tắt JS thì form vẫn gửi được và vẫn bị máy chủ chặn đúng.
+
+  defer: file nhỏ, không chặn vẽ trang, và nó gắn listener ở cấp document nên
+  không cần chờ phần tử nào có sẵn.
+--%>
+<script src="${pageContext.request.contextPath}/assets/js/report-form.js?v=2.6" defer></script>

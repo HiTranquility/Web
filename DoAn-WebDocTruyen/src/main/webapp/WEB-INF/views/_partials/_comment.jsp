@@ -33,7 +33,9 @@
     ngay được hình dạng cuối cùng.
 ================================================================================
 --%>
-<div class="comment">
+<%-- id="comment-N": neo cho link báo cáo ở trang quản trị nhảy thẳng tới
+     đúng bình luận này (ISSUE-025). Không có neo thì admin phải tự mò. --%>
+<div class="comment" id="comment-${cm.id}">
     <span class="user-avatar">${cm.initial}</span>
 
     <div class="comment-body">
@@ -108,13 +110,35 @@
                           and not currentUser.admin}">
                 <details class="report-box report-inline">
                     <summary>⚠ báo cáo</summary>
-                    <form method="post" action="${pageContext.request.contextPath}/report">
+                    <%--
+                      enctype BẮT BUỘC có, không thì ảnh không đi kèm và
+                      request.getParts() ở servlet ném lỗi. Sáu loại thôi —
+                      "Đạo văn" và "Sai thể loại" vô nghĩa với một dòng bình
+                      luận, xem Report.categoriesFor() (ISSUE-025).
+                    --%>
+                    <form method="post" enctype="multipart/form-data"
+                          action="${pageContext.request.contextPath}/report">
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="targetType" value="COMMENT">
                         <input type="hidden" name="targetId" value="${cm.id}">
                         <input type="hidden" name="storyId" value="${cmStoryId}">
+
+                        <select name="category" class="inline-input report-category" required>
+                            <option value="">— Chọn loại vi phạm —</option>
+                            <c:forEach var="cat" items="${reportCategoriesComment}">
+                                <option value="${cat}">${reportCategoryLabels[cat]}</option>
+                            </c:forEach>
+                        </select>
+
                         <input type="text" name="reason" maxlength="500"
-                               class="inline-input" placeholder="Lý do…">
+                               class="inline-input" placeholder="Mô tả thêm (bắt buộc nếu chọn Khác)">
+
+                        <label class="report-file-label">
+                            📎 Ảnh
+                            <input type="file" name="evidence" accept="image/*" multiple
+                                   class="report-file-input" data-max="3">
+                        </label>
+
                         <button type="submit" class="btn btn-danger btn-sm">Gửi</button>
                     </form>
                 </details>
@@ -130,7 +154,7 @@
         <c:if test="${not empty cm.replies}">
             <div class="reply-list">
                 <c:forEach var="rp" items="${cm.replies}">
-                    <div class="comment comment-reply">
+                    <div class="comment comment-reply" id="comment-${rp.id}">
                         <span class="user-avatar">${rp.initial}</span>
                         <div class="comment-body">
                             <div class="comment-head">

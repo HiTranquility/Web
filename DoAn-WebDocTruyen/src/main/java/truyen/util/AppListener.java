@@ -2,13 +2,16 @@ package truyen.util;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
 import truyen.dao.TagDAO;
+import truyen.model.Report;
 import truyen.model.Tag;
 
 /**
@@ -49,6 +52,7 @@ public class AppListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent e) {
         refresh(e.getServletContext());
+        loadReportCategories(e.getServletContext());
         e.getServletContext().log("AppListener: đã nạp danh sách thể loại");
 
         // Dọn dẹp view_logs định kỳ chạy ngầm (ISSUE-013)
@@ -98,8 +102,46 @@ public class AppListener implements ServletContextListener {
         return cached == null ? new ArrayList<Tag>() : (List<Tag>) cached;
     }
 
+    // ========================================================================
+    //  LOẠI VI PHẠM CHO FORM BÁO CÁO  (ISSUE-025)
+    // ========================================================================
+
+    /**
+     * Nạp danh sách loại vi phạm vào application scope.
+     *
+     * <p>ĐÂY LÀ ỨNG VIÊN HOÀN HẢO CHO APPLICATION SCOPE — còn hợp hơn cả thể
+     * loại truyện: nó là hằng số biên dịch trong {@code Report}, không đọc từ
+     * CSDL, và <b>không bao giờ đổi</b> khi web đang chạy. Nạp một lần lúc
+     * khởi động là xong, không cần {@code refresh()} như thể loại.
+     *
+     * <p>Vì sao không để JSP tự gọi {@code Report.categoryLabel()}: EL gọi
+     * phương thức static là thứ dễ vỡ giữa các phiên bản container, và nó kéo
+     * tên lớp Java vào file JSP — đi ngược luật "JSP không chứa mã Java" ở
+     * {@code 02-VIEW}. Một Map đặt sẵn thì JSP chỉ việc tra khoá.
+     */
+    public static void loadReportCategories(ServletContext ctx) {
+        ctx.setAttribute("reportCategoriesStory",   Report.categoriesFor("STORY"));
+        ctx.setAttribute("reportCategoriesComment", Report.categoriesFor("COMMENT"));
+
+        // LinkedHashMap giữ đúng thứ tự khai báo — thứ tự đó là thứ tự hiện
+        // trong ô chọn, và nó được sắp có chủ ý (nặng trước, "Khác" cuối).
+        Map<String, String> labels = new LinkedHashMap<>();
+        for (String code : Report.CATEGORIES) {
+            labels.put(code, Report.categoryLabel(code));
+        }
+        ctx.setAttribute("reportCategoryLabels", labels);
+
+        // Ba loại nặng — trang quản trị dùng để tô đỏ nhãn.
+        ctx.setAttribute("reportSevereCategories", Report.SEVERE);
+    }
+
     @Override
     public void contextDestroyed(ServletContextEvent e) {
-        e.getServletContext().removeAttribute(TAGS);
+        ServletContext ctx = e.getServletContext();
+        ctx.removeAttribute(TAGS);
+        ctx.removeAttribute("reportCategoriesStory");
+        ctx.removeAttribute("reportCategoriesComment");
+        ctx.removeAttribute("reportCategoryLabels");
+        ctx.removeAttribute("reportSevereCategories");
     }
 }

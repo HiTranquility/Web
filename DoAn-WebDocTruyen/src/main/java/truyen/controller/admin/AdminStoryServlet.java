@@ -47,6 +47,8 @@ public class AdminStoryServlet extends HttpServlet {
             }
         }
 
+        String status = request.getParameter("status");
+
         try {
             if ("delete".equals(action) || "restore".equals(action) || "publish".equals(action)) {
                 int id = parseIntOr(request.getParameter("id"), 0);
@@ -57,12 +59,32 @@ public class AdminStoryServlet extends HttpServlet {
                 }
                 storyDAO.updateStatus(id, targetStatus);
 
-                // Post/Redirect/Get — F5 không gửi lại request
-                response.sendRedirect(request.getContextPath() + "/admin/story");
+                // Post/Redirect/Get — giữ nguyên bộ lọc status nếu có
+                String qs = (status != null && !status.isEmpty()) ? "?status=" + status : "";
+                response.sendRedirect(request.getContextPath() + "/admin/story" + qs);
                 return;
             }
 
-            request.setAttribute("stories", storyDAO.findAllForAdmin());
+            java.util.List<truyen.model.Story> all = storyDAO.findAllForAdmin();
+            java.util.List<truyen.model.Story> filtered = new java.util.ArrayList<>();
+            int draftCount = 0, publishedCount = 0, deletedCount = 0;
+
+            for (truyen.model.Story s : all) {
+                if ("DRAFT".equals(s.getStatus())) draftCount++;
+                else if ("PUBLISHED".equals(s.getStatus())) publishedCount++;
+                else if ("DELETED".equals(s.getStatus())) deletedCount++;
+
+                if (status == null || status.isEmpty() || status.equalsIgnoreCase(s.getStatus())) {
+                    filtered.add(s);
+                }
+            }
+
+            request.setAttribute("stories", filtered);
+            request.setAttribute("status", status);
+            request.setAttribute("totalCount", all.size());
+            request.setAttribute("publishedCount", publishedCount);
+            request.setAttribute("draftCount", draftCount);
+            request.setAttribute("deletedCount", deletedCount);
 
         } catch (SQLException e) {
             log("AdminStoryServlet: lỗi truy vấn, action=" + action, e);

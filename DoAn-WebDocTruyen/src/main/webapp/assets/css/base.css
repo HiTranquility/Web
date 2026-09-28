@@ -88,6 +88,7 @@ body {
     color: var(--text);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    transition: background-color .28s var(--ease), color .28s var(--ease);
 
     /* Hai vệt sáng rất mờ ở góc trên. Nền phẳng tuyệt đối trông chết,
        thêm chút chiều sâu là trang "thở" hơn hẳn. */

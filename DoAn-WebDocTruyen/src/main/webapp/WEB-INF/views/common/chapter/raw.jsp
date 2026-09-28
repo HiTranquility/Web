@@ -15,5 +15,5 @@
     <body>, và đoạn script chạy lại lần thứ hai.
 
   contentType đặt ngay ở đây, KHÔNG có <!DOCTYPE>, KHÔNG có <html>.
-  Cả file chỉ nhả ra đúng một thẻ <article>.
+  Cả file chỉ nhả ra đúng một thẻ <article> từ _block.jsp.
 --%><%@ include file="/WEB-INF/views/common/chapter/_block.jsp" %>

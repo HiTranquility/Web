@@ -38,8 +38,9 @@ public class AdminReportServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        String action = request.getParameter("action");
-        String status = request.getParameter("status");
+        String action   = request.getParameter("action");
+        String status   = request.getParameter("status");
+        String category = request.getParameter("category");   // ISSUE-025
 
         if ("resolve".equals(action) || "dismiss".equals(action)
                 || "resolve_hide".equals(action) || "resolve_delete".equals(action)) {
@@ -65,15 +66,24 @@ public class AdminReportServlet extends HttpServlet {
                 if (targetId > 0) new truyen.dao.StoryDAO().updateStatus(targetId, "DELETED");
             }
 
-            // Post-Redirect-Get — F5 không gửi lại thao tác
+            // Post-Redirect-Get — F5 không gửi lại thao tác.
+            // Giữ CẢ HAI bộ lọc, không thì mỗi lần xử lý một báo cáo là admin
+            // bị ném về danh sách đầy đủ và phải lọc lại từ đầu.
             if ("POST".equalsIgnoreCase(request.getMethod()) && action != null) {
-                String qs = status != null && !status.isEmpty() ? "?status=" + status : "";
+                StringBuilder qs = new StringBuilder();
+                if (status != null && !status.isEmpty()) {
+                    qs.append(qs.length() == 0 ? "?" : "&").append("status=").append(status);
+                }
+                if (category != null && !category.isEmpty()) {
+                    qs.append(qs.length() == 0 ? "?" : "&").append("category=").append(category);
+                }
                 response.sendRedirect(request.getContextPath() + "/admin/report" + qs);
                 return;
             }
 
-            request.setAttribute("reports", reportDAO.findAll(status));
+            request.setAttribute("reports", reportDAO.findAll(status, category));
             request.setAttribute("status", status);
+            request.setAttribute("category", category);
             request.setAttribute("pending", reportDAO.countPending());
 
         } catch (SQLException e) {

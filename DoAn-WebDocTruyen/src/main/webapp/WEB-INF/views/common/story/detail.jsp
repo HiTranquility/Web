@@ -2,6 +2,19 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
+<%--
+  Dải cảnh báo truyện đã bị gỡ (ISSUE-025). Chỉ admin mới vào được tới đây —
+  StoryServlet.detail() trả 404 cho mọi người khác. Không có dải này thì admin
+  bấm từ trang báo cáo sang sẽ thấy một trang truyện trông hoàn toàn bình
+  thường và tưởng mình chưa gỡ.
+--%>
+<c:if test="${storyRemoved}">
+    <div class="panel panel-err" style="margin-bottom:16px">
+        🚫 <b>Truyện này đã bị gỡ.</b>
+        Người đọc không mở được trang này — bạn thấy được vì đang là quản trị viên.
+    </div>
+</c:if>
 <%--
 ================================================================================
   story/detail.jsp — MẢNH NỘI DUNG: Chi tiết truyện               TRANG 3
@@ -165,15 +178,43 @@
             <c:if test="${not empty currentUser}">
                 <details class="report-box" style="margin-left:auto">
                     <summary class="report-trigger-btn">🚩 Báo cáo vi phạm</summary>
-                    <form method="post" action="${pageContext.request.contextPath}/report">
+                    <%--
+                      enctype BẮT BUỘC có, không thì ảnh không đi kèm và
+                      request.getParts() ở servlet ném lỗi (ISSUE-025).
+                    --%>
+                    <form method="post" enctype="multipart/form-data"
+                          class="report-form"
+                          action="${pageContext.request.contextPath}/report">
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="targetType" value="STORY">
                         <input type="hidden" name="targetId" value="${story.id}">
                         <input type="hidden" name="storyId" value="${story.id}">
-                        <input type="text" name="reason" maxlength="500"
-                               class="inline-input"
-                               placeholder="Lý do: spam, nội dung cấm, đạo văn…">
-                        <button type="submit" class="btn btn-danger btn-sm">Gửi</button>
+
+                        <label class="report-field">
+                            <span>Loại vi phạm</span>
+                            <select name="category" class="inline-input" required>
+                                <option value="">— Chọn loại vi phạm —</option>
+                                <c:forEach var="cat" items="${reportCategoriesStory}">
+                                    <option value="${cat}">${reportCategoryLabels[cat]}</option>
+                                </c:forEach>
+                            </select>
+                        </label>
+
+                        <label class="report-field">
+                            <span>Mô tả thêm</span>
+                            <input type="text" name="reason" maxlength="500"
+                                   class="inline-input"
+                                   placeholder="Bắt buộc nếu chọn &quot;Khác&quot;">
+                        </label>
+
+                        <label class="report-field">
+                            <span>Ảnh bằng chứng <em>(tối đa 3, mỗi ảnh ≤ 2 MB)</em></span>
+                            <input type="file" name="evidence" accept="image/*" multiple
+                                   class="report-file-input" data-max="3">
+                            <span class="report-file-hint"></span>
+                        </label>
+
+                        <button type="submit" class="btn btn-danger btn-sm">Gửi báo cáo</button>
                     </form>
                 </details>
             </c:if>
@@ -267,6 +308,14 @@
                 Trang ${cpage}/${cTotalPages} &middot; 50 chương mỗi trang
             </span>
         </c:if>
+
+        <%-- Ô lọc nhanh chương theo số hoặc tiêu đề --%>
+        <div class="chapter-search-box" style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+            <input type="search" id="chapter-filter-input" class="input input-sm"
+                   placeholder="🔍 Tìm nhanh chương..."
+                   style="max-width: 200px; padding: 4px 12px; font-size: 0.85rem; border-radius: 20px;"
+                   title="Gõ số chương hoặc từ khóa tiêu đề để lọc nhanh" />
+        </div>
     </div>
 </c:if>
 
@@ -603,6 +652,19 @@
             } else {
                 prompt('Sao chép liên kết:', url);
             }
+        });
+    }
+
+    /* Lọc nhanh danh sách chương theo số hoặc tiêu đề */
+    var chFilter = document.getElementById('chapter-filter-input');
+    if (chFilter) {
+        chFilter.addEventListener('input', function () {
+            var q = this.value.trim().toLowerCase();
+            var items = document.querySelectorAll('.chapter-item');
+            items.forEach(function (item) {
+                var txt = item.textContent.toLowerCase();
+                item.style.display = txt.indexOf(q) !== -1 ? '' : 'none';
+            });
         });
     }
 })();

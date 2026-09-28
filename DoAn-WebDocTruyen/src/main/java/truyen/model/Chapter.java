@@ -109,4 +109,68 @@ public class Chapter implements Serializable {
         int words = content.split("\\s+").length;
         return Math.max(1, words / 200);
     }
+
+    /**
+     * Danh sách đoạn văn đã định dạng an toàn (Markdown văn học).
+     *
+     * Chống XSS 100%: Toàn bộ ký tự HTML đặc biệt (&, <, >, ", ') đều được
+     * escape trước khi chèn bất kỳ thẻ an toàn nào.
+     *
+     * Hỗ trợ cú pháp tác giả:
+     *   - In đậm: **nội dung** -> <strong>nội dung</strong>
+     *   - In nghiêng: *nội dung* -> <em>nội dung</em>
+     *   - Gạch ngang: ~~nội dung~~ -> <s>nội dung</s>
+     *   - Lời thoại: "— ..." hoặc "- ..." -> <p class="dialogue">...
+     *   - Phân đoạn: "* * *" hoặc "❖ ❖ ❖" hoặc "---" -> <div class="divider">❖ ❖ ❖</div>
+     *   - Trích dẫn: "> ..." -> <blockquote>...</blockquote>
+     *   - Lời tác giả: "[Lời tác giả: ...]" -> <div class="author-note">...</div>
+     */
+    public java.util.List<String> getFormattedParagraphs() {
+        java.util.List<String> raw = getParagraphs();
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String p : raw) {
+            out.add(formatParagraph(p));
+        }
+        return out;
+    }
+
+    private String formatParagraph(String p) {
+        if (p == null || p.isEmpty()) return "";
+
+        // 1. Escape HTML 100% trước để triệt tiêu nguy cơ XSS
+        String safe = p.replace("&", "&amp;")
+                       .replace("<", "&lt;")
+                       .replace(">", "&gt;")
+                       .replace("\"", "&quot;")
+                       .replace("'", "&#039;");
+
+        // 2. Kiểm tra các khối đặc biệt (Block elements)
+        if (safe.equals("* * *") || safe.equals("❖ ❖ ❖") || safe.equals("---") || safe.equals("***")) {
+            return "<div class=\"divider\">❖ ❖ ❖</div>";
+        }
+        if (safe.startsWith("&gt;")) {
+            String q = safe.replaceFirst("^&gt;\\s*", "");
+            return "<blockquote>" + formatInline(q) + "</blockquote>";
+        }
+        if (safe.startsWith("[Lời tác giả:") && safe.endsWith("]")) {
+            String note = safe.substring(13, safe.length() - 1).trim();
+            return "<div class=\"author-note\"><strong>Lời tác giả:</strong> " + formatInline(note) + "</div>";
+        }
+        if (safe.startsWith("—") || safe.startsWith("- ")) {
+            return "<p class=\"dialogue\">" + formatInline(safe) + "</p>";
+        }
+        return "<p>" + formatInline(safe) + "</p>";
+    }
+
+    private String formatInline(String text) {
+        if (text == null || text.isEmpty()) return "";
+        // In đậm: **text**
+        text = text.replaceAll("\\*\\*(.+?)\\*\\*", "<strong>$1</strong>");
+        // In nghiêng: *text* (không khớp dấu sao của bold)
+        text = text.replaceAll("(?<!\\*)\\*([^*]+?)\\*(?!\\*)", "<em>$1</em>");
+        // Gạch ngang: ~~text~~
+        text = text.replaceAll("~~(.+?)~~", "<s>$1</s>");
+        return text;
+    }
 }
+

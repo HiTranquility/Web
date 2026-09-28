@@ -229,19 +229,21 @@ Trang đăng nhập không phải tải CSS của thanh menu và lưới truyệ
 
 ### Tổng kết
 
-*Cập nhật sau giai đoạn 6 — **đã dựng xong toàn bộ**.*
+*Cập nhật phiên bản hoàn thiện — **đã dựng xong toàn bộ 36 trang web JSP và 14 mảnh tái dùng**.*  
+> 📌 *Tài liệu đặc tả chi tiết giao diện đầy đủ hiện tại: Xem [`docs/GIAO-DIEN.md`](../GIAO-DIEN.md).*
 
 | Nhóm | Đã dựng | Tổng |
 |------|:---:|:---:|
-| A. Công khai | **10** | 10 |
-| B. Thành viên | **9** | 8 + 1 phát sinh |
-| C. Xác thực | **4** | 4 |
-| D. Đọc | **1** | 1 |
-| E. Soạn thảo | **1** | 1 |
-| F. Quản trị | **6** | 6 |
-| **Trang — tổng** | **32** | **30** + 2 phát sinh |
-| Layout | **5** | 5 |
-| Mảnh tái dùng | **10** | 9 + 1 phát sinh |
+| A. Công khai & Khám phá | **11** | 11 |
+| B. Thành viên & Độc giả | **8** | 8 |
+| C. Xác thực & Tài khoản | **4** | 4 |
+| D. Đọc truyện (Reader) | **3** | 1 chính + 2 trần (raw, toc) |
+| E. Soạn thảo (Editor) | **1** | 1 |
+| F. Quản trị (Admin) | **6** | 6 |
+| G. Trang lỗi tùy biến | **3** | 3 (403, 404, 500) |
+| **Trang — tổng** | **36** | **36 trang JSP hoàn chỉnh** |
+| Layout chuẩn mực | **5** | 5 (`main`, `auth`, `reader`, `admin`, `editor`) |
+| Mảnh tái dùng | **14** | 14 partials |
 
 ---
 

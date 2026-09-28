@@ -68,7 +68,8 @@ public class NotificationFilter implements Filter {
             return;
         }
 
-        User me = (User) request.getSession().getAttribute("currentUser");
+        javax.servlet.http.HttpSession session = request.getSession(false);
+        User me = session != null ? (User) session.getAttribute("currentUser") : null;
         if (me != null) {
             try {
                 request.setAttribute("unreadCount",

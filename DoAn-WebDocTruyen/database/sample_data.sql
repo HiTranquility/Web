@@ -784,14 +784,19 @@ INSERT INTO notifications (user_id, story_id, chapter_id, type, message, is_read
 -- =============================================================================
 --  Đủ cả ba trạng thái để trang 30 có cái mà lọc.
 -- =============================================================================
-INSERT INTO reports (reporter_id, target_type, target_id, reason, status, created_at, handled_at) VALUES
-    (5, 'STORY',   7, 'Chương 5 có cảnh mạnh nhưng chưa gắn cảnh báo nội dung.',
+-- Cột `category` thêm ở ISSUE-025. Dữ liệu mẫu cố ý phủ CẢ HAI phía:
+--   · một loại NẶNG (ADULT) đang chờ  -> để thấy nó nổi lên đầu danh sách
+--   · các loại thường và các trạng thái khác -> để thấy bộ lọc hoạt động
+-- Không có dòng nào để 'OTHER': loại đó chỉ dành cho báo cáo thật không xếp
+-- được vào đâu, để mẫu toàn 'Khác' thì nhìn như tính năng chưa chạy.
+INSERT INTO reports (reporter_id, target_type, target_id, category, reason, status, created_at, handled_at) VALUES
+    (5, 'STORY',   7, 'ADULT',      'Chương 5 có cảnh mạnh nhưng chưa gắn cảnh báo nội dung.',
      'PENDING',   DATE_SUB(NOW(), INTERVAL 4 HOUR),  NULL),
-    (3, 'COMMENT', 1, 'Nghi ngờ là bình luận quảng cáo trá hình.',
+    (3, 'COMMENT', 1, 'SPAM',       'Nghi ngờ là bình luận quảng cáo trá hình.',
      'PENDING',   DATE_SUB(NOW(), INTERVAL 1 DAY),   NULL),
-    (5, 'COMMENT', 2, 'Lời lẽ xúc phạm người khác.',
+    (5, 'COMMENT', 2, 'HARASSMENT', 'Lời lẽ xúc phạm người khác.',
      'RESOLVED',  DATE_SUB(NOW(), INTERVAL 5 DAY),   DATE_SUB(NOW(), INTERVAL 4 DAY)),
-    (2, 'STORY',   4, 'Nghi ngờ đăng lại tác phẩm của người khác.',
+    (2, 'STORY',   4, 'PLAGIARISM', 'Nghi ngờ đăng lại tác phẩm của người khác.',
      'DISMISSED', DATE_SUB(NOW(), INTERVAL 9 DAY),   DATE_SUB(NOW(), INTERVAL 8 DAY));
 
 

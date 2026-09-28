@@ -18,7 +18,7 @@ docs/projects/issues/
 │   ├── review-4.md                              ← nghiệm thu sau phase 4
 │   └── review-5.md                              ← nghiệm thu sau phase 5
 ├── ISSUE-002-gui-email-that/ … ISSUE-018-chia-se-truyen/     (đợt 1 — đã xong)
-└── ISSUE-019-don-no-dot-1/   … ISSUE-024-tach-js-khoi-jsp/   (đợt 2 — chưa nhận)
+└── ISSUE-019-don-no-dot-1/   … ISSUE-025-nang-cap-bao-cao/     (đợt 2 — chưa nhận)
 ```
 
 Mỗi issue là một thư mục `ISSUE-NNN-slug/` chứa `issue.md`, các file `phase-N.md` và `review-N.md`.
@@ -69,9 +69,10 @@ theo đường nào thì quan trọng hơn là gộp:
 **N3 không có ISSUE 🔴 nào** — cố ý. Mảng đó là chỗ nhận việc tối ưu, và người rảnh nhất
 sẽ đỡ cho mảng đang tắc.
 
-> **[Bẫy] `database/schema.sql` thuộc về N1, không ai khác.** Đợt 2 có hai việc cần sửa
-> schema (ISSUE-020 và ISSUE-022), mà một việc nằm ở N1 còn một việc nằm ở N2. Luật:
+> **[Bẫy] `database/schema.sql` thuộc về N1, không ai khác.** Đợt 2 có **ba** việc cần sửa
+> schema — ISSUE-020, ISSUE-022 và ISSUE-025 — mà ISSUE-022 lại nằm ở N2. Luật:
 > **N2 viết câu SQL, N1 là người commit vào `schema.sql`** — một cửa vào duy nhất.
+> Ba đợt schema đó còn phải **nối tiếp nhau**, xem lịch ở cuối trang.
 
 ---
 
@@ -111,7 +112,7 @@ Lộ trình 18 issue này bao phủ trọn vẹn mọi khía cạnh: Bảo mật
 
 Rà soát ngày **2026-09-23** *(chạy site thật trên trình duyệt, đọc lại code và doc)*:
 97/97 test pass, 18 ISSUE đợt 1 đã xong. Sáu việc dưới đây là thứ **còn thật sự thiếu**,
-**hai việc mỗi người**, không việc nào đụng file của việc kia.
+không việc nào đụng file của việc kia. N1 ba việc, N2 hai, N3 hai.
 
 | Mã | Việc | Đụng vào | Mảng | Trạng thái |
 |---|---|---|---|---|
@@ -121,6 +122,7 @@ Rà soát ngày **2026-09-23** *(chạy site thật trên trình duyệt, đọc
 | **[ISSUE-022](ISSUE-022-danh-gia-dai-spoiler/issue.md)** 🟢 | **Đánh giá dài + nhãn spoiler** — hiện chỉ chấm được 1–5 sao, không viết được một dòng cảm nhận nào. Thêm bài đánh giá có tiêu đề, nội dung, nút *"Có ích"* và nhãn che spoiler. **Chia 2 đợt**, đợt 1 là schema | `schema.sql` · `dao/RatingDAO` · `RatingServlet` · `views/common/story/detail.jsp` | **N2** | 📝 Chưa nhận |
 | **[ISSUE-023](ISSUE-023-admin-vi-xu-nhat-ky/issue.md)** 🟢 | **Admin: trang Ví xu + Nhật ký thao tác** — sidebar quản trị hiện có 6 mục và **không mục nào nhìn thấy được giao dịch xu**; cũng không có chỗ nào ghi lại *ai đã gỡ truyện của ai, lúc nào* | `admin/AdminWalletServlet` *(mới)* · `admin/AdminAuditServlet` *(mới)* · `schema.sql` · `views/admin/*` · `views/layout/admin.jsp` | **N1** | 📝 Chưa nhận |
 | **[ISSUE-024](ISSUE-024-tach-js-khoi-jsp/issue.md)** 🔵 | **Tách JS ra khỏi JSP** — `parts/nav.jsp` đang mang **188 dòng `<script>` nội tuyến** (theme toggle, dropdown, live search), gửi lại nguyên xi ở **mọi** trang và trình duyệt **không cache được dòng nào** | `views/layout/parts/nav.jsp` · `assets/js/nav.js` *(mới)* · `views/layout/parts/head.jsp` | **N3** | 📝 Chưa nhận |
+| **[ISSUE-025](ISSUE-025-nang-cap-bao-cao-vi-pham/issue.md)** 🟢 | **Nâng cấp báo cáo vi phạm** — báo cáo bình luận hiện **không bấm vào được** (`reports.jsp:63` chỉ hiện 80 ký tự, `ReportDAO` không lấy `story_id`); không gửi được ảnh bằng chứng; chỉ có **một ô lý do tự do**, không phân loại nên không lọc được. Thêm **8 loại vi phạm**, **tối đa 3 ảnh** (≤2 MB, chỉ admin xem được), và link nhảy thẳng tới đúng bình luận. **Chia 2 đợt**, đợt 1 là schema | `schema.sql` · `ReportServlet` · `AdminReportServlet` · `UploadedFileServlet` · `dao/ReportDAO` · `views/admin/reports.jsp` · `_comment.jsp` | **N1** | ✅ Xong |
 
 ### Thứ tự trong đợt 2
 
@@ -128,16 +130,17 @@ Rà soát ngày **2026-09-23** *(chạy site thật trên trình duyệt, đọc
 LÀM TRƯỚC   ISSUE-019  (N3)   — dọn nợ trước khi chồng thêm; nhẹ, một buổi
             ISSUE-020 đợt 1   — schema, N1 làm MỘT MÌNH, không ai pull trong lúc này
             ISSUE-022 đợt 1   — schema, N1 commit hộ N2, LÀM SAU ISSUE-020 đợt 1
+            ISSUE-025 đợt 1   — schema, N1, đợt schema CUỐI của đợt 2
 
 SONG SONG   ISSUE-020 đợt 2 (N1) · ISSUE-021 (N2) · ISSUE-024 (N3)
-SAU ĐÓ      ISSUE-023 (N1)       · ISSUE-022 đợt 2 (N2)
+SAU ĐÓ      ISSUE-023 (N1) · ISSUE-025 đợt 2 (N1) · ISSUE-022 đợt 2 (N2)
 ```
 
-Hai chỗ **không được song song**: hai đợt schema của ISSUE-020 và ISSUE-022 phải nối
-tiếp nhau, vì cả hai đều sửa `schema.sql`.
+**Ba đợt schema phải nối tiếp nhau**, không được song song — ISSUE-020 đợt 1 → ISSUE-022
+đợt 1 → ISSUE-025 đợt 1 — vì cả ba đều sửa `schema.sql`, và chỉ N1 được commit vào file đó.
 
-> Sáu thư mục `ISSUE-NNN-slug/` đã dựng đủ, mỗi thư mục có `issue.md`; ISSUE-020 và
-> ISSUE-022 có thêm `phase-1.md` + `phase-2.md`. Nhận việc nào thì điền tên thật vào ô
+> Bảy thư mục `ISSUE-NNN-slug/` đã dựng đủ, mỗi thư mục có `issue.md`; ISSUE-020,
+> ISSUE-022 và ISSUE-025 có thêm `phase-1.md` + `phase-2.md`. Nhận việc nào thì điền tên thật vào ô
 > **Người làm** của `issue.md`, đổi Trạng thái sang 🚧, và cập nhật dòng tương ứng ở bảng
 > trên. Xong mỗi phase thì copy [`review-template.md`](../../templates/review-template.md)
 > thành `review-N.md` **trước khi** mở phase kế.

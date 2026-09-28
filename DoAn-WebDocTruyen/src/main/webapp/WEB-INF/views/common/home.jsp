@@ -47,6 +47,22 @@
         </section>
     </c:if>
 
+    <%-- ---- WIDGET TIẾP TỤC ĐỌC GẦN ĐÂY (Recent Reading History) ----------- --%>
+    <div id="recent-reading-widget" class="recent-reading-card" style="display:none;" aria-label="Tiếp tục đọc">
+        <div class="recent-reading-inner">
+            <div class="recent-reading-badge">📖 ĐANG ĐỌC DỞ</div>
+            <div class="recent-reading-info">
+                <h3 class="recent-reading-title" id="recent-story-title">...</h3>
+                <p class="recent-reading-sub" id="recent-chapter-title">Chương ...</p>
+            </div>
+            <div class="recent-reading-actions">
+                <a id="recent-read-btn" href="#" class="btn btn-primary btn-sm">Đọc tiếp →</a>
+                <button type="button" id="recent-dismiss-btn" class="recent-dismiss-btn"
+                        title="Xoá khỏi danh sách đọc gần đây" aria-label="Đóng">&times;</button>
+            </div>
+        </div>
+    </div>
+
     <%-- ---- BANNER TIÊU ĐIỂM (Featured Story Spotlight) ------------------- --%>
     <c:if test="${not empty popular}">
         <c:set var="featured" value="${popular[0]}"/>
@@ -209,4 +225,37 @@
             </div>
         </c:otherwise>
     </c:choose>
+
+<script>
+/* Khôi phục và hiển thị widget Tiếp tục đọc nếu độc giả có lịch sử đọc gần đây */
+(function () {
+    try {
+        var raw = localStorage.getItem('webdoctruyen_recent_read');
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        if (!data || !data.storyId || !data.chapterId) return;
+
+        var widget = document.getElementById('recent-reading-widget');
+        var sTitle = document.getElementById('recent-story-title');
+        var cTitle = document.getElementById('recent-chapter-title');
+        var rBtn = document.getElementById('recent-read-btn');
+        var dBtn = document.getElementById('recent-dismiss-btn');
+
+        if (widget && sTitle && cTitle && rBtn) {
+            sTitle.textContent = data.storyTitle || 'Truyện bạn đang theo dõi';
+            cTitle.textContent = (data.chapterNo ? 'Chương ' + data.chapterNo : '') + (data.chapterTitle ? ' · ' + data.chapterTitle : '');
+            rBtn.href = '${pageContext.request.contextPath}/chapter?action=read&id=' + encodeURIComponent(data.chapterId);
+            widget.style.display = 'block';
+
+            if (dBtn) {
+                dBtn.addEventListener('click', function () {
+                    localStorage.removeItem('webdoctruyen_recent_read');
+                    widget.style.display = 'none';
+                });
+            }
+        }
+    } catch (e) { }
+})();
+</script>
+
 

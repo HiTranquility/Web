@@ -211,12 +211,84 @@ public final class RateLimiter {
     //  HỖ TRỢ KIỂM THỬ VÀ DỌN DẸP
     // ========================================================================
 
+    // ========================================================================
+    //  CHỐNG SPAM BÁO CÁO VI PHẠM  (ISSUE-025)
+    // ========================================================================
+    //  VÌ SAO ĐẾM SỐ LẦN CHỨ KHÔNG PHẢI COOLDOWN NHƯ BÌNH LUẬN
+    //    Bình luận thì chặn "gõ quá nhanh" là đủ. Báo cáo thì khác: mỗi lần
+    //    gửi có thể kéo theo BA ẢNH nằm lại trên ổ đĩa máy chủ. Một tài khoản
+    //    viết vòng lặp gửi báo cáo là đầy đĩa — mà đúng hôm nay ổ C của máy
+    //    dev đã đầy 100% một lần rồi, nên đây không phải lo xa.
+    //
+    //    Cửa sổ trượt 1 phút / 3 lượt: người thật báo cáo vài cái liền nhau
+    //    vẫn lọt, còn vòng lặp thì chặn ngay từ lượt thứ tư.
+    // ========================================================================
+
+    /** Tối đa bao nhiêu báo cáo trong một cửa sổ. */
+    public static final int MAX_REPORTS_PER_WINDOW = 3;
+
+    /** Độ dài cửa sổ trượt cho báo cáo: 1 phút. */
+    public static final long REPORT_WINDOW_MILLIS = 60 * 1000L;
+
+    private static final Map<Integer, List<Long>> reportTimes = new ConcurrentHashMap<>();
+
+    /** Người này có đang gửi báo cáo quá dày không. */
+    public static boolean isReportSpam(int userId) {
+        if (userId <= 0) {
+            return false;
+        }
+        List<Long> times = reportTimes.get(userId);
+        if (times == null) {
+            return false;
+        }
+        synchronized (times) {
+            cleanExpired(times, System.currentTimeMillis(), REPORT_WINDOW_MILLIS);
+            return times.size() >= MAX_REPORTS_PER_WINDOW;
+        }
+    }
+
+    /** Ghi nhận một báo cáo vừa gửi thành công. */
+    public static void recordReport(int userId) {
+        if (userId <= 0) {
+            return;
+        }
+        List<Long> times =
+                reportTimes.computeIfAbsent(userId, k -> new ArrayList<>());
+        synchronized (times) {
+            long now = System.currentTimeMillis();
+            cleanExpired(times, now, REPORT_WINDOW_MILLIS);
+            times.add(now);
+        }
+    }
+
+    /** Còn phải chờ bao nhiêu giây nữa mới gửi báo cáo tiếp được. */
+    public static long getReportCooldownRemainingSeconds(int userId) {
+        if (userId <= 0) {
+            return 0;
+        }
+        List<Long> times = reportTimes.get(userId);
+        if (times == null) {
+            return 0;
+        }
+        synchronized (times) {
+            long now = System.currentTimeMillis();
+            cleanExpired(times, now, REPORT_WINDOW_MILLIS);
+            if (times.size() < MAX_REPORTS_PER_WINDOW) {
+                return 0;
+            }
+            // Lượt sớm nhất rơi ra khỏi cửa sổ lúc nào thì mở khoá lúc đó.
+            long remaining = REPORT_WINDOW_MILLIS - (now - times.get(0));
+            return remaining <= 0 ? 0 : Math.max(1, remaining / 1000);
+        }
+    }
+
     /**
      * Xóa sạch dữ liệu trong bộ đệm (chủ yếu phục vụ Unit Test).
      */
     public static void clear() {
         loginFailures.clear();
         lastCommentTimestamps.clear();
+        reportTimes.clear();
     }
 
     private static void cleanExpired(List<Long> timestamps, long now, long maxAgeMillis) {

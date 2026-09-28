@@ -823,8 +823,8 @@ public final class DemoData {
     // ========================================================================
 
     private static Report report(int id, int reporterId, String type, int targetId,
-                                 String reason, String status, int hoursAgo,
-                                 String title) {
+                                 String category, String reason, String status,
+                                 int hoursAgo, int storyId, String title) {
         Report r = new Report();
         r.setId(id);
         r.setReporterId(reporterId);
@@ -832,6 +832,10 @@ public final class DemoData {
         r.setTargetType(type);
         r.setTargetId(targetId);
         r.setTargetTitle(title);
+        r.setCategory(category);
+        // Id truyện để dựng link. Với bình luận thì là truyện chứa nó — chính
+        // là thứ câu SQL thật lấy bằng COALESCE(s.id, c.story_id).
+        r.setStoryId(storyId);
         r.setReason(reason);
         r.setStatus(status);
         r.setCreatedAt(T0.minusHours(hoursAgo));
@@ -843,14 +847,14 @@ public final class DemoData {
 
     public static List<Report> reports(String status) {
         List<Report> all = new ArrayList<>(Arrays.asList(
-            report(1, 5, "COMMENT", 99, "Bình luận chứa đường dẫn quảng cáo.",
-                   "PENDING", 4, "Mua ngay tại shop... link rút gọn"),
-            report(2, 3, "STORY", 7, "Nội dung chương 5 chưa gắn cảnh báo phù hợp.",
-                   "PENDING", 30, "Trấn yêu lục"),
-            report(3, 5, "COMMENT", 98, "Xúc phạm người khác trong phần bình luận.",
-                   "RESOLVED", 72, "câu bình luận đã bị ẩn"),
-            report(4, 2, "STORY", 4, "Nghi ngờ đăng lại của người khác.",
-                   "DISMISSED", 120, "Đêm không trăng")
+            report(1, 5, "COMMENT", 99, "SPAM", "Bình luận chứa đường dẫn quảng cáo.",
+                   "PENDING", 4, 1, "Mua ngay tại shop... link rút gọn"),
+            report(2, 3, "STORY", 7, "ADULT", "Nội dung chương 5 chưa gắn cảnh báo phù hợp.",
+                   "PENDING", 30, 7, "Trấn yêu lục"),
+            report(3, 5, "COMMENT", 98, "HARASSMENT", "Xúc phạm người khác trong phần bình luận.",
+                   "RESOLVED", 72, 2, "câu bình luận đã bị ẩn"),
+            report(4, 2, "STORY", 4, "PLAGIARISM", "Nghi ngờ đăng lại của người khác.",
+                   "DISMISSED", 120, 4, "Đêm không trăng")
         ));
         if (status == null || status.isEmpty()) return all;
 

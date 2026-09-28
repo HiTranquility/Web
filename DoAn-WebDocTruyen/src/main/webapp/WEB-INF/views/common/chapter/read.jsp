@@ -18,7 +18,7 @@
 ================================================================================
 --%>
 
-<%-- Nơi JavaScript nối thêm chương. Chương đầu server dựng sẵn. --%>
+<%-- Nơi JavaScript nối thêm chương. Chương đầu server dựng sẵn từ _block.jsp. --%>
 <div id="chapters">
     <%@ include file="/WEB-INF/views/common/chapter/_block.jsp" %>
 </div>

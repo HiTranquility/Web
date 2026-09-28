@@ -21,12 +21,12 @@
   phải có @MultipartConfig — không thì getParameter() trả null cho tất cả và
   form trông như người dùng bỏ trống hết.
 --%>
-<form action="${pageContext.request.contextPath}/story?_csrf=${csrfToken}" method="post"
+<form id="storyForm" action="${pageContext.request.contextPath}/story?_csrf=${csrfToken}" method="post"
       class="wide-form" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="${csrfToken}">
     <input type="hidden" name="action"
            value="${empty story.id or story.id eq 0 ? 'create' : 'edit'}">
-    <input type="hidden" name="id" value="${story.id}">
+    <input type="hidden" name="id" id="storyId" value="${story.id}">
 
     <%--
       BA NHÓM CÓ TIÊU ĐỀ, thay cho một cột ô nhập xếp thẳng.
@@ -42,13 +42,25 @@
     <fieldset class="form-group">
         <legend>Nội dung</legend>
 
-        <label for="title">Tiêu đề *</label>
-        <input type="text" id="title" name="title" maxlength="200" required
-           value="<c:out value='${story.title}'/>">
-        <small>Đường dẫn thân thiện (slug) tự sinh từ tiêu đề, trùng thì tự thêm số.</small>
+        <div class="field-with-counter">
+            <label for="title">Tiêu đề *</label>
+            <input type="text" id="title" name="title" maxlength="200" required
+                   placeholder="Nhập tên truyện..."
+                   value="<c:out value='${story.title}'/>">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                <small id="slugPreviewRow" style="color:var(--text-mut);">
+                    Đường dẫn dự kiến: <code id="slugPreview" style="color:var(--ember); background:var(--ink-850); padding:2px 6px; border-radius:4px; font-size:.82rem;">/truyen/<c:out value='${story.slug}'/></code>
+                </small>
+                <span id="storyTitleCounter" class="char-counter">0 / 200 ký tự</span>
+            </div>
+        </div>
 
-        <label for="description">Giới thiệu</label>
-        <textarea id="description" name="description" rows="5"><c:out value="${story.description}"/></textarea>
+        <div class="field-with-counter" style="margin-top:14px;">
+            <label for="description">Giới thiệu tóm tắt</label>
+            <textarea id="description" name="description" rows="5" maxlength="5000"
+                      placeholder="Mô tả bối cảnh, giới thiệu nhân vật và cốt truyện lôi cuốn..."><c:out value="${story.description}"/></textarea>
+            <span id="storyDescCounter" class="char-counter">0 / 5.000 ký tự</span>
+        </div>
 
     </fieldset>
 
@@ -105,8 +117,11 @@
     <fieldset class="form-group">
         <legend>Phân loại &amp; trạng thái</legend>
 
-        <label>Thể loại</label>
-        <div class="tag-picker">
+        <div style="display:flex; align-items:baseline; gap:8px;">
+            <label style="margin-bottom:0">Thể loại</label>
+            <span id="selectedTagCount" style="font-size:.82rem; color:var(--ember); font-weight:600;"></span>
+        </div>
+        <div class="tag-picker" style="margin-top:6px;">
         <c:forEach var="t" items="${allTags}">
             <%--
               Đánh dấu tag đã chọn: duyệt selectedTags tìm id trùng.
@@ -120,13 +135,14 @@
 
             <label class="tag-check">
                 <input type="checkbox" name="tagIds" value="${t.id}"
+                       class="tag-checkbox"
                        ${checked ? 'checked' : ''}>
                 <c:out value="${t.name}"/>
             </label>
         </c:forEach>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" style="margin-top:14px;">
         <div>
             <label for="status">Trạng thái</label>
             <select id="status" name="status">
@@ -173,41 +189,156 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('storyForm');
+    var titleInput = document.getElementById('title');
+    var titleCounter = document.getElementById('storyTitleCounter');
+    var descInput = document.getElementById('description');
+    var descCounter = document.getElementById('storyDescCounter');
+    var slugPreview = document.getElementById('slugPreview');
+    var tagCheckboxes = document.querySelectorAll('.tag-checkbox');
+    var selectedTagCount = document.getElementById('selectedTagCount');
     var coverFileInput = document.getElementById('coverFile');
     var coverFileName = document.getElementById('coverFileName');
     var coverUrlInput = document.getElementById('coverUrl');
     var previewBox = document.getElementById('cover-preview-box');
 
-    if (!coverFileInput || !previewBox) return;
+    // 1. TẠO SLUG TỰ ĐỘNG TỪ TIẾNG VIỆT CÓ DẤU
+    function toSlug(str) {
+        if (!str) return '...';
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+        str = str.replace(/đ/g, 'd');
+        str = str.replace(/[^a-z0-9\s-]/g, '');
+        str = str.trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+        return str || '...';
+    }
 
-    coverFileInput.addEventListener('change', function (e) {
-        var file = e.target.files && e.target.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Ảnh bìa vượt quá dung lượng tối đa 2 MB. Vui lòng chọn ảnh nhỏ hơn.');
-                coverFileInput.value = '';
-                if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
-                return;
+    // 2. BỘ ĐẾM KÝ TỰ TIÊU ĐỀ & LIVE SLUG
+    function updateTitleCounter() {
+        if (!titleInput) return;
+        var len = titleInput.value.length;
+        if (titleCounter) {
+            titleCounter.textContent = len + ' / 200 ký tự';
+            if (len >= 200) {
+                titleCounter.className = 'char-counter limit-full';
+            } else if (len >= 180) {
+                titleCounter.className = 'char-counter limit-near';
+            } else {
+                titleCounter.className = 'char-counter';
             }
-            if (coverFileName) coverFileName.textContent = file.name;
-            var reader = new FileReader();
-            reader.onload = function (evt) {
-                previewBox.style.borderStyle = 'solid';
-                previewBox.innerHTML = '<img src="' + evt.target.result + '" alt="Xem trước bìa" style="width:100%;height:100%;object-fit:cover;display:block;">';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
         }
-    });
+        if (slugPreview) {
+            slugPreview.textContent = '/truyen/' + toSlug(titleInput.value);
+        }
+    }
+    if (titleInput) {
+        titleInput.addEventListener('input', updateTitleCounter);
+        updateTitleCounter();
+    }
 
-    if (coverUrlInput) {
+    // 3. BỘ ĐẾM KÝ TỰ MÔ TẢ
+    function updateDescCounter() {
+        if (!descInput || !descCounter) return;
+        var len = descInput.value.length;
+        descCounter.textContent = len.toLocaleString('vi-VN') + ' / 5.000 ký tự';
+        if (len >= 5000) {
+            descCounter.className = 'char-counter limit-full';
+        } else if (len >= 4500) {
+            descCounter.className = 'char-counter limit-near';
+        } else {
+            descCounter.className = 'char-counter';
+        }
+    }
+    if (descInput) {
+        descInput.addEventListener('input', updateDescCounter);
+        updateDescCounter();
+    }
+
+    // 4. ĐẾM SỐ THỂ LOẠI ĐÃ CHỌN
+    function updateTagCount() {
+        if (!selectedTagCount || !tagCheckboxes) return;
+        var count = 0;
+        tagCheckboxes.forEach(function (cb) {
+            if (cb.checked) count++;
+        });
+        if (count > 0) {
+            selectedTagCount.textContent = '· Đã chọn ' + count + ' thể loại';
+        } else {
+            selectedTagCount.textContent = '';
+        }
+    }
+    if (tagCheckboxes.length > 0) {
+        tagCheckboxes.forEach(function (cb) {
+            cb.addEventListener('change', updateTagCount);
+        });
+        updateTagCount();
+    }
+
+    // 5. XỬ LÝ CHỌN VÀ XEM TRƯỚC ẢNH BÌA
+    if (coverFileInput && previewBox) {
+        coverFileInput.addEventListener('change', function (e) {
+            var file = e.target.files && e.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('⚠️ Ảnh bìa vượt quá dung lượng tối đa 2 MB. Vui lòng chọn ảnh nhỏ hơn.');
+                    coverFileInput.value = '';
+                    if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
+                    return;
+                }
+                if (coverFileName) coverFileName.textContent = file.name;
+                var reader = new FileReader();
+                reader.onload = function (evt) {
+                    previewBox.style.borderStyle = 'solid';
+                    previewBox.innerHTML = '<img src="' + evt.target.result + '" alt="Xem trước bìa" style="width:100%;height:100%;object-fit:cover;display:block;">';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
+            }
+        });
+    }
+
+    if (coverUrlInput && previewBox) {
         coverUrlInput.addEventListener('input', function () {
             var val = coverUrlInput.value.trim();
             if (val && (!coverFileInput.files || coverFileInput.files.length === 0)) {
                 var src = val.startsWith('/') ? ('${pageContext.request.contextPath}' + val) : val;
                 previewBox.style.borderStyle = 'solid';
                 previewBox.innerHTML = '<img src="' + src + '" alt="Xem trước bìa" onerror="this.onerror=null;this.parentElement.innerHTML=\'<span style=\\\'font-size:2rem;color:#ef4444;\\\'>⚠️</span>\';" style="width:100%;height:100%;object-fit:cover;display:block;">';
+            }
+        });
+    }
+
+    // 6. CLIENT-SIDE VALIDATION TRƯỚC KHI SUBMIT
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            var title = titleInput ? titleInput.value.trim() : '';
+            var desc = descInput ? descInput.value.trim() : '';
+
+            if (title.length === 0) {
+                e.preventDefault();
+                alert('⚠️ Vui lòng nhập tiêu đề truyện (không được để trống hoặc chỉ chứa khoảng trắng).');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+
+            if (title.length > 200) {
+                e.preventDefault();
+                alert('⚠️ Tiêu đề truyện không được vượt quá 200 ký tự.');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+
+            if (desc.length > 5000) {
+                e.preventDefault();
+                alert('⚠️ Giới thiệu truyện không được vượt quá 5.000 ký tự.');
+                if (descInput) descInput.focus();
+                return;
             }
         });
     }

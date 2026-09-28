@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.Base64;
 import javax.servlet.ServletContext;
 import javax.servlet.http.Part;
@@ -83,6 +84,101 @@ public final class UploadUtil {
             Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
         }
         return "/uploads/" + name;
+    }
+
+    /** Tiền tố thư mục của ảnh bằng chứng — xem ghi chú ở {@link #saveEvidence}. */
+    public static final String EVIDENCE_PREFIX = "evidence/";
+
+    /**
+     * Lưu một ảnh bằng chứng của báo cáo vi phạm (ISSUE-025).
+     *
+     * <p>Trả về đường dẫn <b>tương đối với thư mục uploads</b>, dạng
+     * {@code evidence/2026/09/AbC123.jpg} — <b>không</b> có tiền tố
+     * {@code /uploads/} như {@link #save}. Lý do: giá trị này đi thẳng vào cột
+     * {@code report_evidence.file_path}, và bảng đó lưu đường dẫn tương đối để
+     * còn đổi được chỗ chứa mà không phải sửa dữ liệu.
+     *
+     * <p><b>VÌ SAO PHẢI NẰM RIÊNG TRONG {@code evidence/}.</b> Ảnh bìa truyện
+     * vốn để khoe, ai xem cũng được. Ảnh tố cáo thì ngược lại: nó có thể là
+     * ảnh chụp tin nhắn riêng, thông tin cá nhân của người bị tố, hoặc chính
+     * nội dung phản cảm đang bị báo cáo. {@code UploadedFileServlet} nhìn đúng
+     * tiền tố này để chặn người không phải admin — nên đây là một <b>hàng
+     * rào</b>, không phải quy ước đặt tên cho gọn.
+     *
+     * <p>Chia thêm theo {@code YYYY/MM} để một thư mục không phình tới hàng
+     * vạn file — thư mục quá lớn làm chậm mọi thao tác trên file, và dọn dẹp
+     * theo tháng cũng dễ hơn.
+     *
+     * @return đường dẫn tương đối, hoặc null nếu người dùng không chọn file
+     */
+    public static String saveEvidence(Part part, ServletContext ctx)
+            throws UploadException, IOException {
+
+        if (part == null || part.getSize() == 0) {
+            return null;
+        }
+        if (part.getSize() > MAX_BYTES) {
+            throw new UploadException("Ảnh bằng chứng quá "
+                    + (MAX_BYTES / 1024 / 1024) + " MB. Chọn ảnh nhỏ hơn.");
+        }
+
+        String ext;
+        try (InputStream in = part.getInputStream()) {
+            ext = sniff(in);
+        }
+        if (ext == null) {
+            throw new UploadException(
+                    "File bằng chứng phải là ảnh PNG, JPG, GIF hoặc WebP.");
+        }
+
+        LocalDate today = LocalDate.now();
+        String sub = EVIDENCE_PREFIX
+                   + today.getYear() + "/"
+                   + String.format("%02d", today.getMonthValue());
+
+        File root = resolveUploadFolder(ctx);
+        Path dir = root.toPath().resolve(sub);
+        Files.createDirectories(dir);
+
+        // Tên ngẫu nhiên, cùng lý lẽ với save(): không bao giờ dùng tên người
+        // dùng gửi lên. Xem chú thích dài ở save().
+        byte[] bytes = new byte[12];
+        RANDOM.nextBytes(bytes);
+        String name = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes) + ext;
+
+        try (InputStream in = part.getInputStream()) {
+            Files.copy(in, dir.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+        }
+        return sub + "/" + name;
+    }
+
+    /**
+     * Xoá một ảnh bằng chứng khỏi ổ đĩa.
+     *
+     * <p>Cần vì {@code ON DELETE CASCADE} chỉ xoá <b>dòng</b> trong CSDL, file
+     * thì nằm lại mãi mãi. Trả về true nếu xoá được.
+     *
+     * <p>Chỉ nhận đường dẫn bắt đầu bằng {@code evidence/} và từ chối mọi
+     * đường có {@code ".."} — để một giá trị rác trong CSDL không biến hàm này
+     * thành công cụ xoá file bất kỳ trên máy chủ.
+     */
+    public static boolean deleteEvidence(String relPath, ServletContext ctx) {
+        if (relPath == null
+                || !relPath.startsWith(EVIDENCE_PREFIX)
+                || relPath.contains("..")) {
+            return false;
+        }
+        try {
+            Path root = resolveUploadFolder(ctx).toPath().toAbsolutePath().normalize();
+            Path target = root.resolve(relPath).normalize();
+            // Sau khi normalize vẫn phải nằm trong thư mục uploads.
+            if (!target.startsWith(root)) {
+                return false;
+            }
+            return Files.deleteIfExists(target);
+        } catch (UploadException | IOException e) {
+            return false;
+        }
     }
 
     /**

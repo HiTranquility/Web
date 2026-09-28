@@ -101,9 +101,17 @@
         </div>
 
         <%--
-          Bật / tắt đọc liên tục và Phím tắt trợ giúp.
+          Bật / tắt đọc liên tục, Giọng đọc TTS, Mưa thư giãn, In chương và Phím tắt trợ giúp.
         --%>
         <div class="tool-group">
+            <button type="button" class="tool-btn" id="toggle-tts"
+                    title="Đọc truyện bằng giọng nói (Text-to-Speech)" aria-label="Đọc giọng nói">🎧</button>
+            <button type="button" class="tool-btn" id="toggle-ambient"
+                    title="Bật / Tắt âm thanh mưa rơi thư giãn" aria-label="Âm thanh mưa">🌧️</button>
+            <button type="button" class="tool-btn" id="btn-print-chapter"
+                    title="In chương truyện / Xuất PDF (Ctrl+P)" aria-label="In chương">🖨️</button>
+            <button type="button" class="tool-btn" id="toggle-zen"
+                    title="Chế độ tập trung Zen Mode (Z)" aria-label="Chế độ tập trung">🧘</button>
             <button type="button" class="tool-btn" id="toggle-continuous"
                     aria-pressed="true" title="Đọc liên tục">∞</button>
             <button type="button" class="tool-btn" id="toggle-shortcuts"
@@ -115,6 +123,17 @@
 <main class="reader-wrap">
     <jsp:include page="${contentPage}" />
 </main>
+
+<%-- Thanh điều khiển Giọng đọc Text-to-Speech (TTS) --%>
+<div class="reader-tts-bar" id="reader-tts-bar" aria-hidden="true">
+    <button type="button" class="tts-btn" id="tts-prev-btn" title="Đoạn trước">⏮</button>
+    <button type="button" class="tts-btn tts-btn-play" id="tts-play-btn" title="Phát / Tạm dừng">▶</button>
+    <button type="button" class="tts-btn" id="tts-stop-btn" title="Dừng đọc">⏹</button>
+    <button type="button" class="tts-btn" id="tts-next-btn" title="Đoạn tiếp">⏭</button>
+    <span class="tts-info" id="tts-info">Sẵn sàng</span>
+    <span class="tts-rate-badge" id="tts-rate-badge" title="Đổi tốc độ đọc">1.0x</span>
+    <button type="button" class="tts-btn tts-btn-close" id="tts-close-btn" title="Thu gọn">&times;</button>
+</div>
 
 <%-- Hộp thoại hướng dẫn phím tắt --%>
 <dialog id="shortcuts-modal" class="reader-dialog">
@@ -141,6 +160,18 @@
                 <span>Bật / tắt Toàn màn hình</span>
             </div>
             <div class="shortcut-row">
+                <span class="key-combo"><kbd>Z</kbd></span>
+                <span>Chế độ đọc tập trung (Zen Mode)</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>S</kbd></span>
+                <span>Bật / tắt Đọc giọng nói (TTS)</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>M</kbd></span>
+                <span>Bật / tắt Âm thanh mưa rơi</span>
+            </div>
+            <div class="shortcut-row">
                 <span class="key-combo"><kbd>?</kbd></span>
                 <span>Hiện bảng phím tắt này</span>
             </div>
@@ -151,6 +182,37 @@
         </div>
     </div>
 </dialog>
+
+<%-- CỤM NÚT ĐIỀU HƯỚNG NỔI (FLOATING DOCK): LÊN ĐẦU TRANG ↑ & XUỐNG BÌNH LUẬN ↓ --%>
+<div class="reader-fab-dock" id="reader-fab-dock">
+    <%-- Nút 1: Mũi tên lên đầu trang ↑ --%>
+    <button type="button" class="reader-fab-btn reader-fab-top" id="reader-fab-top"
+            title="Cuộn lên đầu trang" aria-label="Cuộn lên đầu trang">
+        <span class="fab-icon-wrap">
+            <svg class="fab-arrow-up" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+        </span>
+        <span class="fab-tooltip">Lên đầu trang ↑</span>
+    </button>
+
+    <%-- Nút 2: Mũi tên xuống bình luận ↓ kèm badge chat --%>
+    <button type="button" class="reader-fab-btn reader-fab-comment" id="reader-fab-comment"
+            title="Chuyển xuống bình luận chương" aria-label="Chuyển xuống bình luận chương">
+        <span class="fab-icon-wrap">
+            <svg class="fab-arrow-down" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+            </svg>
+            <span class="fab-chat-badge" aria-hidden="true">💬</span>
+        </span>
+        <span class="fab-tooltip">Bình luận chương ↓</span>
+    </button>
+</div>
+
+<%-- Thanh tiến độ đọc mỏng mượt mà ở đỉnh màn hình --%>
+<div class="reader-progress-bar" id="reader-progress-bar" aria-hidden="true"></div>
 
 <script>
 /*
@@ -225,6 +287,102 @@ var CTX = '${pageContext.request.contextPath}';
     }
 
 })();
+
+/*
+ * ĐỊNH DẠNG VĂN HỌC (MARKDOWN VĂN HỌC & TYPOGRAPHY)
+ *
+ * Chuyển các cú pháp viết lách của tác giả thành HTML tao nhã và an toàn:
+ * - **in đậm** -> <strong>
+ * - *in nghiêng* -> <em>
+ * - ~~gạch ngang~~ -> <s>
+ * - Lời thoại (bắt đầu bằng — hoặc - ) -> class .dialogue
+ * - Hoa thị ngắt cảnh (* * *, ***, ---) -> class .divider (❖ ❖ ❖)
+ * - Trích dẫn (bắt đầu bằng >) -> <blockquote>
+ * - Lời nhắn tác giả ([Tác giả: ...]) -> class .author-note
+ */
+function escapeHtmlSafe(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function applyInlineFormat(html) {
+    if (!html) return '';
+    return html
+        .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/~~([^~]+?)~~/g, '<s>$1</s>')
+        .replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+}
+
+function formatChapterBlock(root) {
+    if (!root) return;
+    var paras = root.querySelectorAll('.chapter-content p');
+    for (var i = 0; i < paras.length; i++) {
+        var p = paras[i];
+        var txt = p.textContent.trim();
+
+        // 1. Phân đoạn hoa thị: * * *, ***, ---, ❖ ❖ ❖
+        if (/^(\*\s*\*\s*\*|—{3,}|-{3,}|❖\s*❖\s*❖)$/.test(txt)) {
+            var div = document.createElement('div');
+            div.className = 'divider';
+            div.setAttribute('aria-hidden', 'true');
+            div.textContent = '❖ ❖ ❖';
+            p.parentNode.replaceChild(div, p);
+            continue;
+        }
+
+        // 2. Trích dẫn cổ phong / câu danh ngôn (bắt đầu bằng > hoặc &gt;)
+        if (/^(&gt;|>)\s*/.test(txt)) {
+            var clean = txt.replace(/^(&gt;|>)\s*/, '');
+            var bq = document.createElement('blockquote');
+            bq.innerHTML = applyInlineFormat(escapeHtmlSafe(clean));
+            p.parentNode.replaceChild(bq, p);
+            continue;
+        }
+
+        // 3. Lời tác giả / Ghi chú
+        if (/^\[(Lời tác giả|Tác giả|Ghi chú|Note):/i.test(txt)) {
+            p.classList.add('author-note');
+        }
+        // 4. Lời thoại nhân vật
+        else if (/^([—–-]|--)\s+/.test(txt)) {
+            p.classList.add('dialogue');
+        }
+
+        // Inline formatting (in đậm, in nghiêng, gạch ngang)
+        p.innerHTML = applyInlineFormat(p.innerHTML);
+    }
+
+    // 5. Ước tính thời gian đọc và tổng số từ của chương
+    var blocks = (root.querySelectorAll && root.querySelectorAll('.chapter-block')) || [];
+    if (blocks.length === 0 && root.classList && root.classList.contains('chapter-block')) {
+        blocks = [root];
+    }
+    for (var b = 0; b < blocks.length; b++) {
+        var blk = blocks[b];
+        var contentEl = blk.querySelector('.chapter-content');
+        var subEl = blk.querySelector('.reader-sub');
+        if (contentEl && subEl && !subEl.querySelector('.read-est')) {
+            var words = contentEl.textContent.trim().split(/\s+/).filter(Boolean).length;
+            if (words > 0) {
+                var mins = Math.max(1, Math.round(words / 220));
+                var estSpan = document.createElement('span');
+                estSpan.className = 'read-est';
+                estSpan.style.opacity = '0.85';
+                estSpan.innerHTML = ' &middot; ⏱️ ~' + mins + ' phút đọc (' + words.toLocaleString('vi-VN') + ' từ)';
+                subEl.appendChild(estSpan);
+            }
+        }
+    }
+}
+
+// Chạy format cho toàn bộ các chương đã nạp sẵn khi tải trang
+try {
+    formatChapterBlock(document.getElementById('chapters'));
+} catch (e) {
+    if (window.console) console.warn('Lỗi định dạng văn học:', e);
+}
+
 /*
  * ĐỌC LIÊN TỤC — cuộn hết chương là chương sau tự nối vào bên dưới.
  *
@@ -270,16 +428,33 @@ var CTX = '${pageContext.request.contextPath}';
 
     try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) { }
 
-    /* ------------------------------------------------------ đánh dấu đã đọc */
+    /* ------------------------------------------------------ đánh dấu đã đọc & lịch sử */
     function markRead(block) {
         try {
-            var key = 'read.' + block.getAttribute('data-story-id');
+            var sId = block.getAttribute('data-story-id');
+            var cId = block.getAttribute('data-chapter-id');
+            if (!sId || !cId) return;
+
+            var key = 'read.' + sId;
             var seen = JSON.parse(localStorage.getItem(key) || '[]');
-            var id = block.getAttribute('data-chapter-id');
-            if (seen.indexOf(id) === -1) {
-                seen.push(id);
+            if (seen.indexOf(cId) === -1) {
+                seen.push(cId);
                 localStorage.setItem(key, JSON.stringify(seen));
             }
+
+            // Ghi nhận truyện vừa đọc gần đây để Trang chủ hiển thị "Tiếp tục đọc"
+            var sTitle = block.getAttribute('data-story-title');
+            var cTitle = block.getAttribute('data-chapter-title');
+            var cNo = block.getAttribute('data-chapter-no');
+            var recent = {
+                storyId: sId,
+                storyTitle: sTitle,
+                chapterId: cId,
+                chapterTitle: cTitle,
+                chapterNo: cNo,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('webdoctruyen_recent_read', JSON.stringify(recent));
         } catch (e) { /* trình duyệt chặn lưu trữ — việc đọc không ảnh hưởng */ }
     }
 
@@ -318,6 +493,9 @@ var CTX = '${pageContext.request.contextPath}';
                 box.innerHTML = html;
                 var block = box.querySelector('.chapter-block');
                 if (!block) throw new Error('không thấy .chapter-block');
+
+                // Định dạng văn học cho block chương mới tải
+                formatChapterBlock(block);
 
                 wrap.appendChild(block);
                 watch(block);
@@ -610,6 +788,13 @@ var CTX = '${pageContext.request.contextPath}';
         else modal.removeAttribute('open');
     }
 
+    var zenBtn = document.getElementById('toggle-zen');
+    function toggleZenMode() {
+        var isZen = document.body.classList.toggle('is-zen-mode');
+        if (zenBtn) zenBtn.classList.toggle('is-active', isZen);
+    }
+    if (zenBtn) zenBtn.addEventListener('click', toggleZenMode);
+
     if (openBtn) openBtn.addEventListener('click', showModal);
     if (closeBtn) closeBtn.addEventListener('click', hideModal);
     if (modal) {
@@ -636,12 +821,39 @@ var CTX = '${pageContext.request.contextPath}';
             return;
         }
 
-        // Phím Esc đóng TOC nếu đang mở
+        // Phím Esc đóng TOC nếu đang mở hoặc thoát Zen mode
         if (key === 'Escape') {
+            if (document.body.classList.contains('is-zen-mode')) {
+                toggleZenMode();
+                return;
+            }
             var toc = document.getElementById('toc-box');
             if (toc && toc.open) {
                 toc.open = false;
             }
+            return;
+        }
+
+        // Phím Z -> Bật / tắt Zen Mode
+        if (code === 'KeyZ') {
+            e.preventDefault();
+            toggleZenMode();
+            return;
+        }
+
+        // Phím S -> Bật / tắt Đọc giọng nói (TTS)
+        if (code === 'KeyS') {
+            e.preventDefault();
+            var ttsToggle = document.getElementById('toggle-tts');
+            if (ttsToggle) ttsToggle.click();
+            return;
+        }
+
+        // Phím M -> Bật / tắt Âm thanh mưa rơi
+        if (code === 'KeyM') {
+            e.preventDefault();
+            var rainToggle = document.getElementById('toggle-ambient');
+            if (rainToggle) rainToggle.click();
             return;
         }
 
@@ -682,24 +894,369 @@ var CTX = '${pageContext.request.contextPath}';
         }
     });
 
-    /* Nút Cuộn lên đầu trang trong trình đọc */
-    var rBttBtn = document.getElementById('reader-back-to-top');
-    if (!rBttBtn) {
-        rBttBtn = document.createElement('button');
-        rBttBtn.type = 'button';
-        rBttBtn.className = 'back-to-top';
-        rBttBtn.id = 'reader-back-to-top';
-        rBttBtn.title = 'Lên đầu trang';
-        rBttBtn.setAttribute('aria-label', 'Cuộn lên đầu trang');
-        rBttBtn.innerHTML = '<span>↑</span>';
-        document.body.appendChild(rBttBtn);
+    /* ========================================================================
+     * CỤM NÚT ĐIỀU HƯỚNG NỔI (FLOATING NAVIGATION DOCK) & THANH TIẾN ĐỘ ĐỌC
+     * ===================================================================== */
+    var fabTop = document.getElementById('reader-fab-top');
+    var fabComment = document.getElementById('reader-fab-comment');
+    var progressBar = document.getElementById('reader-progress-bar');
+
+    // Nút Lên đầu trang
+    if (fabTop) {
+        fabTop.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     }
-    window.addEventListener('scroll', function () {
-        rBttBtn.classList.toggle('is-show', window.scrollY > 350);
-    }, { passive: true });
-    rBttBtn.addEventListener('click', function () {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+
+    // Nút Chuyển xuống bình luận
+    if (fabComment) {
+        fabComment.addEventListener('click', function () {
+            var commentsSection = document.getElementById('comments') || document.querySelector('.chapter-comments-wrap');
+            if (commentsSection) {
+                commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var textarea = commentsSection.querySelector('textarea[name="content"]');
+                if (textarea) {
+                    setTimeout(function () { textarea.focus(); }, 600);
+                }
+            }
+        });
+    }
+
+    // Theo dõi cuộn trang: Hiển thị nút Lên đầu trang & Cập nhật thanh tiến độ %
+    function onReaderScroll() {
+        var scrollY = window.scrollY || window.pageYOffset;
+        var scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        // Hiện nút Lên đầu trang khi cuộn quá 200px
+        if (fabTop) {
+            fabTop.classList.toggle('is-show', scrollY > 200);
+        }
+
+        // Cập nhật thanh tiến độ đọc mỏng ở đỉnh màn hình
+        if (progressBar && scrollHeight > 0) {
+            var pct = Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100));
+            progressBar.style.width = pct + '%';
+        }
+    }
+
+    window.addEventListener('scroll', onReaderScroll, { passive: true });
+    onReaderScroll();
+
+    /* ========================================================================
+     * TÍNH NĂNG 1: IN CHƯƠNG TRUYỆN / XUẤT PDF (PRINT-FRIENDLY)
+     * ===================================================================== */
+    var btnPrint = document.getElementById('btn-print-chapter');
+    if (btnPrint) {
+        btnPrint.addEventListener('click', function () {
+            window.print();
+        });
+    }
+
+    /* ========================================================================
+     * TÍNH NĂNG 2: ÂM THANH MƯA RƠI THƯ GIÃN (AMBIENT RAIN SOUND)
+     *
+     * Sinh âm thanh mưa rơi thuần 100% bằng Web Audio API, không tốn băng thông,
+     * không cần tải tệp mp3 từ mạng, chạy offline mượt mà.
+     * ===================================================================== */
+    var toggleAmbient = document.getElementById('toggle-ambient');
+    var audioCtx = null;
+    var noiseNode = null;
+    var gainNode = null;
+    var isAmbientPlaying = false;
+
+    function initAmbientRain() {
+        if (audioCtx) return;
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        audioCtx = new AudioContext();
+
+        // Tạo 5 giây Pink Noise (tiếng mưa êm tai)
+        var bufferSize = audioCtx.sampleRate * 5;
+        var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        var output = buffer.getChannelData(0);
+        var b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (var i = 0; i < bufferSize; i++) {
+            var white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.035;
+            b6 = white * 0.115926;
+        }
+
+        // Bộ lọc Lowpass mô phỏng tiếng mưa rơi ngoài hiên
+        var filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(850, audioCtx.currentTime);
+
+        gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
+
+        noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = buffer;
+        noiseNode.loop = true;
+
+        noiseNode.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        noiseNode.start(0);
+    }
+
+    if (toggleAmbient) {
+        toggleAmbient.addEventListener('click', function () {
+            if (!isAmbientPlaying) {
+                try {
+                    initAmbientRain();
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    gainNode.gain.setTargetAtTime(0.35, audioCtx.currentTime, 0.1);
+                    isAmbientPlaying = true;
+                    toggleAmbient.classList.add('is-active');
+                    toggleAmbient.title = 'Đang phát tiếng mưa (Bấm để tắt)';
+                } catch (e) {
+                    if (window.console) console.warn('Không thể phát âm thanh ambient:', e);
+                }
+            } else {
+                if (gainNode) {
+                    gainNode.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.1);
+                }
+                isAmbientPlaying = false;
+                toggleAmbient.classList.remove('is-active');
+                toggleAmbient.title = 'Bật / Tắt âm thanh mưa rơi thư giãn';
+            }
+        });
+    }
+
+    /* ========================================================================
+     * TÍNH NĂNG 3: ĐỌC TRUYỆN BẰNG GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
+     *
+     * Dùng Web Speech API bản xứ tiếng Việt (vi-VN).
+     * Tự động đọc từng đoạn văn, highlight đoạn đang đọc và cuộn màn hình.
+     * ===================================================================== */
+    var toggleTts = document.getElementById('toggle-tts');
+    var ttsBar = document.getElementById('reader-tts-bar');
+    var ttsPlayBtn = document.getElementById('tts-play-btn');
+    var ttsStopBtn = document.getElementById('tts-stop-btn');
+    var ttsPrevBtn = document.getElementById('tts-prev-btn');
+    var ttsNextBtn = document.getElementById('tts-next-btn');
+    var ttsCloseBtn = document.getElementById('tts-close-btn');
+    var ttsInfo = document.getElementById('tts-info');
+    var ttsRateBadge = document.getElementById('tts-rate-badge');
+
+    var synth = window.speechSynthesis;
+    var ttsParagraphs = [];
+    var ttsIndex = 0;
+    var ttsIsPlaying = false;
+    var ttsRate = 1.0;
+    var ttsRates = [0.8, 1.0, 1.25, 1.5];
+    var ttsRateIndex = 1;
+    var viVoice = null;
+
+    function loadVoices() {
+        if (!synth) return;
+        var voices = synth.getVoices();
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].lang === 'vi-VN' || voices[i].lang.indexOf('vi') === 0) {
+                viVoice = voices[i];
+                break;
+            }
+        }
+    }
+    if (synth) {
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+    }
+
+    function collectParagraphs() {
+        var paras = document.querySelectorAll('.chapter-content p');
+        ttsParagraphs = [];
+        paras.forEach(function (p) {
+            var txt = p.textContent.trim();
+            if (txt && !p.classList.contains('divider')) {
+                ttsParagraphs.push(p);
+            }
+        });
+    }
+
+    function clearHighlight() {
+        var actives = document.querySelectorAll('.chapter-content p.tts-active');
+        actives.forEach(function (el) { el.classList.remove('tts-active'); });
+    }
+
+    function updateTtsInfo() {
+        if (!ttsInfo) return;
+        if (ttsParagraphs.length === 0) {
+            ttsInfo.textContent = 'Trống';
+        } else {
+            ttsInfo.textContent = 'Đoạn ' + (ttsIndex + 1) + '/' + ttsParagraphs.length;
+        }
+    }
+
+    function playCurrentParagraph() {
+        if (!synth || ttsParagraphs.length === 0 || ttsIndex >= ttsParagraphs.length) {
+            stopTts();
+            return;
+        }
+
+        synth.cancel(); // Dừng câu trước đó
+
+        var currentP = ttsParagraphs[ttsIndex];
+        clearHighlight();
+        currentP.classList.add('tts-active');
+        currentP.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        updateTtsInfo();
+
+        var text = currentP.textContent.trim();
+        var utter = new SpeechSynthesisUtterance(text);
+        utter.rate = ttsRate;
+        utter.lang = 'vi-VN';
+        if (viVoice) utter.voice = viVoice;
+
+        utter.onend = function () {
+            if (ttsIsPlaying) {
+                ttsIndex++;
+                if (ttsIndex < ttsParagraphs.length) {
+                    playCurrentParagraph();
+                } else {
+                    stopTts();
+                }
+            }
+        };
+
+        utter.onerror = function (e) {
+            if (window.console) console.warn('Lỗi đọc giọng nói:', e);
+            if (ttsIsPlaying) {
+                ttsIndex++;
+                if (ttsIndex < ttsParagraphs.length) {
+                    playCurrentParagraph();
+                } else {
+                    stopTts();
+                }
+            }
+        };
+
+        synth.speak(utter);
+        ttsIsPlaying = true;
+        if (ttsPlayBtn) {
+            ttsPlayBtn.innerHTML = '⏸';
+            ttsPlayBtn.title = 'Tạm dừng';
+        }
+        if (toggleTts) toggleTts.classList.add('is-active');
+    }
+
+    function pauseTts() {
+        if (!synth) return;
+        if (synth.speaking && !synth.paused) {
+            synth.pause();
+            ttsIsPlaying = false;
+            ttsPlayBtn.innerHTML = '▶';
+            ttsPlayBtn.title = 'Tiếp tục phát';
+        } else if (synth.paused) {
+            synth.resume();
+            ttsIsPlaying = true;
+            ttsPlayBtn.innerHTML = '⏸';
+            ttsPlayBtn.title = 'Tạm dừng';
+        } else {
+            collectParagraphs();
+            playCurrentParagraph();
+        }
+    }
+
+    function stopTts() {
+        if (!synth) return;
+        synth.cancel();
+        ttsIsPlaying = false;
+        ttsIndex = 0;
+        clearHighlight();
+        if (ttsPlayBtn) {
+            ttsPlayBtn.innerHTML = '▶';
+            ttsPlayBtn.title = 'Phát';
+        }
+        if (ttsInfo) ttsInfo.textContent = 'Sẵn sàng';
+        if (toggleTts) toggleTts.classList.remove('is-active');
+    }
+
+    if (toggleTts) {
+        toggleTts.addEventListener('click', function () {
+            if (!window.speechSynthesis) {
+                alert('Trình duyệt của bạn chưa hỗ trợ Web Speech API.');
+                return;
+            }
+            ttsBar.classList.toggle('is-show');
+            if (ttsBar.classList.contains('is-show')) {
+                collectParagraphs();
+                updateTtsInfo();
+            } else {
+                stopTts();
+            }
+        });
+    }
+
+    if (ttsPlayBtn) {
+        ttsPlayBtn.addEventListener('click', function () {
+            if (ttsIsPlaying) {
+                pauseTts();
+            } else {
+                if (synth.paused) {
+                    synth.resume();
+                    ttsIsPlaying = true;
+                    ttsPlayBtn.innerHTML = '⏸';
+                } else {
+                    collectParagraphs();
+                    playCurrentParagraph();
+                }
+            }
+        });
+    }
+
+    if (ttsStopBtn) {
+        ttsStopBtn.addEventListener('click', stopTts);
+    }
+
+    if (ttsPrevBtn) {
+        ttsPrevBtn.addEventListener('click', function () {
+            if (ttsIndex > 0) {
+                ttsIndex--;
+                if (ttsIsPlaying) playCurrentParagraph();
+                else updateTtsInfo();
+            }
+        });
+    }
+
+    if (ttsNextBtn) {
+        ttsNextBtn.addEventListener('click', function () {
+            if (ttsIndex < ttsParagraphs.length - 1) {
+                ttsIndex++;
+                if (ttsIsPlaying) playCurrentParagraph();
+                else updateTtsInfo();
+            }
+        });
+    }
+
+    if (ttsRateBadge) {
+        ttsRateBadge.addEventListener('click', function () {
+            ttsRateIndex = (ttsRateIndex + 1) % ttsRates.length;
+            ttsRate = ttsRates[ttsRateIndex];
+            ttsRateBadge.textContent = ttsRate + 'x';
+            if (ttsIsPlaying) {
+                playCurrentParagraph();
+            }
+        });
+    }
+
+    if (ttsCloseBtn) {
+        ttsCloseBtn.addEventListener('click', function () {
+            stopTts();
+            ttsBar.classList.remove('is-show');
+        });
+    }
 })();
 </script>
 

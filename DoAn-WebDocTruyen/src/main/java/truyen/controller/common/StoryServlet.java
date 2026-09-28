@@ -216,23 +216,51 @@ public class StoryServlet extends HttpServlet {
         int id = parseIntOr(request.getParameter("id"), 0);
         Story story = storyDAO.findById(id);
 
-        if (story == null || "DELETED".equals(story.getStatus())) {
+        if (story == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
+
+        User me = ServletHelper.currentUser(request);
+
+        /*
+         * TRUYỆN ĐÃ GỠ: 404 với mọi người, TRỪ ADMIN  (ISSUE-025).
+         *
+         * Trước đây 404 với tất cả. Nghe thì chặt chẽ, nhưng nó làm hỏng đúng
+         * việc admin cần làm: trang xử lý báo cáo dựng link tới bình luận bị
+         * tố, mà bình luận đó rất hay nằm trong truyện vừa bị gỡ vì một báo
+         * cáo khác. Admin bấm vào thì nhận 404 — không xem được mình vừa gỡ
+         * cái gì, cũng không đọc được bình luận đang phải phân xử.
+         *
+         * Người đọc thường vẫn nhận 404 y như cũ: truyện đã gỡ là biến mất,
+         * không có cửa sau nào.
+         */
+        boolean isAdmin = me != null && me.isAdmin();
+        if ("DELETED".equals(story.getStatus()) && !isAdmin) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+        // Để JSP hiện dải cảnh báo "truyện này đã bị gỡ" cho admin.
+        request.setAttribute("storyRemoved", "DELETED".equals(story.getStatus()));
 
         /*
          * Truyện DRAFT chỉ tác giả và admin xem được.
          * Trả 404 chứ không phải 403 — cố ý. 403 vô tình xác nhận "truyện này
          * CÓ tồn tại", còn 404 thì không tiết lộ gì cả.
          */
-        User me = ServletHelper.currentUser(request);
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
 
-        storyDAO.increaseView(id);
+        /*
+         * Truyện đã gỡ thì KHÔNG cộng lượt xem. Chỉ admin vào được, và đó là
+         * đi xử lý báo cáo chứ không phải đọc truyện — cộng vào là làm bẩn số
+         * liệu bằng chính thao tác quản trị của mình.
+         */
+        if (!"DELETED".equals(story.getStatus())) {
+            storyDAO.increaseView(id);
+        }
 
         /*
          * Ghi thêm một dòng vào nhật ký lượt xem.

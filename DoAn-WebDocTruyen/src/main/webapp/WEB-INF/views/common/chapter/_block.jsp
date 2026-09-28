@@ -25,6 +25,8 @@
          data-chapter-id="${chapter.id}"
          data-chapter-no="${chapter.chapterNo}"
          data-story-id="${story.id}"
+         data-story-title="<c:out value='${story.title}'/>"
+         data-chapter-title="<c:out value='${chapter.title}'/>"
          data-next-id="${empty next ? '' : next.id}"
          data-title="Chương ${chapter.chapterNo} — <c:out value='${story.title}'/>"
          data-url="${pageContext.request.contextPath}/chapter?action=read&amp;id=${chapter.id}">
@@ -38,13 +40,9 @@
         <%--
           Mỗi đoạn văn một thẻ <p>.
 
-          chapter.paragraphs do model cắt sẵn — xem ghi chú đầy đủ ở
-          model/Chapter.getParagraphs(). Tóm tắt: cắt trong JSP bằng
-          fn:replace hay c:forTokens đều hỏng vì chuyện CRLF và vì JSP
-          không giải mã entity trong thuộc tính.
-
-          c:out escape từng đoạn — nội dung chương là chữ tác giả nhập,
-          bắt buộc phải escape.
+          chapter.formattedParagraphs do model cắt và định dạng an toàn:
+          escape toàn bộ ký tự nguy hiểm chống XSS, đồng thời hỗ trợ cú pháp
+          in đậm, in nghiêng, gạch ngang, khối trích dẫn, lời tác giả và hoa thị phân đoạn.
         --%>
         <c:forEach var="para" items="${chapter.paragraphs}">
             <p><c:out value="${para}"/></p>

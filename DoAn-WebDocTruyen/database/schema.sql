@@ -446,6 +446,28 @@ CREATE TABLE reports (
     target_type ENUM('STORY', 'COMMENT') NOT NULL,
     target_id   INT NOT NULL,
 
+    /*
+      PHÂN LOẠI VI PHẠM (ISSUE-025). Tám loại, xem bảng ở issue.md §3.1.
+
+      MẶC ĐỊNH 'OTHER' — đây là điều kiện để nâng cấp không phải sửa tay: mọi
+      báo cáo CŨ (chỉ có ô reason tự do) tự rơi vào "Khác", đọc vẫn đúng
+      nghĩa, và không dòng nào phải chạy UPDATE.
+
+      ENUM chứ không phải bảng riêng: một báo cáo có ĐÚNG MỘT loại. Quan hệ
+      một-một thì cột là đúng, bảng nối là thừa. Thêm loại thứ chín sau này
+      chỉ là sửa một dòng — cùng lý lẽ với cột target_type ngay phía trên.
+
+      BA LOẠI NẶNG (ADULT, VIOLENCE, PRIVACY) được trang quản trị đẩy lên đầu
+      hàng đợi. Không phải cho đẹp: nội dung người lớn và lộ thông tin cá nhân
+      là loại mà mỗi giờ chậm là thêm người nhìn thấy. Spam thì để chiều xử
+      cũng không sao.
+    */
+    category    ENUM('SPAM','ADULT','VIOLENCE','PRIVACY',
+                     'PLAGIARISM','WRONG_INFO','HARASSMENT','OTHER')
+                NOT NULL DEFAULT 'OTHER',
+
+    -- Mô tả thêm của người báo cáo. Bắt buộc khi category = 'OTHER',
+    -- tuỳ chọn với các loại còn lại.
     reason      VARCHAR(500) NOT NULL,
 
     -- PENDING: chờ xử lý · RESOLVED: đã xử lý · DISMISSED: bỏ qua
@@ -457,7 +479,57 @@ CREATE TABLE reports (
     FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
 
     -- Trang xử lý luôn lọc "còn chờ xử lý" trước.
-    INDEX idx_report_status (status, created_at)
+    INDEX idx_report_status (status, created_at),
+
+    -- Bộ lọc theo loại vi phạm ở trang quản trị (ISSUE-025).
+    INDEX idx_report_category (category, status, created_at)
+) ENGINE=InnoDB;
+
+
+-- =============================================================================
+--  report_evidence — ảnh bằng chứng kèm theo báo cáo  (ISSUE-025)
+-- =============================================================================
+--  VÌ SAO BẢNG RIÊNG, KHÔNG PHẢI MỘT CỘT evidence_url TRÊN reports
+--    Một cột chỉ chứa được một ảnh, mà ba ảnh là nhu cầu thật: ảnh chụp trang
+--    truyện + ảnh chụp đúng chỗ vi phạm + ảnh bản gốc khi tố đạo văn. Nhét ba
+--    đường dẫn ngăn phẩy vào một VARCHAR là đúng cái sai mà bảng story_tags đã
+--    cảnh báo ("đừng làm kiểu tags = 'a,b'"): không đếm được, không xoá lẻ
+--    được, và phải tự tách chuỗi ở tầng Java.
+--
+--  KHÔNG LƯU ẢNH VÀO CSDL, CHỈ LƯU ĐƯỜNG DẪN
+--    Khác với nội dung chương (lưu thẳng MEDIUMTEXT, xem ghi chú bảng
+--    chapters). Lý do ngược lại: ảnh là dữ liệu nhị phân vài trăm KB, đọc ra
+--    là đọc nguyên khối, và trình duyệt cache được nếu nó là một file có URL
+--    riêng. Nhét BLOB vào đây là mỗi lần mở trang quản trị kéo về vài MB.
+--
+--  ĐƯỜNG DẪN LUÔN BẮT ĐẦU BẰNG "evidence/"
+--    Đây KHÔNG phải quy ước cho đẹp mà là hàng rào: UploadedFileServlet nhìn
+--    tiền tố này để biết phải chặn người không phải admin. Ảnh tố cáo có thể
+--    chứa ảnh chụp tin nhắn riêng hoặc thông tin cá nhân của người bị tố —
+--    khác hẳn ảnh bìa truyện vốn để khoe.
+--
+--  GIỚI HẠN 3 ẢNH KHÔNG KHAI ĐƯỢC Ở ĐÂY
+--    MySQL không có ràng buộc kiểu "nhiều nhất 3 dòng con". Nó được ép ở
+--    ReportDAO.insertEvidence() trong cùng một transaction với lúc chèn.
+-- =============================================================================
+CREATE TABLE report_evidence (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+
+    report_id  INT NOT NULL,
+
+    -- Ví dụ: "evidence/2026/09/a1b2c3d4.jpg". Tương đối với thư mục uploads.
+    file_path  VARCHAR(255) NOT NULL,
+
+    -- Cỡ file lúc tải lên, để trang quản trị hiện và để đối soát khi dọn đĩa.
+    file_size  INT NOT NULL,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Xoá báo cáo thì ảnh của nó đi theo. LƯU Ý: CASCADE chỉ xoá DÒNG, không
+    -- xoá FILE trên ổ đĩa — ReportDAO.deleteWithEvidence() phải tự xoá file.
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+
+    INDEX idx_evidence_report (report_id)
 ) ENGINE=InnoDB;
 
 

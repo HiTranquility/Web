@@ -57,6 +57,15 @@ public class EncodingFilter implements Filter {
         }
         res.setCharacterEncoding(UTF8);
 
+        if (res instanceof javax.servlet.http.HttpServletResponse) {
+            javax.servlet.http.HttpServletResponse httpRes = (javax.servlet.http.HttpServletResponse) res;
+            // Bảo vệ an toàn HTTP Headers (OWASP Security Standards)
+            httpRes.setHeader("X-Content-Type-Options", "nosniff");
+            httpRes.setHeader("X-Frame-Options", "SAMEORIGIN");
+            httpRes.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+            httpRes.setHeader("X-XSS-Protection", "1; mode=block");
+        }
+
         chain.doFilter(req, res);
     }
 

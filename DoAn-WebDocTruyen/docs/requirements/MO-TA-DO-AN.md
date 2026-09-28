@@ -8,7 +8,7 @@
 | **Tên ngắn** | ĐọcTruyện — Nền tảng đọc truyện cộng đồng |
 | **Công nghệ** | Java Servlet 3.1 · JSP + JSTL · MySQL 8 · Apache Tomcat 9 |
 | **Kiến trúc** | MVC Model 2 (Model – View – Controller), server-rendered |
-| **Quy mô** | 47 lớp Java · 51 file JSP (31 trang) · 13 bảng dữ liệu |
+| **Quy mô** | **77 lớp Java** · **55 file JSP** (36 trang, 5 layouts, 14 partials) · **14 bảng dữ liệu** · **114 bài Unit Test** |
 
 ---
 
@@ -29,9 +29,9 @@ có quyền gỡ nội dung vi phạm.
 
 | Nhóm | Quyền hạn |
 |------|-----------|
-| **Khách** (chưa đăng nhập) | Xem kho truyện, lọc theo thể loại, tìm kiếm, đọc chương, tải truyện |
-| **Thành viên** | Toàn bộ quyền của Khách, cộng thêm: đăng truyện, quản lý truyện **của mình**, bình luận, đánh dấu truyện |
-| **Quản trị viên** | Toàn bộ quyền của Thành viên, cộng thêm: gỡ/khôi phục truyện bất kỳ, khoá/mở khoá tài khoản |
+| **Khách** (chưa đăng nhập) | Xem kho truyện, lọc theo thể loại, tìm kiếm nội dung sâu, đọc chương, tải truyện, xem bảng xếp hạng |
+| **Thành viên** | Toàn bộ quyền của Khách, cộng thêm: đăng truyện, quản lý truyện **của mình**, bình luận, đánh dấu truyện, đánh giá sao, theo dõi tác giả, tặng xu ủng hộ tác giả |
+| **Quản trị viên** | Toàn bộ quyền của Thành viên, cộng thêm: xem bảng điều khiển thống kê, gỡ/khôi phục truyện bất kỳ, khoá/mở khoá tài khoản, quản lý thể loại, kiểm duyệt bình luận và xử lý báo cáo vi phạm |
 
 Quyền được kiểm ở **hai tầng**: `Filter` chặn theo nhóm, và `Servlet` kiểm quyền
 sở hữu từng bản ghi — đảm bảo người dùng A không sửa được truyện của người dùng B
@@ -39,58 +39,93 @@ kể cả khi tự sửa tham số trên URL.
 
 ---
 
-## 3. Danh sách chức năng — 17 chức năng
+## 3. Danh sách chức năng — 38 chức năng hoàn chỉnh
 
-### A. Nhóm chức năng đọc truyện (không cần đăng nhập)
+> 📌 *Chi tiết kiến trúc kỹ thuật, bản đồ 36 trang web và 18 modules nâng cao: Xem tài liệu trung tâm [`TONG-HOP-HE-THONG.md`](../TONG-HOP-HE-THONG.md).*
 
-| # | Chức năng | Mô tả |
-|:-:|-----------|-------|
-| 1 | **Trang chủ** | Hiển thị truyện mới cập nhật và truyện có nhiều lượt xem nhất |
-| 2 | **Kho truyện** | Danh sách toàn bộ truyện, có phân trang |
-| 3 | **Lọc theo thể loại** | Lọc truyện theo 10 thể loại, hiển thị số truyện mỗi thể loại |
-| 4 | **Tìm kiếm** | Tìm truyện theo tên; kết quả có thể chia sẻ qua đường dẫn |
-| 5 | **Xem chi tiết truyện** | Thông tin truyện, thể loại, mục lục chương, bình luận |
-| 6 | **Đọc chương** | Giao diện đọc riêng: bỏ menu, chữ lớn, phông chữ có chân, độ rộng tối ưu cho việc đọc lâu |
-| 7 | **Tải truyện** | Xuất toàn bộ truyện ra tệp `.txt` để đọc ngoại tuyến |
-
-### B. Nhóm chức năng thành viên (cần đăng nhập)
+### A. Nhóm chức năng đọc truyện & khám phá (10 chức năng)
 
 | # | Chức năng | Mô tả |
 |:-:|-----------|-------|
-| 8 | **Quản lý tài khoản** | Đăng ký, đăng nhập (hỗ trợ cả mật khẩu PBKDF2 và đăng nhập Google OIDC an toàn qua Firebase), đăng xuất, gắn/gỡ tài khoản Google |
-| 9 | **Đăng và sửa truyện** | Tạo truyện, chọn thể loại, lưu nháp hoặc công khai. Chỉ tác giả sửa được truyện của mình |
-| 10 | **Quản lý chương** | Thêm, sửa, xoá chương. Hệ thống tự đề xuất số chương kế tiếp |
-| 11 | **Bình luận** | Bình luận truyện; tự gỡ được bình luận của mình |
-| 12 | **Đánh dấu truyện** | Lưu truyện để đọc sau. Hệ thống **tự ghi nhớ vị trí đọc** — mở lại có nút "Đọc tiếp" đưa đúng chương đang dở |
-| 13 | **Sao lưu Google Drive** | Tác giả sao lưu toàn bộ chương truyện sang Google Drive cá nhân (scope `drive.file`, tự động ghi đè, tên file chuẩn `001 - <chương>.txt`) |
+| 1 | **Trang chủ** | Hiển thị truyện mới cập nhật, truyện hot nhiều lượt xem, và khối "Tiếp tục đọc" ghi nhớ vị trí đọc dở |
+| 2 | **Kho truyện** | Danh sách toàn bộ truyện, lọc theo 10+ thể loại, tình trạng đang ra/hoàn thành, phân trang chuẩn |
+| 3 | **Tìm kiếm sâu trong chương (ISSUE-005)** | Chỉ mục FULLTEXT MySQL, trích ngữ cảnh từ khóa kèm bôi đậm `<mark>` |
+| 4 | **Xem chi tiết truyện** | Thông tin truyện, thể loại, mục lục chương, bình luận, nút tặng xu ủng hộ, gợi ý truyện tương đồng |
+| 5 | **Đọc chương truyện** | Giao diện đọc chuyên biệt (Reader layout): ẩn menu, cột 38em chuẩn quang học, điều hướng phím mũi tên `←`/`→` |
+| 6 | **Tùy biến môi trường đọc** | Đổi màu giao diện Sáng / Tối / Giấy Sepia, tăng giảm cỡ chữ linh hoạt, giãn dòng, đổi font Serif/Sans |
+| 7 | **Tự động lưu tiến độ đọc** | Ghi nhận chương đọc dở và % vị trí cuộn trang tự động vào CSDL và LocalStorage |
+| 8 | **Tải truyện Offline (.txt)** | Xuất toàn bộ nội dung truyện ra tệp văn bản `.txt` để đọc ngoại tuyến |
+| 9 | **Bảng xếp hạng (ISSUE-006)** | Bảng vàng vinh danh truyện hot theo lượt xem/đánh giá và bảng xếp hạng tác giả xuất sắc |
+| 10 | **Trang thông tin & Trợ năng** | Hướng dẫn sử dụng, nội quy cộng đồng, hỗ trợ A11y, Skip-link và chuẩn Mobile 360px (ISSUE-015) |
 
-### C. Nhóm chức năng quản trị
-
-| # | Chức năng | Mô tả |
-|:-:|-----------|-------|
-| 14 | **Quản lý truyện** | Xem toàn bộ truyện kể cả bản nháp; gỡ truyện vi phạm và khôi phục lại |
-| 15 | **Quản lý tài khoản** | Xem danh sách tài khoản; khoá/mở khoá kèm lý do |
-
-### D. Trang thông tin
+### B. Nhóm chức năng thành viên & cộng đồng (8 chức năng)
 
 | # | Chức năng | Mô tả |
 |:-:|-----------|-------|
-| 16 | **Hướng dẫn sử dụng** | Hướng dẫn từng chức năng cho người dùng mới |
-| 17 | **Nội quy cộng đồng** | Quy định nội dung, ứng xử, và mức xử lý vi phạm |
+| 11 | **Quản lý tài khoản & Google OIDC** | Đăng ký, đăng nhập mật khẩu PBKDF2 muối ngẫu nhiên + Đăng nhập Google an toàn qua Firebase (ISSUE-001) |
+| 12 | **Hồ sơ cá nhân & Unlink Guard** | Cập nhật avatar, bio, tên hiển thị. Chốt chặn Unlink Guard yêu cầu có mật khẩu mới cho gỡ Google |
+| 13 | **Khôi phục mật khẩu qua Email (ISSUE-002)** | Gửi link đặt lại mật khẩu với token an toàn qua JavaMail SMTP |
+| 14 | **Đánh dấu truyện (Bookmarks)** | Lưu truyện đọc sau kèm nút "Đọc tiếp" thông minh đưa thẳng đến chương đang dở |
+| 15 | **Lịch sử đọc truyện** | Theo dõi toàn bộ lịch sử các chương đã đọc theo dòng thời gian |
+| 16 | **Bình luận đa cấp & Chân chương (ISSUE-004)** | Thảo luận ở chi tiết truyện và dưới chân từng chương đọc; trả lời lồng nhau, thả tim tương tác |
+| 17 | **Đánh giá truyện (Rating)** | Chấm sao từ 1 đến 5 sao với ràng buộc chống trùng lặp đánh giá |
+| 18 | **Báo cáo vi phạm (Report)** | Gửi phản ánh nội dung truyện hoặc bình luận vi phạm tới quản trị viên |
+
+### C. Nhóm chức năng tác giả & sáng tác (7 chức năng)
+
+| # | Chức năng | Mô tả |
+|:-:|-----------|-------|
+| 19 | **Tủ truyện của tôi** | Quản lý danh sách truyện do mình sáng tác, chuyển trạng thái Bản nháp / Công khai |
+| 20 | **Đăng và sửa truyện** | Tạo truyện, chọn thể loại, tải ảnh bìa kèm **Live Preview 3:4** tức thì bằng FileReader API (ISSUE-017) |
+| 21 | **Soạn thảo chương (Editor Layout)** | Khung soạn chuyên biệt toàn màn hình, đếm số từ trực tiếp, tự đề xuất số chương kế tiếp |
+| 22 | **Thống kê truyện tác giả** | Thống kê tổng lượt xem, bookmark, bình luận kèm biểu đồ lượt đọc 14 ngày của truyện hot nhất |
+| 23 | **Sao lưu Google Drive (ISSUE-001)** | Xuất và sao lưu toàn bộ chương truyện sang Google Drive cá nhân chuẩn định dạng text qua API v3 |
+| 24 | **Nhận xu ủng hộ (ISSUE-008)** | Độc giả gửi tặng xu ảo kèm lời chúc; tác giả nhận xu trong ví cá nhân |
+| 25 | **Theo dõi & Bắn thông báo** | Độc giả Follow tác giả; hệ thống tự động bắn thông báo khi có chương mới xuất bản |
+
+### D. Nhóm chức năng quản trị viên (6 chức năng)
+
+| # | Chức năng | Mô tả |
+|:-:|-----------|-------|
+| 26 | **Bảng điều khiển quản trị** | Thống kê số lượng truyện, chương, người dùng, lượt xem, biểu đồ tăng trưởng 14 ngày |
+| 27 | **Quản lý toàn bộ kho truyện** | Xem toàn bộ truyện kể cả bản nháp; gỡ truyện vi phạm và khôi phục lại (cơ chế xóa mềm) |
+| 28 | **Quản lý tài khoản người dùng** | Xem danh sách tài khoản; phân quyền thành viên/admin; khoá/mở khoá kèm lý do chi tiết |
+| 29 | **Quản lý thể loại (Tags)** | Thêm, sửa, xóa danh mục thể loại; theo dõi số lượng truyện theo từng thể loại |
+| 30 | **Xử lý báo cáo vi phạm** | Tiếp nhận và xử lý danh sách báo cáo nội dung từ người dùng (duyệt / bỏ qua) |
+| 31 | **Kiểm duyệt bình luận** | Xem bình luận toàn hệ thống; ẩn bình luận vi phạm giữ bằng chứng trong CSDL |
+
+### E. Nhóm chức năng nền tảng & nâng cao (7 chức năng)
+
+| # | Chức năng | Mô tả |
+|:-:|-----------|-------|
+| 32 | **Ví xu ảo & Giao dịch ACID (ISSUE-008)** | Quản lý ví xu và lịch sử giao dịch nguyên tử, chống thất thoát dữ liệu số dư |
+| 33 | **RESTful JSON API (ISSUE-009)** | Cung cấp endpoints `/api/stories`, `/api/story/{id}`, `/api/chapter/{id}` chuẩn CORS |
+| 34 | **PWA Đọc ngoại tuyến (ISSUE-010)** | Service Worker Cache-First và Web Manifest đạt chuẩn cài đặt App HomeScreen |
+| 35 | **Chống Brute-force & Spam (ISSUE-003)** | Thuật toán Sliding Window luồng an toàn tự khóa IP/tài khoản thử sai và giãn cách bình luận |
+| 36 | **Dọn dẹp hệ thống ngầm (ISSUE-013)** | Background thread AppListener tự dọn dẹp các dòng view logs quá hạn 90 ngày |
+| 37 | **SEO Động & Sitemap XML (ISSUE-012)** | Tự động sinh `sitemap.xml`, `robots.txt` và thẻ OpenGraph khi chia sẻ mạng xã hội |
+| 38 | **Chia sẻ 1 chạm (ISSUE-018)** | Copy link kèm Toast thông báo nổi tức thì và phím tắt chia sẻ Facebook/Twitter |
 
 ---
 
-## 4. Cơ sở dữ liệu — 13 bảng
+## 4. Cơ sở dữ liệu — 14 bảng
 
 | Bảng | Vai trò |
 |------|---------|
-| `users` | Tài khoản. Một bảng chung cho cả độc giả và tác giả |
-| `stories` | Truyện |
-| `chapters` | Chương truyện |
-| `tags` | Thể loại |
+| `users` | Tài khoản. Một bảng chung cho cả độc giả, tác giả và quản trị viên |
+| `user_identities` | Liên kết tài khoản mạng xã hội (Google OIDC UID) |
+| `stories` | Danh sách truyện, thông tin tóm tắt và thống kê tổng hợp |
+| `chapters` | Nội dung các chương truyện (`MEDIUMTEXT`, chỉ mục FULLTEXT) |
+| `tags` | Danh mục thể loại truyện |
 | `story_tags` | Bảng nối truyện ↔ thể loại (quan hệ nhiều–nhiều) |
-| `comments` | Bình luận |
-| `bookmarks` | Đánh dấu truyện và vị trí đọc |
+| `bookmarks` | Đánh dấu truyện yêu thích và vị trí chương đọc dở |
+| `comments` | Bình luận truyện và thảo luận theo từng chương |
+| `ratings` | Chấm sao đánh giá từ 1 đến 5 sao |
+| `follows` | Theo dõi tác giả yêu thích |
+| `reports` | Báo cáo vi phạm nội dung truyện hoặc bình luận |
+| `notifications` | Thông báo gửi tới người dùng |
+| `view_logs` | Nhật ký lượt mở đọc truyện phục vụ thống kê |
+| `wallets` & `transactions` | Ví xu ảo nội bộ và lịch sử chuyển xu tặng thưởng |
 
 **Sơ đồ ERD** và các sơ đồ luồng xử lý: xem [`docs/architecture/so-do.md`](../architecture/so-do.md).
 
