@@ -130,6 +130,10 @@
             <a class="btn btn-ghost"
                href="${pageContext.request.contextPath}/download?storyId=${story.id}">
                 ⬇ Tải .txt</a>
+            <a class="btn btn-ghost"
+               href="${pageContext.request.contextPath}/download?storyId=${story.id}&amp;format=epub"
+               title="Tải sách điện tử EPUB (đọc trên Kindle, Apple Books, Moon+ Reader)">
+                📕 Tải EPUB</a>
 
             <%-- canEdit do servlet tính: chủ truyện HOẶC admin --%>
             <c:if test="${canEdit}">

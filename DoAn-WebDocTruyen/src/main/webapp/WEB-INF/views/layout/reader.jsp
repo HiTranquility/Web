@@ -27,7 +27,7 @@
   data-theme và data-size đặt ngay trên <body>, giá trị mặc định ở đây.
   Đoạn script dưới cùng sẽ đọc lựa chọn đã lưu và ghi đè.
 --%>
-<body class="reader-body" data-theme="dark" data-size="m" data-leading="normal" data-font="serif">
+<body class="reader-body" data-ctx="${pageContext.request.contextPath}" data-theme="dark" data-size="m" data-leading="normal" data-font="serif">
 
 <%--
   THANH TIẾN ĐỘ ĐỌC — vạch mảnh chạy ngang trên cùng.
@@ -126,13 +126,43 @@
 
 <%-- Thanh điều khiển Giọng đọc Text-to-Speech (TTS) --%>
 <div class="reader-tts-bar" id="reader-tts-bar" aria-hidden="true">
-    <button type="button" class="tts-btn" id="tts-prev-btn" title="Đoạn trước">⏮</button>
-    <button type="button" class="tts-btn tts-btn-play" id="tts-play-btn" title="Phát / Tạm dừng">▶</button>
-    <button type="button" class="tts-btn" id="tts-stop-btn" title="Dừng đọc">⏹</button>
-    <button type="button" class="tts-btn" id="tts-next-btn" title="Đoạn tiếp">⏭</button>
-    <span class="tts-info" id="tts-info">Sẵn sàng</span>
-    <span class="tts-rate-badge" id="tts-rate-badge" title="Đổi tốc độ đọc">1.0x</span>
-    <button type="button" class="tts-btn tts-btn-close" id="tts-close-btn" title="Thu gọn">&times;</button>
+    <%-- Hàng chính: điều khiển phát --%>
+    <div class="tts-main-row">
+        <button type="button" class="tts-btn" id="tts-prev-btn" title="Đoạn trước">⏮</button>
+        <button type="button" class="tts-btn tts-btn-play" id="tts-play-btn" title="Phát / Tạm dừng">▶</button>
+        <button type="button" class="tts-btn" id="tts-stop-btn" title="Dừng đọc">⏹</button>
+        <button type="button" class="tts-btn" id="tts-next-btn" title="Đoạn tiếp">⏭</button>
+        <span class="tts-info" id="tts-info">Sẵn sàng</span>
+        <span class="tts-rate-badge" id="tts-rate-badge" title="Đổi tốc độ đọc">1.0x</span>
+        <button type="button" class="tts-btn tts-btn-settings" id="tts-settings-btn"
+                title="Cài đặt giọng đọc" aria-expanded="false">⚙</button>
+        <button type="button" class="tts-btn tts-btn-close" id="tts-close-btn" title="Thu gọn">&times;</button>
+    </div>
+    <%-- Hàng cài đặt nâng cao (ẩn mặc định, mở khi nhấn ⚙) --%>
+    <div class="tts-settings-row" id="tts-settings-row">
+        <div class="tts-setting-item">
+            <label for="tts-voice-select" class="tts-label">🎙 Giọng đọc</label>
+            <select id="tts-voice-select" class="tts-select">
+                <option value="">— Mặc định trình duyệt —</option>
+            </select>
+        </div>
+        <div class="tts-setting-item">
+            <label for="tts-pitch-range" class="tts-label">🎵 Cao độ</label>
+            <div class="tts-range-wrap">
+                <input type="range" id="tts-pitch-range" class="tts-range"
+                       min="0.5" max="2" step="0.1" value="1">
+                <span class="tts-range-val" id="tts-pitch-val">1.0</span>
+            </div>
+        </div>
+        <div class="tts-setting-item">
+            <label for="tts-volume-range" class="tts-label">🔊 Âm lượng</label>
+            <div class="tts-range-wrap">
+                <input type="range" id="tts-volume-range" class="tts-range"
+                       min="0" max="1" step="0.1" value="1">
+                <span class="tts-range-val" id="tts-volume-val">100%</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <%-- Hộp thoại hướng dẫn phím tắt --%>
@@ -1034,43 +1064,217 @@ try {
     /* ========================================================================
      * TÍNH NĂNG 3: ĐỌC TRUYỆN BẰNG GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
      *
-     * Dùng Web Speech API bản xứ tiếng Việt (vi-VN).
-     * Tự động đọc từng đoạn văn, highlight đoạn đang đọc và cuộn màn hình.
+     * Dùng Web Speech API — hỗ trợ chọn giọng đọc, cao độ (pitch), âm lượng,
+     * tốc độ. Tự động đọc từng đoạn văn, highlight đoạn đang đọc và cuộn
+     * màn hình. Lưu cài đặt vào localStorage để nhớ cho lần sau.
      * ===================================================================== */
-    var toggleTts = document.getElementById('toggle-tts');
-    var ttsBar = document.getElementById('reader-tts-bar');
-    var ttsPlayBtn = document.getElementById('tts-play-btn');
-    var ttsStopBtn = document.getElementById('tts-stop-btn');
-    var ttsPrevBtn = document.getElementById('tts-prev-btn');
-    var ttsNextBtn = document.getElementById('tts-next-btn');
-    var ttsCloseBtn = document.getElementById('tts-close-btn');
-    var ttsInfo = document.getElementById('tts-info');
-    var ttsRateBadge = document.getElementById('tts-rate-badge');
+    var toggleTts      = document.getElementById('toggle-tts');
+    var ttsBar         = document.getElementById('reader-tts-bar');
+    var ttsPlayBtn     = document.getElementById('tts-play-btn');
+    var ttsStopBtn     = document.getElementById('tts-stop-btn');
+    var ttsPrevBtn     = document.getElementById('tts-prev-btn');
+    var ttsNextBtn     = document.getElementById('tts-next-btn');
+    var ttsCloseBtn    = document.getElementById('tts-close-btn');
+    var ttsInfo        = document.getElementById('tts-info');
+    var ttsRateBadge   = document.getElementById('tts-rate-badge');
+    var ttsSettingsBtn = document.getElementById('tts-settings-btn');
+    var ttsSettingsRow = document.getElementById('tts-settings-row');
+    var ttsVoiceSelect = document.getElementById('tts-voice-select');
+    var ttsPitchRange  = document.getElementById('tts-pitch-range');
+    var ttsPitchVal    = document.getElementById('tts-pitch-val');
+    var ttsVolumeRange = document.getElementById('tts-volume-range');
+    var ttsVolumeVal   = document.getElementById('tts-volume-val');
 
     var synth = window.speechSynthesis;
     var ttsParagraphs = [];
     var ttsIndex = 0;
     var ttsIsPlaying = false;
     var ttsRate = 1.0;
-    var ttsRates = [0.8, 1.0, 1.25, 1.5];
-    var ttsRateIndex = 1;
-    var viVoice = null;
+    var ttsRates = [0.5, 0.8, 1.0, 1.25, 1.5, 2.0];
+    var ttsRateIndex = 2; // mặc định 1.0x
+    var ttsPitch = 1.0;
+    var ttsVolume = 1.0;
+    var ttsSelectedVoice = null;
+    var ttsAllVoices = [];
 
-    function loadVoices() {
-        if (!synth) return;
+    /* --- Khôi phục cài đặt đã lưu --- */
+    var TTS_PREFS_KEY = 'readerTtsPrefs';
+    function loadTtsPrefs() {
+        try {
+            var raw = localStorage.getItem(TTS_PREFS_KEY);
+            if (!raw) return;
+            var prefs = JSON.parse(raw);
+            if (prefs.rate != null) {
+                ttsRate = prefs.rate;
+                var idx = ttsRates.indexOf(ttsRate);
+                if (idx >= 0) ttsRateIndex = idx;
+                if (ttsRateBadge) ttsRateBadge.textContent = ttsRate + 'x';
+            }
+            if (prefs.pitch != null) {
+                ttsPitch = prefs.pitch;
+                if (ttsPitchRange) ttsPitchRange.value = ttsPitch;
+                if (ttsPitchVal) ttsPitchVal.textContent = ttsPitch.toFixed(1);
+            }
+            if (prefs.volume != null) {
+                ttsVolume = prefs.volume;
+                if (ttsVolumeRange) ttsVolumeRange.value = ttsVolume;
+                if (ttsVolumeVal) ttsVolumeVal.textContent = Math.round(ttsVolume * 100) + '%';
+            }
+            // voiceName sẽ được áp dụng sau khi voices đã load xong
+        } catch (e) { /* bỏ qua nếu localStorage lỗi */ }
+    }
+    function saveTtsPrefs() {
+        try {
+            var prefs = {
+                rate: ttsRate,
+                pitch: ttsPitch,
+                volume: ttsVolume,
+                voiceName: ttsSelectedVoice ? ttsSelectedVoice.name : ''
+            };
+            localStorage.setItem(TTS_PREFS_KEY, JSON.stringify(prefs));
+        } catch (e) { /* bỏ qua */ }
+    }
+    loadTtsPrefs();
+
+    /* --- Nạp danh sách giọng đọc vào dropdown --- */
+    function populateVoiceList() {
+        if (!synth || !ttsVoiceSelect) return;
         var voices = synth.getVoices();
+        if (voices.length === 0) return;
+        ttsAllVoices = voices;
+
+        // Phân nhóm theo ngôn ngữ
+        var groups = {};
+        var viGroup = [];
+        var otherGroups = {};
         for (var i = 0; i < voices.length; i++) {
-            if (voices[i].lang === 'vi-VN' || voices[i].lang.indexOf('vi') === 0) {
-                viVoice = voices[i];
-                break;
+            var v = voices[i];
+            var langCode = v.lang || 'unknown';
+            if (langCode === 'vi-VN' || langCode.indexOf('vi') === 0) {
+                viGroup.push(v);
+            } else {
+                if (!otherGroups[langCode]) otherGroups[langCode] = [];
+                otherGroups[langCode].push(v);
             }
         }
-    }
-    if (synth) {
-        loadVoices();
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = loadVoices;
+
+        // Xoá options cũ (giữ option đầu tiên "Mặc định")
+        while (ttsVoiceSelect.options.length > 1) {
+            ttsVoiceSelect.remove(1);
         }
+
+        // Thêm nhóm Tiếng Việt trước
+        if (viGroup.length > 0) {
+            var optgroupVi = document.createElement('optgroup');
+            optgroupVi.label = '🇻🇳 Tiếng Việt';
+            for (var j = 0; j < viGroup.length; j++) {
+                var opt = document.createElement('option');
+                opt.value = viGroup[j].name;
+                opt.textContent = viGroup[j].name + (viGroup[j].localService ? ' (Offline)' : ' (Online)');
+                optgroupVi.appendChild(opt);
+            }
+            ttsVoiceSelect.appendChild(optgroupVi);
+        }
+
+        // Sắp xếp nhóm ngôn ngữ khác
+        var langKeys = Object.keys(otherGroups).sort();
+        // Map mã ngôn ngữ phổ biến sang tên dễ đọc
+        var langNames = {
+            'en-US': '🇺🇸 English (US)', 'en-GB': '🇬🇧 English (UK)',
+            'ja-JP': '🇯🇵 Tiếng Nhật', 'ko-KR': '🇰🇷 Tiếng Hàn',
+            'zh-CN': '🇨🇳 Tiếng Trung (CN)', 'zh-TW': '🇹🇼 Tiếng Trung (TW)',
+            'fr-FR': '🇫🇷 Tiếng Pháp', 'de-DE': '🇩🇪 Tiếng Đức',
+            'es-ES': '🇪🇸 Tiếng Tây Ban Nha', 'th-TH': '🇹🇭 Tiếng Thái',
+            'pt-BR': '🇧🇷 Tiếng Bồ Đào Nha'
+        };
+        for (var k = 0; k < langKeys.length; k++) {
+            var lang = langKeys[k];
+            var optgroup = document.createElement('optgroup');
+            optgroup.label = langNames[lang] || lang;
+            var items = otherGroups[lang];
+            for (var m = 0; m < items.length; m++) {
+                var opt2 = document.createElement('option');
+                opt2.value = items[m].name;
+                opt2.textContent = items[m].name + (items[m].localService ? ' (Offline)' : ' (Online)');
+                optgroup.appendChild(opt2);
+            }
+            ttsVoiceSelect.appendChild(optgroup);
+        }
+
+        // Khôi phục giọng đã lưu
+        try {
+            var raw = localStorage.getItem(TTS_PREFS_KEY);
+            if (raw) {
+                var prefs = JSON.parse(raw);
+                if (prefs.voiceName) {
+                    ttsVoiceSelect.value = prefs.voiceName;
+                    ttsSelectedVoice = findVoiceByName(prefs.voiceName);
+                }
+            }
+        } catch (e) { /* bỏ qua */ }
+
+        // Nếu chưa có giọng đã lưu, tự chọn giọng vi-VN đầu tiên
+        if (!ttsSelectedVoice && viGroup.length > 0) {
+            ttsSelectedVoice = viGroup[0];
+            ttsVoiceSelect.value = viGroup[0].name;
+        }
+    }
+
+    function findVoiceByName(name) {
+        for (var i = 0; i < ttsAllVoices.length; i++) {
+            if (ttsAllVoices[i].name === name) return ttsAllVoices[i];
+        }
+        return null;
+    }
+
+    if (synth) {
+        populateVoiceList();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+    }
+
+    /* --- Sự kiện chọn giọng --- */
+    if (ttsVoiceSelect) {
+        ttsVoiceSelect.addEventListener('change', function () {
+            var name = ttsVoiceSelect.value;
+            ttsSelectedVoice = name ? findVoiceByName(name) : null;
+            saveTtsPrefs();
+            // Nếu đang phát, áp dụng giọng mới ngay
+            if (ttsIsPlaying) playCurrentParagraph();
+        });
+    }
+
+    /* --- Sự kiện slider Pitch --- */
+    if (ttsPitchRange) {
+        ttsPitchRange.addEventListener('input', function () {
+            ttsPitch = parseFloat(ttsPitchRange.value);
+            if (ttsPitchVal) ttsPitchVal.textContent = ttsPitch.toFixed(1);
+            saveTtsPrefs();
+        });
+        ttsPitchRange.addEventListener('change', function () {
+            if (ttsIsPlaying) playCurrentParagraph();
+        });
+    }
+
+    /* --- Sự kiện slider Volume --- */
+    if (ttsVolumeRange) {
+        ttsVolumeRange.addEventListener('input', function () {
+            ttsVolume = parseFloat(ttsVolumeRange.value);
+            if (ttsVolumeVal) ttsVolumeVal.textContent = Math.round(ttsVolume * 100) + '%';
+            saveTtsPrefs();
+        });
+        ttsVolumeRange.addEventListener('change', function () {
+            if (ttsIsPlaying) playCurrentParagraph();
+        });
+    }
+
+    /* --- Nút mở/đóng cài đặt nâng cao --- */
+    if (ttsSettingsBtn && ttsSettingsRow) {
+        ttsSettingsBtn.addEventListener('click', function () {
+            var isOpen = ttsSettingsRow.classList.toggle('is-open');
+            ttsSettingsBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
     }
 
     function collectParagraphs() {
@@ -1115,9 +1319,17 @@ try {
 
         var text = currentP.textContent.trim();
         var utter = new SpeechSynthesisUtterance(text);
-        utter.rate = ttsRate;
-        utter.lang = 'vi-VN';
-        if (viVoice) utter.voice = viVoice;
+        utter.rate   = ttsRate;
+        utter.pitch  = ttsPitch;
+        utter.volume = ttsVolume;
+
+        // Áp dụng giọng đọc đã chọn
+        if (ttsSelectedVoice) {
+            utter.voice = ttsSelectedVoice;
+            utter.lang  = ttsSelectedVoice.lang;
+        } else {
+            utter.lang = 'vi-VN';
+        }
 
         utter.onend = function () {
             if (ttsIsPlaying) {
@@ -1245,6 +1457,7 @@ try {
             ttsRateIndex = (ttsRateIndex + 1) % ttsRates.length;
             ttsRate = ttsRates[ttsRateIndex];
             ttsRateBadge.textContent = ttsRate + 'x';
+            saveTtsPrefs();
             if (ttsIsPlaying) {
                 playCurrentParagraph();
             }

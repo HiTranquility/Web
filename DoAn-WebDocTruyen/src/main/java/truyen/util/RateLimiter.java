@@ -282,6 +282,35 @@ public final class RateLimiter {
         }
     }
 
+    // ========================================================================
+    //  CHỐNG SPAM QUÊN MẬT KHẨU (FORGOT PASSWORD RATE LIMITING)
+    // ========================================================================
+    public static final int MAX_FORGOT_ATTEMPTS = 3;
+    public static final long FORGOT_WINDOW_MILLIS = 15 * 60 * 1000L;
+    private static final Map<String, List<Long>> forgotAttempts = new ConcurrentHashMap<>();
+
+    public static boolean isForgotSpam(String ip, String email) {
+        String key = (ip == null ? "127.0.0.1" : ip.trim()) + ":" + (email == null ? "" : email.trim().toLowerCase());
+        List<Long> times = forgotAttempts.get(key);
+        if (times == null) {
+            return false;
+        }
+        synchronized (times) {
+            cleanExpired(times, System.currentTimeMillis(), FORGOT_WINDOW_MILLIS);
+            return times.size() >= MAX_FORGOT_ATTEMPTS;
+        }
+    }
+
+    public static void recordForgot(String ip, String email) {
+        String key = (ip == null ? "127.0.0.1" : ip.trim()) + ":" + (email == null ? "" : email.trim().toLowerCase());
+        List<Long> times = forgotAttempts.computeIfAbsent(key, k -> new ArrayList<>());
+        synchronized (times) {
+            long now = System.currentTimeMillis();
+            cleanExpired(times, now, FORGOT_WINDOW_MILLIS);
+            times.add(now);
+        }
+    }
+
     /**
      * Xóa sạch dữ liệu trong bộ đệm (chủ yếu phục vụ Unit Test).
      */
@@ -289,6 +318,7 @@ public final class RateLimiter {
         loginFailures.clear();
         lastCommentTimestamps.clear();
         reportTimes.clear();
+        forgotAttempts.clear();
     }
 
     private static void cleanExpired(List<Long> timestamps, long now, long maxAgeMillis) {

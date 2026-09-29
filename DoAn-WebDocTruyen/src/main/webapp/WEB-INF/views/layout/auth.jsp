@@ -23,7 +23,7 @@
     <c:set var="layoutCss" value="layout-auth" scope="request"/>
     <%@ include file="parts/head.jsp" %>
 </head>
-<body class="auth-body">
+<body class="auth-body" data-ctx="${pageContext.request.contextPath}">
 
 <div class="auth-wrap">
     <a href="${pageContext.request.contextPath}/" class="brand auth-brand">

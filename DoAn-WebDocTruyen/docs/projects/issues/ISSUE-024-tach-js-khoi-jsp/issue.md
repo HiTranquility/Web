@@ -8,7 +8,7 @@
 |---|---|
 | **Mã** | ISSUE-024 |
 | **Người làm** | N3 — Giao diện & Hiệu năng |
-| **Trạng thái** | 📝 Chưa nhận |
+| **Trạng thái** | ✅ Đã xong (2026-09-29) |
 | **Ngày mở** | 2026-09-23 |
 | **CASE liên quan** | Tối ưu hiệu năng frontend |
 | **Đụng vào** | `views/layout/parts/nav.jsp` · `views/layout/parts/head.jsp` · `assets/js/nav.js` *(mới)* · `views/common/story/detail.jsp` · `views/common/chapter/read.jsp` |

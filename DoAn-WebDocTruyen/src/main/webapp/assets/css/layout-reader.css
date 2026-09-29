@@ -830,24 +830,32 @@ kbd {
     border: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-radius: 40px;
-    padding: 8px 16px;
+    border-radius: 20px;
+    padding: 0;
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
     z-index: 97;
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     color: #ffffff;
-    max-width: 92vw;
+    max-width: 94vw;
+    overflow: hidden;
 }
 
 .reader-tts-bar.is-show {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(-50%) translateY(0);
+}
+
+/* --- Hàng điều khiển chính --- */
+.tts-main-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
 }
 
 .tts-btn {
@@ -910,6 +918,18 @@ kbd {
     color: #f59e0b;
 }
 
+/* Nút cài đặt giọng đọc */
+.tts-btn-settings {
+    font-size: 1rem;
+    padding: 5px 8px;
+    transition: transform 0.3s ease, background 0.2s;
+}
+.tts-btn-settings[aria-expanded="true"] {
+    transform: rotate(90deg);
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
 .tts-btn-close {
     opacity: 0.65;
     font-size: 1.1rem;
@@ -917,6 +937,121 @@ kbd {
 }
 .tts-btn-close:hover {
     opacity: 1;
+}
+
+/* --- Hàng cài đặt nâng cao (ẩn mặc định) --- */
+.tts-settings-row {
+    display: none;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    padding: 10px 16px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    animation: ttsSettingsSlideIn 0.25s ease-out;
+}
+.tts-settings-row.is-open {
+    display: flex;
+}
+
+@keyframes ttsSettingsSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.tts-setting-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.tts-label {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Dropdown chọn giọng */
+.tts-select {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    max-width: 220px;
+    text-overflow: ellipsis;
+}
+.tts-select:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+.tts-select option {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+.tts-select optgroup {
+    background: #0f172a;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* Thanh trượt pitch & volume */
+.tts-range-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.tts-range {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    outline: none;
+    cursor: pointer;
+}
+.tts-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 1px 6px rgba(245, 158, 11, 0.35);
+    transition: transform 0.15s;
+    cursor: pointer;
+}
+.tts-range::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+.tts-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 1px 6px rgba(245, 158, 11, 0.35);
+    cursor: pointer;
+}
+
+.tts-range-val {
+    font-size: 0.72rem;
+    color: #f59e0b;
+    font-weight: 600;
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
 }
 
 /* Đánh dấu đoạn văn đang được đọc */

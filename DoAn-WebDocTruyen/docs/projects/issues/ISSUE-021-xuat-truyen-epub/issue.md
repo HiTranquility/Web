@@ -8,7 +8,7 @@
 |---|---|
 | **Mã** | ISSUE-021 |
 | **Người làm** | N2 — Đọc & Nội dung |
-| **Trạng thái** | 📝 Chưa nhận |
+| **Trạng thái** | ✅ Đã xong (2026-09-29) |
 | **Ngày mở** | 2026-09-23 |
 | **CASE liên quan** | CASE 09 — Tải truyện *(mở rộng)* |
 | **Đụng vào** | `controller/common/DownloadServlet.java` · `util/EpubWriter.java` *(mới)* · `util/ChapterToTxt.java` *(chỉ đọc)* · `views/common/story/detail.jsp` |

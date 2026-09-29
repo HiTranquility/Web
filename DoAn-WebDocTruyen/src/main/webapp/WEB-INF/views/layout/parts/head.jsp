@@ -6,6 +6,7 @@
 --%>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="context-path" content="${pageContext.request.contextPath}">
 <title><c:out value="${empty pageTitle ? 'ĐọcTruyện — Nền tảng đọc truyện trực tuyến' : pageTitle}"/></title>
 
 <%-- SEO & OpenGraph Meta Tags (ISSUE-012) --%>
@@ -16,6 +17,11 @@
 <meta property="og:title" content="<c:out value='${empty pageTitle ? \"ĐọcTruyện\" : pageTitle}'/>">
 <meta property="og:description" content="<c:out value='${_metaDesc}'/>">
 <meta property="og:type" content="${not empty story ? 'book' : 'website'}">
+<c:set var="_reqUri" value="${pageContext.request.requestURI}" />
+<c:set var="_reqQuery" value="${pageContext.request.queryString}" />
+<c:set var="_pageCanonical" value="${empty canonicalUrl ? (pageContext.request.scheme.concat('://').concat(pageContext.request.serverName).concat(pageContext.request.serverPort eq 80 or pageContext.request.serverPort eq 443 ? '' : ':'.concat(pageContext.request.serverPort)).concat(_reqUri).concat(empty _reqQuery ? '' : '?'.concat(_reqQuery))) : canonicalUrl}" />
+<link rel="canonical" href="<c:out value='${_pageCanonical}'/>">
+<meta property="og:url" content="<c:out value='${_pageCanonical}'/>">
 <c:if test="${not empty story.coverUrl}">
     <c:set var="_ogImg" value="${fn:startsWith(story.coverUrl, '/') ? pageContext.request.contextPath.concat(story.coverUrl) : story.coverUrl}"/>
     <meta property="og:image" content="<c:out value='${_ogImg}'/>">
@@ -33,7 +39,7 @@
     }
 </script>
 
-<%-- Chống nháy sáng/tối (FOUC): đọc theme đã lưu trước khi CSS vẽ màn hình --%>
+<%-- Chống nháy sáng/tối (FOUC): đọc theme đã lưu trước khi CSS vẽ màn hình. PHẢI nội tuyến — xem ISSUE-024 §3.2 --%>
 <script>
     (function () {
         try {
@@ -72,3 +78,6 @@
   không cần chờ phần tử nào có sẵn.
 --%>
 <script src="${pageContext.request.contextPath}/assets/js/report-form.js?v=2.6" defer></script>
+
+<%-- Logic thanh điều hướng, tìm kiếm tự động, theme và dropdown menu (ISSUE-024) --%>
+<script src="${pageContext.request.contextPath}/assets/js/nav.js?v=2.6" defer></script>

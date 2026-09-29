@@ -21,7 +21,10 @@ import truyen.model.Chapter;
 import truyen.model.Story;
 import truyen.util.SlugUtil;
 
-/** CASE 09 — Tải truyện về dạng .txt */
+import truyen.model.User;
+import truyen.util.EpubWriter;
+
+/** CASE 09 — Tải truyện về dạng .txt hoặc .epub (ISSUE-021) */
 @WebServlet("/download")
 public class DownloadServlet extends HttpServlet {
 
@@ -39,21 +42,32 @@ public class DownloadServlet extends HttpServlet {
             throws ServletException, IOException {
 
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
+        String format = request.getParameter("format");
 
         Story story;
         List<Chapter> chapters;
         try {
             story = storyDAO.findById(storyId);
-            if (story == null || !"PUBLISHED".equals(story.getStatus())) {
+            if (story == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
+
+            // Kiểm quyền: truyện nháp hoặc đã gỡ chỉ tác giả hoặc admin mới được tải
+            User currentUser = (User) request.getSession().getAttribute("currentUser");
+            boolean isAuthor = (currentUser != null && currentUser.getId() == story.getAuthorId());
+            boolean isAdmin = (currentUser != null && currentUser.isAdmin());
+            if (!"PUBLISHED".equals(story.getStatus()) && !isAuthor && !isAdmin) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
             chapters = chapterDAO.findAllWithContent(storyId);
         } catch (SQLException e) {
             log("DownloadServlet: không đọc được truyện id=" + storyId, e);
 
-            // Chua co CSDL thi khong the sinh file. Dua ve trang truyen kem
-            // mot cau giai thich, thay vi mot trang 500 khong noi len gi.
+            // Chưa có CSDL thì không thể sinh file. Đưa về trang truyện kèm
+            // một câu giải thích, thay vì một trang 500 không nói lên gì.
             if (!DBConnection.isReady()) {
                 request.getSession().setAttribute("flash",
                         "Chưa nối cơ sở dữ liệu nên chưa tải truyện được.");
@@ -65,30 +79,40 @@ public class DownloadServlet extends HttpServlet {
             return;
         }
 
-        /* BA HEADER PHẢI ĐẶT TRƯỚC getWriter() — sau đó là muộn. */
-        response.setContentType("text/plain; charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
-
-        /*
-         * 3. Content-Disposition: attachment — đây là header BẮT TRÌNH DUYỆT
-         * TẢI XUỐNG thay vì mở trong tab. Không có nó thì nội dung truyện
-         * hiện thẳng ra màn hình.
-         */
         String asciiName = SlugUtil.toSlug(story.getTitle());
         if (asciiName.isEmpty()) {
             asciiName = "truyen";
         }
-        String utf8Name = URLEncoder.encode(story.getTitle() + ".txt", "UTF-8")
-                                    .replace("+", "%20");
 
+        // ====================================================================
+        // 1. XUẤT ĐỊNH DẠNG EPUB (Đọc trên Kindle, Apple Books - ISSUE-021)
+        // ====================================================================
+        if ("epub".equalsIgnoreCase(format)) {
+            response.setContentType("application/epub+zip");
+            String utf8Name = URLEncoder.encode(story.getTitle() + ".epub", "UTF-8").replace("+", "%20");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\"" + asciiName + ".epub\"; "
+                  + "filename*=UTF-8''" + utf8Name);
+
+            try (java.io.OutputStream out = response.getOutputStream()) {
+                EpubWriter.write(out, story, chapters);
+            }
+            return;
+        }
+
+        // ====================================================================
+        // 2. XUẤT ĐỊNH DẠNG TEXT (.txt thuần)
+        // ====================================================================
+        response.setContentType("text/plain; charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        String utf8Name = URLEncoder.encode(story.getTitle() + ".txt", "UTF-8").replace("+", "%20");
         response.setHeader("Content-Disposition",
                 "attachment; filename=\"" + asciiName + ".txt\"; "
               + "filename*=UTF-8''" + utf8Name);
 
-        // getWriter() phải gọi SAU khi đặt xong header
         try (PrintWriter out = response.getWriter()) {
             out.print(truyen.util.ChapterToTxt.formatStory(story, chapters));
         }
     }
-
 }

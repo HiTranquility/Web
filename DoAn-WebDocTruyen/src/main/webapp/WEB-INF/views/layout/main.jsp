@@ -38,7 +38,7 @@
     <c:set var="layoutCss" value="layout-main" scope="request"/>
     <%@ include file="parts/head.jsp" %>
 </head>
-<body>
+<body data-ctx="${pageContext.request.contextPath}">
 
 <%@ include file="parts/nav.jsp" %>
 

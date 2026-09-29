@@ -1,7 +1,7 @@
 # 📚 TỔNG HỢP TOÀN BỘ HỆ THỐNG WEB ĐỌC TRUYỆN
 
-> **Tài liệu tổng hợp kiến trúc, bản đồ trang, danh mục chức năng đầy đủ và 18 phân hệ nâng cao đã xây dựng.**  
-> Cập nhật: 2026-09-28 · **Phiên bản:** Hoàn thiện 18/18 ISSUE · **Độ phủ test:** 114/114 tests PASS (100%).
+> **Tài liệu tổng hợp kiến trúc, bản đồ trang, danh mục chức năng đầy đủ và 19 phân hệ nâng cao đã xây dựng.**  
+> Cập nhật: 2026-09-29 · **Phiên bản:** Hoàn thiện 19/19 ISSUE (Đợt 1: 18/18 + ISSUE-025) · **Độ phủ test:** 114/114 tests PASS (100%).
 
 ---
 
@@ -9,11 +9,11 @@
 1. [Tổng quan Đồ án & Nền tảng Kỹ thuật](#1-tổng-quan-đồ-án--nền-tảng-kỹ-thuật)
 2. [Đối chiếu Chức năng: Đề xuất Ban đầu vs Hệ thống Hiện tại](#2-đối-chiếu-chức-năng-đề-xuất-ban-đầu-vs-hệ-thống-hiện-tại)
 3. [Bản đồ Hệ thống: 36 Trang Web & 7 Endpoints Dịch vụ](#3-bản-đồ-hệ-thống-36-trang-web--7-endpoints-dịch-vụ)
-4. [Danh mục 38 Chức năng Toàn diện (Full Feature Catalog)](#4-danh-mục-38-chức-năng-toàn-diện-full-feature-catalog)
-5. [Hệ thống 18 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-018)](#5-hệ-thống-18-module-công-nghệ-nâng-cao-issue-001--issue-018)
-6. [Thiết kế Cơ sở Dữ liệu (14 Bảng CSDL)](#6-thiết-kế-cơ-sở-dữ-liệu-14-bảng-csdl)
+4. [Danh mục 40 Chức năng Toàn diện (Full Feature Catalog)](#4-danh-mục-40-chức-năng-toàn-diện-full-feature-catalog)
+5. [Hệ thống 21 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-025)](#5-hệ-thống-21-module-công-nghệ-nâng-cao-issue-001--issue-025)
+6. [Thiết kế Cơ sở Dữ liệu (15 Bảng CSDL)](#6-thiết-kế-cơ-sở-dữ-liệu-15-bảng-csdl)
 7. [Bảo mật & Trợ năng (Security & Accessibility)](#7-bảo-mật--trợ-năng-security--accessibility)
-8. [Hệ thống Kiểm thử Tự động (114 Tests)](#8-hệ-thống-kiểm-thử-tự-động-114-tests)
+8. [Hệ thống Kiểm thử Tự động (119 Tests)](#8-hệ-thống-kiểm-thử-tự-động-119-tests)
 9. [Hướng dẫn Vận hành Nhanh](#9-hướng-dẫn-vận-hành-nhanh)
 
 ---
@@ -41,17 +41,17 @@ Trước đây, đồ án có các tài liệu mô tả chức năng ở từng 
 - **`MO-TA-DO-AN.md`**: Bản tóm tắt gửi giảng viên (ghi nhận 17 chức năng cốt lõi).
 - **`ke-hoach-frontend.md`**: Bản quy hoạch ban đầu dự kiến 30 trang và 4 layouts.
 
-Qua quá trình phát triển và hoàn thiện trọn vẹn **18 ISSUE công nghệ cao**, hệ thống hiện tại đã mở rộng vượt bậc:
+Qua quá trình phát triển và hoàn thiện trọn vẹn **19 ISSUE công nghệ cao** (18 ISSUE đợt 1 + ISSUE-025 đợt 2), hệ thống hiện tại đã mở rộng vượt bậc:
 
 | Tiêu chí | Bản đăng ký / mô tả cũ | Hệ thống thực tế hiện tại | Tỉ lệ hoàn thành / Ghi chú |
 |---|:---:|:---:|---|
 | **Số lượng chức năng** | 17 – 28 chức năng | **38 chức năng hoàn chỉnh** | **Đạt 135%** (toàn bộ tính năng tuỳ chọn đều đã được hiện thực hóa) |
 | **Số lượng trang web (Views)** | 30 – 31 trang | **36 trang web JSP + 7 Endpoints** | Bổ sung thêm Thống kê tác giả, Tìm kiếm FULLTEXT, Lỗi 403, Raw view, REST API, Drive Backup, Wallet |
 | **Khung bố cục (Layouts)** | 4 layouts | **5 layouts** (`main`, `auth`, `reader`, `admin`, `editor`) | Bổ sung thêm layout `editor` chuyên biệt cho sáng tác chương |
-| **Số lớp mã nguồn Java** | 47 – 60 lớp | **77 lớp Java** | 18 Controllers, 14 DAOs, 12 Models, 6 Filters, 12 Utilities, 15 Services/Helpers |
+| **Số lớp mã nguồn Java** | 47 – 60 lớp | **78 lớp Java** | 18 Controllers, 14 DAOs, 12 Models, 6 Filters, 13 Utilities, 15 Services/Helpers |
 | **Số file view JSP** | 50 – 51 files | **55 file JSP** | 36 trang nội dung, 5 layout wrappers, 14 view partials tái sử dụng |
-| **Bảng dữ liệu CSDL** | 13 bảng | **14 bảng** | Thêm bảng `wallets` & `transactions` (Ví xu ảo) |
-| **Bộ kiểm thử tự động** | 28 bài | **97 bài Unit Tests (22 classes)** | Đạt 100% PASS, kiểm thử độc lập DAO, Filter, Token, Wallet, RateLimiter |
+| **Bảng dữ liệu CSDL** | 13 bảng | **15 bảng** | Thêm bảng `wallets` & `transactions` (Ví xu ảo), `report_evidence` (Bằng chứng vi phạm — ISSUE-025) |
+| **Bộ kiểm thử tự động** | 28 bài | **119 bài Unit Tests (23 classes)** | Đạt 100% PASS, kiểm thử độc lập DAO, Filter, Token, Wallet, RateLimiter, Report, EpubWriter |
 
 ---
 
@@ -140,7 +140,7 @@ Qua quá trình phát triển và hoàn thiện trọn vẹn **18 ISSUE công ng
 
 ---
 
-## 4. Danh mục 38 Chức năng Toàn diện (Full Feature Catalog)
+## 4. Danh mục 40 Chức năng Toàn diện (Full Feature Catalog)
 
 Hệ thống được thiết kế hoàn thiện với **38 chức năng phân thành 5 nhóm đối tượng**:
 
@@ -191,13 +191,15 @@ Hệ thống được thiết kế hoàn thiện với **38 chức năng phân t
 36. **Tự động dọn dẹp hệ thống ngầm (Background Cleaner - ISSUE-013):** Daemon thread dọn dẹp nhật ký lượt đọc `view_logs` quá hạn 90 ngày, đảm bảo CSDL luôn tinh gọn.
 37. **SEO Động, Sitemap & OpenGraph (ISSUE-012):** Tự động sinh `sitemap.xml`, cung cấp `robots.txt` và các thẻ OpenGraph (`og:image`, `og:title`) khi chia sẻ link lên Facebook/Zalo/Twitter.
 38. **Chia sẻ 1 chạm & Toast Notifications (ISSUE-018):** Sao chép đường dẫn truyện vào Clipboard tức thì kèm Toast thông báo nổi siêu mượt.
+39. **Xuất truyện chuẩn EPUB 2.0 (ISSUE-021):** Xuất toàn bộ truyện ra file `.epub` chuẩn quốc tế (đọc mượt trên Apple Books, Kindle, Moon+ Reader) với đầy đủ bìa sách, mục lục điều hướng NCX, phân chia chương XHTML 1.1 nghiêm ngặt và typography thanh lịch.
+40. **Tách biệt Frontend Javascript & Tối ưu Cache (ISSUE-024):** Tách 188 dòng mã JavaScript khỏi `nav.jsp` sang file độc lập `assets/js/nav.js` tải qua thuộc tính `defer`, truyền ngữ cảnh qua `data-ctx`, giảm kích thước HTML tải về trên toàn bộ các trang và hỗ trợ browser cache.
 
 ---
 
-## 5. Hệ thống 18 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-018)
+## 5. Hệ thống 21 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-025)
 
 
-Dự án đã giải quyết trọn vẹn lộ trình 18 ISSUE công nghệ cao:
+Dự án đã giải quyết trọn vẹn lộ trình 21 ISSUE công nghệ cao (18 đợt 1 + 3 đợt 2: ISSUE-021, ISSUE-024, ISSUE-025):
 
 | Mã | Tên Module Nâng cao | Điểm sáng kỹ thuật |
 |---|---|---|
@@ -214,15 +216,18 @@ Dự án đã giải quyết trọn vẹn lộ trình 18 ISSUE công nghệ cao:
 | **ISSUE-011** | **Kiến trúc CSS Phân tầng Tinh gọn** | Phân tầng 4 lớp: `base.css` (biến màu, reset) → `components.css` (thành phần chung) → `layout-*.css` (chuyên biệt cho Auth, Reader, Admin) → `pageCss`. Tiết kiệm băng thông tải trang. |
 | **ISSUE-012** | **SEO Động, Sitemap & OpenGraph** | Tự động sinh `sitemap.xml` theo chuẩn sitemaps.org; Cung cấp `robots.txt`; Tự động sinh thẻ `og:title`, `og:image`, `og:description` khi chia sẻ lên MXH. |
 | **ISSUE-013** | **Dọn dẹp `view_logs` Định kỳ** | Background thread chạy ngầm lúc khởi động máy chủ (AppListener), tự động dọn dẹp các dòng log vô danh quá 90 ngày, bảo vệ hiệu năng CSDL. |
-| **ISSUE-014** | **Nâng Độ phủ Test Toàn diện** | Mở rộng bộ kiểm thử tự động từ 28 bài lên 97 bài test, bao phủ toàn bộ các DAO nghiệp vụ, Servlets, Filters và các trường hợp biên. |
+| **ISSUE-014** | **Nâng Độ phủ Test Toàn diện** | Mở rộng bộ kiểm thử tự động từ 28 bài lên 114 bài test, bao phủ toàn bộ các DAO nghiệp vụ, Servlets, Filters và các trường hợp biên. |
 | **ISSUE-015** | **Trải nghiệm Mobile 360px & Trợ năng A11y** | Hoàn thiện layout cho màn hình từ 360px; Vùng chạm ngón tay tối thiểu 44px (chuẩn WCAG 2.1); Hỗ trợ `:focus-visible`, `.skip-link` và tôn trọng `prefers-reduced-motion`. |
 | **ISSUE-016** | **Trang Báo lỗi 404 & 500 Tùy biến** | Bắt lỗi tập trung qua `ErrorServlet`, giao diện đồng bộ phong cách truyện, che giấu stack trace nhạy cảm của máy chủ. |
 | **ISSUE-017** | **Live Preview Ảnh Bìa Truyện** | Khung xem trước bìa sách 3:4 trực quan khi người dùng chọn ảnh từ máy tính trước khi bấm lưu. |
 | **ISSUE-018** | **Tiện ích Chia sẻ Truyện 1 Chạm** | Nút sao chép liên kết truyện vào clipboard kèm Toast thông báo nổi tức thì; Phím tắt chia sẻ Facebook/Twitter nhanh chóng. |
+| **ISSUE-021** | **Xuất truyện ra EPUB (Đợt 2)** | Dùng thuần `java.util.zip` của JDK không phụ thuộc thư viện ngoài; cấu trúc chuẩn EPUB 2.0 (mimetype STORED, container.xml, content.opf, toc.ncx, XHTML 1.1 escape XML chuẩn); tải đọc được trên Kindle, Apple Books, Kobo. |
+| **ISSUE-024** | **Tách JS ra khỏi JSP (Đợt 2)** | Tách 188 dòng JavaScript trong `nav.jsp` sang file `assets/js/nav.js` nạp với `defer`, đọc contextPath qua `data-ctx` trên `<body>`, hỗ trợ HTTP 304 disk cache và dọn đường cho CSP. |
+| **ISSUE-025** | **Nâng cấp Báo cáo Vi phạm (Đợt 2)** | 8 loại vi phạm có phân loại, đính kèm tối đa 3 ảnh bằng chứng (chỉ admin xem), liên kết sâu nhảy thẳng tới nội dung bị báo cáo, bảng `report_evidence` mới. |
 
 ---
 
-## 6. Thiết kế Cơ sở Dữ liệu (14 Bảng CSDL)
+## 6. Thiết kế Cơ sở Dữ liệu (15 Bảng CSDL)
 
 Database: `webdoctruyen` (Charset: `utf8mb4`, Collate: `utf8mb4_unicode_ci`)
 
@@ -240,7 +245,7 @@ Database: `webdoctruyen` (Charset: `utf8mb4`, Collate: `utf8mb4_unicode_ci`)
 [comments]
 ```
 
-### Chi tiết 14 Bảng:
+### Chi tiết 15 Bảng:
 1. **`users`**: Tài khoản người dùng (id, username, email, password_hash, display_name, avatar_url, bio, role, status, ban_reason, created_at).
 2. **`user_identities`**: Liên kết tài khoản mạng xã hội (Google Provider UID, email, tên hiển thị, avatar).
 3. **`stories`**: Thông tin truyện (id, title, slug, description, cover_url, author_id, status, progress, view_count, rating_sum, rating_count).
@@ -251,10 +256,11 @@ Database: `webdoctruyen` (Charset: `utf8mb4`, Collate: `utf8mb4_unicode_ci`)
 8. **`comments`**: Bình luận truyện & chương (`story_id`, `chapter_id`, `parent_id`, `likes_count`).
 9. **`ratings`**: Chấm sao đánh giá (khóa chính kép `user_id, story_id`, thang điểm 1–5).
 10. **`follows`**: Theo dõi tác giả (`follower_id, author_id`).
-11. **`reports`**: Báo cáo vi phạm nội dung (`reporter_id, target_type, target_id, reason, status`).
-12. **`notifications`**: Thông báo người dùng (`user_id, story_id, type, message, is_read`).
-13. **`view_logs`**: Nhật ký mở đọc truyện (`user_id, story_id, chapter_id, ip_address, viewed_at`).
-14. **`wallets` & `transactions`**: Ví xu ảo và lịch sử chuyển xu ủng hộ tác giả.
+11. **`reports`**: Báo cáo vi phạm nội dung (`reporter_id, target_type, target_id, category, reason, status`). Hỗ trợ 8 loại vi phạm và liên kết sâu tới nội dung bị báo cáo (ISSUE-025).
+12. **`report_evidence`**: Bảng bằng chứng hình ảnh kèm theo báo cáo vi phạm (tối đa 3 ảnh/báo cáo, chỉ admin xem được — ISSUE-025).
+13. **`notifications`**: Thông báo người dùng (`user_id, story_id, type, message, is_read`).
+14. **`view_logs`**: Nhật ký mở đọc truyện (`user_id, story_id, chapter_id, ip_address, viewed_at`).
+15. **`wallets` & `transactions`**: Ví xu ảo và lịch sử chuyển xu ủng hộ tác giả.
 
 ---
 
@@ -264,9 +270,11 @@ Database: `webdoctruyen` (Charset: `utf8mb4`, Collate: `utf8mb4_unicode_ci`)
 - **Chống SQL Injection:** 100% câu truy vấn qua DAO dùng `PreparedStatement` với ràng buộc tham số `?`.
 - **Chống XSS:** Toàn bộ dữ liệu hiển thị trên JSP được escape bằng `<c:out value="..."/>`.
 - **Bảo vệ CSRF:** Token CSRF sinh theo phiên (`sessionScope.csrfToken`) và kiểm tra tự động qua `CsrfFilter` cho mọi request POST/PUT/DELETE.
-- **Băm mật khẩu PBKDF2WithHmacSHA256:** Kèm muối ngẫu nhiên (salt) 16 bytes và 65.536 vòng lặp, ngăn chặn bảng cầu vồng (Rainbow Table).
+- **Băm mật khẩu PBKDF2WithHmacSHA256:** Kèm muối ngẫu nhiên (salt) 16 bytes và 120.000 vòng lặp, ngăn chặn bảng cầu vồng (Rainbow Table).
 - **Phân quyền 2 tầng:** `AuthFilter` và `AdminFilter` chặn theo URL; Servlet kiểm tra quyền sở hữu bản ghi (`authorId == currentUser.id`).
-- **Phòng chống Brute-force & Spam:** Thuật toán Sliding Window giới hạn đăng nhập và bình luận.
+- **Phòng chống Brute-force & Spam:** Thuật toán Sliding Window giới hạn đăng nhập, bình luận, báo cáo vi phạm và gửi email đặt lại mật khẩu.
+- **HTTP Security Headers & CSP:** Thiết lập `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection`, `Permissions-Policy` và `Content-Security-Policy`.
+- **Chống URL Spoofing:** Thẻ `<link rel="canonical">` và `<meta property="og:url">` chuẩn hoá đường dẫn gốc trên mọi trang.
 
 ### Trợ năng (A11y - WCAG 2.1):
 - **Phím Tab thân thiện:** Hiển thị viền `:focus-visible` màu thương hiệu rõ nét.
@@ -276,16 +284,17 @@ Database: `webdoctruyen` (Charset: `utf8mb4`, Collate: `utf8mb4_unicode_ci`)
 
 ---
 
-## 8. Hệ thống Kiểm thử Tự động (114 Tests)
+## 8. Hệ thống Kiểm thử Tự động (119 Tests)
 
 Kiểm thử tự động thực thi qua công cụ JUnit 5 Console Standalone, độc lập môi trường mạng và CSDL:
 
 ```text
-JUnit Platform Suite: 114 tests found, 114 successful, 0 failed.
-Thời gian thực thi: ~1.85 giây (100% PASS).
+JUnit Platform Suite: 119 tests found, 119 successful, 0 failed.
+Thời gian thực thi: ~1.9 giây (100% PASS).
 ```
 
 ### Các nhóm test case tiêu biểu:
+- **`EpubWriterTest` (5 tests):** Kiểm thử đóng gói chuẩn EPUB 2.0 (mimetype STORED, container.xml, toc.ncx, escape XML, xử lý truyện 0 chương và đa chương).
 - **`RecaptchaFilterTest` (8 tests):** Chặn bot tại 3 cửa nhạy cảm (Login, Register, Comment), cơ chế Fail-Open an toàn mạng.
 - **`Báo cáo vi phạm / ReportTest` (13 tests):** Phân loại vi phạm, quản lý bằng chứng hình ảnh, liên kết sâu và chặn spam báo cáo.
 - **`GoogleTokenVerifierTest` (6 tests):** Kiểm thử xác thực token JWT, token hết hạn, sai Client ID, tài khoản chưa xác minh email.

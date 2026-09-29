@@ -357,8 +357,16 @@ public class AuthServlet extends HttpServlet {
     /** TRANG 21 — Xin cấp vé đặt lại mật khẩu (ISSUE-002: gửi qua email, không in ra màn hình). */
     private String forgot(HttpServletRequest request) throws SQLException {
         String email = trimOrEmpty(request.getParameter("email"));
+        String clientIp = RateLimiter.getClientIp(request);
 
         if (!email.isEmpty()) {
+            if (RateLimiter.isForgotSpam(clientIp, email)) {
+                request.setAttribute("message", "Bạn đã yêu cầu gửi email quá nhiều lần. Vui lòng chờ 15 phút để bảo vệ tài khoản.");
+                request.setAttribute("pageTitle", "Quên mật khẩu");
+                return "/WEB-INF/views/auth/forgot.jsp";
+            }
+            RateLimiter.recordForgot(clientIp, email);
+
             User u = userDAO.findByEmail(email);
             if (u != null) {
                 String token = newToken();

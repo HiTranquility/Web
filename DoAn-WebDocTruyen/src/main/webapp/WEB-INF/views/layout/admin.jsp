@@ -19,7 +19,7 @@
     <c:set var="layoutCss" value="layout-admin" scope="request"/>
     <%@ include file="parts/head.jsp" %>
 </head>
-<body>
+<body data-ctx="${pageContext.request.contextPath}">
 
 <%-- Dùng chung với layout main — không chép lại --%>
 <%@ include file="parts/nav.jsp" %>

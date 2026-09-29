@@ -29,7 +29,29 @@
         <li>Dùng nút <b>← →</b> ở cuối chương để chuyển chương.</li>
     </ul>
 
-    <h2>3. Lưu truyện và đọc tiếp</h2>
+    <h2>3. Nghe đọc truyện bằng giọng nói (TTS)</h2>
+    <ul>
+        <li>Trong trang đọc chương, bấm nút <b>🎧</b> trên thanh công cụ để mở
+            thanh điều khiển giọng đọc.</li>
+        <li>Bấm <b>▶</b> để bắt đầu đọc — hệ thống sẽ tự đọc từng đoạn và
+            tô sáng đoạn đang đọc.</li>
+        <li>Bấm vào nút <b>⚙</b> để mở phần cài đặt nâng cao:
+            <ul>
+                <li><b>Chọn giọng đọc</b> — chọn từ danh sách giọng có sẵn
+                    trên trình duyệt, ưu tiên giọng Tiếng Việt.</li>
+                <li><b>Cao độ (Pitch)</b> — kéo thanh trượt để giọng trầm hơn
+                    hoặc cao hơn.</li>
+                <li><b>Âm lượng</b> — điều chỉnh độ to nhỏ giọng đọc.</li>
+            </ul>
+        </li>
+        <li>Bấm vào badge <b>1.0x</b> để đổi tốc độ đọc (0.5x → 2.0x).</li>
+        <li>Tất cả cài đặt được <b>tự động lưu</b> — lần sau mở lại không
+            cần chọn lại.</li>
+        <li>Ngoài ra, bấm nút <b>🌧️</b> để bật âm thanh mưa rơi thư giãn
+            khi đọc.</li>
+    </ul>
+
+    <h2>4. Lưu truyện và đọc tiếp</h2>
     <ul>
         <li>Bấm <b>☆ Lưu truyện</b> ở trang truyện. Cần đăng nhập trước.</li>
         <li>Xem lại ở mục <b>Truyện đã lưu</b>.</li>
@@ -37,14 +59,14 @@
             Lần sau vào sẽ có nút <b>Đọc tiếp</b> đưa thẳng tới chương đang dở.</li>
     </ul>
 
-    <h2>4. Tải truyện về máy</h2>
+    <h2>5. Tải truyện về máy</h2>
     <ul>
         <li>Bấm <b>⬇ Tải .txt</b> ở trang truyện.</li>
         <li>File gồm toàn bộ chương đã đăng, ghép theo thứ tự, đọc được bằng
             Notepad hay bất kỳ ứng dụng đọc sách nào.</li>
     </ul>
 
-    <h2 id="upload">5. Đăng truyện của bạn</h2>
+    <h2 id="upload">6. Đăng truyện của bạn</h2>
     <ol>
         <li>Đăng nhập, rồi vào <b>Truyện của tôi → + Đăng truyện mới</b>.</li>
         <li>Điền tiêu đề, giới thiệu, chọn thể loại. Đường dẫn thân thiện tự sinh.</li>
@@ -60,13 +82,22 @@
         sửa truyện của bạn cũng bị hệ thống chặn.
     </div>
 
-    <h2>6. Bình luận</h2>
+    <h2>7. Bình luận</h2>
     <ul>
         <li>Cuộn xuống cuối trang truyện, viết vào ô rồi bấm <b>Gửi</b>.</li>
+        <li>Bạn cũng có thể bình luận <b>dưới chân mỗi chương</b> khi đang đọc.</li>
         <li>Bình luận của mình thì <b>gỡ được</b>. Quản trị viên gỡ được của mọi người.</li>
     </ul>
 
-    <h2>7. Tài khoản &amp; Liên kết Google</h2>
+    <h2>8. Ủng hộ tác giả bằng xu</h2>
+    <ul>
+        <li>Mỗi tài khoản mới có sẵn <b>xu trải nghiệm</b> trong ví.</li>
+        <li>Vào trang chi tiết truyện, bấm <b>🎁 Tặng xu</b> để gửi xu kèm
+            lời nhắn động viên cho tác giả.</li>
+        <li>Xem số dư xu ở mục <b>Trung tâm cá nhân</b>.</li>
+    </ul>
+
+    <h2>9. Tài khoản &amp; Liên kết Google</h2>
     <ul>
         <li>Đăng ký cần tên đăng nhập (chữ, số, gạch dưới), email và mật khẩu
             từ 6 ký tự.</li>
@@ -76,6 +107,14 @@
         <li><b>Gắn tài khoản Google:</b> Bạn có thể vào <i>Hồ sơ → Sửa hồ sơ → Tài khoản liên kết</i> để gắn Google, giúp đăng nhập nhanh hơn. Khi muốn hủy liên kết Google, hệ thống luôn yêu cầu bạn phải có sẵn mật khẩu để bảo vệ an toàn cho tài khoản.</li>
         <li>Tài khoản bị khoá thì không đăng nhập được, nhưng
             <b>truyện đã đăng vẫn còn</b> trên trang.</li>
+    </ul>
+
+    <h2>10. Báo cáo vi phạm</h2>
+    <ul>
+        <li>Thấy truyện hoặc bình luận vi phạm? Bấm nút <b>🚩 Báo cáo</b>.</li>
+        <li>Chọn <b>loại vi phạm</b> phù hợp, viết mô tả, và có thể đính kèm
+            tối đa <b>3 ảnh bằng chứng</b>.</li>
+        <li>Quản trị viên sẽ xem xét và xử lý.</li>
     </ul>
 
     <p class="doc-foot">

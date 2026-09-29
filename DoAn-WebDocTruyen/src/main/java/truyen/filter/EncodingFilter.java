@@ -64,6 +64,16 @@ public class EncodingFilter implements Filter {
             httpRes.setHeader("X-Frame-Options", "SAMEORIGIN");
             httpRes.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
             httpRes.setHeader("X-XSS-Protection", "1; mode=block");
+            httpRes.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+            httpRes.setHeader("Content-Security-Policy",
+                    "default-src 'self'; "
+                    + "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://apis.google.com; "
+                    + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                    + "font-src 'self' https://fonts.gstatic.com data:; "
+                    + "img-src 'self' data: blob: https:; "
+                    + "media-src 'self' blob: data:; "
+                    + "connect-src 'self' https://www.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com; "
+                    + "frame-src 'self' https://www.google.com https://*.firebaseapp.com;");
         }
 
         chain.doFilter(req, res);

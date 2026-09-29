@@ -31,7 +31,7 @@
     <c:set var="layoutCss" value="layout-editor" scope="request"/>
     <%@ include file="parts/head.jsp" %>
 </head>
-<body class="editor-body">
+<body class="editor-body" data-ctx="${pageContext.request.contextPath}">
 
 <%--
   Thanh trên tối giản — KHÔNG dùng parts/nav.jsp.
