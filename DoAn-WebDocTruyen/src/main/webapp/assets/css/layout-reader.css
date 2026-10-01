@@ -342,6 +342,16 @@ a.toc-link:hover .toc-no { color: var(--ember); }
 .toc-here { flex: 0 0 auto; font-size: .72rem; color: var(--ember);
             text-transform: uppercase; letter-spacing: .03em; }
 
+.toc-link .badge-vip,
+.toc-link .badge-unlocked {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    flex: 0 0 auto;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
 /* ===========================================================================
    THANH TIẾN ĐỘ ĐỌC
    ======================================================================== */

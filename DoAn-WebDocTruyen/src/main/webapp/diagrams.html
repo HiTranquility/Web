@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Sơ đồ tuần tự - Sequence Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#e0f2fe',
+                primaryTextColor: '#0369a1',
+                primaryBorderColor: '#38bdf8',
+                lineColor: '#0284c7',
+                secondaryColor: '#fef3c7',
+                tertiaryColor: '#f1f5f9'
+            },
+            sequence: {
+                actorMargin: 50,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: false
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            margin: 0;
+            padding: 30px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        .diagram-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        }
+        h2 {
+            margin: 0 0 20px 0;
+            font-size: 1.25rem;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SƠ ĐỒ 1: CHƯƠNG VIP & PAYWALL -->
+        <div class="diagram-card" id="card-diag-vip">
+            <h2>Sơ đồ 1: Luồng mở khóa chương VIP bằng Xu (ISSUE-020)</h2>
+            <div class="mermaid" id="diag-vip">
+sequenceDiagram
+    autonumber
+    actor User as Độc giả
+    participant CS as ChapterServlet
+    participant UDAO as UnlockDAO
+    participant WDAO as WalletDAO
+    participant DB as MySQL Database
+    participant View as JSP View (Reader/_locked)
+
+    User->>CS: GET /chapter?action=read&id=61
+    CS->>UDAO: hasUnlocked(userId, 61)
+    UDAO->>DB: SELECT COUNT(*) FROM chapter_unlocks WHERE user_id=? AND chapter_id=?
+    DB-->>UDAO: Trả về 0 (Chưa mở khoá)
+    UDAO-->>CS: false
+    CS->>CS: chapter.setContent("") (Bảo mật 100%)
+    CS->>View: Forward read.jsp (isLocked=true, unlockPrice=20)
+    View-->>User: Hiển thị Paywall: Báo giá 20 xu & Nút Mở khóa
+
+    User->>CS: POST /chapter?action=unlock (id=61)
+    CS->>WDAO: unlockChapter(userId, authorId, chapterId, 20)
+    Note over WDAO,DB: ACID Transaction (con.setAutoCommit(false))
+    WDAO->>DB: SELECT balance FROM wallets WHERE user_id=? FOR UPDATE
+    DB-->>WDAO: balance = 100
+    WDAO->>DB: UPDATE wallets SET balance = balance - 20 (Độc giả)
+    WDAO->>DB: UPDATE wallets SET balance = balance + 20 (Tác giả)
+    WDAO->>DB: INSERT INTO chapter_unlocks VALUES (...)
+    WDAO->>DB: INSERT INTO transactions VALUES (...)
+    WDAO->>DB: con.commit()
+    WDAO-->>CS: true (Mở khóa thành công)
+    CS-->>User: Redirect /chapter?action=read&id=61
+    CS->>View: Render đầy đủ nội dung chương truyện
+    View-->>User: Hiển thị văn bản chương VIP
+            </div>
+        </div>
+
+        <!-- SƠ ĐỒ 2: REVIEW & SPOILER & VOTE -->
+        <div class="diagram-card" id="card-diag-review">
+            <h2>Sơ đồ 2: Luồng đánh giá chi tiết, gắn nhãn Spoiler & Vote hữu ích (ISSUE-022)</h2>
+            <div class="mermaid" id="diag-review">
+sequenceDiagram
+    autonumber
+    actor Reader as Độc giả
+    participant SS as StoryServlet / RatingServlet
+    participant RDAO as ReviewDAO
+    participant DB as MySQL Database
+    participant View as JSP View (detail.jsp / _review.jsp)
+
+    Reader->>SS: POST /rating?action=review (title, content, hasSpoiler=1)
+    SS->>RDAO: upsert(review)
+    RDAO->>DB: INSERT INTO reviews ... ON DUPLICATE KEY UPDATE ...
+    DB-->>RDAO: OK
+    SS-->>Reader: Redirect /story?action=detail&id=1#reviews
+
+    Reader->>SS: GET /story?action=detail&id=1#reviews
+    SS->>RDAO: findByStory(storyId=1, userId)
+    RDAO->>DB: SELECT r.*, u.username, ... ORDER BY helpful_count DESC
+    DB-->>RDAO: List Review
+    SS->>View: Forward detail.jsp (tab Đánh giá)
+    View-->>Reader: Hiển thị Review Card (Spoiler bị blur 6px kèm nút 'Hiển thị')
+
+    Reader->>View: Bấm nút "Hiển thị nội dung"
+    Note over View,Reader: JavaScript DOM toggle: .revealed (gỡ blur ngay tại client)
+
+    Reader->>SS: POST /rating?action=vote (reviewId)
+    SS->>RDAO: toggleVote(userId, reviewId)
+    RDAO->>DB: INSERT INTO review_votes / DELETE nếu đã vote
+    RDAO->>DB: UPDATE reviews SET helpful_count = helpful_count +/- 1
+    DB-->>RDAO: OK
+    SS-->>Reader: Redirect & Cập nhật số đếm hữu ích
+            </div>
+        </div>
+
+        <!-- SƠ ĐỒ 3: GAMIFICATION -->
+        <div class="diagram-card" id="card-diag-game">
+            <h2>Sơ đồ 3: Luồng Gamification điểm danh 7 ngày & Nhận thưởng nhiệm vụ (ISSUE-026)</h2>
+            <div class="mermaid" id="diag-game">
+sequenceDiagram
+    autonumber
+    actor User as Độc giả
+    participant US as UserServlet
+    participant GDAO as GamificationDAO
+    participant DB as MySQL Database
+    participant View as JSP View (me.jsp)
+
+    User->>US: GET /user?action=me
+    US->>GDAO: getTodayCheckin(userId)
+    GDAO->>DB: SELECT * FROM daily_checkins WHERE user_id=? AND checkin_date=CURRENT_DATE()
+    DB-->>GDAO: null (Chưa điểm danh)
+    US->>GDAO: getDailyQuests(userId)
+    GDAO->>DB: Quét view_logs, comments để tính tiến độ
+    DB-->>GDAO: Danh sách tiến độ nhiệm vụ
+    US->>View: Render me.jsp (Nút 'Điểm Danh Ngay' sáng)
+    View-->>User: Hiển thị chuỗi 7 ngày & các nhiệm vụ
+
+    User->>US: POST /user?action=checkin
+    US->>GDAO: doCheckin(userId)
+    Note over GDAO,DB: Transaction: Ghi điểm danh + Cộng xu ví
+    GDAO->>DB: INSERT INTO daily_checkins (streak_days, reward_coins)
+    GDAO->>DB: UPDATE wallets SET balance = balance + rewardCoins
+    GDAO->>DB: INSERT INTO transactions VALUES (...)
+    DB-->>GDAO: Commit thành công
+    GDAO-->>US: DailyCheckin object
+    US-->>User: Redirect /user?action=me (Thông báo: Điểm danh thành công +xu)
+            </div>
+        </div>
+
+        <!-- SƠ ĐỒ 4: BẢNG XẾP HẠNG TÁC GIẢ -->
+        <div class="diagram-card" id="card-diag-rank">
+            <h2>Sơ đồ 4: Luồng Bảng xếp hạng Tác giả nổi bật & Vinh danh (ISSUE-006)</h2>
+            <div class="mermaid" id="diag-rank">
+sequenceDiagram
+    autonumber
+    actor Reader as Người dùng / Độc giả
+    participant RS as RankServlet
+    participant UDAO as UserDAO
+    participant DB as MySQL Database
+    participant View as JSP View (rank/index.jsp)
+
+    Reader->>RS: GET /rank?type=authors
+    RS->>UDAO: findTopAuthors(limit = 20)
+    UDAO->>DB: SELECT u.*, SUM(s.view_count) AS total_views, COUNT(f.follower_id) ... GROUP BY u.id ORDER BY total_views DESC
+    DB-->>UDAO: ResultSet (Danh sách 20 tác giả hàng đầu)
+    UDAO-->>RS: List User topAuthors
+    RS->>View: Forward rank/index.jsp (topAuthors, currentType='authors')
+    View-->>Reader: Hiển thị Bảng vinh danh Tác giả (Huy hiệu 1, 2, 3 mạ kim loại)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

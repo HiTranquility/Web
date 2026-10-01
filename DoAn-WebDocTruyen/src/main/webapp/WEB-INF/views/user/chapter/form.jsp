@@ -47,6 +47,18 @@
         </div>
     </div>
 
+    <%-- CHƯƠNG VIP VÀ GIÁ XU (ISSUE-020) --%>
+    <div class="vip-setting-card" style="margin-bottom:1.5rem; padding:12px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg, rgba(255,255,255,0.03)); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; margin-bottom:0">
+            <input type="checkbox" id="isVipCheckbox" name="isVip" value="1" ${chapter.vip ? 'checked' : ''} onchange="document.getElementById('coinPriceWrapper').style.display = this.checked ? 'flex' : 'none';">
+            <span>🔒 Đặt làm Chương VIP (Có tính phí xu để mở khoá)</span>
+        </label>
+        <div id="coinPriceWrapper" style="display:${chapter.vip ? 'flex' : 'none'}; align-items:center; gap:8px;">
+            <label for="coinPrice" style="margin-bottom:0; font-size:0.9rem">Giá mở khoá (Xu):</label>
+            <input type="number" id="coinPrice" name="coinPrice" min="1" max="10000" style="width:7em; padding:6px 10px;" value="${chapter.coinPrice > 0 ? chapter.coinPrice : 10}">
+        </div>
+    </div>
+
     <div style="margin-bottom: 6px; display:flex; justify-content:space-between; align-items:baseline;">
         <label for="content" style="margin-bottom:0">Nội dung chương *</label>
         <small style="color:var(--text-mut);">Phím tắt: <strong>Ctrl+B</strong> (Đậm), <strong>Ctrl+I</strong> (Nghiêng), <strong>Ctrl+S</strong> (Lưu nhanh)</small>

@@ -24,6 +24,7 @@ docs/
 │   └── ke-hoach-database.md          13 bảng CSDL · chuẩn hoá + phi chuẩn hoá
 │
 ├── guides/                           ← HƯỚNG DẪN & GIẢI THÍCH CƠ CHẾ
+│   ├── visual-flow-code-tinh-nang-moi.md 🧭 SƠ ĐỒ TRỰC QUAN — luồng từ UI/Mảng Frontend ➔ Servlet ➔ DAO ➔ Database
 │   ├── huong-dan-code.md             HƯỚNG DẪN CODE BẰNG TAY — luồng CSDL → DAO → Servlet → JSP từ A-Z
 │   ├── giai-thich.md                 VÌ SAO nó chạy như vậy — 7 khu, giảng từ đầu
 │   └── CHECKLIST.md                  danh sách tick kiểm tra trước khi nộp bài
@@ -56,6 +57,7 @@ docs/
 |-------------------|---------|
 | ⭐ **"Xem tổng hợp toàn bộ hệ thống (36 trang, 38 chức năng, 18 modules, CSDL)"** | **[TONG-HOP-HE-THONG.md](TONG-HOP-HE-THONG.md)** |
 | 🎨 **"Xem tổng hợp toàn bộ giao diện (36 trang JSP, 5 layouts, UI/UX)"** | **[GIAO-DIEN.md](GIAO-DIEN.md)** |
+| 🧭 **"Sơ đồ trực quan từ UI/Mảng Frontend ➔ Backend ➔ Database (ký hiệu, các bước)"** | **[guides/visual-flow-code-tinh-nang-moi.md](guides/visual-flow-code-tinh-nang-moi.md)** |
 | **"Tự tay code một tính năng từ DAO tới JSP"** | **[guides/huong-dan-code.md](guides/huong-dan-code.md)** |
 | "Cách dùng getParameter, getSession, setAttribute?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §2 |
 | "Cách viết try-catch, mở kết nối DAO?" | [guides/huong-dan-code.md](guides/huong-dan-code.md) §1 |

@@ -102,6 +102,102 @@
     </p>
 </div>
 
+<%-- ================================================================================
+     GAMIFICATION: ĐIỂM DANH 7 NGÀY & NHIỆM VỤ HÀNG NGÀY NHẬN XU
+     ================================================================================ --%>
+<div class="panel gamification-panel" id="gamification" style="margin-top:20px; border:1px solid rgba(245, 158, 11, 0.3); background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, rgba(0,0,0,0) 100%);">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+        <h3 class="panel-title" style="margin:0; color:#f59e0b; display:flex; align-items:center; gap:8px;">
+            🎁 Trạm Nhận Xu: Điểm danh &amp; Nhiệm vụ
+        </h3>
+        <span class="badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.4); padding:4px 10px; border-radius:20px; font-weight:600;">
+            🔥 Chuỗi: ${currentStreak} ngày liên tiếp
+        </span>
+    </div>
+
+    <%-- 7 NGÀY ĐIỂM DANH --%>
+    <div class="checkin-streak-container" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(80px, 1fr)); gap:10px; margin-bottom:20px;">
+        <c:forEach var="day" begin="1" end="7">
+            <c:set var="isPassed" value="${day lt currentStreak or (day eq currentStreak and not empty todayCheckin)}" />
+            <c:set var="isTodayTarget" value="${(empty todayCheckin and day eq (currentStreak % 7 + 1)) or (not empty todayCheckin and day eq currentStreak)}" />
+            <c:set var="coinReward" value="${day eq 1 ? 5 : (day eq 2 ? 10 : (day eq 3 ? 15 : (day eq 4 ? 20 : (day eq 5 ? 25 : (day eq 6 ? 30 : 50)))))}" />
+
+            <div class="streak-day-card ${isPassed ? 'day-claimed' : (isTodayTarget ? 'day-today' : '')}"
+                 style="padding:10px 6px; text-align:center; border-radius:8px; border:1px solid ${isPassed ? '#10b981' : (isTodayTarget ? '#f59e0b' : 'var(--border)')}; background:${isPassed ? 'rgba(16, 185, 129, 0.08)' : (isTodayTarget ? 'rgba(245, 158, 11, 0.12)' : 'var(--card-bg, rgba(255,255,255,0.02))')};">
+                <div style="font-size:0.8rem; font-weight:600; color:var(--text-mut);">Ngày ${day}</div>
+                <div style="font-size:1.4rem; margin:4px 0;">${day eq 7 ? '👑' : (isPassed ? '✅' : '🪙')}</div>
+                <div style="font-size:0.85rem; font-weight:700; color:${isPassed ? '#10b981' : '#f59e0b'};">+${coinReward} xu</div>
+                <div style="font-size:0.75rem; margin-top:4px;">
+                    <c:choose>
+                        <c:when test="${isPassed}"><span style="color:#10b981; font-weight:600;">Đã nhận</span></c:when>
+                        <c:when test="${isTodayTarget}"><span style="color:#f59e0b; font-weight:600;">Hôm nay</span></c:when>
+                        <c:otherwise><span class="muted">Chờ</span></c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </c:forEach>
+    </div>
+
+    <%-- Nút bấm điểm danh --%>
+    <div style="text-align:center; margin-bottom:24px;">
+        <c:choose>
+            <c:when test="${empty todayCheckin}">
+                <form action="${pageContext.request.contextPath}/user" method="post" style="display:inline;">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
+                    <input type="hidden" name="action" value="checkin">
+                    <button type="submit" class="btn btn-primary btn-lg" style="background:linear-gradient(135deg, #f59e0b, #d97706); border:none; padding:10px 28px; font-weight:700; box-shadow:0 4px 14px rgba(245, 158, 11, 0.4);">
+                        ✨ Điểm Danh Ngay (+${(currentStreak % 7 + 1) eq 1 ? 5 : ((currentStreak % 7 + 1) eq 2 ? 10 : ((currentStreak % 7 + 1) eq 3 ? 15 : ((currentStreak % 7 + 1) eq 4 ? 20 : ((currentStreak % 7 + 1) eq 5 ? 25 : ((currentStreak % 7 + 1) eq 6 ? 30 : 50)))))} xu)
+                    </button>
+                </form>
+            </c:when>
+            <c:otherwise>
+                <button type="button" class="btn btn-secondary btn-lg" disabled style="opacity:0.85;">
+                    ✅ Bạn đã hoàn thành điểm danh hôm nay (+${todayCheckin.rewardCoins} xu)
+                </button>
+                <p class="muted small" style="margin-top:6px;">Quay lại vào ngày mai để tiếp tục duy trì chuỗi nhận quà nhé!</p>
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <%-- NHIỆM VỤ HÀNG NGÀY --%>
+    <h4 style="margin:0 0 12px 0; font-size:1.05rem; display:flex; align-items:center; gap:6px;">
+        🎯 Nhiệm vụ hàng ngày
+    </h4>
+    <div class="quests-list" style="display:flex; flex-direction:column; gap:10px;">
+        <c:forEach var="q" items="${dailyQuests}">
+            <div class="quest-item-card" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:12px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg, rgba(255,255,255,0.02));">
+                <div style="flex:1; min-width:200px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <strong style="color:var(--text);"><c:out value="${q.title}"/></strong>
+                        <span class="badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b; font-size:0.75rem;">+${q.rewardCoins} xu</span>
+                    </div>
+                    <p class="muted small" style="margin:3px 0 0 0;"><c:out value="${q.description}"/></p>
+                </div>
+                <div>
+                    <c:choose>
+                        <c:when test="${q.claimed}">
+                            <span class="badge badge-success" style="padding:6px 12px; font-weight:600;">✓ Đã nhận</span>
+                        </c:when>
+                        <c:when test="${q.completed}">
+                            <form action="${pageContext.request.contextPath}/user" method="post" style="display:inline;">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
+                                <input type="hidden" name="action" value="claim-quest">
+                                <input type="hidden" name="key" value="${q.key}">
+                                <button type="submit" class="btn btn-sm btn-primary" style="background:#10b981; border:none; font-weight:600;">
+                                    🎁 Nhận thưởng
+                                </button>
+                            </form>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="muted small" style="padding:4px 8px; border:1px dashed var(--border); border-radius:4px;">Chưa hoàn thành</span>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </c:forEach>
+    </div>
+</div>
+
 <div class="section-head">
     <h2>Lối tắt</h2>
 </div>

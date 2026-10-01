@@ -27,7 +27,7 @@ public class ChapterDAO {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.chapters(storyId);
         String sql =
-            "SELECT id, story_id, chapter_no, title, created_at, updated_at "
+            "SELECT id, story_id, chapter_no, title, is_vip, coin_price, created_at, updated_at "
           + "FROM chapters WHERE story_id = ? ORDER BY chapter_no";
 
         List<Chapter> list = new ArrayList<>();
@@ -85,7 +85,7 @@ public class ChapterDAO {
         }
 
         String sql =
-            "SELECT id, story_id, chapter_no, title, created_at, updated_at "
+            "SELECT id, story_id, chapter_no, title, is_vip, coin_price, created_at, updated_at "
           + "FROM chapters WHERE story_id = ? "
           + "ORDER BY chapter_no " + (desc ? "DESC" : "ASC") + " "
           + "LIMIT ? OFFSET ?";
@@ -110,7 +110,7 @@ public class ChapterDAO {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.chapter(id);
         String sql =
-            "SELECT c.id, c.story_id, c.chapter_no, c.title, c.content, "
+            "SELECT c.id, c.story_id, c.chapter_no, c.title, c.content, c.is_vip, c.coin_price, "
           + "       c.created_at, c.updated_at, s.title AS story_title "
           + "FROM chapters c JOIN stories s ON s.id = c.story_id "
           + "WHERE c.id = ?";
@@ -135,7 +135,7 @@ public class ChapterDAO {
             List<Chapter> all = DemoData.chapters(storyId);
             return all.isEmpty() ? null : all.get(0);
         }
-        String sql = "SELECT id, story_id, chapter_no, title FROM chapters "
+        String sql = "SELECT id, story_id, chapter_no, title, is_vip, coin_price FROM chapters "
                    + "WHERE story_id = ? ORDER BY chapter_no ASC LIMIT 1";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -151,9 +151,9 @@ public class ChapterDAO {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.neighbour(storyId, chapterNo, direction);
         String sql = direction < 0
-            ? "SELECT id, story_id, chapter_no, title FROM chapters "
+            ? "SELECT id, story_id, chapter_no, title, is_vip, coin_price FROM chapters "
             + "WHERE story_id = ? AND chapter_no < ? ORDER BY chapter_no DESC LIMIT 1"
-            : "SELECT id, story_id, chapter_no, title FROM chapters "
+            : "SELECT id, story_id, chapter_no, title, is_vip, coin_price FROM chapters "
             + "WHERE story_id = ? AND chapter_no > ? ORDER BY chapter_no ASC LIMIT 1";
 
         try (Connection con = DBConnection.get();
@@ -181,14 +181,16 @@ public class ChapterDAO {
     }
 
     public void insert(Chapter c) throws SQLException {
-        String sql = "INSERT INTO chapters (story_id, chapter_no, title, content) "
-                   + "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO chapters (story_id, chapter_no, title, content, is_vip, coin_price) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, c.getStoryId());
             ps.setInt(2, c.getChapterNo());
             ps.setString(3, c.getTitle());
             ps.setString(4, c.getContent());
+            ps.setBoolean(5, c.isVip());
+            ps.setInt(6, c.getCoinPrice());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -199,13 +201,15 @@ public class ChapterDAO {
     }
 
     public void update(Chapter c) throws SQLException {
-        String sql = "UPDATE chapters SET chapter_no = ?, title = ?, content = ? WHERE id = ?";
+        String sql = "UPDATE chapters SET chapter_no = ?, title = ?, content = ?, is_vip = ?, coin_price = ? WHERE id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, c.getChapterNo());
             ps.setString(2, c.getTitle());
             ps.setString(3, c.getContent());
-            ps.setInt(4, c.getId());
+            ps.setBoolean(4, c.isVip());
+            ps.setInt(5, c.getCoinPrice());
+            ps.setInt(6, c.getId());
             ps.executeUpdate();
         }
     }
@@ -359,6 +363,10 @@ public class ChapterDAO {
         c.setStoryId(rs.getInt("story_id"));
         c.setChapterNo(rs.getInt("chapter_no"));
         c.setTitle(rs.getString("title"));
+        try {
+            c.setVip(rs.getBoolean("is_vip"));
+            c.setCoinPrice(rs.getInt("coin_price"));
+        } catch (SQLException ignore) {}
         if (withContent) {
             c.setContent(rs.getString("content"));
         }

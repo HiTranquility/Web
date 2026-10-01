@@ -31,6 +31,12 @@ public class Chapter implements Serializable {
     /** Tên truyện, lấy qua JOIN — để trang đọc hiện được mà khỏi truy vấn thêm. */
     private String storyTitle;
 
+    /** Chương VIP — yêu cầu trả xu để mở khoá (ISSUE-020). */
+    private boolean vip;
+
+    /** Giá xu mở khoá chương VIP. */
+    private int coinPrice;
+
     public Chapter() { }
 
     public int getId() { return id; }
@@ -56,6 +62,12 @@ public class Chapter implements Serializable {
 
     public String getStoryTitle() { return storyTitle; }
     public void setStoryTitle(String storyTitle) { this.storyTitle = storyTitle; }
+
+    public boolean isVip() { return vip; }
+    public void setVip(boolean vip) { this.vip = vip; }
+
+    public int getCoinPrice() { return coinPrice; }
+    public void setCoinPrice(int coinPrice) { this.coinPrice = coinPrice; }
 
     /**
      * Nội dung chương, cắt sẵn thành từng đoạn văn.

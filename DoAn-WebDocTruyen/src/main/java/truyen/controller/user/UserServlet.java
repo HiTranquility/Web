@@ -14,10 +14,12 @@ import javax.servlet.http.Part;
 import truyen.util.DBConnection;
 import truyen.util.UploadUtil;
 import truyen.dao.FollowDAO;
+import truyen.dao.GamificationDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.IdentityDAO;
 import truyen.dao.UserDAO;
 import truyen.dao.WalletDAO;
+import truyen.model.DailyCheckin;
 import truyen.model.Story;
 import truyen.model.User;
 import truyen.model.UserIdentity;
@@ -41,6 +43,7 @@ public class UserServlet extends HttpServlet {
     private FollowDAO followDAO;
     private IdentityDAO identityDAO;
     private WalletDAO walletDAO;
+    private GamificationDAO gamificationDAO;
     private GoogleTokenVerifier googleTokenVerifier;
 
     /** Số truyện mỗi trang trên hồ sơ tác giả. */
@@ -54,6 +57,7 @@ public class UserServlet extends HttpServlet {
         followDAO = new FollowDAO();
         identityDAO = new IdentityDAO();
         walletDAO = new WalletDAO();
+        gamificationDAO = new GamificationDAO();
         googleTokenVerifier = new GoogleTokenVerifier();
     }
 
@@ -92,11 +96,17 @@ public class UserServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if (action == null) {
-            action = "profile";
+            User me = currentUser(request);
+            if (me != null && request.getParameter("id") == null) {
+                action = "me";
+            } else {
+                action = "profile";
+            }
         }
 
         if ("save".equals(action) || "password".equals(action) || "link-google".equals(action)
-                || "unlink-google".equals(action) || "set-password".equals(action)) {
+                || "unlink-google".equals(action) || "set-password".equals(action)
+                || "checkin".equals(action) || "claim-quest".equals(action)) {
             if (!"POST".equalsIgnoreCase(request.getMethod())) {
                 response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                 return;
@@ -107,6 +117,8 @@ public class UserServlet extends HttpServlet {
         try {
             switch (action) {
                 case "me":            url = me(request, response);            break;
+                case "checkin":       handleCheckin(request, response);       return;
+                case "claim-quest":   handleClaimQuest(request, response);    return;
                 case "edit":          url = edit(request, response);          break;
                 case "save":          url = save(request, response);          break;
                 case "password":      url = password(request, response);      break;
@@ -153,6 +165,16 @@ public class UserServlet extends HttpServlet {
             throws SQLException, IOException {
 
         int id = parseIntOr(request.getParameter("id"), 0);
+        if (id <= 0) {
+            User me = currentUser(request);
+            if (me != null) {
+                response.sendRedirect(request.getContextPath() + "/user?action=me");
+                return null;
+            } else {
+                response.sendRedirect(request.getContextPath() + "/");
+                return null;
+            }
+        }
         User author = userDAO.findById(id);
 
         if (author == null) {
@@ -230,9 +252,53 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("me", fresh);
         request.setAttribute("totalViews", storyDAO.totalViewsByAuthor(fresh.getId()));
         request.setAttribute("walletBalance", walletDAO.getBalance(fresh.getId()));
+        request.setAttribute("todayCheckin", gamificationDAO.getTodayCheckin(fresh.getId()));
+        request.setAttribute("currentStreak", gamificationDAO.getCurrentStreak(fresh.getId()));
+        request.setAttribute("dailyQuests", gamificationDAO.getDailyQuests(fresh.getId()));
         request.setAttribute("pageTitle", "Hồ sơ của tôi");
         request.setAttribute("activeNav", "me");
         return "/WEB-INF/views/user/me.jsp";
+    }
+
+    private void handleCheckin(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        User me = requireLogin(request, response);
+        if (me == null) return;
+
+        DailyCheckin checkin = gamificationDAO.doCheckin(me.getId());
+        if (checkin != null) {
+            request.getSession().setAttribute("flash", "🎉 Điểm danh thành công! Bạn nhận được +" + checkin.getRewardCoins() + " xu.");
+        } else {
+            request.getSession().setAttribute("flash", "Bạn đã điểm danh hôm nay rồi!");
+        }
+
+        if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write("{\"success\":true,\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+            return;
+        }
+        response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
+    }
+
+    private void handleClaimQuest(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        User me = requireLogin(request, response);
+        if (me == null) return;
+
+        String key = trimOrEmpty(request.getParameter("key"));
+        boolean ok = gamificationDAO.claimQuestReward(me.getId(), key);
+        if (ok) {
+            request.getSession().setAttribute("flash", "🎁 Nhận thưởng nhiệm vụ thành công!");
+        } else {
+            request.getSession().setAttribute("flashError", "Không thể nhận thưởng hoặc bạn đã nhận trước đó.");
+        }
+
+        if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write("{\"success\":" + ok + ",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+            return;
+        }
+        response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
     }
 
     /** TRANG 15 — Form sửa hồ sơ. */

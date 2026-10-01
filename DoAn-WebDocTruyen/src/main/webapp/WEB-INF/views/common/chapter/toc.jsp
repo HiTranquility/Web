@@ -31,11 +31,29 @@
           trong một danh sách hàng trăm dòng.
         --%>
         <li class="toc-item ${ch.id eq currentId ? 'is-current' : ''}">
+            <c:set var="isUnlocked" value="false" />
+            <c:if test="${not empty unlockedChapterIds}">
+                <c:forEach var="uId" items="${unlockedChapterIds}">
+                    <c:if test="${uId eq ch.id}">
+                        <c:set var="isUnlocked" value="true" />
+                    </c:if>
+                </c:forEach>
+            </c:if>
             <c:choose>
                 <c:when test="${ch.id eq currentId}">
                     <span class="toc-link">
                         <b class="toc-no">Chương ${ch.chapterNo}</b>
                         <span class="toc-title"><c:out value="${ch.title}"/></span>
+                        <c:if test="${ch.vip}">
+                            <c:choose>
+                                <c:when test="${isUnlocked or (not empty sessionScope.currentUser and (sessionScope.currentUser.id eq story.authorId or sessionScope.currentUser.role eq 'ADMIN'))}">
+                                    <span class="badge-unlocked">🔓 Đã mở</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge-vip">🔒 VIP <c:out value="${ch.coinPrice}"/> xu</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:if>
                         <span class="toc-here">đang đọc</span>
                     </span>
                 </c:when>
@@ -44,6 +62,16 @@
                        href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${ch.id}">
                         <b class="toc-no">Chương ${ch.chapterNo}</b>
                         <span class="toc-title"><c:out value="${ch.title}"/></span>
+                        <c:if test="${ch.vip}">
+                            <c:choose>
+                                <c:when test="${isUnlocked or (not empty sessionScope.currentUser and (sessionScope.currentUser.id eq story.authorId or sessionScope.currentUser.role eq 'ADMIN'))}">
+                                    <span class="badge-unlocked">🔓 Đã mở</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge-vip">🔒 VIP <c:out value="${ch.coinPrice}"/> xu</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:if>
                     </a>
                 </c:otherwise>
             </c:choose>

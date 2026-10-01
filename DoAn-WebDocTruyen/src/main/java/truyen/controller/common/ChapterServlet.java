@@ -20,6 +20,8 @@ import truyen.dao.CommentDAO;
 import truyen.dao.FollowDAO;
 import truyen.dao.NotificationDAO;
 import truyen.dao.StoryDAO;
+import truyen.dao.UnlockDAO;
+import truyen.dao.WalletDAO;
 import truyen.model.Chapter;
 import truyen.model.Comment;
 import truyen.model.Story;
@@ -42,6 +44,8 @@ public class ChapterServlet extends HttpServlet {
     private NotificationDAO notificationDAO;
     private StoryDAO storyDAO;
     private BookmarkDAO bookmarkDAO;
+    private UnlockDAO unlockDAO;
+    private WalletDAO walletDAO;
 
     @Override
     public void init() throws ServletException {
@@ -51,6 +55,8 @@ public class ChapterServlet extends HttpServlet {
         notificationDAO = new NotificationDAO();
         storyDAO = new StoryDAO();
         bookmarkDAO = new BookmarkDAO();
+        unlockDAO = new UnlockDAO();
+        walletDAO = new WalletDAO();
     }
 
     @Override
@@ -91,6 +97,9 @@ public class ChapterServlet extends HttpServlet {
                     break;
                 case "delete":
                     url = delete(request, response);
+                    break;
+                case "unlock":
+                    url = unlock(request, response);
                     break;
                 case "raw":
                     // Tra ve TRAN, khong boc layout nao. raw() tu forward roi
@@ -145,6 +154,15 @@ public class ChapterServlet extends HttpServlet {
             throws SQLException, IOException {
 
         int id = parseIntOr(request.getParameter("id"), 0);
+        if (id <= 0) {
+            int storyId = parseIntOr(request.getParameter("storyId"), 0);
+            if (storyId > 0) {
+                response.sendRedirect(request.getContextPath() + "/story?action=detail&id=" + storyId);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/story");
+            }
+            return null;
+        }
         Chapter chapter = chapterDAO.findById(id);
         if (chapter == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -165,12 +183,31 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
-        /* Tự động ghi lại vị trí đọc cho người đã đăng nhập. */
-        if (me != null) {
-            try {
-                bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
-            } catch (SQLException e) {
-                log("Không lưu được vị trí đọc, userId=" + me.getId(), e);
+        // Hàng rào chương VIP (ISSUE-020)
+        boolean isLocked = false;
+        if (chapter.isVip()) {
+            if (me == null) {
+                isLocked = true;
+            } else if (canEdit(me, story) || "ADMIN".equals(me.getRole())) {
+                isLocked = false; // Tác giả và Admin đọc miễn phí
+            } else {
+                isLocked = !unlockDAO.hasUnlocked(me.getId(), chapter.getId());
+            }
+        }
+
+        if (isLocked) {
+            request.setAttribute("isLocked", true);
+            request.setAttribute("unlockPrice", chapter.getCoinPrice());
+            request.setAttribute("walletBalance", me != null ? walletDAO.getBalance(me.getId()) : 0);
+            chapter.setContent(""); // Triệt tiêu nội dung khỏi HTML ngăn ngừa lộ qua Ctrl+U
+        } else {
+            /* Tự động ghi lại vị trí đọc cho người đã đăng nhập (chỉ khi được đọc). */
+            if (me != null) {
+                try {
+                    bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
+                } catch (SQLException e) {
+                    log("Không lưu được vị trí đọc, userId=" + me.getId(), e);
+                }
             }
         }
 
@@ -189,6 +226,53 @@ public class ChapterServlet extends HttpServlet {
         request.setAttribute("pageTitle",
                 "Chương " + chapter.getChapterNo() + " — " + story.getTitle());
         return "/WEB-INF/views/common/chapter/read.jsp";
+    }
+
+    private String unlock(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        User me = ServletHelper.currentUser(request);
+        int chapterId = parseIntOr(request.getParameter("id"), 0);
+        if (chapterId <= 0) {
+            response.sendRedirect(request.getContextPath() + "/story");
+            return null;
+        }
+        Chapter chapter = chapterDAO.findById(chapterId);
+        if (chapter == null) {
+            response.sendRedirect(request.getContextPath() + "/story");
+            return null;
+        }
+
+        if (me == null) {
+            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            return null;
+        }
+
+        Story story = storyDAO.findById(chapter.getStoryId());
+        if (story == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return null;
+        }
+
+        // Tác giả hoặc admin hoặc chương không VIP thì không cần mở khoá
+        if (!chapter.isVip() || canEdit(me, story) || "ADMIN".equals(me.getRole())) {
+            response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
+            return null;
+        }
+
+        // Đã mở khoá trước đó rồi
+        if (unlockDAO.hasUnlocked(me.getId(), chapter.getId())) {
+            response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
+            return null;
+        }
+
+        boolean success = walletDAO.unlockChapter(me.getId(), chapter.getId(), story.getAuthorId(), story.getId(), chapter.getCoinPrice());
+        if (success) {
+            request.getSession().setAttribute("flash", "🎉 Mở khoá chương thành công! Chúc bạn đọc truyện vui vẻ.");
+        } else {
+            request.getSession().setAttribute("flashError", "Số dư xu của bạn không đủ để mở khoá chương này (cần " + chapter.getCoinPrice() + " xu). Hãy điểm danh nhận xu nhé!");
+        }
+        response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
+        return null;
     }
     /**
      * Tra ve CHI noi dung mot chuong, khong co khung trang.
@@ -236,11 +320,30 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
-        if (me != null) {
-            try {
-                bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
-            } catch (SQLException e) {
-                log("Khong luu duoc vi tri doc, userId=" + me.getId(), e);
+        // Hàng rào VIP đối với raw()
+        boolean isLocked = false;
+        if (chapter.isVip()) {
+            if (me == null) {
+                isLocked = true;
+            } else if (canEdit(me, story) || "ADMIN".equals(me.getRole())) {
+                isLocked = false;
+            } else {
+                isLocked = !unlockDAO.hasUnlocked(me.getId(), chapter.getId());
+            }
+        }
+
+        if (isLocked) {
+            request.setAttribute("isLocked", true);
+            request.setAttribute("unlockPrice", chapter.getCoinPrice());
+            request.setAttribute("walletBalance", me != null ? walletDAO.getBalance(me.getId()) : 0);
+            chapter.setContent("");
+        } else {
+            if (me != null) {
+                try {
+                    bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
+                } catch (SQLException e) {
+                    log("Khong luu duoc vi tri doc, userId=" + me.getId(), e);
+                }
             }
         }
 
@@ -293,6 +396,11 @@ public class ChapterServlet extends HttpServlet {
         request.setAttribute("story", story);
         request.setAttribute("chapters", chapterDAO.findByStory(storyId));
 
+        if (me != null) {
+            List<Integer> unlockedIds = unlockDAO.findUnlockedChapterIds(me.getId(), storyId);
+            request.setAttribute("unlockedChapterIds", unlockedIds);
+        }
+
         // id chuong DANG doc, de to dam dung dong trong danh sach
         request.setAttribute("currentId", parseIntOr(request.getParameter("current"), 0));
 
@@ -315,7 +423,7 @@ public class ChapterServlet extends HttpServlet {
         if (isCreate) {
             story = storyDAO.findById(parseIntOr(request.getParameter("storyId"), 0));
             if (story == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                response.sendRedirect(request.getContextPath() + "/story?action=mine");
                 return null;
             }
             chapter = new Chapter();
@@ -324,10 +432,14 @@ public class ChapterServlet extends HttpServlet {
         } else {
             chapter = chapterDAO.findById(parseIntOr(request.getParameter("id"), 0));
             if (chapter == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                response.sendRedirect(request.getContextPath() + "/story?action=mine");
                 return null;
             }
             story = storyDAO.findById(chapter.getStoryId());
+            if (story == null) {
+                response.sendRedirect(request.getContextPath() + "/story?action=mine");
+                return null;
+            }
         }
 
         // Quyền sở hữu: chỉ tác giả truyện (hoặc admin) mới thêm/sửa chương
@@ -349,9 +461,20 @@ public class ChapterServlet extends HttpServlet {
         String content = request.getParameter("content");
         int chapterNo = parseIntOr(request.getParameter("chapterNo"), chapter.getChapterNo());
 
+        boolean isVip = "1".equals(request.getParameter("isVip")) || "true".equalsIgnoreCase(request.getParameter("isVip")) || "on".equalsIgnoreCase(request.getParameter("isVip"));
+        int coinPrice = parseIntOr(request.getParameter("coinPrice"), 0);
+        if (!isVip || coinPrice < 0) {
+            coinPrice = 0;
+            isVip = false;
+        } else if (coinPrice > 10000) {
+            coinPrice = 10000;
+        }
+
         chapter.setTitle(title);
         chapter.setContent(content == null ? "" : content);
         chapter.setChapterNo(chapterNo);
+        chapter.setVip(isVip);
+        chapter.setCoinPrice(coinPrice);
 
         String error = null;
         if (title.isEmpty() || chapter.getContent().trim().isEmpty()) {

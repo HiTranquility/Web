@@ -33,6 +33,11 @@
                        href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${ch.id}">
                         <span class="chapter-no">Chương ${ch.chapterNo}</span>
                         <span class="chapter-title"><c:out value="${ch.title}"/></span>
+                        <c:if test="${ch.vip}">
+                            <span class="badge-vip">
+                                🔒 VIP <c:out value="${ch.coinPrice}"/> xu
+                            </span>
+                        </c:if>
                     </a>
 
                     <c:if test="${clCanEdit}">

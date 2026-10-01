@@ -57,6 +57,7 @@ public class StoryServlet extends HttpServlet {
     private ChapterDAO chapterDAO;
     private CommentDAO commentDAO;
     private BookmarkDAO bookmarkDAO;
+    private truyen.dao.ReviewDAO reviewDAO;
 
     /** Số truyện mỗi trang. Đọc từ context-param nên đổi được mà khỏi biên dịch lại. */
     private int pageSize = 24;
@@ -79,6 +80,7 @@ public class StoryServlet extends HttpServlet {
         chapterDAO = new ChapterDAO();
         commentDAO = new CommentDAO();
         bookmarkDAO = new BookmarkDAO();
+        reviewDAO = new truyen.dao.ReviewDAO();
 
         String cfg = getServletContext().getInitParameter("pageSize");
         if (cfg != null) {
@@ -214,6 +216,10 @@ public class StoryServlet extends HttpServlet {
             throws SQLException, IOException {
 
         int id = parseIntOr(request.getParameter("id"), 0);
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/story");
+            return null;
+        }
         Story story = storyDAO.findById(id);
 
         if (story == null) {
@@ -337,6 +343,17 @@ public class StoryServlet extends HttpServlet {
             request.setAttribute("alsoRead", storyDAO.findAlsoRead(id, 4));
         } catch (SQLException e) {
             log("Không lấy được gợi ý đồng độc giả cho truyện " + id, e);
+        }
+
+        // Đánh giá chi tiết (ISSUE-022)
+        try {
+            int currentUserId = me != null ? me.getId() : 0;
+            request.setAttribute("reviews", reviewDAO.findByStory(id, currentUserId));
+            if (me != null) {
+                request.setAttribute("myReview", reviewDAO.findByUserAndStory(me.getId(), id));
+            }
+        } catch (SQLException e) {
+            log("Không lấy được bài đánh giá cho truyện " + id, e);
         }
 
         request.setAttribute("googleClientId", GoogleConfig.getClientId());
@@ -502,7 +519,7 @@ public class StoryServlet extends HttpServlet {
         } else {
             story = storyDAO.findById(parseIntOr(request.getParameter("id"), 0));
             if (story == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                response.sendRedirect(request.getContextPath() + "/story?action=mine");
                 return null;
             }
             /*

@@ -267,6 +267,8 @@
 <div class="tab-bar" id="story-tabs">
     <a class="tab-btn is-on" href="#muc-luc" data-panel="panel-chapters">
         Mục lục <span class="tab-count">${chapterTotal}</span></a>
+    <a class="tab-btn" href="#reviews" data-panel="panel-reviews">
+        Đánh giá <span class="tab-count">${fn:length(reviews)}</span></a>
     <a class="tab-btn" href="#comments" data-panel="panel-comments">
         Bình luận <span class="tab-count">${nCmtTotal}</span></a>
 </div>
@@ -346,6 +348,92 @@
 <c:set var="pgHash"  value="#muc-luc" scope="request"/>
 <%@ include file="/WEB-INF/views/_partials/_pagination.jsp" %>
 
+</section>
+
+<section id="panel-reviews" class="tab-panel">
+    <%-- ---- Đánh giá chi tiết (ISSUE-022) ---- --%>
+    <div class="section-head" id="reviews" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Đánh giá từ độc giả (${fn:length(reviews)})</h2>
+        <c:if test="${not empty currentUser and currentUser.id ne story.authorId}">
+            <button type="button" class="btn btn-primary btn-sm" onclick="var f = document.getElementById('review-form-wrapper'); f.style.display = (f.style.display === 'none' ? 'block' : 'none'); if (f.style.display === 'block') f.scrollIntoView({behavior:'smooth'});">
+                ✍️ ${empty myReview ? 'Viết đánh giá' : 'Sửa đánh giá của bạn'}
+            </button>
+        </c:if>
+    </div>
+
+    <%-- Form soạn bài đánh giá --%>
+    <c:if test="${not empty currentUser and currentUser.id ne story.authorId}">
+        <div id="review-form-wrapper" class="review-compose-card" style="display:${empty myReview ? 'none' : 'block'}; margin-bottom:24px; padding:18px 20px; border:1px solid var(--border); border-radius:10px; background:var(--card-bg, rgba(255,255,255,0.02)); box-shadow:0 4px 16px rgba(0,0,0,0.1);">
+            <h3 style="margin-top:0; font-size:1.15rem; color:var(--text);">
+                ${empty myReview ? '✍️ Viết cảm nhận cho tác phẩm' : '✏️ Chỉnh sửa bài đánh giá của bạn'}
+            </h3>
+            <form action="${pageContext.request.contextPath}/rating" method="post">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
+                <input type="hidden" name="action" value="review">
+                <input type="hidden" name="storyId" value="${story.id}">
+
+                <div style="margin-bottom:14px; display:flex; align-items:center; gap:12px;">
+                    <label style="margin:0; font-weight:600">Đánh giá sao:</label>
+                    <select name="score" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:600;">
+                        <option value="5" ${myRating eq 5 or (empty myRating and empty myReview) ? 'selected' : ''}>★★★★★ (5/5 sao - Tuyệt tác)</option>
+                        <option value="4" ${myRating eq 4 ? 'selected' : ''}>★★★★☆ (4/5 sao - Rất hay)</option>
+                        <option value="3" ${myRating eq 3 ? 'selected' : ''}>★★★☆☆ (3/5 sao - Khá ổn)</option>
+                        <option value="2" ${myRating eq 2 ? 'selected' : ''}>★★☆☆☆ (2/5 sao - Tạm được)</option>
+                        <option value="1" ${myRating eq 1 ? 'selected' : ''}>★☆☆☆☆ (1/5 sao - Cần cải thiện)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <label for="revTitle" style="display:block; margin-bottom:6px; font-weight:600">Tiêu đề bài viết *</label>
+                    <input type="text" id="revTitle" name="title" maxlength="150" required
+                           class="input" style="width:100%; box-sizing:border-box; padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text);"
+                           placeholder="Ví dụ: Cốt truyện sâu sắc, xây dựng tâm lý nhân vật tuyệt vời..."
+                           value="<c:out value='${myReview.title}'/>">
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <label for="revContent" style="display:block; margin-bottom:6px; font-weight:600">Nội dung cảm nhận chi tiết *</label>
+                    <textarea id="revContent" name="content" rows="4" maxlength="4000" required
+                              class="input" style="width:100%; box-sizing:border-box; padding:10px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); line-height:1.6;"
+                              placeholder="Hãy chia sẻ lý do bạn thích hoặc chưa thích, các điểm nhấn của truyện..."><c:out value="${myReview.content}"/></textarea>
+                </div>
+
+                <div style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="hasSpoiler" name="hasSpoiler" value="1" ${myReview.hasSpoiler ? 'checked' : ''} style="width:16px; height:16px;">
+                    <label for="hasSpoiler" style="margin:0; cursor:pointer; font-weight:500;">
+                        ⚠️ Bài đánh giá này có chứa tiết lộ nội dung (Spoiler)
+                    </label>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        ${empty myReview ? 'Đăng bài đánh giá' : 'Cập nhật bài đánh giá'}
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('review-form-wrapper').style.display='none';">
+                        Đóng lại
+                    </button>
+                </div>
+            </form>
+        </div>
+    </c:if>
+
+    <%-- Danh sách bài đánh giá --%>
+    <div class="reviews-container">
+        <c:choose>
+            <c:when test="${not empty reviews}">
+                <c:forEach var="r" items="${reviews}">
+                    <%@ include file="/WEB-INF/views/_partials/_review.jsp" %>
+                </c:forEach>
+            </c:when>
+            <c:otherwise>
+                <div class="empty-state text-center" style="padding:36px 12px; border:1px dashed var(--border); border-radius:10px; margin:16px 0;">
+                    <span style="font-size:2.2rem; display:block; margin-bottom:10px">⭐</span>
+                    <p style="margin:0 0 6px 0; font-weight:600; font-size:1.05rem">Chưa có bài đánh giá chi tiết nào</p>
+                    <p class="muted small" style="margin:0">Hãy chia sẻ góc nhìn và cảm nhận của bạn để cộng đồng cùng thảo luận!</p>
+                </div>
+            </c:otherwise>
+        </c:choose>
+    </div>
 </section>
 
 <section id="panel-comments" class="tab-panel">
@@ -527,7 +615,13 @@
     });
 
     function theoNeo() {
-        chon(location.hash === '#comments' ? 'panel-comments' : 'panel-chapters');
+        if (location.hash === '#reviews') {
+            chon('panel-reviews');
+        } else if (location.hash === '#comments') {
+            chon('panel-comments');
+        } else {
+            chon('panel-chapters');
+        }
     }
 
     /*

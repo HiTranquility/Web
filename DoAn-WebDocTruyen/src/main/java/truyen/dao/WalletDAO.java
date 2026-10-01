@@ -108,6 +108,87 @@ public class WalletDAO {
     }
 
     /**
+     * Mở khoá chương VIP bằng xu ảo (ISSUE-020).
+     * Atomic transaction:
+     * 1. Trừ xu người đọc (nếu balance >= price).
+     * 2. Cộng xu tác giả.
+     * 3. Ghi vào chapter_unlocks.
+     * 4. Ghi vào transactions với type/message mở khoá chương.
+     */
+    public boolean unlockChapter(int readerId, int chapterId, int authorId, int storyId, int price)
+            throws SQLException {
+        if (price <= 0 || readerId <= 0 || chapterId <= 0) return false;
+        if (!DBConnection.isReady()) return true;
+
+        String deductSql = "UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND balance >= ?";
+        String addSql = "INSERT INTO wallets (user_id, balance) VALUES (?, ?) "
+                      + "ON DUPLICATE KEY UPDATE balance = balance + ?";
+        String unlockSql = "INSERT INTO chapter_unlocks (user_id, chapter_id, price_paid) VALUES (?, ?, ?)";
+        String logSql = "INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message) "
+                      + "VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection con = DBConnection.get()) {
+            con.setAutoCommit(false);
+            try {
+                // Đảm bảo ví người đọc tồn tại
+                getBalance(readerId);
+
+                // 1. Trừ tiền người đọc
+                try (PreparedStatement ps = con.prepareStatement(deductSql)) {
+                    ps.setInt(1, price);
+                    ps.setInt(2, readerId);
+                    ps.setInt(3, price);
+                    int affected = ps.executeUpdate();
+                    if (affected == 0) {
+                        con.rollback();
+                        return false; // Không đủ số dư
+                    }
+                }
+
+                // 2. Cộng tiền tác giả (nếu khác tác giả)
+                if (authorId > 0 && authorId != readerId) {
+                    try (PreparedStatement ps = con.prepareStatement(addSql)) {
+                        ps.setInt(1, authorId);
+                        ps.setInt(2, price);
+                        ps.setInt(3, price);
+                        ps.executeUpdate();
+                    }
+                }
+
+                // 3. Ghi vé mở khoá
+                try (PreparedStatement ps = con.prepareStatement(unlockSql)) {
+                    ps.setInt(1, readerId);
+                    ps.setInt(2, chapterId);
+                    ps.setInt(3, price);
+                    ps.executeUpdate();
+                }
+
+                // 4. Ghi log giao dịch
+                try (PreparedStatement ps = con.prepareStatement(logSql)) {
+                    ps.setInt(1, readerId);
+                    ps.setInt(2, authorId > 0 ? authorId : readerId);
+                    if (storyId > 0) {
+                        ps.setInt(3, storyId);
+                    } else {
+                        ps.setNull(3, Types.INTEGER);
+                    }
+                    ps.setInt(4, price);
+                    ps.setString(5, "Mở khoá chương #" + chapterId);
+                    ps.executeUpdate();
+                }
+
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
      * Tìm thông tin ví xu theo userId.
      */
     public truyen.model.Wallet findByUserId(int userId) throws SQLException {

@@ -36,18 +36,22 @@
         Chương ${chapter.chapterNo} &middot; <c:out value="${story.title}"/>
     </p>
 
-    <div class="chapter-content">
-        <%--
-          Mỗi đoạn văn một thẻ <p>.
-
-          chapter.formattedParagraphs do model cắt và định dạng an toàn:
-          escape toàn bộ ký tự nguy hiểm chống XSS, đồng thời hỗ trợ cú pháp
-          in đậm, in nghiêng, gạch ngang, khối trích dẫn, lời tác giả và hoa thị phân đoạn.
-        --%>
-        <c:forEach var="para" items="${chapter.paragraphs}">
-            <p><c:out value="${para}"/></p>
-        </c:forEach>
-    </div>
+    <c:choose>
+        <c:when test="${isLocked}">
+            <%@ include file="/WEB-INF/views/common/chapter/_locked.jsp" %>
+        </c:when>
+        <c:otherwise>
+            <div class="chapter-content">
+                <%--
+                  Mỗi đoạn văn một thẻ <p>.
+                  chapter.formattedParagraphs do model cắt và định dạng an toàn.
+                --%>
+                <c:forEach var="para" items="${chapter.paragraphs}">
+                    <p><c:out value="${para}"/></p>
+                </c:forEach>
+            </div>
+        </c:otherwise>
+    </c:choose>
 
     <%--
       Mốc để JavaScript biết "sắp đọc hết chương này".
