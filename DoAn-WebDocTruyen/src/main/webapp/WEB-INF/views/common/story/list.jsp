@@ -55,11 +55,11 @@
     <div class="filter-bar" style="margin-top:-4px">
         <div class="filter-group">
             <span class="filter-label">Tìm theo</span>
-            <a class="chip is-on"
-               href="${pageContext.request.contextPath}/story?action=list&amp;q=${keyword}">
+            <a class="chip ${empty searchIn or searchIn eq 'title' ? 'is-on' : ''}"
+            href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepProg}${keepSort}&amp;q=${keyword}">
                 Tên truyện / tác giả</a>
-            <a class="chip"
-               href="${pageContext.request.contextPath}/story?action=search&amp;q=${keyword}">
+            <a class="chip ${searchIn eq 'content' ? 'is-on' : ''}"
+            href="${pageContext.request.contextPath}/story?action=search${keepTag}${keepProg}${keepSort}&amp;q=${keyword}">
                 🔎 Nội dung chương</a>
         </div>
     </div>
@@ -158,8 +158,12 @@
                 <span class="chip-x">×</span></a>
         </c:if>
 
-        <a class="link-clear-all"
-           href="${pageContext.request.contextPath}/story?action=list">Xoá tất cả</a>
+        <div class="active-filters">
+            <span class="filter-label">Đang lọc</span>
+            <%-- các chip --%>
+            <a class="link-clear-all" style="margin-left:auto"
+            href="${pageContext.request.contextPath}/story?action=list">Xoá tất cả</a>
+        </div>
     </div>
 </c:if>
 
