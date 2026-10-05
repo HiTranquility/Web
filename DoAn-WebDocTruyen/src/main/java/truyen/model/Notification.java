@@ -44,6 +44,7 @@ public class Notification implements Serializable {
     /** Biểu tượng theo loại — để JSP không phải viết chuỗi if. */
     public String getIcon() {
         if ("NEW_CHAPTER".equals(type)) return "📖";
+        if ("UPDATE_CHAPTER".equals(type)) return "📝";
         if (message != null && (message.contains("bình luận") || message.contains("trả lời"))) return "💬";
         return "🔔";
     }

@@ -2,9 +2,13 @@ package truyen.controller.common;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -21,6 +25,7 @@ import truyen.dao.RatingDAO;
 import truyen.dao.TagDAO;
 import truyen.util.AppListener;
 import truyen.model.Story;
+import truyen.model.Tag;
 import truyen.model.User;
 import truyen.util.DBConnection;
 import truyen.util.GoogleConfig;
@@ -632,7 +637,26 @@ public class StoryServlet extends HttpServlet {
                               boolean isCreate, String message) {
         request.setAttribute("message", message);
         request.setAttribute("story", story);
-        request.setAttribute("allTags", AppListener.tags(getServletContext()));
+        List<Tag> allTags = AppListener.tags(getServletContext());
+        request.setAttribute("allTags", allTags);
+
+        String[] tagIds = request.getParameterValues("tagIds");
+        List<Tag> selected = new ArrayList<>();
+        if (tagIds != null && tagIds.length > 0) {
+            Set<String> idSet = new HashSet<>(Arrays.asList(tagIds));
+            if (allTags != null) {
+                for (Tag t : allTags) {
+                    if (idSet.contains(String.valueOf(t.getId()))) {
+                        selected.add(t);
+                    }
+                }
+            }
+        } else if (!isCreate && story.getId() > 0) {
+            try {
+                selected = tagDAO.findByStory(story.getId());
+            } catch (SQLException ignored) {}
+        }
+        request.setAttribute("selectedTags", selected);
         request.setAttribute("pageTitle", isCreate ? "Đăng truyện mới" : "Sửa truyện");
         return "/WEB-INF/views/user/story/form.jsp";
     }

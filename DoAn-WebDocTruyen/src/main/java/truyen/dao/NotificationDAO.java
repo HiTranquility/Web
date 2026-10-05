@@ -99,13 +99,13 @@ public class NotificationDAO {
 
     /** Gửi CÙNG MỘT thông báo cho nhiều người — tác giả đăng chương mới. */
     public void notifyFollowers(List<Integer> userIds, int storyId, int chapterId,
-                                String message) throws SQLException {
+                                String type, String message) throws SQLException {
         if (userIds == null || userIds.isEmpty()) return;
         if (!DBConnection.isReady()) return;
 
         String sql = "INSERT INTO notifications "
                    + "(user_id, story_id, chapter_id, type, message) "
-                   + "VALUES (?, ?, ?, 'NEW_CHAPTER', ?)";
+                   + "VALUES (?, ?, ?, ?, ?)";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             for (Integer uid : userIds) {
@@ -116,11 +116,17 @@ public class NotificationDAO {
                 if (chapterId > 0) ps.setInt(3, chapterId);
                 else ps.setNull(3, java.sql.Types.INTEGER);
 
-                ps.setString(4, message);
+                ps.setString(4, type != null ? type : "NEW_CHAPTER");
+                ps.setString(5, message);
                 ps.addBatch();
             }
             ps.executeBatch();
         }
+    }
+
+    public void notifyFollowers(List<Integer> userIds, int storyId, int chapterId,
+                                String message) throws SQLException {
+        notifyFollowers(userIds, storyId, chapterId, "NEW_CHAPTER", message);
     }
 
     private Notification mapRow(ResultSet rs) throws SQLException {

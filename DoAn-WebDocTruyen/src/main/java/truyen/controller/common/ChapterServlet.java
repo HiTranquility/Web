@@ -516,14 +516,18 @@ public class ChapterServlet extends HttpServlet {
             return "/WEB-INF/views/user/chapter/form.jsp";
         }
 
+        boolean notifyUpdate = "1".equals(request.getParameter("notifyFollowers"))
+                || "true".equalsIgnoreCase(request.getParameter("notifyFollowers"))
+                || "on".equalsIgnoreCase(request.getParameter("notifyFollowers"));
+
         if (isCreate) {
             chapterDAO.insert(chapter);
-            notifyFollowers(story, chapter);
+            notifyFollowers(story, chapter, false);
         } else {
             chapterDAO.update(chapter);
-            // Sửa chương KHÔNG gửi thông báo. Tác giả sửa lỗi chính tả ba lần
-            // mà người theo dõi nhận ba thông báo "có chương mới" là cách
-            // nhanh nhất khiến họ tắt thông báo vĩnh viễn.
+            if (notifyUpdate) {
+                notifyFollowers(story, chapter, true);
+            }
         }
 
         response.sendRedirect(request.getContextPath()
@@ -562,8 +566,8 @@ public class ChapterServlet extends HttpServlet {
                 && (user.getId() == story.getAuthorId() || user.isAdmin());
     }
 
-    /** Báo cho những người đang theo dõi tác giả và những người đã lưu truyện rằng có chương mới. */
-    private void notifyFollowers(Story story, Chapter chapter) {
+    /** Báo cho những người đang theo dõi tác giả và những người đã lưu truyện rằng có chương mới hoặc có cập nhật nội dung. */
+    private void notifyFollowers(Story story, Chapter chapter, boolean isUpdate) {
         try {
             java.util.Set<Integer> recipients = new java.util.LinkedHashSet<>();
             recipients.addAll(followDAO.findFollowerIds(story.getAuthorId()));
@@ -573,12 +577,14 @@ public class ChapterServlet extends HttpServlet {
             if (recipients.isEmpty()) {
                 return;   // không ai theo dõi hoặc lưu thì thôi
             }
-            String message = story.getAuthorName() + " vừa đăng chương "
+            String type = isUpdate ? "UPDATE_CHAPTER" : "NEW_CHAPTER";
+            String action = isUpdate ? " vừa cập nhật nội dung chương " : " vừa đăng chương ";
+            String message = story.getAuthorName() + action
                            + chapter.getChapterNo() + " của \"" + story.getTitle() + "\"";
             notificationDAO.notifyFollowers(new java.util.ArrayList<>(recipients), story.getId(),
-                                            chapter.getId(), message);
+                                            chapter.getId(), type, message);
         } catch (SQLException e) {
-            log("Không gửi được thông báo chương mới cho truyện " + story.getId(), e);
+            log("Không gửi được thông báo chương cho truyện " + story.getId(), e);
         }
     }
 }

@@ -59,6 +59,19 @@
         </div>
     </div>
 
+    <%-- TÙY CHỌN BẮN THÔNG BÁO CHO ĐỘC GIẢ KHI SỬA CHƯƠNG --%>
+    <c:if test="${not empty chapter.id and chapter.id ne 0}">
+        <div class="vip-setting-card" style="margin-top:10px; background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.2);">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; margin-bottom:0">
+                <input type="checkbox" id="notifyFollowers" name="notifyFollowers" value="1">
+                <span>📢 Gửi thông báo cập nhật chương tới những người theo dõi bộ truyện</span>
+            </label>
+            <p class="field-hint" style="margin:4px 0 0 24px; font-size:0.82rem; color:var(--text-mut);">
+                Bật tùy chọn này nếu bạn vừa viết thêm nội dung, chỉnh sửa tình tiết quan trọng và muốn báo cho độc giả đã lưu/theo dõi.
+            </p>
+        </div>
+    </c:if>
+
     <div style="margin-bottom: 6px; display:flex; justify-content:space-between; align-items:baseline;">
         <label for="content" style="margin-bottom:0">Nội dung chương *</label>
         <small style="color:var(--text-mut);">Phím tắt: <strong>Ctrl+B</strong> (Đậm), <strong>Ctrl+I</strong> (Nghiêng), <strong>Ctrl+S</strong> (Lưu nhanh)</small>

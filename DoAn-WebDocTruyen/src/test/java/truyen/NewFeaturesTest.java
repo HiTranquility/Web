@@ -73,4 +73,32 @@ class NewFeaturesTest {
         assertTrue(quests.stream().anyMatch(q -> "READ_CHAPTER".equals(q.getKey())));
         assertTrue(quests.stream().anyMatch(q -> "COMMENT_REVIEW".equals(q.getKey())));
     }
+
+    @Test
+    @DisplayName("Ca 6: Notification icon phân biệt chính xác chương mới và cập nhật chương")
+    void testNotificationIcons() {
+        truyen.model.Notification n1 = new truyen.model.Notification();
+        n1.setType("NEW_CHAPTER");
+        assertEquals("📖", n1.getIcon());
+
+        truyen.model.Notification n2 = new truyen.model.Notification();
+        n2.setType("UPDATE_CHAPTER");
+        assertEquals("📝", n2.getIcon());
+
+        truyen.model.Notification n3 = new truyen.model.Notification();
+        n3.setMessage("Ai đó đã trả lời bình luận của bạn");
+        assertEquals("💬", n3.getIcon());
+
+        truyen.model.Notification n4 = new truyen.model.Notification();
+        n4.setType("SYSTEM");
+        assertEquals("🔔", n4.getIcon());
+    }
+
+    @Test
+    @DisplayName("Ca 7: NotificationDAO.notifyFollowers chạy an toàn khi danh sách rỗng hoặc DB demo")
+    void testNotifyFollowersSafe() {
+        truyen.dao.NotificationDAO dao = new truyen.dao.NotificationDAO();
+        assertDoesNotThrow(() -> dao.notifyFollowers(null, 1, 1, "test"));
+        assertDoesNotThrow(() -> dao.notifyFollowers(java.util.Collections.emptyList(), 1, 1, "UPDATE_CHAPTER", "test"));
+    }
 }
