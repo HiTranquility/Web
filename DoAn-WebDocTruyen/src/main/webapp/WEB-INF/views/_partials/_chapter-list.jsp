@@ -30,8 +30,11 @@
             <c:forEach var="ch" items="${clChapters}">
                 <div class="chapter-item">
                     <a class="chapter-link"
-                       href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${ch.id}">
-                        <span class="chapter-no">Chương ${ch.chapterNo}</span>
+                       href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${ch.id}"
+                       <c:if test="${empty currentUser}">title="Cần đăng nhập để đọc chương này"</c:if>>
+                        <span class="chapter-no">
+                            <c:if test="${empty currentUser}"><span style="opacity: 0.7; margin-right: 3px;" title="Cần đăng nhập">🔒</span></c:if>Chương ${ch.chapterNo}
+                        </span>
                         <span class="chapter-title"><c:out value="${ch.title}"/></span>
                         <c:if test="${ch.vip}">
                             <span class="badge-vip">

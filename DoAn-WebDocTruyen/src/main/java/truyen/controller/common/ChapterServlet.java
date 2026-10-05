@@ -8,6 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import truyen.util.DBConnection;
 import truyen.util.ServletHelper;
@@ -177,6 +178,19 @@ public class ChapterServlet extends HttpServlet {
 
         User me = ServletHelper.currentUser(request);
 
+        // Nghiệp vụ: Phải đăng nhập mới được đọc truyện
+        if (me == null) {
+            String target = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                target += "?" + request.getQueryString();
+            }
+            HttpSession session = request.getSession(true);
+            session.setAttribute("redirectAfterLogin", target);
+            session.setAttribute("flash", "Vui lòng đăng nhập tài khoản để đọc truyện nhé!");
+            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            return null;
+        }
+
         // Chương của truyện NHÁP chỉ tác giả và admin được đọc.
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -315,6 +329,10 @@ public class ChapterServlet extends HttpServlet {
         // Kiem lai o day chu khong tin rang JS chi goi nhung id hop le —
         // duong dan nay go thang vao thanh dia chi cung goi duoc.
         User me = ServletHelper.currentUser(request);
+        if (me == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Vui lòng đăng nhập để đọc tiếp");
+            return null;
+        }
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
@@ -388,6 +406,10 @@ public class ChapterServlet extends HttpServlet {
         // Truyen nhap: chi tac gia va admin. Kiem lai y het raw() — duong dan
         // nay go thang vao thanh dia chi cung goi duoc.
         User me = ServletHelper.currentUser(request);
+        if (me == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Vui lòng đăng nhập");
+            return null;
+        }
         if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;

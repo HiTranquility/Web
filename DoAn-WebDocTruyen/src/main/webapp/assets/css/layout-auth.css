@@ -6,56 +6,88 @@
    thanh menu và lưới truyện mà nó chẳng dùng tới.
    ========================================================================= */
 
-/* Căn giữa theo cả hai chiều — đây là khác biệt lớn nhất so với layout main,
-   vốn là một cột rộng căn trên. */
+/* Căn giữa theo cả hai chiều — giao diện hiện đại với hiệu ứng ánh sáng nền */
 .auth-body {
     display: grid;
     place-items: center;
     min-height: 100vh;
-    padding: 24px;
+    padding: 32px 20px;
+    background: var(--ink-950);
+    background-image:
+        radial-gradient(800px 450px at 50% 30%, rgba(255, 122, 26, 0.12), transparent 70%),
+        radial-gradient(600px 350px at 50% 85%, rgba(139, 92, 246, 0.08), transparent 70%);
 }
 
-.auth-wrap { width: 100%; max-width: 400px; }
+.auth-wrap {
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 10;
+}
 
 .auth-brand {
     display: flex; justify-content: center;
-    margin-bottom: 22px;
-    font-size: 1.25rem;
+    margin-bottom: 24px;
+    font-size: 1.35rem;
 }
 
 .auth-card {
-    background: var(--ink-850);
-    border: 1px solid var(--ink-700);
+    background: var(--glass-card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-radius: var(--r-xl);
-    padding: 30px 28px;
-    box-shadow: var(--shadow-lg);
+    padding: 36px 32px;
+    box-shadow: var(--shadow-lg), 0 0 35px -5px rgba(0, 0, 0, 0.5);
+    transition: border-color .28s var(--ease), box-shadow .28s var(--ease);
 }
-.auth-card h1 { font-size: 1.35rem; margin-bottom: 6px; }
-.auth-card > p { color: var(--text-dim); font-size: .92rem; margin-bottom: 20px; }
+.auth-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+html[data-site-theme="light"] .auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.1);
+}
 
-/* Ô nhập chiếm hết bề ngang — form dọc thì rộng bằng nhau mới gọn */
+.auth-card h1 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+.auth-card > p {
+    color: var(--text-dim);
+    font-size: .92rem;
+    margin-bottom: 24px;
+}
+
+/* Ô nhập chiếm hết bề ngang — bo tròn và focus glow */
 .auth-card label {
     display: block; width: auto;
-    font-size: .85rem; color: var(--text-dim);
-    margin-bottom: 5px;
+    font-size: .84rem; font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
 }
 .auth-card input[type=text],
 .auth-card input[type=email],
 .auth-card input[type=password] {
     width: 100%; min-width: 0;
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     background: var(--ink-900);
     color: var(--text);
-    border: 1px solid var(--ink-600);
-    padding: 10px 12px;
+    border: 1px solid var(--ink-700);
+    padding: 11px 16px;
     border-radius: var(--r-sm);
     font-family: inherit;
     font-size: .92rem;
-    transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+    transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
 }
 .auth-card input:focus {
     border-color: var(--ember);
-    box-shadow: 0 0 0 3px rgba(240, 134, 58, 0.18);
+    background: var(--ink-950);
+    box-shadow: 0 0 0 3px var(--ember-ghost), 0 4px 12px rgba(0, 0, 0, 0.2);
     outline: none;
 }
 

@@ -129,6 +129,16 @@ public class AuthServlet extends HttpServlet {
 
         // GET = chỉ hiện form, chưa có gì để xử lý
         if (!"POST".equals(request.getMethod())) {
+            String redirect = request.getParameter("redirect");
+            if (redirect != null && redirect.startsWith("/") && !redirect.startsWith("//")) {
+                request.getSession(true).setAttribute("redirectAfterLogin", redirect);
+            }
+            String reason = request.getParameter("reason");
+            if ("bookmark".equals(reason)) {
+                request.getSession(true).setAttribute("flash", "Vui lòng đăng nhập để lưu truyện vào tủ sách nhé!");
+            } else if ("follow".equals(reason)) {
+                request.getSession(true).setAttribute("flash", "Vui lòng đăng nhập để theo dõi tác giả nhé!");
+            }
             return "/WEB-INF/views/auth/login.jsp";
         }
 

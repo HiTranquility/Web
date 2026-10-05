@@ -1,76 +1,138 @@
 /* ============================================================================
-   NÚT BẤM
+   NÚT BẤM (BUTTONS) — Tactile & Glowing Micro-interactions
    ========================================================================= */
 .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 18px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px;
     border: 1px solid transparent;
-    border-radius: var(--r-sm);
-    font-family: inherit; font-size: .9rem; font-weight: 600;
+    border-radius: var(--r-pill);
+    font-family: inherit; font-size: .88rem; font-weight: 700;
+    letter-spacing: .01em;
     cursor: pointer;
-    transition: transform .16s var(--ease), box-shadow .16s var(--ease),
-                background .16s var(--ease), border-color .16s var(--ease);
+    text-decoration: none;
+    line-height: 1.25;
+    transition: transform .2s var(--ease), box-shadow .2s var(--ease),
+                background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--ember-lit), var(--ember));
-    color: #1a0f06;
-    box-shadow: 0 3px 14px rgba(240,134,58,.32);
+    background: var(--ember-grad);
+    color: #0a0d14 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px var(--ember-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
-.btn-primary:hover  { transform: translateY(-1px);
-                      box-shadow: 0 7px 22px rgba(240,134,58,.45); }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--ember-glow), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    color: #0a0d14 !important;
+}
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px var(--ember-glow);
+}
 
 .btn-ghost {
-    background: transparent; color: var(--text-dim);
-    border-color: var(--ink-600);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    border: 1px solid var(--ink-700);
+    backdrop-filter: blur(8px);
 }
-.btn-ghost:hover { color: var(--text); border-color: var(--ink-600);
-                   background: var(--ink-800); }
+.btn-ghost:hover {
+    color: #ffffff;
+    border-color: var(--ink-600);
+    background: var(--ink-800);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+html[data-site-theme="light"] .btn-ghost {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+html[data-site-theme="light"] .btn-ghost:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
 
-.btn-sm { padding: 6px 13px; font-size: .84rem; }
-.btn-icon { padding: 6px 10px; min-width: 36px; justify-content: center; }
+.btn-sm { padding: 7px 15px; font-size: .82rem; }
+.btn-icon { padding: 8px 12px; min-width: 38px; justify-content: center; }
 
 
 /* ============================================================================
-   TAG — dùng ở nhiều nơi
+   TAG / THỂ LOẠI (TAGS & PILLS)
    ========================================================================= */
 .tag {
-    display: inline-block;
-    padding: 4px 11px;
-    border-radius: 99px;
-    background: var(--ink-800);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: var(--r-pill);
+    background: var(--ink-850);
     border: 1px solid var(--ink-700);
     color: var(--text-dim);
-    font-size: .77rem; font-weight: 500;
-    transition: all .16s var(--ease);
+    font-size: .78rem; font-weight: 600;
+    text-decoration: none;
+    transition: all .2s var(--ease);
 }
-a.tag:hover { color: var(--ember); border-color: var(--ember);
-              background: var(--ember-ghost); }
-.tag.is-on  { background: var(--ember); border-color: var(--ember);
-              color: #1a0f06; font-weight: 600; }
+a.tag:hover {
+    color: var(--text);
+    border-color: var(--ember-border);
+    background: var(--ink-800);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.tag.is-on {
+    background: var(--ember-grad);
+    border-color: transparent;
+    color: #0a0d14 !important;
+    font-weight: 700;
+    box-shadow: 0 3px 12px var(--ember-glow);
+}
+html[data-site-theme="light"] .tag {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #475569;
+}
+html[data-site-theme="light"] a.tag:hover {
+    background: #ffffff;
+    border-color: var(--ember);
+    color: var(--ember-deep);
+}
 
 .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
 
 /* ============================================================================
-   LƯỚI TRUYỆN
+   LƯỚI TRUYỆN & THẺ TRUYỆN (STORY GRID & CARDS)
    ========================================================================= */
 .section-head {
     display: flex; align-items: baseline; justify-content: space-between;
-    gap: 16px; margin: 40px 0 18px;
+    gap: 16px; margin: 44px 0 20px;
 }
 .section-head h2 {
-    font-size: 1.28rem; font-weight: 700; letter-spacing: -.02em;
+    font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em;
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
-.section-head .more { color: var(--text-mut); font-size: .88rem;
-                      transition: color .16s var(--ease); }
-.section-head .more:hover { color: var(--ember); }
+.section-head .more {
+    color: var(--text-mut); font-size: .88rem; font-weight: 600;
+    transition: color .18s var(--ease), transform .18s var(--ease);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.section-head .more:hover {
+    color: var(--ember-lit);
+    transform: translateX(3px);
+}
 
 .story-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
-    gap: 22px;
+    gap: 24px;
 }
 
 .story-card {
@@ -79,46 +141,74 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
     overflow: hidden;
     background: var(--ink-850);
     border: 1px solid var(--ink-700);
+    box-shadow: var(--shadow-card);
     transition: transform .28s var(--ease), border-color .28s var(--ease),
                 box-shadow .28s var(--ease);
     position: relative;
+    text-decoration: none;
+    color: inherit;
 }
 .story-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(240, 134, 58, 0.45);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 20px rgba(240, 134, 58, 0.1);
+    transform: translateY(-6px) scale(1.008);
+    border-color: var(--ember-border);
+    box-shadow: var(--shadow-lg), 0 0 26px -4px var(--ember-glow);
+}
+html[data-site-theme="light"] .story-card {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+html[data-site-theme="light"] .story-card:hover {
+    border-color: rgba(255, 122, 26, 0.4);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12), 0 0 20px rgba(255, 122, 26, 0.15);
 }
 
 .story-cover {
     position: relative;
     aspect-ratio: 3 / 4;
-    background: linear-gradient(150deg, var(--ink-700), var(--ink-850));
+    background: linear-gradient(150deg, var(--ink-800), var(--ink-900));
     overflow: hidden;
+}
+/* Hiệu ứng gáy sách thực tế (Realistic Book Spine Reflection) */
+.story-cover::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 12px;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(0, 0, 0, 0.15) 60%, transparent 100%);
+    z-index: 2;
+    pointer-events: none;
 }
 .story-cover img {
     width: 100%; height: 100%; object-fit: cover; display: block;
-    transition: transform .45s var(--ease);
+    transition: transform .48s var(--ease);
 }
 .story-card:hover .story-cover img { transform: scale(1.06); }
 
-/* Không có ảnh bìa thì lấy chữ cái đầu làm bìa — đỡ hơn hẳn một ô xám trống */
+/* Khi không có ảnh bìa */
 .cover-fallback {
     width: 100%; height: 100%;
     display: grid; place-items: center;
     font-size: 3rem; font-weight: 800;
     color: var(--ink-600);
-    background: linear-gradient(150deg, var(--ink-700), var(--ink-900));
+    background: linear-gradient(150deg, var(--ink-800), var(--ink-900));
 }
 
+/* ============================================================================
+   NHÃN & BADGES (TINH TẾ, HIỆN ĐẠI, KÍNH MỜ)
+   ========================================================================= */
 .badge {
     position: static;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 3px 10px; border-radius: 99px;
-    font-size: .74rem; font-weight: 700; letter-spacing: .02em;
-    line-height: 1.3;
+    padding: 3px 9px;
+    border-radius: var(--r-pill);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    line-height: 1.25;
     white-space: nowrap;
 }
 
@@ -126,30 +216,39 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 .card-thumb .badge,
 .story-cover > .badge,
 .badge-status {
-    position: absolute; top: 10px; right: 10px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: auto;
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 3;
 }
 
-.badge-done    { background: rgba(43,183,137,.92);  color: #04241a; }
-.badge-going   { background: rgba(240,134,58,.92);  color: #1a0f06; }
+.badge-done    {
+    background: rgba(16, 185, 129, 0.88);
+    color: #02261d !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+.badge-going   {
+    background: rgba(255, 122, 26, 0.88);
+    color: #1a0f06 !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 3px 10px rgba(255, 122, 26, 0.35);
+}
 .badge-success { background: rgba(16, 185, 129, 0.16); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
 .badge-amber   { background: rgba(245, 158, 11, 0.16); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); }
 .badge-warning { background: rgba(245, 158, 11, 0.16); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); }
 .badge-info    { background: rgba(59, 130, 246, 0.16); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35); }
 .badge-muted   { background: var(--ink-800); color: var(--text-mut); border: 1px solid var(--ink-700); }
 
-/* Trạng thái ở góc trên bên trái của thẻ truyện */
-.badge-status {
-    top: 10px; left: 10px; right: auto;
-}
-
 /* Cụm nhãn nổi bật xếp dọc ở góc trên bên phải */
 .story-badges {
     position: absolute; top: 10px; right: 10px;
     display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
-    z-index: 2;
+    z-index: 3;
     pointer-events: none;
 }
 .story-badges .badge {
@@ -158,16 +257,19 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
     margin: 0;
 }
 
-.story-body { padding: 13px 15px 15px; display: flex; flex-direction: column;
-              gap: 7px; flex: 1; }
+.story-body {
+    padding: 14px 16px 16px;
+    display: flex; flex-direction: column;
+    gap: 8px; flex: 1;
+}
 .story-title {
-    font-size: .96rem; font-weight: 700; line-height: 1.35;
-    /* Cắt ở dòng thứ 2 để mọi thẻ cao bằng nhau, lưới không bị so le */
+    font-size: .98rem; font-weight: 700; line-height: 1.38;
+    color: var(--text);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden;
-    transition: color .16s var(--ease);
+    transition: color .18s var(--ease);
 }
-.story-card:hover .story-title { color: var(--ember); }
+.story-card:hover .story-title { color: var(--ember-lit); }
 
 .story-meta {
     margin-top: auto;
@@ -175,7 +277,7 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
     color: var(--text-mut); font-size: .78rem;
 }
 .story-meta span { display: inline-flex; align-items: center; gap: 4px; }
-.story-meta .card-author:hover { color: var(--ember); text-decoration: underline; }
+.story-meta .card-author:hover { color: var(--ember-lit); text-decoration: underline; }
 
 
 /* ============================================================================
@@ -243,33 +345,96 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
          gap: 14px; margin-top: 34px; }
 .pager-info { color: var(--text-mut); font-size: .88rem; }
 
-/* ---- Chi tiet truyen ---- */
-.story-detail { display: grid; grid-template-columns: 210px 1fr;
-                gap: 28px; margin-bottom: 34px; }
-.detail-cover { border-radius: var(--r-lg); overflow: hidden;
-                aspect-ratio: 3/4; background: var(--ink-800); }
-.detail-cover img { width: 100%; height: 100%; object-fit: cover; }
-.detail-info h1 { font-size: 1.7rem; line-height: 1.25; margin-bottom: 8px; }
-.detail-author { color: var(--text-dim); font-size: .93rem; }
-.detail-stats { display: flex; flex-wrap: wrap; gap: 18px;
-                color: var(--text-mut); font-size: .87rem; margin-bottom: 14px; }
-.detail-desc { color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
-.detail-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+/* ---- Chi tiết truyện (Story Detail Showcase) ---- */
+.story-detail {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 36px;
+    margin-bottom: 40px;
+    align-items: start;
+}
+.detail-cover {
+    position: relative;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    aspect-ratio: 3/4;
+    background: var(--ink-800);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 28px -4px var(--ember-glow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.detail-cover::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 14px;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.4) 0%, rgba(255, 255, 255, 0.1) 25%, transparent 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+.detail-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ---- Muc luc chuong ---- */
-.chapter-list { list-style: none; padding: 0;
-                border: 1px solid var(--ink-700); border-radius: var(--r-lg);
-                overflow: hidden; }
-.chapter-list li { display: flex; align-items: center;
-                   border-bottom: 1px solid var(--ink-800); }
+.detail-info h1 {
+    font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -.025em;
+    line-height: 1.25;
+    margin-bottom: 10px;
+    color: var(--text);
+}
+.detail-author {
+    color: var(--text-dim);
+    font-size: .95rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+.detail-stats {
+    display: flex; flex-wrap: wrap; gap: 20px;
+    color: var(--text-mut); font-size: .88rem; margin-bottom: 16px;
+}
+.detail-stats span { display: inline-flex; align-items: center; gap: 6px; }
+.detail-desc {
+    color: var(--text-dim);
+    font-size: .96rem;
+    line-height: 1.75;
+    margin-bottom: 24px;
+}
+.detail-actions {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+}
+
+/* ---- Mục lục chương (Chapter Directory) ---- */
+.chapter-list {
+    list-style: none; padding: 0;
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+    background: var(--ink-850);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.chapter-list li {
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--ink-800);
+}
 .chapter-list li:last-child { border-bottom: 0; }
-.chapter-list a { flex: 1; display: flex; gap: 14px; padding: 12px 16px;
-                  transition: background .16s var(--ease); }
-.chapter-list a:hover { background: var(--ink-850); }
-.ch-no { color: var(--text-mut); font-size: .85rem; flex: none; width: 7em; }
-.ch-title { font-size: .93rem; }
+.chapter-list a {
+    flex: 1; display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background .18s var(--ease), padding-left .18s var(--ease), color .18s var(--ease);
+}
+.chapter-list a:hover {
+    background: var(--ink-800);
+    padding-left: 24px;
+    color: var(--ember-lit);
+}
+.ch-no {
+    color: var(--text-mut); font-size: .86rem; font-weight: 600;
+    flex: none; width: 7.5em;
+}
+.ch-title { font-size: .95rem; font-weight: 600; }
 .ch-edit { flex: none; padding: 0 16px; color: var(--text-mut); font-size: .82rem; }
-.ch-edit:hover { color: var(--ember); }
+.ch-edit:hover { color: var(--ember-lit); }
 
 /* ---- Binh luan ---- */
 .comment-form { margin-bottom: 22px; }
@@ -292,40 +457,222 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 .link-danger:hover { color: var(--rose); }
 .muted-note { color: var(--text-mut); font-size: .89rem; }
 
-/* ---- Form rong (dang truyen, dang chuong) ---- */
-.wide-form { max-width: 44em; }
-.wide-form label { display: block; width: auto; margin: 18px 0 6px;
-                   font-size: .87rem; color: var(--text-dim); }
-.wide-form input[type=text], .wide-form input[type=url],
-.wide-form input[type=number], .wide-form textarea, .wide-form select {
-    width: 100%; min-width: 0;
-    background: var(--ink-900); color: var(--text);
-    border: 1px solid var(--ink-600); border-radius: var(--r-sm);
-    padding: 10px 12px; font-family: inherit; font-size: .95rem;
+/* ---- Form rộng Studio (đăng truyện, sửa truyện, sửa chương) ---- */
+.form-studio-wrapper {
+    max-width: 840px;
+    margin: 20px auto 60px;
 }
-.wide-form textarea { resize: vertical; }
-.wide-form input:focus, .wide-form textarea:focus, .wide-form select:focus {
+.form-header-banner {
+    margin-bottom: 24px;
+}
+.form-header-banner h1 {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+}
+.form-header-banner .form-subtitle {
+    color: var(--text-mut);
+    font-size: 0.95rem;
+}
+
+.wide-form {
+    max-width: 840px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-xl);
+    padding: 32px 36px;
+    box-shadow: var(--shadow);
+    transition: background .2s var(--ease), border-color .2s var(--ease);
+}
+@media (max-width: 640px) {
+    .wide-form {
+        padding: 20px 16px;
+        border-radius: var(--r-lg);
+    }
+}
+
+.wide-form label {
+    display: block;
+    width: auto;
+    margin: 16px 0 6px;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text-dim);
+}
+.wide-form input[type=text],
+.wide-form input[type=url],
+.wide-form input[type=number],
+.wide-form input[type=email],
+.wide-form textarea,
+.wide-form select {
+    width: 100%;
+    min-width: 0;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+    border-radius: var(--r-sm);
+    padding: 11px 14px;
+    font-family: inherit;
+    font-size: .95rem;
+    transition: border-color .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+}
+.wide-form textarea { resize: vertical; line-height: 1.6; }
+.wide-form input:focus,
+.wide-form textarea:focus,
+.wide-form select:focus {
     border-color: var(--ember);
+    box-shadow: 0 0 0 3px var(--ember-glow);
+    outline: none;
 }
-.wide-form small { display: block; color: var(--text-mut);
-                   font-size: .8rem; margin-top: 5px; }
+.wide-form small {
+    display: block;
+    color: var(--text-mut);
+    font-size: .82rem;
+    margin-top: 5px;
+}
 .form-row { display: flex; gap: 16px; align-items: flex-end; }
 .form-row > div { flex: 1; }
-.form-actions { display: flex; gap: 10px; align-items: center;
-                margin-top: 26px; flex-wrap: wrap; }
-.content-editor { font-family: 'Lora', Georgia, serif;
-                  font-size: 1rem; line-height: 1.8; }
+.form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--ink-700);
+    flex-wrap: wrap;
+}
+.content-editor {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 1rem;
+    line-height: 1.8;
+}
 
-/* ---- Chon the loai ---- */
-.tag-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-.tag-check { display: inline-flex; align-items: center; gap: 6px;
-             width: auto; margin: 0;
-             padding: 6px 12px; border-radius: 99px;
-             background: var(--ink-800); border: 1px solid var(--ink-700);
-             font-size: .84rem; cursor: pointer;
-             transition: background .16s var(--ease), border-color .16s var(--ease); }
-.tag-check input { width: auto; margin: 0; }
-.tag-check:hover { border-color: var(--ember-deep); }
+/* Nút chọn file ảnh phong cách Amber Pill — Rõ ràng trên cả nền tối và sáng */
+.file-upload-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: var(--r-pill);
+    background: var(--ember-grad);
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    border: none;
+    box-shadow: 0 2px 10px var(--ember-glow);
+    transition: transform .16s var(--ease), box-shadow .16s var(--ease), opacity .16s var(--ease);
+}
+.file-upload-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px var(--ember-glow);
+    opacity: 0.95;
+}
+.file-upload-btn:active {
+    transform: translateY(0);
+}
+
+/* Khối thiết lập chương VIP */
+.vip-setting-card {
+    margin-bottom: 1.5rem;
+    padding: 14px 20px;
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r);
+    background: var(--ink-800);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    transition: border-color .2s var(--ease), background .2s var(--ease);
+}
+.vip-setting-card:hover {
+    border-color: var(--ember-border);
+}
+
+/* Khu vực chọn & xem trước ảnh bìa */
+.cover-edit-box {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 20px;
+    background: var(--ink-800);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r);
+    transition: border-color .2s var(--ease);
+}
+.cover-edit-box:hover {
+    border-color: var(--ink-600);
+}
+.cover-preview-wrap { flex: none; }
+.story-cover-preview {
+    width: 110px;
+    height: 155px;
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    position: relative;
+    background: var(--ink-900);
+    border: 2px dashed var(--ember-border);
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow);
+    transition: transform .2s var(--ease), border-color .2s var(--ease);
+}
+.story-cover-preview:hover {
+    border-color: var(--ember);
+    transform: scale(1.02);
+}
+.cover-controls {
+    flex: 1;
+    min-width: 240px;
+}
+.cover-file-status {
+    font-size: .86rem;
+    color: var(--text-mut);
+    font-weight: 500;
+}
+.field-label-sub {
+    font-size: .85rem;
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-mut);
+    font-weight: 500;
+}
+
+/* ---- Chọn thể loại ---- */
+.tag-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.tag-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    margin: 0;
+    padding: 7px 14px;
+    border-radius: var(--r-pill);
+    background: var(--ink-800);
+    border: 1px solid var(--ink-700);
+    color: var(--text-dim);
+    font-size: .85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .16s var(--ease);
+    user-select: none;
+}
+.tag-check input { width: auto; margin: 0; accent-color: var(--ember); }
+.tag-check:hover {
+    border-color: var(--ember);
+    color: var(--text);
+    background: var(--ink-700);
+}
+.tag-check:has(input:checked) {
+    background: var(--ember-ghost);
+    border-color: var(--ember);
+    color: var(--ember);
+    font-weight: 600;
+}
 
 /* ---- Truyen da luu ---- */
 .bookmark-list { display: flex; flex-direction: column; gap: 12px; }
@@ -411,51 +758,95 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 /* Nut theo doi tac gia. Cach hang so lieu ra mot khoang de khong dinh vao no. */
 .profile-follow { margin-top: 14px; }
 
-/* ---- Bang xep hang ---- */
-.rank-list { list-style: none; padding: 0; margin: 0;
-             display: flex; flex-direction: column; gap: 10px; }
+/* ---- Bảng xếp hạng (Rankings) — Huy chương Vàng / Bạc / Đồng sang trọng ---- */
+.rank-list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 12px;
+}
 
 .rank-item {
-    display: flex; align-items: center; gap: 15px;
-    padding: 12px 16px;
+    display: flex; align-items: center; gap: 18px;
+    padding: 14px 20px;
     background: var(--ink-850);
     border: 1px solid var(--ink-700);
     border-radius: var(--r-lg);
-    transition: border-color .18s var(--ease), transform .18s var(--ease);
+    box-shadow: var(--shadow-sm);
+    transition: transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease);
 }
-.rank-item:hover { border-color: var(--ember-deep); transform: translateX(3px); }
+.rank-item:hover {
+    border-color: var(--ember-border);
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+}
+html[data-site-theme="light"] .rank-item {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+html[data-site-theme="light"] .rank-item:hover {
+    border-color: rgba(255, 122, 26, 0.4);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
 
 .rank-no {
-    flex: none; width: 2.2em; text-align: center;
-    font-size: 1.15rem; font-weight: 800;
+    flex: none; width: 2.4em; text-align: center;
+    font-size: 1.2rem; font-weight: 800;
     color: var(--text-mut);
-    font-variant-numeric: tabular-nums;   /* so thang cot deu nhau */
+    font-variant-numeric: tabular-nums;
 }
-/* Ba hang dau noi bat hon */
-.rank-no.rank-top {
-    color: var(--ember);
+
+/* Ba hạng đầu vinh danh Top 1, 2, 3 */
+.rank-item:nth-child(1) {
+    border-color: rgba(245, 158, 11, 0.45);
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, var(--ink-850) 60%);
+    box-shadow: 0 4px 18px rgba(245, 158, 11, 0.12);
+}
+.rank-item:nth-child(1) .rank-no {
+    color: #f59e0b;
+    font-size: 1.55rem;
+    text-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
+}
+
+.rank-item:nth-child(2) {
+    border-color: rgba(148, 163, 184, 0.4);
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.06) 0%, var(--ink-850) 60%);
+}
+.rank-item:nth-child(2) .rank-no {
+    color: #cbd5e1;
     font-size: 1.45rem;
+    text-shadow: 0 0 14px rgba(203, 213, 225, 0.35);
+}
+
+.rank-item:nth-child(3) {
+    border-color: rgba(217, 119, 6, 0.35);
+    background: linear-gradient(90deg, rgba(217, 119, 6, 0.05) 0%, var(--ink-850) 60%);
+}
+.rank-item:nth-child(3) .rank-no {
+    color: #d97706;
+    font-size: 1.35rem;
 }
 
 .rank-cover {
-    width: 46px; height: 62px; flex: none;
+    width: 48px; height: 64px; flex: none;
     border-radius: var(--r-sm); overflow: hidden;
     background: var(--ink-800);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 .rank-cover img { width: 100%; height: 100%; object-fit: cover; }
 .rank-cover .cover-fallback { font-size: 1.3rem; }
 
 .rank-info { flex: 1; min-width: 0; }
 .rank-title {
-    font-weight: 650; font-size: .98rem; line-height: 1.35;
+    font-weight: 700; font-size: 1.02rem; line-height: 1.35;
+    color: var(--text);
     display: block;
-    /* Cat mot dong de moi hang cao bang nhau */
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: color .18s var(--ease);
 }
-.rank-title:hover { color: var(--ember); }
-.rank-meta { color: var(--text-mut); font-size: .82rem; margin-top: 3px; }
+.rank-title:hover { color: var(--ember-lit); }
+.rank-meta { color: var(--text-mut); font-size: .82rem; margin-top: 4px; }
 .rank-meta a { color: var(--text-dim); }
-.rank-meta a:hover { color: var(--ember); }
+.rank-meta a:hover { color: var(--ember-lit); }
 
 @media (max-width: 620px) {
     .profile-head { flex-direction: column; align-items: center; text-align: center; }
@@ -467,43 +858,29 @@ a.tag:hover { color: var(--ember); border-color: var(--ember);
 
 
 /* ============================================================================
-   KHUNG CHUNG CỦA TRANG — header, footer, thanh menu
-   ============================================================================
-   VÌ SAO NẰM Ở components.css CHỨ KHÔNG PHẢI layout-main.css
-
-     parts/nav.jsp và parts/footer.jsp được BỐN layout dùng chung. Ban đầu CSS
-     của chúng để trong layout-main.css, hậu quả: mở /admin/user thì thanh menu
-     mất sạch định dạng — vì layout admin nạp layout-admin.css chứ không nạp
-     layout-main.css.
-
-     Quy tắc rút ra, khớp với standards §3:
-         mảnh JSP dùng ở NHIỀU layout  ->  CSS phải ở components.css
-         mảnh JSP chỉ MỘT layout dùng  ->  CSS ở layout-<ten>.css
-
-     .hero chỉ trang chủ dùng nên vẫn ở lại layout-main.css.
+   KHUNG CHUNG CỦA TRANG — Header & Navigation Glassmorphism
    ========================================================================= */
 
-.shell { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.shell { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
 /* ============================================================================
-   HEADER — dính trên cùng, kính mờ
-   ========================================================================= */
-/* ============================================================================
-   HEADER — dính trên cùng, kính mờ
+   HEADER — Dính trên cùng, hiệu ứng kính mờ (Glassmorphism 2026)
    ========================================================================= */
 .site-header {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(16, 18, 25, .82);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border-bottom: 1px solid var(--ink-700);
-    transition: background-color .2s var(--ease), border-color .2s var(--ease);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    transition: background-color .28s var(--ease), border-color .28s var(--ease), box-shadow .28s var(--ease);
 }
 html[data-site-theme="light"] .site-header {
-    background: rgba(255, 255, 255, 0.92);
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    background: rgba(255, 255, 255, 0.88);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
 }
 
 .site-header .shell {
@@ -511,7 +888,7 @@ html[data-site-theme="light"] .site-header {
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    height: 68px;
+    height: 70px;
     max-width: 1360px;
 }
 
@@ -525,57 +902,73 @@ html[data-site-theme="light"] .site-header {
 
 .brand {
     display: flex; align-items: center; gap: 10px;
-    font-weight: 800; font-size: 1.16rem; letter-spacing: -.02em;
+    font-weight: 800; font-size: 1.22rem; letter-spacing: -.02em;
     flex: none;
     color: var(--text);
+    text-decoration: none;
 }
 .brand-mark {
-    width: 34px; height: 34px; flex: none;
+    width: 38px; height: 38px; flex: none;
     display: grid; place-items: center;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--ember-lit), var(--ember-deep));
-    color: var(--ink-950);
-    font-size: 1.05rem;
-    box-shadow: 0 3px 12px rgba(240,134,58,.38);
+    border-radius: var(--r-sm);
+    background: var(--ember-grad);
+    color: #0a0d14;
+    font-size: 1.15rem;
+    box-shadow: 0 4px 14px var(--ember-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: transform .25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .25s var(--ease);
 }
-.brand em { color: var(--ember); font-style: normal; }
+.brand:hover .brand-mark {
+    transform: rotate(-6deg) scale(1.08);
+    box-shadow: 0 6px 20px var(--ember-glow);
+}
+.brand em { color: var(--ember-lit); font-style: normal; }
 
 .nav {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     flex: 1;
     min-width: 0;
 }
 .nav a, .nav-dropdown-btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 8px 13px;
-    border-radius: var(--r-sm);
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--r-pill);
     color: var(--text-dim);
     font-size: .92rem;
     font-weight: 600;
     white-space: nowrap !important;
     text-decoration: none;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     cursor: pointer;
     font-family: inherit;
     line-height: 1.2;
-    transition: color .18s var(--ease), background .18s var(--ease);
+    transition: color .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
 }
 .nav a:hover, .nav-dropdown-btn:hover {
-    color: var(--text);
+    color: #ffffff;
     background: var(--ink-800);
+    border-color: var(--ink-700);
 }
 .nav a.is-active, .nav-dropdown-btn.is-active {
-    color: var(--ember);
+    color: var(--ember-lit);
     background: var(--ember-ghost);
+    border-color: var(--ember-border);
+    font-weight: 700;
+}
+html[data-site-theme="light"] .nav a:hover,
+html[data-site-theme="light"] .nav-dropdown-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
 }
 html[data-site-theme="light"] .nav a.is-active,
 html[data-site-theme="light"] .nav-dropdown-btn.is-active {
-    background: rgba(240, 134, 58, 0.12);
+    background: rgba(255, 122, 26, 0.12);
+    border-color: rgba(255, 122, 26, 0.28);
     color: #ea580c;
 }
 
@@ -1740,18 +2133,31 @@ input[type=file]:hover { border-color: var(--ember-deep); }
 /* <fieldset> mặc định có viền và padding rất cũ kỹ của trình duyệt, phải dọn
    hết rồi dựng lại. */
 .form-group {
-    border: 0; padding: 0; margin: 0 0 28px;
-    border-top: 1px solid var(--ink-800);
-    padding-top: 18px;
+    border: 0; padding: 0; margin: 0 0 32px;
 }
-/* Nhóm đầu tiên không cần đường kẻ phía trên — bên trên nó là tiêu đề trang,
-   thêm một vạch nữa thành hai đường song song sát nhau. */
 .form-group:first-of-type { border-top: 0; padding-top: 0; }
 
 .form-group > legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
     padding: 0 0 10px;
-    color: var(--ember); font-size: .8rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 2px solid var(--ink-700);
+    color: var(--ember);
+    font-size: .88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 18px;
+}
+.form-group > legend::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 15px;
+    background: var(--ember-grad);
+    border-radius: var(--r-pill);
 }
 
 /* ---- Ô tick công tắc menu ----
@@ -2707,10 +3113,14 @@ html[data-site-theme="light"] .report-trigger-btn {
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
-    background: var(--surface-1, rgba(255, 255, 255, 0.03));
-    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-    border-radius: 12px;
-    padding: 16px 20px;
+    background: var(--ink-800);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r);
+    padding: 18px 22px;
+    transition: border-color .2s var(--ease);
+}
+.avatar-edit-box:hover {
+    border-color: var(--ink-600);
 }
 
 .avatar-preview-wrap {
@@ -2880,15 +3290,15 @@ html[data-site-theme="light"] .report-trigger-btn {
 
 /* 1. Header Ambient Beam & Brand Micro-interactions */
 .site-header {
-    border-bottom: 1px solid rgba(240, 134, 58, 0.18);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.35);
 }
 .brand .brand-mark {
     transition: transform .25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .25s var(--ease);
 }
 .brand:hover .brand-mark {
     transform: rotate(-6deg) scale(1.08);
-    box-shadow: 0 6px 18px rgba(240, 134, 58, 0.55);
+    box-shadow: 0 6px 20px var(--ember-glow);
 }
 
 /* 2. Search Bar Glow */
@@ -2907,15 +3317,15 @@ html[data-site-theme="light"] .report-trigger-btn {
                 box-shadow .28s var(--ease);
 }
 .story-card:hover {
-    transform: translateY(-6px);
-    border-color: rgba(240, 134, 58, 0.5);
-    box-shadow: 0 20px 42px rgba(0, 0, 0, 0.52), 0 0 24px rgba(240, 134, 58, 0.16);
+    transform: translateY(-6px) scale(1.008);
+    border-color: var(--ember-border);
+    box-shadow: var(--shadow-lg), 0 0 26px -4px var(--ember-glow);
 }
 .story-cover::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, transparent 65%, rgba(11, 12, 16, 0.72) 100%);
+    background: linear-gradient(180deg, transparent 65%, rgba(10, 13, 20, 0.72) 100%);
     pointer-events: none;
     opacity: 0.8;
     transition: opacity .3s var(--ease);
@@ -2923,30 +3333,6 @@ html[data-site-theme="light"] .report-trigger-btn {
 .story-card:hover .story-cover::after {
     opacity: 0.45;
 }
-
-/* 4. Badges Vibrancy & Colored Glow */
-.badge-done {
-    background: linear-gradient(135deg, rgba(43, 183, 137, 0.96), rgba(16, 185, 129, 0.92));
-    color: #022c22;
-    box-shadow: 0 3px 12px rgba(43, 183, 137, 0.4);
-}
-.badge-going {
-    background: linear-gradient(135deg, rgba(255, 157, 85, 0.96), rgba(240, 134, 58, 0.92));
-    color: #2a1103;
-    box-shadow: 0 3px 12px rgba(240, 134, 58, 0.4);
-}
-
-/* 5. Buttons Sheen & Tactile Micro-feedback */
-.btn-primary {
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 16px rgba(240, 134, 58, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(240, 134, 58, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-.btn-primary:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(240, 134, 58, 0.3);
 }

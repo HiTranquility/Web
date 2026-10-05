@@ -48,7 +48,7 @@
     </div>
 
     <%-- CHƯƠNG VIP VÀ GIÁ XU (ISSUE-020) --%>
-    <div class="vip-setting-card" style="margin-bottom:1.5rem; padding:12px 16px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg, rgba(255,255,255,0.03)); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px;">
+    <div class="vip-setting-card">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; margin-bottom:0">
             <input type="checkbox" id="isVipCheckbox" name="isVip" value="1" ${chapter.vip ? 'checked' : ''} onchange="document.getElementById('coinPriceWrapper').style.display = this.checked ? 'flex' : 'none';">
             <span>🔒 Đặt làm Chương VIP (Có tính phí xu để mở khoá)</span>

@@ -4,118 +4,92 @@
   story/form.jsp — MẢNH nội dung. Form đăng / sửa truyện.          CASE 05
   Nhận: story (rỗng khi tạo mới) · allTags · selectedTags · message
 --%>
-<h1>${empty story.id or story.id eq 0 ? 'Đăng truyện mới' : 'Sửa truyện'}</h1>
+<div class="form-studio-wrapper">
+    <div class="form-header-banner">
+        <h1>${empty story.id or story.id eq 0 ? '✨ Đăng truyện mới' : '✍️ Chỉnh sửa truyện'}</h1>
+        <p class="form-subtitle">Thiết lập nội dung, ảnh bìa và thể loại để phát hành tác phẩm trên hệ thống</p>
+    </div>
 
-<c:if test="${not empty message}">
-    <p class="form-error"><c:out value="${message}"/></p>
-</c:if>
+    <c:if test="${not empty message}">
+        <p class="form-error"><c:out value="${message}"/></p>
+    </c:if>
 
-<%--
-  enctype="multipart/form-data" BẮT BUỘC khi form có <input type="file">.
+    <form id="storyForm" action="${pageContext.request.contextPath}/story?_csrf=${csrfToken}" method="post"
+          class="wide-form" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
+        <input type="hidden" name="action"
+               value="${empty story.id or story.id eq 0 ? 'create' : 'edit'}">
+        <input type="hidden" name="id" id="storyId" value="${story.id}">
 
-  Thiếu nó thì trình duyệt chỉ gửi TÊN file, không gửi nội dung — server nhận
-  được một chuỗi vô dụng, không có lỗi nào để lần ra. Đây là kiểu hỏng im
-  lặng: form gửi đi bình thường, chỉ ảnh không bao giờ tới nơi.
+        <fieldset class="form-group">
+            <legend>📝 Thông tin truyện</legend>
 
-  Đổi lại, mọi ô khác cũng chuyển sang dạng multipart, nên servlet BẮT BUỘC
-  phải có @MultipartConfig — không thì getParameter() trả null cho tất cả và
-  form trông như người dùng bỏ trống hết.
---%>
-<form id="storyForm" action="${pageContext.request.contextPath}/story?_csrf=${csrfToken}" method="post"
-      class="wide-form" enctype="multipart/form-data">
-    <input type="hidden" name="_csrf" value="${csrfToken}">
-    <input type="hidden" name="action"
-           value="${empty story.id or story.id eq 0 ? 'create' : 'edit'}">
-    <input type="hidden" name="id" id="storyId" value="${story.id}">
-
-    <%--
-      BA NHÓM CÓ TIÊU ĐỀ, thay cho một cột ô nhập xếp thẳng.
-
-      Form này có 7 ô thuộc ba loại việc khác hẳn nhau: viết nội dung, chọn
-      ảnh, phân loại. Xếp thẳng một mạch thì người dùng phải đọc hết mới biết
-      còn gì phía dưới, và lúc sửa lại một chi tiết nhỏ thì phải dò từ đầu.
-
-      <fieldset> + <legend> là thẻ HTML CÓ SẴN cho đúng việc này — trình đọc
-          màn hình đọc tên nhóm trước khi đọc từng ô, nên người khiếm thị cũng
-          nhận được cùng thông tin mà mắt thường thấy qua đường kẻ.
-        --%>
-    <fieldset class="form-group">
-        <legend>Nội dung</legend>
-
-        <div class="field-with-counter">
-            <label for="title">Tiêu đề *</label>
-            <input type="text" id="title" name="title" maxlength="200" required
-                   placeholder="Nhập tên truyện..."
-                   value="<c:out value='${story.title}'/>">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                <small id="slugPreviewRow" style="color:var(--text-mut);">
-                    Đường dẫn dự kiến: <code id="slugPreview" style="color:var(--ember); background:var(--ink-850); padding:2px 6px; border-radius:4px; font-size:.82rem;">/truyen/<c:out value='${story.slug}'/></code>
-                </small>
-                <span id="storyTitleCounter" class="char-counter">0 / 200 ký tự</span>
-            </div>
-        </div>
-
-        <div class="field-with-counter" style="margin-top:14px;">
-            <label for="description">Giới thiệu tóm tắt</label>
-            <textarea id="description" name="description" rows="5" maxlength="5000"
-                      placeholder="Mô tả bối cảnh, giới thiệu nhân vật và cốt truyện lôi cuốn..."><c:out value="${story.description}"/></textarea>
-            <span id="storyDescCounter" class="char-counter">0 / 5.000 ký tự</span>
-        </div>
-
-    </fieldset>
-
-    <fieldset class="form-group">
-        <legend>Ảnh bìa</legend>
-
-        <%--
-          HAI CÁCH ĐẶT BÌA, giữ cả hai vì phục vụ hai tình huống khác nhau:
-        tải file  — ảnh nằm trong máy
-        dán link  — ảnh đã có sẵn trên mạng
-
-          Chọn cả hai thì FILE THẮNG (xem StoryServlet): người dùng vừa chủ động
-          chọn file, còn ô link thường chỉ là giá trị cũ còn sót lại.
-        --%>
-        <div class="cover-edit-box" style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; margin-top:10px; padding:16px; background:var(--surface-1, rgba(255,255,255,0.03)); border:1px solid var(--border, rgba(255,255,255,0.1)); border-radius:12px;">
-            <div class="cover-preview-wrap" style="flex:none;">
-                <div id="cover-preview-box" class="story-cover-preview" style="width:105px; height:145px; border-radius:8px; overflow:hidden; position:relative; background:var(--surface-2, #1e293b); border:2px dashed var(--border, #475569); display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,0.2);">
-                    <c:choose>
-                        <c:when test="${not empty story.coverUrl}">
-                            <c:set var="cvUrl"     value="${story.coverUrl}"/>
-                            <c:set var="cvAlt"     value="${story.title}"/>
-                            <c:set var="cvInitial" value="${story.initial}"/>
-                            <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
-                        </c:when>
-                        <c:otherwise>
-                            <span id="cover-empty-placeholder" style="font-size:2.2rem; color:var(--text-mut, #94a3b8);">📖</span>
-                        </c:otherwise>
-                    </c:choose>
+            <div class="field-with-counter">
+                <label for="title">Tiêu đề *</label>
+                <input type="text" id="title" name="title" maxlength="200" required
+                       placeholder="Nhập tên truyện..."
+                       value="<c:out value='${story.title}'/>">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; flex-wrap:wrap; gap:4px;">
+                    <small id="slugPreviewRow" style="color:var(--text-mut);">
+                        Đường dẫn dự kiến: <code id="slugPreview" style="color:var(--ember); background:var(--ink-800); padding:3px 8px; border-radius:6px; font-size:.82rem;">/truyen/<c:out value='${story.slug}'/></code>
+                    </small>
+                    <span id="storyTitleCounter" class="char-counter">0 / 200 ký tự</span>
                 </div>
             </div>
 
-            <div class="cover-controls" style="flex:1; min-width:220px;">
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
-                    <label for="coverFile" class="btn btn-ghost btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border, #334155); background:var(--surface-2, #1e293b); padding:7px 14px; border-radius:6px;">
-                        <span>📁 Chọn ảnh bìa từ máy</span>
-                    </label>
-                    <input type="file" id="coverFile" name="coverFile"
-                           accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">
-                    <span id="coverFileName" style="font-size:.85rem; color:var(--text-mut, #94a3b8);">Chưa chọn tệp mới</span>
-                </div>
-                <p class="field-hint" style="margin:4px 0 10px 0; font-size:.85rem; color:var(--text-mut, #94a3b8);">
-                    PNG, JPG, GIF hoặc WebP (tối đa 2 MB). Tỷ lệ chuẩn 3:4.
-                </p>
-
-                <label for="coverUrl" style="font-size:.85rem; display:block; margin-bottom:4px; color:var(--text-mut, #94a3b8);">…hoặc dán đường dẫn ảnh:</label>
-                <input type="text" id="coverUrl" name="coverUrl"
-                       value="<c:out value='${story.coverUrl}'/>"
-                       placeholder="https://… hoặc /assets/images/covers/cover-1.svg">
+            <div class="field-with-counter" style="margin-top:16px;">
+                <label for="description">Giới thiệu tóm tắt</label>
+                <textarea id="description" name="description" rows="5" maxlength="5000"
+                          placeholder="Mô tả bối cảnh, giới thiệu nhân vật và cốt truyện lôi cuốn..."><c:out value="${story.description}"/></textarea>
+                <span id="storyDescCounter" class="char-counter">0 / 5.000 ký tự</span>
             </div>
-        </div>
 
-    </fieldset>
+        </fieldset>
 
-    <fieldset class="form-group">
-        <legend>Phân loại &amp; trạng thái</legend>
+        <fieldset class="form-group">
+            <legend>🖼️ Thiết kế ảnh bìa</legend>
+
+            <div class="cover-edit-box">
+                <div class="cover-preview-wrap">
+                    <div id="cover-preview-box" class="story-cover-preview">
+                        <c:choose>
+                            <c:when test="${not empty story.coverUrl}">
+                                <c:set var="cvUrl"     value="${story.coverUrl}"/>
+                                <c:set var="cvAlt"     value="${story.title}"/>
+                                <c:set var="cvInitial" value="${story.initial}"/>
+                                <%@ include file="/WEB-INF/views/_partials/_cover.jsp" %>
+                            </c:when>
+                            <c:otherwise>
+                                <span id="cover-empty-placeholder" style="font-size:2.4rem; color:var(--text-mut);">📖</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+
+                <div class="cover-controls">
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                        <label for="coverFile" class="file-upload-btn">
+                            <span>📁 Chọn ảnh bìa từ máy</span>
+                        </label>
+                        <input type="file" id="coverFile" name="coverFile"
+                               accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">
+                        <span id="coverFileName" class="cover-file-status">Chưa chọn tệp mới</span>
+                    </div>
+                    <p class="field-hint" style="margin:6px 0 12px 0;">
+                        PNG, JPG, GIF hoặc WebP (tối đa 2 MB). Tỷ lệ chuẩn 3:4.
+                    </p>
+
+                    <label for="coverUrl" class="field-label-sub">…hoặc dán đường dẫn ảnh:</label>
+                    <input type="text" id="coverUrl" name="coverUrl"
+                           value="<c:out value='${story.coverUrl}'/>"
+                           placeholder="https://… hoặc /assets/images/covers/cover-1.svg">
+                </div>
+            </div>
+
+        </fieldset>
+
+        <fieldset class="form-group">
+            <legend>🏷️ Phân loại &amp; Phát hành</legend>
 
         <div style="display:flex; align-items:baseline; gap:8px;">
             <label style="margin-bottom:0">Thể loại</label>
@@ -186,6 +160,7 @@
         <input type="hidden" name="id" value="${story.id}">
     </form>
 </c:if>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

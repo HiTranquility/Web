@@ -74,7 +74,7 @@
             </div>
             <div class="avatar-edit-controls">
                 <div class="file-upload-btn-wrap">
-                    <label for="avatarFile" class="btn btn-ghost btn-sm" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; border:1px solid var(--border, #334155); background:var(--surface-2, #1e293b); padding:7px 14px; border-radius:6px;">
+                    <label for="avatarFile" class="file-upload-btn">
                         <span>📁 Chọn ảnh từ máy</span>
                     </label>
                     <input type="file" id="avatarFile" name="avatarFile"

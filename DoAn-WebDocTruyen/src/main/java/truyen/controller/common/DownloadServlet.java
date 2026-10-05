@@ -53,10 +53,22 @@ public class DownloadServlet extends HttpServlet {
                 return;
             }
 
-            // Kiểm quyền: truyện nháp hoặc đã gỡ chỉ tác giả hoặc admin mới được tải
+            // Nghiệp vụ: Chưa đăng nhập thì chưa cho tải truyện
             User currentUser = (User) request.getSession().getAttribute("currentUser");
-            boolean isAuthor = (currentUser != null && currentUser.getId() == story.getAuthorId());
-            boolean isAdmin = (currentUser != null && currentUser.isAdmin());
+            if (currentUser == null) {
+                String target = request.getRequestURI();
+                if (request.getQueryString() != null) {
+                    target += "?" + request.getQueryString();
+                }
+                request.getSession().setAttribute("redirectAfterLogin", target);
+                request.getSession().setAttribute("flash", "Vui lòng đăng nhập để tải truyện về máy nhé!");
+                response.sendRedirect(request.getContextPath() + "/auth?action=login");
+                return;
+            }
+
+            // Kiểm quyền: truyện nháp hoặc đã gỡ chỉ tác giả hoặc admin mới được tải
+            boolean isAuthor = (currentUser.getId() == story.getAuthorId());
+            boolean isAdmin = currentUser.isAdmin();
             if (!"PUBLISHED".equals(story.getStatus()) && !isAuthor && !isAdmin) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;

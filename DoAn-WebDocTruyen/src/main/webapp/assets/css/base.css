@@ -15,66 +15,115 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-    /* ---- nền, từ sâu nhất ra ngoài ---- */
-    --ink-950:  #0b0c10;
-    --ink-900:  #101219;
-    --ink-850:  #151822;
-    --ink-800:  #1b1f2b;
-    --ink-700:  #252a38;
-    --ink-600:  #333949;
+    /* ---- Obsidian Midnight Hierarchy (Sâu sắc & Hiện đại) ---- */
+    --ink-950:  #0a0d14; /* Nền sâu nhất */
+    --ink-900:  #0f1420; /* Nền Header / Thanh tác vụ */
+    --ink-850:  #141c2c; /* Nền Thẻ Card / Khối nội dung */
+    --ink-800:  #1c263c; /* Nền hover / Nút phụ */
+    --ink-700:  #28354f; /* Viền thẻ & đường phân cách */
+    --ink-600:  #3b4e72; /* Viền phụ / viền hover */
 
-    /* ---- chữ ---- */
-    --text:     #e8eaf0;
-    --text-dim: #9aa3b5;
-    --text-mut: #6b7488;
+    /* ---- Màu chữ tương phản cao, dịu mắt ---- */
+    --text:     #f8fafc; /* Trắng ngà sáng rõ */
+    --text-dim: #94a3b8; /* Xám xanh thanh lịch */
+    --text-mut: #64748b; /* Xám mờ / metadata */
 
-    /* ---- điểm nhấn: hổ phách / lửa ---- */
-    --ember:      #f0863a;
-    --ember-lit:  #ff9d55;
-    --ember-deep: #c9631f;
-    --ember-ghost: rgba(240, 134, 58, 0.12);
+    /* ---- Điểm nhấn thương hiệu: Hổ phách & Ánh lửa (Ember & Flame) ---- */
+    --ember:        #ff7a1a;
+    --ember-lit:    #ff9e42;
+    --ember-deep:   #e05e00;
+    --ember-glow:   rgba(255, 122, 26, 0.28);
+    --ember-ghost:  rgba(255, 122, 26, 0.12);
+    --ember-grad:   linear-gradient(135deg, #ff8c33 0%, #ff6200 100%);
+    --ember-border: rgba(255, 122, 26, 0.38);
 
-    /* ---- màu phụ ---- */
-    --jade:   #2bb789;
-    --rose:   #e5576f;
-    --violet: #8b7cf6;
+    /* ---- Màu trạng thái & ngữ nghĩa ---- */
+    --jade:        #10b981;
+    --jade-glow:   rgba(16, 185, 129, 0.25);
+    --rose:        #f43f5e;
+    --rose-glow:   rgba(244, 63, 94, 0.25);
+    --violet:      #8b5cf6;
+    --violet-glow: rgba(139, 92, 246, 0.25);
+    --gold:        #f59e0b;
+    --gold-glow:   rgba(245, 158, 11, 0.28);
+    --silver:      #94a3b8;
+    --bronze:      #d97706;
 
-    /* ---- chế độ đọc: nền giấy ấm ---- */
-    --paper:      #f6f1e7;
-    --paper-ink:  #2b2723;
+    /* ---- Chế độ đọc: Nền giấy ấm & chữ mực ---- */
+    --paper:      #f7f2e8;
+    --paper-ink:  #24211d;
 
-    /* ---- hình khối ---- */
-    --r-sm: 6px;
-    --r:    10px;
-    --r-lg: 16px;
-    --r-xl: 22px;
+    /* ---- Hiệu ứng Kính Mờ (Glassmorphism) ---- */
+    --glass-bg:     rgba(15, 20, 32, 0.82);
+    --glass-card:   rgba(20, 28, 44, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.08);
 
-    --shadow:    0 4px 16px rgba(0,0,0,.35);
-    --shadow-lg: 0 18px 48px rgba(0,0,0,.5);
+    /* ---- Hình khối & Bo góc ---- */
+    --r-xs:   4px;
+    --r-sm:   8px;
+    --r:      12px;
+    --r-lg:   18px;
+    --r-xl:   26px;
+    --r-pill: 9999px;
 
-    /* Một đường cong duy nhất cho mọi chuyển động, để cả site nhất quán */
-    --ease: cubic-bezier(.4, 0, .2, 1);
+    /* ---- Đổ bóng chiều sâu đa tầng ---- */
+    --shadow-sm:   0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow:      0 8px 24px -4px rgba(0, 0, 0, 0.4), 0 3px 10px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg:   0 20px 42px -8px rgba(0, 0, 0, 0.55), 0 8px 20px -4px rgba(0, 0, 0, 0.35);
+    --shadow-glow: 0 0 24px -2px var(--ember-glow);
+    /* ---- Bề mặt thẻ, panel & viền chuẩn ---- */
+    --surface-1:    #141c2c;
+    --surface-2:    #1c263c;
+    --border:       #28354f;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --card-bg:      rgba(20, 28, 44, 0.72);
+    --bg:           #0f1420;
+    --input-bg:     #0f1420;
+    --input-border: #28354f;
+
+    /* Đường cong chuyển động mượt mà cho toàn site */
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ============================================================================
-   CHẾ ĐỘ SÁNG (LIGHT MODE) TOÀN TRANG
+   CHẾ ĐỘ SÁNG (LIGHT MODE) TOÀN TRANG — Sang trọng, tinh tế, êm mắt
    ========================================================================= */
 html[data-site-theme="light"] {
-    --ink-950:  #f8fafc;
-    --ink-900:  #ffffff;
-    --ink-850:  #ffffff;
-    --ink-800:  #f1f5f9;
-    --ink-700:  #e2e8f0;
-    --ink-600:  #cbd5e1;
+    --ink-950:  #f0f3f8; /* Nền trang slate ấm dịu mắt, tôn các thẻ trắng */
+    --ink-900:  #ffffff; /* Header, Thanh điều hướng */
+    --ink-850:  #ffffff; /* Thẻ Card / Studio panel nổi */
+    --ink-800:  #f8fafc; /* Nền phụ / button / chip */
+    --ink-700:  #e2e8f0; /* Viền thẻ & đường phân cách */
+    --ink-600:  #cbd5e1; /* Viền đậm / viền input */
 
-    --text:     #0f172a;
+    --surface-1:    #ffffff;
+    --surface-2:    #f8fafc;
+    --border:       #e2e8f0;
+    --border-subtle: rgba(15, 23, 42, 0.06);
+    --card-bg:      #ffffff;
+    --bg:           #ffffff;
+    --input-bg:     #ffffff;
+    --input-border: #cbd5e1;
+
+    --text:     #0f172a; /* Đen xanh sắc nét, dễ đọc */
     --text-dim: #334155;
     --text-mut: #64748b;
 
-    --ember-ghost: rgba(240, 134, 58, 0.12);
+    --ember:        #ea580c; /* Cam hổ phách chuẩn tương phản cao trên nền sáng */
+    --ember-lit:    #f97316;
+    --ember-deep:   #c2410c;
+    --ember-glow:   rgba(234, 88, 12, 0.18);
+    --ember-ghost:  rgba(234, 88, 12, 0.08);
+    --ember-border: rgba(234, 88, 12, 0.35);
 
-    --shadow:    0 4px 16px rgba(15, 23, 42, .06);
-    --shadow-lg: 0 16px 36px rgba(15, 23, 42, .09);
+    --glass-bg:     rgba(255, 255, 255, 0.92);
+    --glass-card:   #ffffff;
+    --glass-border: rgba(15, 23, 42, 0.08);
+
+    --shadow-sm:   0 2px 6px rgba(15, 23, 42, 0.05);
+    --shadow:      0 8px 24px -4px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-lg:   0 20px 42px -8px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+    --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -83,51 +132,51 @@ html[data-site-theme="light"] {
 html { scroll-behavior: smooth; }
 
 body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--ink-950);
     color: var(--text);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     transition: background-color .28s var(--ease), color .28s var(--ease);
 
-    /* Hai vệt sáng rất mờ ở góc trên. Nền phẳng tuyệt đối trông chết,
-       thêm chút chiều sâu là trang "thở" hơn hẳn. */
+    /* Vệt sáng nghệ thuật đa tầng, tạo không gian huyền ảo & ấm áp */
     background-image:
-        radial-gradient(900px 400px at 12% -8%,  rgba(240,134,58,.10), transparent 60%),
-        radial-gradient(700px 380px at 88% -12%, rgba(139,124,246,.08), transparent 60%);
+        radial-gradient(1100px 550px at 15% -10%, rgba(255, 122, 26, 0.09), transparent 65%),
+        radial-gradient(900px 480px at 85% -15%,  rgba(139, 92, 246, 0.08), transparent 65%),
+        radial-gradient(750px 380px at 50% 100%,  rgba(16, 185, 129, 0.04), transparent 65%);
     background-attachment: fixed;
 }
 
 a { color: inherit; text-decoration: none; }
 
-::selection { background: var(--ember); color: var(--ink-950); }
+::selection { background: var(--ember); color: #0a0d14; }
 
-/* Thanh cuộn hợp tông, không để mặc định trắng chóe cắt ngang nền tối */
-::-webkit-scrollbar        { width: 11px; height: 11px; }
-::-webkit-scrollbar-track  { background: var(--ink-900); }
-::-webkit-scrollbar-thumb  { background: var(--ink-700); border-radius: 99px;
-                             border: 3px solid var(--ink-900); }
+/* Thanh cuộn hợp tông, bo tròn hiện đại */
+::-webkit-scrollbar        { width: 10px; height: 10px; }
+::-webkit-scrollbar-track  { background: var(--ink-950); }
+::-webkit-scrollbar-thumb  { background: var(--ink-700); border-radius: var(--r-pill);
+                             border: 2px solid var(--ink-950); }
 ::-webkit-scrollbar-thumb:hover { background: var(--ink-600); }
 
-/* Viền focus cho người dùng bàn phím — bắt buộc có, đừng bao giờ outline:none */
+/* Viền focus trợ năng tinh tế */
 :focus-visible {
     outline: 2px solid var(--ember);
     outline-offset: 2px;
-    border-radius: var(--r-sm);
+    border-radius: var(--r-xs);
 }
 
 /* Tinh chỉnh riêng cho chế độ sáng */
 html[data-site-theme="light"] body {
     background-image:
-        radial-gradient(900px 400px at 12% -8%,  rgba(240,134,58,.07), transparent 60%),
-        radial-gradient(700px 380px at 88% -12%, rgba(139,124,246,.05), transparent 60%);
+        radial-gradient(1100px 550px at 15% -10%, rgba(255, 122, 26, 0.06), transparent 65%),
+        radial-gradient(900px 480px at 85% -15%,  rgba(139, 92, 246, 0.05), transparent 65%);
 }
 html[data-site-theme="light"] ::selection {
     color: #ffffff;
 }
-html[data-site-theme="light"] ::-webkit-scrollbar-track  { background: var(--ink-850); }
+html[data-site-theme="light"] ::-webkit-scrollbar-track  { background: var(--ink-950); }
 html[data-site-theme="light"] ::-webkit-scrollbar-thumb  { background: var(--ink-700);
-                             border: 3px solid var(--ink-850); }
+                             border: 2px solid var(--ink-950); }
 html[data-site-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--ink-600); }
 
 /* Chống trình duyệt ghi đè màu nền sáng chói khi autofill */

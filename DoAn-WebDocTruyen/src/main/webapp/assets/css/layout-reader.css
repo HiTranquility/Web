@@ -16,13 +16,13 @@
 
 .reader-body,
 .reader-body[data-theme="dark"] {
-    --rd-bg:       #0f1117;
-    --rd-text:     #e2e8f0;      /* Chữ sáng rõ nét trên nền tối */
+    --rd-bg:       #0a0d14;
+    --rd-text:     #f8fafc;      /* Chữ sáng rõ nét trên nền tối */
     --rd-dim:      #94a3b8;
-    --rd-line:     #1e293b;
-    --rd-bar:      rgba(15, 17, 23, .94);
-    --rd-toc-bg:   #151822;
-    --rd-toc-line: #252a38;
+    --rd-line:     #252f44;
+    --rd-bar:      rgba(10, 13, 20, .92);
+    --rd-toc-bg:   #121722;
+    --rd-toc-line: #252f44;
 }
 
 /* Nền sáng — cho người đọc ban ngày, độ tương phản cao, êm mắt */

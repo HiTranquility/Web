@@ -53,19 +53,28 @@
             </c:if>
 
             <%-- Nút theo dõi tác giả. Không hiện trên hồ sơ của chính mình. --%>
-            <c:if test="${not empty currentUser and currentUser.id ne story.authorId}">
-                <form method="post" style="display:inline;margin-left:10px"
-                      action="${pageContext.request.contextPath}/follow" id="author-follow-form">
-                    <input type="hidden" name="_csrf" value="${csrfToken}">
-                    <input type="hidden" name="do" id="author-follow-do" value="${following ? 'unfollow' : 'follow'}">
-                    <input type="hidden" name="authorId" value="${story.authorId}">
-                    <input type="hidden" name="back" value="story">
-                    <input type="hidden" name="storyId" value="${story.id}">
-                    <button type="submit" class="btn btn-ghost btn-sm" id="author-follow-btn">
-                        <span id="author-follow-label">${following ? '✓ Đang theo dõi' : '+ Theo dõi'}</span>
-                    </button>
-                </form>
-            </c:if>
+            <c:choose>
+                <c:when test="${not empty currentUser and currentUser.id ne story.authorId}">
+                    <form method="post" style="display:inline;margin-left:10px"
+                          action="${pageContext.request.contextPath}/follow" id="author-follow-form">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                        <input type="hidden" name="do" id="author-follow-do" value="${following ? 'unfollow' : 'follow'}">
+                        <input type="hidden" name="authorId" value="${story.authorId}">
+                        <input type="hidden" name="back" value="story">
+                        <input type="hidden" name="storyId" value="${story.id}">
+                        <button type="submit" class="btn btn-ghost btn-sm" id="author-follow-btn">
+                            <span id="author-follow-label">${following ? '✓ Đang theo dõi' : '+ Theo dõi'}</span>
+                        </button>
+                    </form>
+                </c:when>
+                <c:when test="${empty currentUser}">
+                    <a class="btn btn-ghost btn-sm" id="author-follow-btn-guest" style="margin-left:10px"
+                       href="${pageContext.request.contextPath}/auth?action=login&amp;reason=follow&amp;redirect=${pageContext.request.contextPath}/story?action=detail%26id=${story.id}"
+                       title="Đăng nhập để theo dõi tác giả">
+                        <span>+ Theo dõi</span>
+                    </a>
+                </c:when>
+            </c:choose>
         </p>
 
         <div class="tag-row" style="margin:14px 0">
@@ -104,28 +113,46 @@
                 <c:when test="${not empty firstChapter}">
                     <a class="btn ${empty resumeChapterId ? 'btn-primary' : 'btn-ghost'}"
                        href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${firstChapter.id}">
-                        Đọc từ đầu</a>
+                        <c:choose>
+                            <c:when test="${empty currentUser}">🔒 Đọc từ đầu (Cần đăng nhập)</c:when>
+                            <c:otherwise>Đọc từ đầu</c:otherwise>
+                        </c:choose>
+                    </a>
                 </c:when>
                 <c:when test="${not empty chapters}">
                     <a class="btn ${empty resumeChapterId ? 'btn-primary' : 'btn-ghost'}"
                        href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${chapters[0].id}">
-                        Đọc từ đầu</a>
+                        <c:choose>
+                            <c:when test="${empty currentUser}">🔒 Đọc từ đầu (Cần đăng nhập)</c:when>
+                            <c:otherwise>Đọc từ đầu</c:otherwise>
+                        </c:choose>
+                    </a>
                 </c:when>
             </c:choose>
 
-            <%-- Nút lưu/bỏ lưu. Chỉ hiện khi đã đăng nhập.
-                 Là form POST vì đây là hành động GHI, không phải link. --%>
-            <c:if test="${not empty currentUser}">
-                <form action="${pageContext.request.contextPath}/bookmark" method="post"
-                      style="display:inline" id="bookmark-form">
-                    <input type="hidden" name="_csrf" value="${csrfToken}">
-                    <input type="hidden" name="action" id="bookmark-action" value="${bookmarked ? 'remove' : 'add'}">
-                    <input type="hidden" name="storyId" value="${story.id}">
-                    <button type="submit" class="btn btn-ghost" id="bookmark-btn">
-                        <span id="bookmark-label">${bookmarked ? '★ Đã lưu' : '☆ Lưu truyện'}</span>
-                    </button>
-                </form>
-            </c:if>
+            <%-- Nút lưu/bỏ lưu.
+                 - Đã đăng nhập: Form POST với AJAX chuyển đổi trạng thái tức thì.
+                 - Chưa đăng nhập: Nút bấm dẫn đến đăng nhập kèm ghi nhớ quay lại trang truyện. --%>
+            <c:choose>
+                <c:when test="${not empty currentUser}">
+                    <form action="${pageContext.request.contextPath}/bookmark" method="post"
+                          style="display:inline" id="bookmark-form">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                        <input type="hidden" name="action" id="bookmark-action" value="${bookmarked ? 'remove' : 'add'}">
+                        <input type="hidden" name="storyId" value="${story.id}">
+                        <button type="submit" class="btn btn-ghost" id="bookmark-btn">
+                            <span id="bookmark-label">${bookmarked ? '★ Đã lưu' : '☆ Lưu truyện'}</span>
+                        </button>
+                    </form>
+                </c:when>
+                <c:otherwise>
+                    <a class="btn btn-ghost" id="bookmark-btn-guest"
+                       href="${pageContext.request.contextPath}/auth?action=login&amp;reason=bookmark&amp;redirect=${pageContext.request.contextPath}/story?action=detail%26id=${story.id}"
+                       title="Đăng nhập để lưu truyện vào tủ sách">
+                        <span id="bookmark-label">☆ Lưu truyện</span>
+                    </a>
+                </c:otherwise>
+            </c:choose>
 
             <a class="btn btn-ghost"
                href="${pageContext.request.contextPath}/download?storyId=${story.id}">
@@ -322,6 +349,16 @@
                    style="max-width: 200px; padding: 4px 12px; font-size: 0.85rem; border-radius: 20px;"
                    title="Gõ số chương hoặc từ khóa tiêu đề để lọc nhanh" />
         </div>
+    </div>
+</c:if>
+
+<c:if test="${empty currentUser}">
+    <div class="login-prompt-banner" style="background: rgba(255, 122, 26, 0.08); border: 1px solid rgba(255, 122, 26, 0.25); border-radius: var(--radius-md); padding: 12px 18px; margin: 12px 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 10px; color: var(--ink-200); font-size: 0.92rem;">
+            <span style="font-size: 1.25rem;">🔒</span>
+            <span>Bạn cần <strong>đăng nhập tài khoản</strong> để bắt đầu đọc hoặc tải các chương truyện này.</span>
+        </div>
+        <a href="${pageContext.request.contextPath}/auth?action=login" class="btn btn-primary btn-sm" style="white-space: nowrap;">Đăng nhập ngay</a>
     </div>
 </c:if>
 
@@ -733,6 +770,28 @@
             .catch(function () {
                 fForm.submit();
             });
+        });
+    }
+
+    var bGuest = document.getElementById('bookmark-btn-guest');
+    if (bGuest) {
+        bGuest.addEventListener('click', function (e) {
+            e.preventDefault();
+            toastFn('🔒 Vui lòng đăng nhập để lưu truyện vào tủ sách!');
+            setTimeout(function () {
+                window.location.href = bGuest.href;
+            }, 600);
+        });
+    }
+
+    var fGuest = document.getElementById('author-follow-btn-guest');
+    if (fGuest) {
+        fGuest.addEventListener('click', function (e) {
+            e.preventDefault();
+            toastFn('🔒 Vui lòng đăng nhập để theo dõi tác giả!');
+            setTimeout(function () {
+                window.location.href = fGuest.href;
+            }, 600);
         });
     }
 
