@@ -1,278 +1,271 @@
-# Cấu trúc dự án — bản đồ toàn bộ
+# 🏗️ CẤU TRÚC CODEBASE & QUY CHUẨN THIẾT KẾ HỆ THỐNG
 
-Tài liệu này trả lời đúng một câu hỏi: **file này bỏ vào đâu?**
-
-Đọc xong thì không phải nghĩ về cấu trúc nữa. Cấu trúc bên dưới là **bản cuối**,
-không đổi cho tới lúc nộp bài.
+> **Tài liệu chuẩn hóa cấu trúc thư mục, quy tắc đặt để file mã nguồn, bản đồ đối chiếu Sơ đồ ↔ Codebase (Sequence Tracing) và cẩm nang thay đổi UI/Logic cho đồ án ĐọcTruyện.**  
+> Cập nhật: 2026-10-05 · **Phiên bản:** Hoàn thiện 25 Module Công nghệ Nâng cao · **Độ phủ test:** 126/126 Unit Tests PASS.
 
 ---
 
-## Trước hết: Cấu trúc được định hình chặt chẽ
-
-Toàn bộ dự án sau khi hoàn thiện đầy đủ cả 11 CASE và các chức năng nâng cao:
-
-| Loại | Số file | Thư mục | Ghi chú |
-|------|--------:|--------:|---------|
-| Java | 58 | 7 | Phân tầng: `model`, `dao`, `controller` (`common`, `user`, `admin`), `filter`, `util` |
-| JSP | 57 | 9 | Gồm 4 khung layout, các `parts/`, `_partials/` và các trang theo tính năng |
-| CSS | 6 | 1 | Nạp tầng: `base.css` → `components.css` → `layout-*.css` |
-| **Tổng** | **121** | **17** | |
-
-**Layout thì đúng 4 cái.** Không phải 10, không phải 20.
-
-Lý do: layout không sinh theo TRANG, nó sinh theo **KHUNG**. Hơn 30 trang nhưng chỉ
-có 4 kiểu khung: `main` (trang chủ, kho truyện, thông tin truyện,...), `auth` (đăng nhập/đăng ký), `reader` (tối giản đọc chương), và `admin` (sidebar quản trị).
+## 📑 MỤC LỤC
+1. [Triết lý Kiến trúc & Quy tắc "Nó nói chuyện với ai?"](#1-triết-lý-kiến-trúc--quy-tắc-nó-nói-chuyện-với-ai)
+2. [Bản đồ Toàn bộ Thư mục Mã nguồn (Project Directory Map)](#2-bản-đồ-toàn-bộ-thư-mục-mã-nguồn-project-directory-map)
+3. [Vòng đời Xử lý Yêu cầu (Request Lifecycle Flow)](#3-vòng-đời-xử-lý-yêu-cầu-request-lifecycle-flow)
+4. [Bản đồ Tra cứu Nhanh: Sơ đồ Tuần tự ↔ File Codebase](#4-bản-đồ-tra-cứu-nhanh-sơ-đồ-tuần-tự--file-codebase)
+5. [Cẩm nang Thay đổi Giao diện (UI) Không Làm Vỡ Hệ thống](#5-cẩm-nang-thay-đổi-giao-diện-ui-không-làm-vỡ-hệ-thống)
+6. [Quy trình 4 Bước Thêm hoặc Mở rộng Tính năng Nghiệp vụ](#6-quy-trình-4-bước-thêm-hoặc-mở-rộng-tính-năng-nghiệp-vụ)
+7. [Các Nguyên tắc Vàng (Best Practices & Anti-patterns)](#7-các-nguyên-tắc-vàng-best-practices--anti-patterns)
 
 ---
 
-## Quy tắc DUY NHẤT: file này bỏ vào đâu
+## 1. Triết lý Kiến trúc & Quy tắc "Nó nói chuyện với ai?"
 
-Hỏi một câu: **"Nó nói chuyện với ai?"**
+Dự án áp dụng mô hình chuẩn **MVC Model 2 (Model - View - Controller)** thuần Java, Server-side Rendering (SSR) không pha tạp thư viện cồng kềnh.
 
-| Nó nói chuyện với… | Bỏ vào | Ví dụ |
-|--------------------|--------|-------|
-| **Database** | `dao/` | `StoryDAO` |
-| **Trình duyệt** (đọc request, trả response) | `controller/` | `StoryServlet` |
-| **Không ai** — chỉ chứa dữ liệu | `model/` | `Story` |
-| **Không ai** — chỉ là hàm tiện ích | `util/` | `SlugUtil` |
-| **Chỉ vẽ HTML** | `views/` | `list.jsp` |
-| **Chặn request trước khi vào controller** | `filter/` | `AuthFilter` |
+Để giữ codebase luôn ngăn nắp và không bị rối khi mở rộng, quy tắc quyết định duy nhất khi tạo file hoặc tìm kiếm code là: **"File này nói chuyện với ai?"**
 
-Không có trường hợp thứ bảy. Nếu một file không rơi vào ô nào, gần như chắc
-chắn nó đang làm **hai việc** — tách đôi ra.
+| Nó nói chuyện với… | Bỏ vào tầng | Nhiệm vụ chính | Ví dụ điển hình |
+|---|---|---|---|
+| **Cơ sở dữ liệu (MySQL)** | `src/main/java/truyen/dao/` | 100% câu lệnh SQL qua PreparedStatement, HikariCP Connection Pool, không đụng request/response | `StoryDAO.java`, `UnlockDAO.java` |
+| **Trình duyệt (Browser / Client)** | `src/main/java/truyen/controller/` | Tiếp nhận HTTP Request, đọc tham số, phân quyền, gọi DAO, gắn dữ liệu vào request và forward tới view | `ChapterServlet.java`, `WalletServlet.java` |
+| **Không ai — chỉ là túi dữ liệu** | `src/main/java/truyen/model/` | JavaBean thuần (POJO), chứa trường dữ liệu, getters/setters, không chứa logic nghiệp vụ nặng | `Chapter.java`, `Review.java`, `DailyQuest.java` |
+| **Không ai — chỉ là hàm thuật toán** | `src/main/java/truyen/util/` | Các hàm static xử lý chuỗi, mã hóa mật khẩu, kiểm tra bot, nén EPUB, cấu hình hệ thống | `PasswordUtil.java`, `EpubWriter.java` |
+| **Chặn & tiền xử lý HTTP Request** | `src/main/java/truyen/filter/` | Lọc request trước khi đến Controller (UTF-8, CSRF, chống spam RateLimiter, phân quyền URL) | `AuthFilter.java`, `CsrfFilter.java` |
+| **Người dùng nhìn thấy (Vẽ HTML)** | `src/main/webapp/WEB-INF/views/` | File JSP render giao diện, dùng EL/JSTL `<c:out>`, không chứa mã Java scriplet `<% %>` | `detail.jsp`, `read.jsp`, `form.jsp` |
+| **Tài nguyên tĩnh (Static Assets)** | `src/main/webapp/assets/` | CSS phân tầng, Vanilla JS độc lập nạp defer, hình ảnh minh họa | `base.css`, `components.css`, `nav.js` |
+
+> 💡 **Nguyên tắc phân định ranh giới:** Nếu một file làm cả 2 việc (vừa query SQL vừa in HTML, hoặc vừa xử lý request vừa tính toán thuật toán phức tạp), **hãy tách đôi ra ngay lập tức**.
 
 ---
 
-## Java — Phân tầng rõ ràng theo vai trò & trách nhiệm
+## 2. Bản đồ Toàn bộ Thư mục Mã nguồn (Project Directory Map)
 
 ```text
-src/main/java/truyen/
-├── model/          11 file — JavaBean thuần, chỉ get/set, khớp bảng CSDL & view object
-│   ├── User.java        Story.java       Chapter.java
-│   ├── Tag.java         Comment.java     Bookmark.java
-│   ├── Rating.java      Follow.java      Report.java
-│   └── Notification.java ReadHistory.java
-│
-├── dao/            12 file — chỉ xử lý SQL, Prepared Statement, không đụng request/response
-│   ├── UserDAO.java     StoryDAO.java    ChapterDAO.java
-│   ├── TagDAO.java      CommentDAO.java  BookmarkDAO.java
-│   ├── RatingDAO.java   FollowDAO.java   ReportDAO.java
-│   ├── NotificationDAO.java ViewLogDAO.java PasswordResetDAO.java
-│
-├── controller/     23 servlet — chia 4 package theo vai trò & quyền hạn (Role-based)
+DoAn-WebDocTruyen/
+├── src/main/java/truyen/
+│   ├── model/                  (15 Models — JavaBeans / DTOs khớp CSDL)
+│   │   ├── User.java           Story.java          Chapter.java        Tag.java
+│   │   ├── Comment.java        Bookmark.java       Rating.java         Follow.java
+│   │   ├── Report.java         Notification.java   ReadHistory.java    Wallet.java
+│   │   ├── Transaction.java    Review.java         DailyQuest.java
 │   │
-│   ├── common/     8 servlet — công khai, trang chủ, đọc truyện, xác thực, tải file
-│   │   ├── HomeServlet.java          /            trang chủ
-│   │   ├── AuthServlet.java          /auth        đăng nhập, đăng ký, đăng xuất, OAuth Google
-│   │   ├── StoryServlet.java         /story       danh sách, chi tiết, tìm kiếm truyện
-│   │   ├── ChapterServlet.java       /chapter     đọc chương, mục lục chương
-│   │   ├── DownloadServlet.java      /download    tải truyện dạng .txt
-│   │   ├── PageServlet.java          /page        hướng dẫn sử dụng, nội quy
-│   │   ├── RankServlet.java          /rank        bảng xếp hạng lượt xem, đánh giá
-│   │   └── UploadedFileServlet.java  /uploads/*   phục vụ ảnh upload an toàn
+│   ├── dao/                    (17 DAOs — Truy vấn CSDL nguyên tử)
+│   │   ├── UserDAO.java        StoryDAO.java       ChapterDAO.java     TagDAO.java
+│   │   ├── CommentDAO.java     BookmarkDAO.java    RatingDAO.java      FollowDAO.java
+│   │   ├── ReportDAO.java      NotificationDAO.java ViewLogDAO.java    PasswordResetDAO.java
+│   │   ├── WalletDAO.java      UnlockDAO.java      ReviewDAO.java      GamificationDAO.java
 │   │
-│   ├── user/       8 servlet — thành viên đã đăng nhập (bình luận, theo dõi, cá nhân)
-│   │   ├── UserServlet.java          /user/*      hồ sơ cá nhân, đổi mật khẩu, avatar
-│   │   ├── BookmarkServlet.java      /bookmark    đánh dấu & lưu vị trí chương đọc dở
-│   │   ├── CommentServlet.java       /comment     gửi, xoá bình luận
-│   │   ├── FollowServlet.java        /follow      theo dõi truyện yêu thích
-│   │   ├── HistoryServlet.java       /history     lịch sử các chương đã đọc
-│   │   ├── NotificationServlet.java  /notification thông báo hệ thống
-│   │   ├── RatingServlet.java        /rating      chấm điểm sao truyện
-│   │   └── ReportServlet.java        /report      báo cáo vi phạm nội dung
+│   ├── controller/             (19 Servlets — Điều hướng & Xử lý nghiệp vụ)
+│   │   ├── common/             (Nhóm Công cộng & Đọc truyện)
+│   │   │   ├── HomeServlet.java            Trang chủ (/)
+│   │   │   ├── StoryServlet.java           Kho truyện, Chi tiết, Tìm kiếm, Đánh giá (/story)
+│   │   │   ├── ChapterServlet.java         Đọc chương, Thêm/Sửa chương (/chapter)
+│   │   │   ├── RankServlet.java            Bảng xếp hạng truyện & tác giả (/rank)
+│   │   │   ├── PageServlet.java            Hướng dẫn, Nội quy (/page)
+│   │   │   ├── DownloadServlet.java        Xuất tải truyện .txt (/download)
+│   │   │   ├── SitemapServlet.java         SEO sitemap.xml (/sitemap.xml)
+│   │   │   ├── ApiServlet.java             RESTful JSON API (/api/*)
+│   │   │   └── ErrorServlet.java           Bắt lỗi tập trung 403, 404, 500 (/error)
+│   │   │
+│   │   ├── user/               (Nhóm Thành viên & Tác giả)
+│   │   │   ├── AuthServlet.java            Đăng nhập, Đăng ký, Quên MK, Google OIDC (/auth)
+│   │   │   ├── UserServlet.java            Hồ sơ, Đổi MK, Gamification Quests (/user)
+│   │   │   ├── BookmarkServlet.java        Lưu truyện & Tiến độ đọc (/bookmark)
+│   │   │   ├── HistoryServlet.java         Lịch sử đọc truyện (/history)
+│   │   │   ├── FollowServlet.java          Theo dõi tác giả (/follow)
+│   │   │   ├── NotificationServlet.java    Hộp thông báo cá nhân (/notification)
+│   │   │   ├── CommentServlet.java         Bình luận đa cấp & Thả tim (/comment)
+│   │   │   ├── ReportServlet.java          Báo cáo vi phạm nội dung (/report)
+│   │   │   └── WalletServlet.java          Ví xu ảo & Mở khóa chương VIP (/wallet)
+│   │   │
+│   │   ├── story/              (Nhóm Tác vụ Đám mây)
+│   │   │   └── DriveBackupServlet.java     Sao lưu Google Drive API v3 (/backup/drive)
+│   │   │
+│   │   └── admin/              (Nhóm Quản trị viên)
+│   │       ├── AdminDashboardServlet.java  Thống kê tổng quan (/admin/dashboard)
+│   │       ├── AdminStoryServlet.java      Duyệt, gỡ & khôi phục truyện (/admin/story)
+│   │       ├── AdminUserServlet.java       Quản lý tài khoản, khóa vi phạm (/admin/user)
+│   │       ├── AdminTagServlet.java        Quản lý thể loại truyện (/admin/tag)
+│   │       ├── AdminCommentServlet.java    Kiểm duyệt bình luận (/admin/comment)
+│   │       └── AdminReportServlet.java     Xử lý báo cáo & xem bằng chứng (/admin/report)
 │   │
-│   ├── story/      1 servlet — tác giả sao lưu dữ liệu
-│   │   └── DriveBackupServlet.java   /drive       sao lưu truyện lên Google Drive cho tác giả
+│   ├── filter/                 (6 Filters — Vòng tròn bảo mật đa lớp)
+│   │   ├── EncodingFilter.java         Ép bảng mã UTF-8 toàn hệ thống
+│   │   ├── CsrfFilter.java             Chống tấn công CSRF trên mọi request POST
+│   │   ├── RecaptchaFilter.java        Chặn bot spam reCAPTCHA v3 ở cửa đăng ký/bình luận
+│   │   ├── AuthFilter.java             Chặn khách chưa đăng nhập khi đọc chương/tải truyện
+│   │   ├── AdminFilter.java            Bảo vệ khu vực quản trị viên `/admin/*`
+│   │   └── NotificationFilter.java     Tự động nạp số lượng thông báo chưa đọc vào thanh menu
 │   │
-│   └── admin/      6 servlet — quản trị viên (AdminFilter bảo vệ)
-│       ├── AdminDashboardServlet.java /admin/dashboard thống kê tổng quan
-│       ├── AdminStoryServlet.java     /admin/story     quản lý, duyệt, gỡ truyện
-│       ├── AdminUserServlet.java      /admin/user      quản lý, khoá tài khoản, cấp quyền
-│       ├── AdminTagServlet.java       /admin/tag       thêm, sửa thể loại
-│       ├── AdminCommentServlet.java   /admin/comment   kiểm duyệt bình luận
-│       └── AdminReportServlet.java    /admin/report    xử lý đơn báo cáo
+│   └── util/                   (15 Utilities — Thư viện tiện ích)
+│       ├── DBConnection.java           HikariCP Connection Pool kết nối MySQL
+│       ├── PasswordUtil.java           Băm mật khẩu PBKDF2WithHmacSHA256 kèm muối ngẫu nhiên
+│       ├── SlugUtil.java               Chuẩn hóa tiêu đề thành URL slug không dấu
+│       ├── CsrfUtil.java               Sinh & kiểm tra token bảo mật phiên
+│       ├── RateLimiter.java            Thuật toán Sliding Window chặn brute-force & spam
+│       ├── MailSender.java             Gửi email SMTP JavaMail thật & bất đồng bộ
+│       ├── EpubWriter.java             Đóng gói file truyện chuẩn quốc tế EPUB 2.0
+│       ├── UploadUtil.java             Xử lý tải ảnh bìa, kiểm soát dung lượng & định dạng
+│       ├── GoogleConfig.java           Đọc cấu hình OIDC Client ID & Google Drive
+│       ├── GoogleTokenVerifier.java    Xác thực chữ ký JWT idToken từ Google
+│       ├── RecaptchaVerifier.java      Xác thực điểm số bot Google reCAPTCHA v3
+│       ├── DriveClient.java            Giao tiếp Google Drive REST API v3
+│       ├── ChapterToTxt.java           Chuyển đổi nội dung chương sang văn bản thuần
+│       ├── ServletHelper.java          Đọc tham số an toàn, redirect, session helper
+│       └── DemoData.java               Dữ liệu mẫu dự phòng khi chưa bật CSDL
 │
-├── filter/         6 filter — bộ lọc bảo mật & tiền xử lý request
-│   ├── EncodingFilter.java      ép chuẩn UTF-8 mọi request/response
-│   ├── CsrfFilter.java          chặn tấn công CSRF trên mọi form POST
-│   ├── RecaptchaFilter.java     chặn bot reCAPTCHA v3 ở 3 cửa (đăng ký, đăng nhập, bình luận)
-│   ├── AuthFilter.java          bảo vệ các URL yêu cầu đăng nhập (`/user/*`, `/bookmark`, `/drive`, ...)
-│   ├── AdminFilter.java         bảo vệ vùng `/admin/*` chỉ dành cho role ADMIN
-│   └── NotificationFilter.java  tự nạp số lượng thông báo chưa đọc vào request
-│
-└── util/           13 file — tiện ích dùng chung
-    ├── DBConnection.java        mở kết nối MySQL qua Connection Pool
-    ├── PasswordUtil.java        băm mật khẩu PBKDF2WithHmacSHA256 kèm muối ngẫu nhiên
-    ├── SlugUtil.java            chuẩn hoá URL thân thiện (bỏ dấu tiếng Việt, ký tự lạ)
-    ├── CsrfUtil.java            sinh và xác thực CSRF Token
-    ├── GoogleConfig.java        đọc cấu hình Google OAuth, Firebase & reCAPTCHA an toàn
-    ├── GoogleTokenVerifier.java xác thực chữ ký số idToken Google OIDC (chống giả mạo)
-    ├── RecaptchaVerifier.java   xác minh điểm số bot Google reCAPTCHA v3 (fail-open 2s)
-    ├── DriveClient.java         kết nối Google Drive REST API v3 tải & ghi đè file
-    ├── ChapterToTxt.java        định dạng chương truyện & toàn bộ truyện sang .txt chuẩn
-    ├── UploadUtil.java          kiểm tra đuôi ảnh, chống path traversal khi tải lên
-    ├── ServletHelper.java       tiện ích lấy tham số an toàn, redirect, trả JSON
-    ├── DemoData.java            dữ liệu mẫu khi chạy thử nghiệm
-    └── AppListener.java         khởi tạo ngữ cảnh ứng dụng khi server start
+├── src/main/webapp/
+│   ├── WEB-INF/views/
+│   │   ├── layouts/            (5 Khung Layout chuyên biệt)
+│   │   │   ├── main.jsp        Khung chính (Nav + Nội dung + Footer)
+│   │   │   ├── auth.jsp        Khung thẻ căn giữa màn hình (Đăng nhập/Đăng ký)
+│   │   │   ├── reader.jsp      Khung đọc truyện chuẩn quang học (38em, Zen)
+│   │   │   ├── editor.jsp      Khung soạn thảo toàn màn hình cho tác giả
+│   │   │   └── admin.jsp       Khung bảng điều khiển có Sidebar quản trị
+│   │   │
+│   │   ├── _partials/          (14 Mảnh giao diện tái sử dụng)
+│   │   │   ├── _nav.jsp        Thanh điều hướng kính mờ
+│   │   │   ├── _footer.jsp     Chân trang thông tin & bản quyền
+│   │   │   ├── _card.jsp       Thẻ truyện dạng lưới (Story Grid Card)
+│   │   │   ├── _rating-stars.jsp Hiển thị sao đánh giá
+│   │   │   ├── _pagination.jsp Thanh phân trang bảo toàn tham số
+│   │   │   ├── _toast.jsp      Thông báo nổi Toast
+│   │   │   └── ...             (Các mảnh thành phần khác)
+│   │   │
+│   │   ├── common/             (Giao diện công cộng: home, rank, story, chapter, page)
+│   │   ├── user/               (Giao diện cá nhân, tủ sách, ví xu, soạn thảo chương)
+│   │   ├── auth/               (Giao diện đăng nhập, đăng ký, quên mật khẩu)
+│   │   ├── admin/              (Giao diện bảng điều khiển quản trị)
+│   │   └── error/              (Giao diện trang lỗi 403, 404, 500)
+│   │
+│   └── assets/
+│       ├── css/
+│       │   ├── base.css        Design Tokens (HSL colors, dark/light theme, typography)
+│       │   ├── components.css  Thành phần UI (Buttons, Cards, Badges, Modals, Forms)
+│       │   ├── layout-main.css Bố cục khung chính
+│       │   ├── layout-auth.css Bố cục khung đăng nhập
+│       │   ├── layout-reader.css Bố cục trang đọc chương
+│       │   ├── layout-admin.css Bố cục trang quản trị
+│       │   └── ...             (Page CSS đặc thù: stats.css, rank.css)
+│       ├── js/
+│       │   ├── nav.js          Điều hướng, menu mobile, chuyển theme Dark/Light
+│       │   ├── pwa.js          Đăng ký Service Worker & Cache ngoại tuyến
+│       │   └── reader.js       Phím tắt đọc chương, thanh tiến độ cuộn
+│       └── images/             (Ảnh bìa mẫu, logo, icons)
 ```
-
-> **Tại sao tách `controller/` thành 3 package `common`, `user`, `admin`?**
-> - **Rõ ràng quyền hạn:** Nhìn vào package biết ngay servlet cần mức quyền nào. `AdminFilter` chỉ cần soi URL `/admin/*`, `AuthFilter` quản lý các servlet trong `user/`.
-> - **Dễ làm việc nhóm:** Nhóm làm giao diện người dùng không bị xung đột code với nhóm làm module quản trị.
-> - **Mỗi servlet phụ trách một việc:** Giữ servlet gọn gàng, xử lý qua nhánh `?action=` cho các thao tác cùng thực thể.
 
 ---
 
-## Views — Tổ chức theo 4 nhóm vai trò + 2 nhóm dùng chung
+## 3. Vòng đời Xử lý Yêu cầu (Request Lifecycle Flow)
+
+Mọi HTTP Request từ trình duyệt gửi về máy chủ Tomcat đều đi qua một chu trình khép kín, được kiểm soát qua 5 chốt chặn:
 
 ```text
-WEB-INF/views/
-├── layout/         KHUNG BỐ CỤC — 5 layout wrapper chính
-│   ├── main.jsp        nav + nội dung + footer (trang chủ, kho truyện, thông tin,...)
-│   ├── auth.jsp        card giữa màn hình, không nav (đăng nhập, đăng ký, quên mk)
-│   ├── reader.jsp      tối giản, dải tiến độ, thanh công cụ đọc chương
-│   ├── editor.jsp      giao diện soạn thảo chương truyện toàn màn hình
-│   ├── admin.jsp       có sidebar quản trị bên trái
-│   └── parts/          mảnh dùng chung giữa các layout (head.jsp, nav.jsp, footer.jsp)
-│
-├── _partials/      MẢNH GIAO DIỆN TÁI SỬ DỤNG — nhúng tĩnh bằng <%@ include %>
-│   ├── _card.jsp          thẻ truyện dạng lưới (grid card)
-│   ├── _cover.jsp         ảnh bìa truyện hoặc chữ cái đại diện
-│   ├── _chapter-list.jsp  bảng danh sách chương phân trang
-│   ├── _comment.jsp       khối bình luận lồng nhau
-│   ├── _pagination.jsp    thanh chuyển trang giữ nguyên tham số lọc
-│   ├── _rating-stars.jsp  hiển thị số sao đánh giá
-│   ├── _stat-tile.jsp     khối số liệu thống kê
-│   ├── _story-row.jsp     hàng truyện dạng danh sách ngang
-│   ├── _tag-filter.jsp    bộ lọc thể loại truyện
-│   └── _empty.jsp         trạng thái rỗng khi không có dữ liệu
-│
-├── auth/           XÁC THỰC — đi kèm layout/auth.jsp
-│   ├── login.jsp       form đăng nhập + đăng nhập Google OAuth
-│   ├── register.jsp    form đăng ký thành viên
-│   ├── forgot.jsp      form quên mật khẩu
-│   └── reset.jsp       form đặt lại mật khẩu mới
-│
-├── common/         TRANG CÔNG KHAI / CHUNG — ai cũng xem được
-│   ├── home.jsp        trang chủ hệ thống (/)
-│   ├── rank.jsp        bảng xếp hạng (/rank)
-│   ├── story/          list.jsp (kho truyện), detail.jsp (chi tiết), search.jsp (tìm kiếm)
-│   ├── chapter/        read.jsp (đọc chương), toc.jsp (mục lục thả xuống), raw.jsp, _block.jsp
-│   └── page/           guide.jsp, rules.jsp, error403.jsp, error404.jsp, error500.jsp
-│
-├── user/           THÀNH VIÊN & TÁC GIẢ — yêu cầu đăng nhập
-│   ├── profile.jsp     hồ sơ công khai
-│   ├── me.jsp          trang cá nhân của tôi
-│   ├── edit.jsp        chỉnh sửa hồ sơ, đổi mật khẩu
-│   ├── bookmarks.jsp   tủ sách truyện đã đánh dấu
-│   ├── history.jsp     lịch sử đọc
-│   ├── following.jsp   truyện đang theo dõi
-│   ├── notifications.jsp danh sách thông báo
-│   ├── story/          form.jsp (đăng/sửa truyện), mine.jsp (quản lý), stats.jsp (thống kê)
-│   └── chapter/        form.jsp (thêm/sửa chương)
-│
-└── admin/          QUẢN TRỊ VIÊN — chỉ dành cho role ADMIN
-    ├── dashboard.jsp   thống kê tổng quan hệ thống
-    ├── stories.jsp     quản lý, duyệt, gỡ truyện
-    ├── users.jsp       quản lý tài khoản, phân quyền, khoá
-    ├── tags.jsp        quản lý thể loại truyện
-    ├── comments.jsp    kiểm duyệt bình luận
-    └── reports.jsp     xử lý báo cáo vi phạm
+[Trình duyệt (Browser)]
+       │ (HTTP Request: GET/POST)
+       ▼
+ [1. EncodingFilter]     ───> Ép UTF-8 request & response (chống lỗi font tiếng Việt)
+       │
+ [2. CsrfFilter]         ───> Kiểm tra _csrf Token cho mọi POST/PUT/DELETE
+       │
+ [3. RecaptchaFilter]    ───> Kiểm tra điểm bot reCAPTCHA v3 tại form nhạy cảm
+       │
+ [4. Auth / AdminFilter] ───> Kiểm tra quyền đăng nhập (User) hoặc quyền Quản trị (Admin)
+       │
+ [5. Servlet Controller] ───> Đọc action parameter (?action=...)
+       │                      ├── Validate tham số đầu vào
+       │                      ├── Gọi DAO / Service thực hiện logic CSDL
+       │                      └── Gán dữ liệu vào request.setAttribute(...)
+       ▼
+ [JSP Layout & Content]  ───> Layout nhúng Content Page qua <jsp:include>
+       │                      └── Escape XSS qua <c:out value="..."/>
+       ▼
+[Trả về HTML cho Browser]
 ```
-
-### Quy ước tên file — nhìn tên biết loại
-
-| Tên | Là gì | Ai gọi |
-|-----|-------|--------|
-| `list.jsp` | **mảnh nội dung** — không có `<html>` | servlet trỏ `contentPage` vào |
-| `_card.jsp` | **mảnh nhỏ** tái dùng nhiều nơi | `<c:forEach>` trong mảnh khác |
-| `main.jsp` | **khung** — có `<html>`, chèn mảnh vào giữa | servlet forward tới |
-| `error404.jsp` | **trang phóng** 3 dòng | Tomcat forward thẳng tới |
-
-Chỉ trang lỗi mới cần cặp phóng/mảnh, vì Tomcat gọi thẳng nó, không qua servlet
-nào nên không ai đặt hộ `contentPage`.
 
 ---
 
-## Khi nào được tạo layout MỚI
+## 4. Bản đồ Tra cứu Nhanh: Sơ đồ Tuần tự ↔ File Codebase
 
-Đây là chỗ dễ đẻ ra 10 layout nhất. Quy tắc:
+Khi xem các Sơ đồ Tuần tự (Sequence Diagrams) hoặc muốn kiểm tra, chỉnh sửa từng luồng nghiệp vụ, hãy tra cứu theo bảng dưới đây:
 
-> **Layout mới chỉ khi KHUNG khác — không phải khi NỘI DUNG khác.**
-
-Khung = thanh nav, chân trang, khối bao ngoài. Nội dung khác nhau là chuyện
-bình thường, đó là lý do có nhiều mảnh nội dung chứ không phải nhiều layout.
-
-### Bảng quyết định — hỏi lần lượt, dừng ở câu đầu tiên trả lời "có"
-
-| # | Câu hỏi | Có → dùng |
-|:-:|---------|-----------|
-| 1 | Có thanh nav như trang chủ không? | `main` |
-| 2 | Người chưa đăng nhập, cần ô nhập giữa màn hình? | `auth` |
-| 3 | Có menu bên trái của quản trị? | `admin` |
-| 4 | Toàn màn hình, bỏ hết thứ gây phân tâm để đọc? | `reader` |
-| 5 | Không câu nào ở trên | **`main`** — đừng tạo mới |
-
-Câu 5 quan trọng nhất. Mặc định là `main`, không phải "tạo cái mới cho chắc".
-
-### Ví dụ áp dụng
-
-| Trang mới | Layout | Vì sao |
-|-----------|--------|--------|
-| Trang cá nhân tác giả | `main` | vẫn nav + footer như thường |
-| Kết quả tìm kiếm | `main` | y hệt kho truyện, chỉ khác dữ liệu |
-| Quên mật khẩu | `auth` | chưa đăng nhập, một ô nhập |
-| Thống kê lượt đọc | `admin` | nằm trong khu quản trị |
-| Xem trước chương | `reader` | cần y hệt trải nghiệm đọc |
-
-**5 trang mới, 0 layout mới.**
+| Luồng Nghiệp Vụ / Sơ Đồ | File Controller Phụ Trách | File DAO Thực Thi SQL | File JSP Giao Diện | File CSS Định Dạng |
+|---|---|---|---|---|
+| **Chương VIP & Paywall Mở Khóa** (`diagram_seq_vip.png`) | [ChapterServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/common/ChapterServlet.java)<br>[WalletServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/user/WalletServlet.java) | [UnlockDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/UnlockDAO.java)<br>[WalletDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/WalletDAO.java) | `common/chapter/read.jsp`<br>`common/story/detail.jsp`<br>`user/chapter/form.jsp` | `layout-reader.css`<br>`components.css` (`.vip-card`, `.badge-vip`) |
+| **Đánh Giá & Cảnh Báo Spoiler** (`diagram_seq_review.png`) | [StoryServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/common/StoryServlet.java) | [ReviewDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/ReviewDAO.java) | `common/story/detail.jsp` | `components.css` (`.spoiler-box`, `.review-card`) |
+| **Gamification & Nhiệm Vụ Ngày** (`diagram_seq_gamification.png`) | [UserServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/user/UserServlet.java) | [GamificationDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/GamificationDAO.java)<br>[WalletDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/WalletDAO.java) | `user/me.jsp` | `components.css` (`.quest-pill`, `.checkin-btn`) |
+| **Bảng Xếp Hạng Truyện & Tác Giả** (`diagram_seq_rank.png`) | [RankServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/common/RankServlet.java) | [StoryDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/StoryDAO.java)<br>[UserDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/UserDAO.java) | `common/rank.jsp` | `assets/css/rank.css` |
+| **Bắt Buộc Đăng Nhập khi Đọc** | [AuthFilter.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/filter/AuthFilter.java) | [UserDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/UserDAO.java) | `auth/login.jsp`<br>`common/chapter/read.jsp` | `layout-auth.css` |
+| **Thông Báo Tác Giả & Cập Nhật** | [ChapterServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/common/ChapterServlet.java) | [NotificationDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/NotificationDAO.java)<br>[FollowDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/FollowDAO.java) | `user/notifications.jsp`<br>`user/chapter/form.jsp` | `components.css` (`.notif-item`, `.notif-new`) |
+| **Soạn Thảo Văn Học (Studio)** | [ChapterServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/common/ChapterServlet.java) | [ChapterDAO.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/dao/ChapterDAO.java) | `user/chapter/form.jsp`<br>`layouts/editor.jsp` | `layout-editor.css` |
+| **Xuất Bản Sách EPUB 2.0** | [StoryServlet.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/controller/common/StoryServlet.java) | [EpubWriter.java](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/java/truyen/util/EpubWriter.java) | `common/story/detail.jsp` | `components.css` |
 
 ---
 
-## CSS — 6 file, nạp theo tầng
+## 5. Cẩm nang Thay đổi Giao diện (UI) Không Làm Vỡ Hệ thống
 
-```
-assets/css/
-├── base.css           biến màu, reset, typography     — MỌI trang
-├── components.css     nút, thẻ, tag, form, bảng       — MỌI trang
-├── layout-main.css    header, nav, hero, footer
-├── layout-auth.css    card giữa màn hình
-├── layout-reader.css  cỡ chữ đọc, chế độ giấy
-└── layout-admin.css   sidebar, bảng quản trị
-```
+Khi muốn nâng cấp, chỉnh sửa màu sắc, phông chữ hoặc tái thiết kế giao diện cho đồ án:
 
-`parts/head.jsp` nạp theo thứ tự — file sau ghi đè file trước:
+### Bước 1: Thay đổi Bảng màu & Typography (Tokens)
+- Mở file: `src/main/webapp/assets/css/base.css`.
+- Chỉnh sửa các biến CSS trong `:root` (Dark Mode) và `[data-theme="light"]` (Light Mode):
+  - `--bg`: Màu nền chính của ứng dụng.
+  - `--bg-card`: Màu nền các thẻ card truyện / bảng biểu.
+  - `--text-main`: Màu chữ chính.
+  - `--text-mut`: Màu chữ phụ / chú thích mờ.
+  - `--border`: Màu đường viền phân cách.
+  - `--ember`: Màu nhấn thương hiệu nhận diện (đỏ cam hổ phách).
 
-```
-base.css → components.css → layout-{tên}.css → {pageCss}.css (tuỳ chọn)
-```
+### Bước 2: Tùy biến Kiểu dáng Thành phần (Components)
+- Mở file: `src/main/webapp/assets/css/components.css`.
+- Mọi nút bấm, khung form, thẻ card, huy hiệu trạng thái đều tuân theo các class chuẩn:
+  - Nút bấm: `.btn`, `.btn-primary`, `.btn-ghost`, `.btn-danger`, `.btn-sm`.
+  - Thẻ truyện: `.story-card`, `.story-cover`, `.story-info`.
+  - Huy hiệu: `.badge`, `.badge-vip`, `.badge-completed`.
+- **Tuyệt đối không viết `style="..."` trực tiếp trong file JSP.** Hãy tạo class trong `components.css` để dễ bảo trì và chấm điểm đồ án.
 
-Layout mới = thêm đúng **1** file `layout-*.css`. Không tách nhỏ hơn.
-
----
-
-## Bốn thứ sẽ làm nó rối — đừng làm
-
-| Đừng | Vì sao |
-|------|--------|
-| **Chia vừa theo tầng vừa theo tính năng** (`dao/story/StoryDAO.java`) | 6 DAO không cần thư mục con. Thêm một cấp là thêm một chỗ phải nghĩ |
-| **Mỗi trang một layout** | 25 layout gần giống hệt nhau. Sửa logo phải sửa 25 chỗ |
-| **Thêm tầng Service** khi controller còn mỏng | `Controller → Service → DAO` mà Service chỉ gọi xuyên qua thì nó là tầng thừa |
-| **Mỗi trang một file CSS** | 25 file CSS, không biết class nào định nghĩa ở đâu |
+### Bước 3: Tùy biến Bố cục Khung (Layouts)
+- Muốn chỉnh sửa thanh điều hướng Header: sửa `src/main/webapp/WEB-INF/views/_partials/_nav.jsp` và `layout-main.css`.
+- Muốn chỉnh sửa Chân trang Footer: sửa `src/main/webapp/WEB-INF/views/_partials/_footer.jsp`.
+- Muốn chỉnh sửa Bố cục Đọc truyện (độ rộng cột, thanh cuộn): sửa `src/main/webapp/WEB-INF/views/layouts/reader.jsp` và `layout-reader.css`.
 
 ---
 
-## Cách thêm một tính năng — quy trình cố định
+## 6. Quy trình 4 Bước Thêm hoặc Mở rộng Tính năng Nghiệp vụ
 
-Ví dụ: **thêm chức năng tìm kiếm truyện**
+Khi cần thêm tính năng mới, tuân thủ nghiêm ngặt 4 bước tuần tự:
 
-1. `StoryDAO` — thêm method `search(String keyword)` ← **file có sẵn**
-2. `StoryServlet` — thêm nhánh `else if (action.equals("search"))` ← **file có sẵn**
-3. `views/story/search.jsp` — mảnh nội dung mới ← **file mới, 1 cái**
-4. Servlet đặt `contentPage = ".../search.jsp"`, forward tới `layout/main.jsp`
+```text
+[Bước 1: Model]      Tạo / Bổ sung JavaBean trong truyen.model (chỉ get/set)
+        │
+        ▼
+[Bước 2: DAO]        Viết hàm truy vấn SQL trong truyen.dao (Dùng PreparedStatement)
+        │
+        ▼
+[Bước 3: Controller] Thêm nhánh action trong truyen.controller (Đọc param, gọi DAO, gắn requestScope)
+        │
+        ▼
+[Bước 4: View]       Tạo / Cập nhật file JSP trong WEB-INF/views/ (Hiển thị qua JSTL / EL)
+```
 
-**1 file mới. 0 thư mục mới. 0 layout mới.**
+**Ví dụ thực tế:** Thêm tính năng *"Ghim truyện yêu thích lên đầu hồ sơ"*
+1. **Model:** Thêm cờ `boolean isPinned` trong `Story.java`.
+2. **DAO:** Viết `pinStory(int storyId, boolean pin)` trong `StoryDAO.java`.
+3. **Controller:** Thêm nhánh `case "pin":` trong `StoryServlet.java`, kiểm tra quyền sở hữu rồi gọi DAO.
+4. **View:** Thêm nút bấm Ghim `📌` trong `user/story/mine.jsp`.
 
-Gần như mọi tính năng đều theo đúng 4 bước này. Nếu bạn thấy mình sắp tạo thư
-mục mới hay layout mới, dừng lại đọc lại bảng quyết định ở trên — thường là
-không cần.
+---
+
+## 7. Các Nguyên tắc Vàng (Best Practices & Anti-patterns)
+
+### ✅ Những điều PHẢI làm:
+1. **Luôn dùng PreparedStatement:** Ràng buộc tham số qua dấu `?`, không bao giờ nối chuỗi SQL.
+2. **Luôn Escape HTML ở JSP:** Sử dụng `<c:out value="${...}"/>` cho toàn bộ nội dung do người dùng nhập vào để ngăn chặn tuyệt đối XSS.
+3. **Mô hình Post/Redirect/Get (PRG):** Sau khi thực hiện lệnh POST ghi dữ liệu, luôn dùng `response.sendRedirect(...)` để người dùng bấm F5 không bị gửi lại form.
+4. **Phân quyền 2 lớp:** Filter chặn theo tiền tố URL (`/admin/*`, `/user/*`); Servlet kiểm tra quyền sở hữu cụ thể (`authorId == currentUser.id`).
+5. **Chạy kiểm thử trước khi commit:** Chạy `scripts\test.ps1` để bảo đảm toàn bộ **126 tests** đều xanh.
+
+### ❌ Những điều TUYỆT ĐỐI TRÁNH:
+1. Không viết code Java (`<% ... %>`) trong file JSP.
+2. Không gọi trực tiếp DAO từ trang JSP.
+3. Không để lộ Exception Stack Trace ra màn hình người dùng (ErrorServlet đã bắt tập trung).
+4. Không đẻ thêm layout khi chỉ thay đổi nội dung trang.
+5. Không lạm dụng inline CSS trong mã HTML.
