@@ -158,12 +158,8 @@
                 <span class="chip-x">×</span></a>
         </c:if>
 
-        <div class="active-filters">
-            <span class="filter-label">Đang lọc</span>
-            <%-- các chip --%>
-            <a class="link-clear-all" style="margin-left:auto"
-            href="${pageContext.request.contextPath}/story?action=list">Xoá tất cả</a>
-        </div>
+        <a class="link-clear-all" style="margin-left:auto"
+           href="${pageContext.request.contextPath}/story?action=list">Xoá tất cả</a>
     </div>
 </c:if>
 
