@@ -654,16 +654,27 @@ INSERT INTO comments (story_id, user_id, content, status) VALUES
 -- =============================================================================
 --  7. ĐÁNH DẤU  (bookmark)
 -- =============================================================================
---  Có cả hai trạng thái: đang đọc dở (có last_chapter_id) và mới lưu (NULL).
-INSERT INTO bookmarks (user_id, story_id, last_chapter_id) VALUES
-(2, 1, 3),      -- Mộc Miên đọc Kiếm Khí tới chương 3
-(2, 3, NULL),   -- đã lưu Hồ Sơ nhưng chưa đọc
-(3, 1, 1),      -- Hải Dương mới đọc chương 1
-(4, 2, 8),      -- Kiếm Vũ đọc xong Mùa Hạ (chương cuối id=8)
-(5, 1, 5),      -- Thuỷ Tiên đọc Kiếm Khí tới chương 5
-(5, 2, 6),
-(5, 5, NULL),
-(5, 6, 15);
+--  bookmarks = truyện người dùng tự bấm lưu.
+--  reading_progress = vị trí đọc (chương + đoạn). Hai thứ độc lập: có truyện
+--  đã lưu mà chưa đọc, có truyện đang đọc dở mà không lưu.
+INSERT INTO bookmarks (user_id, story_id) VALUES
+(2, 1),
+(2, 3),         -- đã lưu Hồ Sơ nhưng chưa đọc
+(3, 1),
+(4, 2),
+(5, 1),
+(5, 2),
+(5, 5),
+(5, 6);
+
+INSERT INTO reading_progress (user_id, story_id, chapter_id, para_no) VALUES
+(2, 1, 3, 4),   -- Mộc Miên đọc Kiếm Khí tới chương 3, đoạn 4
+(3, 1, 1, 0),   -- Hải Dương mới mở chương 1
+(4, 2, 8, 0),   -- Kiếm Vũ đọc xong Mùa Hạ (chương cuối id=8)
+(5, 1, 5, 2),   -- Thuỷ Tiên đọc Kiếm Khí tới chương 5
+(5, 2, 6, 0),
+(5, 6, 15, 0),
+(3, 3, 10, 0);  -- Hải Dương đọc dở Hồ Sơ nhưng KHÔNG lưu truyện
 
 
 -- =============================================================================

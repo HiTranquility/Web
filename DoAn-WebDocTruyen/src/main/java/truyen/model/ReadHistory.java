@@ -37,11 +37,11 @@ public class ReadHistory implements Serializable {
     private int viewTimes;
 
     /**
-     * Chương đang đọc dở, lấy từ bookmarks qua LEFT JOIN.
+     * Chương đang đọc dở, lấy từ reading_progress qua LEFT JOIN.
      *
-     * 0 = có đọc truyện này nhưng CHƯA lưu, nên hệ thống không biết dừng ở
-     * chương nào. view_logs chỉ ghi "đã mở truyện", không ghi tới chương mấy —
-     * vị trí đọc nằm ở bookmarks.last_chapter_id.
+     * 0 = có mở trang truyện nhưng chưa đọc chương nào. view_logs chỉ ghi
+     * "đã mở truyện", không ghi tới chương mấy — vị trí đọc nằm ở
+     * reading_progress.chapter_id.
      */
     private int lastChapterId;
     private int lastChapterNo;

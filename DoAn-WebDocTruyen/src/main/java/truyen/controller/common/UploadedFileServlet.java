@@ -96,6 +96,24 @@ public class UploadedFileServlet extends HttpServlet {
          * Kiểu nội dung suy từ ĐUÔI FILE do chính mình đặt lúc lưu, không phải
          * từ thứ người dùng gửi lên. UploadUtil chỉ sinh 4 đuôi này.
          */
+        /*
+         * ẢNH TRANG TRUYỆN TRANH: chỉ phát cho người ĐỌC ĐƯỢC chương đó.
+         *
+         * Không chặn ở đây thì chương VIP truyện tranh chẳng còn gì là VIP:
+         * một người mở khoá rồi gửi link ảnh cho cả lớp. Tên file ngẫu nhiên
+         * chống ĐOÁN, không chống CHIA SẺ.
+         *
+         * Thường thì phiên đã được ChapterServlet cấp quyền lúc mở chương —
+         * tra một tập trong bộ nhớ, không tốn câu SQL nào. Chỉ khi chưa có
+         * (mở thẳng link ảnh, ảnh thu nhỏ ở tủ sách) mới hỏi CSDL một lần,
+         * đúng luật ChapterAccess như trang đọc.
+         */
+        boolean gated = rel.startsWith(truyen.util.UploadUtil.PAGES_PREFIX);
+        if (gated && !canReadPage(request, rel)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         String name = file.getFileName().toString().toLowerCase();
         String type = name.endsWith(".png")  ? "image/png"
                     : name.endsWith(".gif")  ? "image/gif"
@@ -136,11 +154,44 @@ public class UploadedFileServlet extends HttpServlet {
          * dùng lại cho ảnh khác, nên nội dung sau một tên là bất biến — đổi
          * ảnh bìa là sinh tên mới. Đã bất biến thì cache càng lâu càng tốt.
          */
-        response.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        //
+        // Ảnh trang truyện tranh thì "private": vẫn cache lâu trong trình duyệt
+        // của người đọc (lật lại chương không tải lại), nhưng CẤM proxy / CDN
+        // dùng chung giữ bản sao — không thì người chưa mở khoá đi qua cùng
+        // proxy sẽ nhận ảnh từ bộ đệm, bỏ qua bước kiểm quyền ở trên.
+        response.setHeader("Cache-Control", gated
+                ? "private, max-age=86400"
+                : "public, max-age=31536000, immutable");
         response.setContentLengthLong(Files.size(file));
 
         try (OutputStream out = response.getOutputStream()) {
             Files.copy(file, out);
+        }
+    }
+
+    private final truyen.dao.ChapterDAO chapterDAO = new truyen.dao.ChapterDAO();
+    private final truyen.dao.StoryDAO storyDAO = new truyen.dao.StoryDAO();
+    private final truyen.dao.UnlockDAO unlockDAO = new truyen.dao.UnlockDAO();
+
+    /** Người đang xem có đọc được chương chứa ảnh này không. */
+    private boolean canReadPage(HttpServletRequest request, String rel) {
+        int chapterId = truyen.util.UploadUtil.chapterIdOfPage(rel);
+        if (chapterId <= 0) return false;
+
+        javax.servlet.http.HttpSession session = request.getSession(false);
+        if (truyen.util.ChapterAccess.isGranted(session, chapterId)) return true;
+
+        truyen.model.User me = truyen.util.ServletHelper.currentUser(request);
+        if (me == null) return false;          // nghiệp vụ: phải đăng nhập mới đọc
+        try {
+            truyen.model.Chapter ch = chapterDAO.findById(chapterId);
+            truyen.model.Story st = ch == null ? null : storyDAO.findById(ch.getStoryId());
+            boolean ok = truyen.util.ChapterAccess.canRead(me, st, ch, unlockDAO::hasUnlocked);
+            if (ok) truyen.util.ChapterAccess.grant(session, chapterId);
+            return ok;
+        } catch (java.sql.SQLException e) {
+            log("UploadedFileServlet: không kiểm được quyền đọc chương " + chapterId, e);
+            return false;                      // không chắc -> không phát
         }
     }
 }

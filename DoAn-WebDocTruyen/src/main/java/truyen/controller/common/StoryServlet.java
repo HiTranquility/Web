@@ -62,6 +62,7 @@ public class StoryServlet extends HttpServlet {
     private ChapterDAO chapterDAO;
     private CommentDAO commentDAO;
     private BookmarkDAO bookmarkDAO;
+    private truyen.dao.ReadingProgressDAO progressDAO;
     private truyen.dao.ReviewDAO reviewDAO;
 
     /** Số truyện mỗi trang. Đọc từ context-param nên đổi được mà khỏi biên dịch lại. */
@@ -76,6 +77,10 @@ public class StoryServlet extends HttpServlet {
      */
     private static final int CHAPTER_PAGE_SIZE = 50;
 
+    /** Số thẻ gợi ý — 8 ở trang chi tiết (2 hàng x 4), 4 ở cuối trang đọc (1 hàng). */
+    private static final int DETAIL_RECOMMEND_COUNT = 8;
+    private static final int READER_RECOMMEND_COUNT = 4;
+
     @Override
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
@@ -85,6 +90,7 @@ public class StoryServlet extends HttpServlet {
         chapterDAO = new ChapterDAO();
         commentDAO = new CommentDAO();
         bookmarkDAO = new BookmarkDAO();
+        progressDAO = new truyen.dao.ReadingProgressDAO();
         reviewDAO = new truyen.dao.ReviewDAO();
 
         String cfg = getServletContext().getInitParameter("pageSize");
@@ -130,6 +136,7 @@ public class StoryServlet extends HttpServlet {
                 case "stats":   url = stats(request);             break;
                 case "search":  url = search(request);            break;
                 case "suggest": suggest(request, response);       return;
+                case "recommend": recommend(request, response);   return;
                 default:        url = list(request);              break;
             }
         } catch (SQLException e) {
@@ -182,18 +189,21 @@ public class StoryServlet extends HttpServlet {
          */
         String progress = request.getParameter("progress");
 
+        // Loại truyện: chữ / tranh. null = tất cả (xem Story.filterType).
+        String storyType = Story.filterType(request.getParameter("type"));
+
         int page = parseIntOr(request.getParameter("page"), 1);
         if (page < 1) {
             page = 1;   // ?page=-5 không được thành OFFSET âm
         }
 
-        int total = storyDAO.countPage(tag, keyword, progress);
+        int total = storyDAO.countPage(tag, keyword, progress, storyType);
         int totalPages = Math.max(1, (int) Math.ceil(total / (double) pageSize));
         if (page > totalPages) {
             page = totalPages;
         }
 
-        List<Story> stories = storyDAO.findPage(tag, keyword, sort, progress,
+        List<Story> stories = storyDAO.findPage(tag, keyword, sort, progress, storyType,
                                                 (page - 1) * pageSize, pageSize);
 
         request.setAttribute("stories", stories);
@@ -207,6 +217,18 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("keyword", keyword);
         request.setAttribute("sort", sort);
         request.setAttribute("progress", progress);
+        request.setAttribute("storyType", storyType == null ? null : storyType.toLowerCase());
+
+        /*
+         * Bản ĐÃ MÃ HOÁ URL của từ khoá và thể loại, cho list.jsp ghép vào href.
+         *
+         * Trước đây JSP ghép thẳng ${keyword} vào href — gõ từ khoá có dấu nháy
+         * kép là phá được thuộc tính href và chèn được mã (XSS phản xạ: gửi ai đó
+         * một link tìm kiếm là đủ). URLEncoder biến mọi ký tự đặc biệt thành %xx,
+         * nên chuỗi ghép vào href không còn gì để "thoát ra".
+         */
+        request.setAttribute("keywordUrl", urlEncode(keyword));
+        request.setAttribute("tagUrl", urlEncode(tag));
         request.setAttribute("page", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalStories", total);
@@ -329,26 +351,15 @@ public class StoryServlet extends HttpServlet {
             request.setAttribute("myRating", ratingDAO.findScore(me.getId(), id));
             request.setAttribute("following",
                     followDAO.isFollowing(me.getId(), story.getAuthorId()));
-            truyen.model.Bookmark progress = bookmarkDAO.findProgress(me.getId(), id);
-            if (progress != null && progress.getLastChapterId() > 0) {
-                request.setAttribute("resumeChapterId", progress.getLastChapterId());
-                request.setAttribute("resumeChapterNo", progress.getLastChapterNo());
+            truyen.model.ReadingProgress progress = progressDAO.find(me.getId(), id);
+            if (progress != null && progress.getChapterId() > 0) {
+                request.setAttribute("resumeChapterId", progress.getChapterId());
+                request.setAttribute("resumeChapterNo", progress.getChapterNo());
             }
         }
-        // Gợi ý 4 truyện cùng thể loại. Hỏng thì bỏ qua — khối gợi ý biến
-        // mất, trang chi tiết vẫn đọc được bình thường.
-        try {
-            request.setAttribute("similar", storyDAO.findSimilar(id, 4));
-        } catch (SQLException e) {
-            log("Không lấy được truyện tương tự cho truyện " + id, e);
-        }
-
-        // Gợi ý 4 truyện "độc giả đọc truyện này cũng đọc" (Collaborative Filtering)
-        try {
-            request.setAttribute("alsoRead", storyDAO.findAlsoRead(id, 4));
-        } catch (SQLException e) {
-            log("Không lấy được gợi ý đồng độc giả cho truyện " + id, e);
-        }
+        // Gợi ý truyện — MỘT khối, xem StoryDAO.findRecommendations(). Hỏng
+        // thì bỏ qua — khối gợi ý biến mất, trang chi tiết vẫn đọc được.
+        setRecommendations(request, id, DETAIL_RECOMMEND_COUNT);
 
         // Đánh giá chi tiết (ISSUE-022)
         try {
@@ -442,6 +453,7 @@ public class StoryServlet extends HttpServlet {
         String keyword = trimOrEmpty(request.getParameter("q"));
 
         request.setAttribute("keyword", keyword);
+        request.setAttribute("keywordUrl", urlEncode(keyword));   // cho href, xem list()
         request.setAttribute("results", keyword.isEmpty()
                 ? java.util.Collections.emptyList()
                 : chapterDAO.searchContent(keyword, 30));
@@ -451,6 +463,39 @@ public class StoryServlet extends HttpServlet {
                 : "Tìm: " + keyword);
         request.setAttribute("activeNav", "browse");
         return "/WEB-INF/views/common/story/search.jsp";
+    }
+
+    /**
+     * Đặt recommendations + recReasons cho _partials/_recommend.jsp.
+     * Gợi ý là phần phụ: hỏng CSDL thì khối gợi ý biến mất, trang vẫn chạy.
+     */
+    private void setRecommendations(HttpServletRequest request, int storyId, int limit) {
+        try {
+            truyen.model.RecommendationSet recs = storyDAO.findRecommendations(storyId, limit);
+            request.setAttribute("recommendations", recs.getStories());
+            request.setAttribute("recReasons", recs.getReasons());
+        } catch (SQLException e) {
+            log("Không lấy được gợi ý cho truyện " + storyId, e);
+        }
+    }
+
+    /**
+     * Khối gợi ý TRẦN (không khung trang) — trang đọc nạp bằng fetch() khi
+     * người đọc tới cuối chương cuối cùng.
+     *
+     * Trả HTML do cùng mảnh _recommend.jsp dựng, không trả JSON: trang chi
+     * tiết và trang đọc nhờ vậy hiện ĐÚNG một mẫu thẻ, và <c:out> lo escape
+     * như mọi nơi khác — không có chỗ thứ hai sinh HTML bằng JavaScript.
+     */
+    private void recommend(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        int id = parseIntOr(request.getParameter("id"), 0);
+        setRecommendations(request, id, READER_RECOMMEND_COUNT);
+        request.setAttribute("recTitle", "Đọc xong rồi? Thử truyện này nhé");
+        response.setContentType("text/html;charset=UTF-8");
+        getServletContext()
+                .getRequestDispatcher("/WEB-INF/views/common/story/recommend.jsp")
+                .forward(request, response);
     }
 
     /** Gợi ý tìm kiếm tức thì (Live Search Autocomplete) trả về JSON. */
@@ -565,6 +610,24 @@ public class StoryServlet extends HttpServlet {
         story.setCoverUrl(coverUrl.isEmpty() ? null : coverUrl);
         story.setStatus("PUBLISHED".equals(status) ? "PUBLISHED" : "DRAFT");
         story.setProgress("COMPLETED".equals(progress) ? "COMPLETED" : "ONGOING");
+
+        /*
+         * LOẠI TRUYỆN chỉ đổi được khi truyện CHƯA CÓ CHƯƠNG NÀO.
+         *
+         * Chương truyện chữ lưu chữ trong chapters.content, chương truyện tranh
+         * lưu ảnh trong chapter_pages. Đổi loại khi đã có chương là để lại một
+         * loạt chương "chữ" trong truyện "tranh" (trang đọc hiện trắng), hoặc
+         * ngược lại. Muốn đổi thì xoá hết chương trước — cố ý bắt làm tay.
+         */
+        String wantType = Story.normalizeType(request.getParameter("storyType"));
+        if (!wantType.equals(story.getStoryType())) {
+            if (!isCreate && story.getChapterCount() > 0) {
+                return backToForm(request, story, isCreate,
+                        "Truyện đã có chương nên không đổi được loại truyện. "
+                        + "Muốn đổi, hãy xoá hết chương trước.");
+            }
+            story.setStoryType(wantType);
+        }
 
         /*
          * ẢNH TẢI LÊN ĐÈ LÊN Ô DÁN LINK.
@@ -689,6 +752,12 @@ public class StoryServlet extends HttpServlet {
      * Sinh slug chưa ai dùng. Trùng thì thêm số: tien-hiep, tien-hiep-2...
      * Thử tối đa 50 lần rồi bỏ cuộc, tránh vòng lặp vô hạn nếu database lỗi.
      */
+    /** Mã hoá một giá trị để ghép vào query string. null/rỗng -> "". */
+    private static String urlEncode(String s) {
+        if (s == null || s.isEmpty()) return "";
+        return java.net.URLEncoder.encode(s, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     private String uniqueSlug(String title, int exceptId) throws SQLException {
         String base = SlugUtil.toSlug(title);
         if (base.isEmpty()) {

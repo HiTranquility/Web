@@ -16,16 +16,17 @@ $classes  = Join-Path $build 'classes'
 $toolsOut = Join-Path $build 'tools'
 $repo     = 'https://repo1.maven.org/maven2'
 
-function Get-LatestVersion($groupPath, $artifact, $prefix) {
-    $url = "$repo/$groupPath/$artifact/maven-metadata.xml"
-    $xml = [xml](Invoke-WebRequest -Uri $url -UseBasicParsing).Content
-    ($xml.metadata.versioning.versions.version | Where-Object { $_ -like "$prefix*" } | Select-Object -Last 1)
-}
-
 New-Item -ItemType Directory -Force -Path $libs, $classes, $toolsOut | Out-Null
 
 # ---- 1. Dependencies --------------------------------------------------------
-$tomcatVersion = Get-LatestVersion 'org/apache/tomcat/embed' 'tomcat-embed-core' '9.0.'
+#  GHIM PHIÊN BẢN, KHÔNG LẤY "MỚI NHẤT".
+#    Trước đây script hỏi Maven bản Tomcat 9 mới nhất ở MỖI lần chạy. Hậu quả:
+#    không có mạng là không chạy được; mỗi lần Tomcat ra bản mới lại tải thêm
+#    một bộ jar, và .libs giữ CẢ HAI bản cùng lúc trên classpath (đã gặp:
+#    9.0.121 và 9.0.122) — lớp nào được nạp trước là chuyện may rủi.
+#    Bản 9.0.106+ có giới hạn maxPartCount — xem tools/DevServer.java.
+#  Muốn nâng Tomcat: sửa đúng một dòng dưới đây.
+$tomcatVersion = '9.0.122'
 $jars = @(
     # Servlet container
     @{ path = "org/apache/tomcat/embed/tomcat-embed-core/$tomcatVersion";   file = "tomcat-embed-core-$tomcatVersion.jar" },
@@ -53,6 +54,13 @@ foreach ($jar in $jars) {
         Invoke-WebRequest -Uri "$repo/$($jar.path)/$($jar.file)" -OutFile $dest -UseBasicParsing
     }
 }
+
+# Dọn jar Tomcat của phiên bản KHÁC còn sót trong .libs (từ thời còn lấy
+# "mới nhất") — hai bản cùng nằm trên classpath là nạp lớp may rủi.
+Get-ChildItem $libs -Filter 'tomcat-*.jar' |
+    Where-Object { $_.Name -notlike "*-$tomcatVersion.jar" } |
+    ForEach-Object { Write-Host "Removing stale $($_.Name)"; Remove-Item $_.FullName }
+
 $cp = (Get-ChildItem $libs -Filter *.jar | ForEach-Object { $_.FullName }) -join ';'
 
 # ---- 2. Compile -------------------------------------------------------------

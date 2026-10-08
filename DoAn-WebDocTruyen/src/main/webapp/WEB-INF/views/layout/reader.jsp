@@ -27,7 +27,9 @@
   data-theme và data-size đặt ngay trên <body>, giá trị mặc định ở đây.
   Đoạn script dưới cùng sẽ đọc lựa chọn đã lưu và ghi đè.
 --%>
-<body class="reader-body" data-ctx="${pageContext.request.contextPath}" data-theme="dark" data-size="m" data-leading="normal" data-font="serif">
+<body class="reader-body" data-ctx="${pageContext.request.contextPath}" data-theme="dark" data-size="m" data-leading="normal" data-font="serif"
+      data-csrf="${csrfToken}" data-resume-para="${resumePara}"
+      data-kind="${story.comic ? 'comic' : 'text'}" data-unit="${story.unitLabel}" data-cwidth="fit">
 
 <%--
   THANH TIẾN ĐỘ ĐỌC — vạch mảnh chạy ngang trên cùng.
@@ -55,7 +57,11 @@
     </a>
 
     <span class="reader-meta">
-        Chương ${chapter.chapterNo} &middot; ~${chapter.readMinutes} phút đọc
+        Chương ${chapter.chapterNo} &middot;
+        <c:choose>
+            <c:when test="${story.comic}">${chapter.pageCount} trang</c:when>
+            <c:otherwise>~${chapter.readMinutes} phút đọc</c:otherwise>
+        </c:choose>
         <span class="reader-pct-badge" id="read-pct-badge">0%</span>
     </span>
 
@@ -77,19 +83,44 @@
         bảng và một lần ghi CSDL cho việc chẳng liên quan gì tới nội dung.
     --%>
     <div class="reader-tools">
-        <div class="tool-group" role="group" aria-label="Cỡ chữ">
+        <%--
+          LƯU TRUYỆN & ĐÁNH DẤU ĐOẠN — hai việc KHÁC NHAU, hai nút khác nhau.
+            📚 lưu cả truyện vào tủ sách (giống nút "Lưu truyện" ở trang chi tiết)
+            🔖 đánh dấu ĐOẠN đang ở đầu màn hình để đọc lại sau (phím B)
+          Còn vị trí đọc thì tự nhớ, không cần nút nào — xem cuối read.jsp.
+        --%>
+        <div class="tool-group" role="group" aria-label="Lưu và đánh dấu">
+            <button type="button" class="tool-btn ${bookmarked ? 'is-on' : ''}" id="btn-save-story"
+                    data-story-id="${story.id}" aria-pressed="${bookmarked ? 'true' : 'false'}"
+                    title="${bookmarked ? 'Đã lưu vào tủ sách — bấm để bỏ lưu' : 'Lưu truyện vào tủ sách'}">📚</button>
+            <button type="button" class="tool-btn" id="btn-mark-para"
+                    title="Đánh dấu ${story.unitLabel} đang đọc (B)" aria-label="Đánh dấu ${story.unitLabel} đang đọc">🔖</button>
+        </div>
+
+        <%--
+          BỀ RỘNG TRANG — chỉ có ở truyện tranh (CSS ẩn ở truyện chữ, và ẩn
+          ngược lại cỡ chữ / giãn dòng / font / giọng đọc ở truyện tranh).
+          Cùng cơ chế data-set như các nút khác: JS chỉ đặt data-cwidth lên
+          <body>, CSS lo phần còn lại, lựa chọn nhớ trong localStorage.
+        --%>
+        <div class="tool-group comic-only" role="group" aria-label="Bề rộng trang">
+            <button type="button" class="tool-btn" data-set="cwidth" data-val="fit" title="Vừa khung đọc">▭</button>
+            <button type="button" class="tool-btn" data-set="cwidth" data-val="wide" title="Rộng hết màn hình">⬌</button>
+        </div>
+
+        <div class="tool-group text-only" role="group" aria-label="Cỡ chữ">
             <button type="button" class="tool-btn" data-set="size" data-val="s">A<small>-</small></button>
             <button type="button" class="tool-btn" data-set="size" data-val="m">A</button>
             <button type="button" class="tool-btn" data-set="size" data-val="l">A<small>+</small></button>
         </div>
 
-        <div class="tool-group" role="group" aria-label="Giãn dòng">
+        <div class="tool-group text-only" role="group" aria-label="Giãn dòng">
             <button type="button" class="tool-btn" data-set="leading" data-val="tight" title="Dòng khít">≡</button>
             <button type="button" class="tool-btn" data-set="leading" data-val="normal" title="Dòng thường">☰</button>
             <button type="button" class="tool-btn" data-set="leading" data-val="loose" title="Dòng thưa">⩸</button>
         </div>
 
-        <div class="tool-group" role="group" aria-label="Font chữ">
+        <div class="tool-group text-only" role="group" aria-label="Font chữ">
             <button type="button" class="tool-btn" data-set="font" data-val="serif" title="Font có chân (Serif)">Serif</button>
             <button type="button" class="tool-btn" data-set="font" data-val="sans" title="Font không chân (Sans)">Sans</button>
         </div>
@@ -104,7 +135,7 @@
           Bật / tắt đọc liên tục, Giọng đọc TTS, Mưa thư giãn, In chương và Phím tắt trợ giúp.
         --%>
         <div class="tool-group">
-            <button type="button" class="tool-btn" id="toggle-tts"
+            <button type="button" class="tool-btn text-only" id="toggle-tts"
                     title="Đọc truyện bằng giọng nói (Text-to-Speech)" aria-label="Đọc giọng nói">🎧</button>
             <button type="button" class="tool-btn" id="toggle-ambient"
                     title="Bật / Tắt âm thanh mưa rơi thư giãn" aria-label="Âm thanh mưa">🌧️</button>
@@ -202,6 +233,10 @@
                 <span>Bật / tắt Âm thanh mưa rơi</span>
             </div>
             <div class="shortcut-row">
+                <span class="key-combo"><kbd>B</kbd></span>
+                <span>Đánh dấu / bỏ đánh dấu đoạn đang đọc</span>
+            </div>
+            <div class="shortcut-row">
                 <span class="key-combo"><kbd>?</kbd></span>
                 <span>Hiện bảng phím tắt này</span>
             </div>
@@ -241,6 +276,10 @@
     </button>
 </div>
 
+<%-- Thông báo ngắn ("Đã đánh dấu đoạn 12", "Đã đưa bạn về chỗ đang đọc").
+     role=status + aria-live: trình đọc màn hình đọc lên mà không cướp focus. --%>
+<div class="reader-toast" id="reader-toast" role="status" aria-live="polite" hidden></div>
+
 <%-- Thanh tiến độ đọc mỏng mượt mà ở đỉnh màn hình --%>
 <div class="reader-progress-bar" id="reader-progress-bar" aria-hidden="true"></div>
 
@@ -263,7 +302,7 @@ var CTX = '${pageContext.request.contextPath}';
  */
 (function () {
     var body = document.body;
-    var KEYS = ['size', 'leading', 'theme', 'font'];
+    var KEYS = ['size', 'leading', 'theme', 'font', 'cwidth'];   // cwidth: bề rộng trang truyện tranh
 
     /*
      * localStorage có thể NÉM LỖI chứ không chỉ trả về null: trình duyệt ở
@@ -350,12 +389,16 @@ function formatChapterBlock(root) {
     for (var i = 0; i < paras.length; i++) {
         var p = paras[i];
         var txt = p.textContent.trim();
+        /* Thẻ thay thế PHẢI mang theo data-para — số thứ tự đoạn mà đánh dấu
+           đoạn và "đọc tiếp đúng đoạn" dựa vào. Mất nó là đếm lệch từ đó trở đi. */
+        var paraNo = p.getAttribute('data-para');
 
         // 1. Phân đoạn hoa thị: * * *, ***, ---, ❖ ❖ ❖
         if (/^(\*\s*\*\s*\*|—{3,}|-{3,}|❖\s*❖\s*❖)$/.test(txt)) {
             var div = document.createElement('div');
             div.className = 'divider';
             div.setAttribute('aria-hidden', 'true');
+            if (paraNo) div.setAttribute('data-para', paraNo);
             div.textContent = '❖ ❖ ❖';
             p.parentNode.replaceChild(div, p);
             continue;
@@ -365,6 +408,7 @@ function formatChapterBlock(root) {
         if (/^(&gt;|>)\s*/.test(txt)) {
             var clean = txt.replace(/^(&gt;|>)\s*/, '');
             var bq = document.createElement('blockquote');
+            if (paraNo) bq.setAttribute('data-para', paraNo);
             bq.innerHTML = applyInlineFormat(escapeHtmlSafe(clean));
             p.parentNode.replaceChild(bq, p);
             continue;
@@ -458,7 +502,15 @@ try {
 
     try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) { }
 
-    /* ------------------------------------------------------ đánh dấu đã đọc & lịch sử */
+    /* ------------------------------------------------- đánh dấu chương đã đọc */
+    /*
+     * Chỉ ghi danh sách chương đã đọc (để trang chi tiết làm mờ các hàng).
+     *
+     * TỪNG ghi thêm "truyện vừa đọc" vào localStorage cho một khung "Tiếp tục
+     * đọc" ở trang chủ — đã bỏ: trùng với dải "Đọc tiếp" lấy từ CSDL, và
+     * localStorage không gắn với tài khoản nên máy dùng chung thì người đăng
+     * nhập sau thấy truyện người trước đang đọc.
+     */
     function markRead(block) {
         try {
             var sId = block.getAttribute('data-story-id');
@@ -471,37 +523,43 @@ try {
                 seen.push(cId);
                 localStorage.setItem(key, JSON.stringify(seen));
             }
-
-            // Ghi nhận truyện vừa đọc gần đây để Trang chủ hiển thị "Tiếp tục đọc"
-            var sTitle = block.getAttribute('data-story-title');
-            var cTitle = block.getAttribute('data-chapter-title');
-            var cNo = block.getAttribute('data-chapter-no');
-            var recent = {
-                storyId: sId,
-                storyTitle: sTitle,
-                chapterId: cId,
-                chapterTitle: cTitle,
-                chapterNo: cNo,
-                timestamp: Date.now()
-            };
-            localStorage.setItem('webdoctruyen_recent_read', JSON.stringify(recent));
         } catch (e) { /* trình duyệt chặn lưu trữ — việc đọc không ảnh hưởng */ }
+    }
+
+    /* ------------------------------------------ hết truyện + khối gợi ý */
+    /*
+     * Gợi ý nạp MỘT lần, bằng cùng mảnh _recommend.jsp với trang chi tiết.
+     * Chạy cả khi TẮT đọc liên tục: đọc tới cuối chương cuối là hết truyện,
+     * bất kể chương đó tới bằng cách nào.
+     */
+    var recsLoaded = false;
+    function showDone() {
+        if (done) {
+            done.hidden = false;
+            done.style.display = 'block';
+        }
+        hideLoading();
+
+        var box = document.getElementById('reader-recs');
+        if (!box || recsLoaded) return;
+        recsLoaded = true;
+        fetch(CTX + '/story?action=recommend&id=' + encodeURIComponent(box.getAttribute('data-story-id')),
+              { credentials: 'same-origin' })
+            .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .then(function (html) { box.innerHTML = html; })
+            .catch(function () { recsLoaded = false; });   // lần sau tới cuối thì thử lại
     }
 
     /* ---------------------------------------------- nạp chương kế tiếp */
     function loadNext() {
-        if (busy || !on) return;
-
         var last = wrap.lastElementChild;
         var nextId = last && last.getAttribute('data-next-id');
         if (!nextId) {                       // hết truyện
-            if (done) {
-                done.hidden = false;
-                done.style.display = 'block';
-            }
-            hideLoading();
+            showDone();
             return;
         }
+
+        if (busy || !on) return;
 
         busy = true;
         showLoading();
@@ -624,6 +682,260 @@ try {
     /* Chương đầu do server dựng — vẫn phải theo dõi như mọi chương khác */
     var first = wrap.querySelector('.chapter-block');
     if (first) { watch(first); markRead(first); }
+})();
+
+
+/* ===========================================================================
+   NHỚ ĐÚNG ĐOẠN ĐANG ĐỌC · ĐÁNH DẤU ĐOẠN · LƯU TRUYỆN
+   ===========================================================================
+   Mỗi đoạn văn mang data-para (số thứ tự, đếm từ 1 — xem _block.jsp).
+
+   VỊ TRÍ ĐỌC
+     "Đoạn đang đọc" = đoạn đầu tiên còn thấy được ngay dưới thanh công cụ.
+     Gửi lên /bookmark?action=progress khi người đọc DỪNG CUỘN 1.5 giây, và
+     khi rời trang / chuyển tab. Không gửi theo từng sự kiện scroll — cuộn
+     một chương là hàng nghìn sự kiện, mà chỉ chỗ dừng lại mới đáng nhớ.
+
+     navigator.sendBeacon: trình duyệt bảo đảm gửi xong kể cả khi trang đang
+     đóng — fetch() thường bị huỷ giữa chừng đúng lúc cần nhất (bấm Back).
+
+   ĐỌC TIẾP
+     Mở trang có #doan-12 (từ danh sách đánh dấu) hoặc server báo
+     data-resume-para (mở lại đúng chương đang dở) thì cuộn tới đoạn đó.
+
+   TẤT CẢ ĐỀU LÀ NÂNG CẤP: tắt JavaScript thì vẫn đọc được, server vẫn nhớ
+   CHƯƠNG (ChapterServlet ghi lúc mở trang), chỉ mất phần "đúng đoạn".
+   ======================================================================== */
+(function () {
+    var wrap = document.getElementById('chapters');
+    if (!wrap || !document.querySelector) return;
+
+    var CSRF = document.body.getAttribute('data-csrf') || '';
+    var UNIT = document.body.getAttribute('data-unit') || 'đoạn';   // "trang" với truyện tranh
+    var COMIC = document.body.getAttribute('data-kind') === 'comic';
+    var bar = document.querySelector('.reader-bar');
+    var toastEl = document.getElementById('reader-toast');
+
+    /* Mép dưới của thanh công cụ dính trên cùng. ĐO mỗi lần chứ không đặt
+       cứng: màn hẹp thì thanh gãy thành 2–3 hàng, cuộn xuống thì thanh tự
+       ẩn (mép dưới <= 0). Đặt cứng 72px là "đoạn đang đọc" có khi lại là
+       đoạn đang nằm khuất sau thanh công cụ. */
+    function topGap() {
+        var b = bar ? bar.getBoundingClientRect().bottom : 0;
+        return Math.max(0, b);
+    }
+    var toastTimer = null;
+
+    function toast(msg, actionLabel, onAction) {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        if (actionLabel) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'reader-toast-btn';
+            b.textContent = actionLabel;
+            b.addEventListener('click', function () { hideToast(); onAction(); });
+            toastEl.appendChild(b);
+        }
+        toastEl.hidden = false;
+        toastEl.classList.add('is-show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, actionLabel ? 6000 : 2600);
+    }
+    function hideToast() {
+        if (!toastEl) return;
+        toastEl.classList.remove('is-show');
+        toastEl.hidden = true;
+    }
+
+    function form(data) {
+        var body = new URLSearchParams();
+        for (var k in data) body.append(k, data[k]);
+        body.append('_csrf', CSRF);
+        return body;
+    }
+    function postJson(data) {
+        return fetch(CTX + '/bookmark', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: form(data)
+        }).then(function (r) { return r.json(); });
+    }
+
+    function parasOf(block) {
+        return block.querySelectorAll('.chapter-content [data-para]');
+    }
+
+    /* Chương đang chiếm màn hình: chương CUỐI CÙNG có đỉnh đã lên quá 1/3
+       màn hình. Đọc liên tục có thể có nhiều chương trên cùng một trang. */
+    function currentBlock() {
+        var blocks = wrap.querySelectorAll('.chapter-block');
+        var line = window.innerHeight / 3;
+        var cur = blocks[0] || null;
+        for (var i = 0; i < blocks.length; i++) {
+            if (blocks[i].getBoundingClientRect().top <= line) cur = blocks[i];
+            else break;
+        }
+        return cur;
+    }
+
+    /* Đoạn đầu tiên còn thấy được — tìm nhị phân: chương dài vài trăm đoạn,
+       gọi getBoundingClientRect cho từng đoạn là ép trình duyệt tính bố cục
+       vài trăm lần. Nhị phân chỉ cần chừng 8–9 lần. */
+    function currentPara(block) {
+        var ps = parasOf(block);
+        /* Truyện chữ: +24px ≈ một dòng — đoạn chỉ còn ló nửa dòng cuối dưới
+           thanh công cụ thì coi như đã đọc qua, đoạn kế mới là "đang đọc".
+           Truyện tranh: một trang cao cả màn hình, nên "đang xem" là trang
+           đang nằm ở 1/3 màn hình — không phải mẩu đuôi 50px của trang trước
+           còn sót trên cùng. */
+        var gap = topGap();
+        var line = COMIC ? gap + (window.innerHeight - gap) * 0.35 : gap + 24;
+        var lo = 0, hi = ps.length - 1, found = -1;
+        while (lo <= hi) {
+            var mid = (lo + hi) >> 1;
+            if (ps[mid].getBoundingClientRect().bottom > line) { found = mid; hi = mid - 1; }
+            else lo = mid + 1;
+        }
+        return found >= 0 ? ps[found] : null;
+    }
+
+    function position() {
+        var block = currentBlock();
+        if (!block) return null;
+        var el = currentPara(block);
+        return {
+            block: block,
+            chapterId: block.getAttribute('data-chapter-id'),
+            el: el,
+            paraNo: el ? parseInt(el.getAttribute('data-para'), 10) : 0
+        };
+    }
+
+    function scrollToPara(block, n) {
+        var el = block.querySelector('.chapter-content [data-para="' + n + '"]');
+        if (!el) return false;
+        /* Lấy chiều cao thanh lúc ĐANG HIỆN (offsetHeight không đổi khi thanh
+           trượt lên ẩn) — sau cú cuộn này thanh vẫn có thể hiện lại. */
+        var gap = bar ? bar.offsetHeight : 0;
+        var y = el.getBoundingClientRect().top + window.scrollY - gap - 8;
+        /* behavior 'instant' là CỐ Ý: base.css đặt scroll-behavior: smooth cho
+           cả trang, nên scrollTo thường sẽ TRƯỢT qua cả chương tới đoạn 200 —
+           chậm, chóng mặt, và bắn hàng trăm sự kiện scroll trên đường đi. */
+        window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
+        el.classList.add('is-flash');
+        setTimeout(function () { el.classList.remove('is-flash'); }, 1800);
+        return true;
+    }
+
+    /* ------------------------------------------------ gửi vị trí đọc */
+    var first = wrap.querySelector('.chapter-block');
+    var lastSent = first ? first.getAttribute('data-chapter-id') + ':'
+            + (document.body.getAttribute('data-resume-para') || '0') : '';
+
+    function report() {
+        var pos = position();
+        if (!pos || !pos.chapterId) return;
+        var key = pos.chapterId + ':' + pos.paraNo;
+        if (key === lastSent) return;          // chưa đi đâu thì khỏi gửi
+        lastSent = key;
+
+        var body = form({ action: 'progress', chapterId: pos.chapterId, paraNo: pos.paraNo });
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(CTX + '/bookmark', body);
+        } else {
+            fetch(CTX + '/bookmark', { method: 'POST', body: body,
+                                       credentials: 'same-origin', keepalive: true });
+        }
+    }
+
+    var idle = null;
+    window.addEventListener('scroll', function () {
+        clearTimeout(idle);
+        idle = setTimeout(report, 1500);
+    }, { passive: true });
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') report();
+    });
+    window.addEventListener('pagehide', report);
+
+    /* ------------------------------------------------ đọc tiếp đúng đoạn */
+    if (first) {
+        var m = location.hash.match(/^#doan-(\d+)$/);
+        var target = m ? parseInt(m[1], 10)
+                       : parseInt(document.body.getAttribute('data-resume-para') || '0', 10);
+        if (target > 1 && scrollToPara(first, target) && !m) {
+            toast('Đã đưa bạn về ' + UNIT + ' ' + target + ', chỗ đang đọc dở.', 'Về đầu chương', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }
+
+    /* ------------------------------------------------ đánh dấu đoạn */
+    function applyMarks(block) {
+        var list = (block.getAttribute('data-marked') || '').split(',');
+        list.forEach(function (n) {
+            if (!n) return;
+            var el = block.querySelector('.chapter-content [data-para="' + n + '"]');
+            if (el) el.classList.add('is-marked');
+        });
+    }
+    [].forEach.call(wrap.querySelectorAll('.chapter-block'), applyMarks);
+
+    /* Chương nối thêm khi đọc liên tục cũng phải được tô — theo dõi #chapters
+       thay vì sửa vào đoạn mã đọc liên tục: hai việc, hai chỗ. */
+    if (window.MutationObserver) {
+        new MutationObserver(function (records) {
+            records.forEach(function (r) {
+                [].forEach.call(r.addedNodes, function (n) {
+                    if (n.nodeType === 1 && n.classList.contains('chapter-block')) applyMarks(n);
+                });
+            });
+        }).observe(wrap, { childList: true });
+    }
+
+    var markBtn = document.getElementById('btn-mark-para');
+    var marking = false;
+    function toggleMark() {
+        if (marking) return;
+        var pos = position();
+        if (!pos || !pos.el) {
+            toast('Chương này chưa có ' + UNIT + ' nào để đánh dấu.');
+            return;
+        }
+        var wasMarked = pos.el.classList.contains('is-marked');
+        marking = true;
+        postJson({ action: wasMarked ? 'unmark' : 'mark',
+                   chapterId: pos.chapterId, paraNo: pos.paraNo })
+            .then(function (res) {
+                if (res.success) pos.el.classList.toggle('is-marked', !!res.marked);
+                toast(res.message || (res.success ? 'Đã lưu.' : 'Chưa lưu được.'));
+            })
+            .catch(function () { toast('Mất kết nối, chưa đánh dấu được.'); })
+            .then(function () { marking = false; });
+    }
+    if (markBtn) markBtn.addEventListener('click', toggleMark);
+
+    /* ------------------------------------------------ lưu truyện */
+    var saveBtn = document.getElementById('btn-save-story');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+            var saved = saveBtn.getAttribute('aria-pressed') === 'true';
+            saveBtn.disabled = true;
+            postJson({ action: saved ? 'remove' : 'add', storyId: saveBtn.getAttribute('data-story-id') })
+                .then(function (res) {
+                    if (!res.success) { toast(res.message || 'Chưa lưu được.'); return; }
+                    var now = !!res.bookmarked;
+                    saveBtn.classList.toggle('is-on', now);
+                    saveBtn.setAttribute('aria-pressed', now ? 'true' : 'false');
+                    saveBtn.title = now ? 'Đã lưu vào tủ sách — bấm để bỏ lưu' : 'Lưu truyện vào tủ sách';
+                    toast(res.message);
+                })
+                .catch(function () { toast('Mất kết nối, thử lại sau nhé.'); })
+                .then(function () { saveBtn.disabled = false; });
+        });
+    }
 })();
 
 
@@ -798,6 +1110,7 @@ try {
    - Mũi tên Phải / Phím D: Sang chương sau
    - Mũi tên Trái / Phím A: Về chương trước
    - Phím T: Bật / tắt bảng Mục lục
+   - Phím B: Đánh dấu / bỏ đánh dấu đoạn đang đọc
    - Phím F: Bật / tắt toàn màn hình (Fullscreen)
    - Phím ?: Mở hộp thoại hướng dẫn phím tắt
    - Phím Esc: Đóng bảng mục lục / đóng hộp thoại
@@ -874,6 +1187,7 @@ try {
         // Phím S -> Bật / tắt Đọc giọng nói (TTS)
         if (code === 'KeyS') {
             e.preventDefault();
+            if (document.body.getAttribute('data-kind') === 'comic') return;   // truyện tranh không có chữ để đọc
             var ttsToggle = document.getElementById('toggle-tts');
             if (ttsToggle) ttsToggle.click();
             return;
@@ -884,6 +1198,14 @@ try {
             e.preventDefault();
             var rainToggle = document.getElementById('toggle-ambient');
             if (rainToggle) rainToggle.click();
+            return;
+        }
+
+        // Phím B -> Đánh dấu / bỏ đánh dấu đoạn đang đọc
+        if (code === 'KeyB' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            var markToggle = document.getElementById('btn-mark-para');
+            if (markToggle) markToggle.click();
             return;
         }
 

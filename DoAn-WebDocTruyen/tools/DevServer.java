@@ -27,7 +27,17 @@ public class DevServer {
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
         tomcat.setBaseDir(work.getAbsolutePath());
-        tomcat.getConnector();
+        /*
+         * maxPartCount: Tomcat 9.0.106+ mặc định chỉ nhận 10 PHẦN trong một
+         * form multipart (vá CVE-2025-48988). Mỗi ô của form là một phần —
+         * form chương truyện tranh có ~10 ô + mỗi trang ảnh một phần, nên 10
+         * là không đủ: Tomcat bỏ cả thân form, ô _csrf mất theo và người dùng
+         * nhận 403 khó hiểu. Đặt 300 (≈ 200 trang + các ô), vẫn là một giới
+         * hạn để chặn request nghìn phần.
+         * Chạy trên Tomcat cài sẵn thì đặt cùng thuộc tính này ở <Connector>
+         * trong conf/server.xml.
+         */
+        tomcat.getConnector().setProperty("maxPartCount", "300");
 
         Context context = tomcat.addWebapp(contextPath, webapp.getAbsolutePath());
 

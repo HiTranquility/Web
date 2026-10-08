@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * Đánh dấu truyện.
+ * Truyện người dùng TỰ BẤM lưu (bảng bookmarks).
  *
- * Gộp HAI nhu cầu vào một bảng:
- *   1. "lưu truyện để đọc sau"       -> chỉ cần (userId, storyId)
- *   2. "nhớ đang đọc tới chương mấy" -> cột lastChapterId
- * Tách làm hai bảng cũng được, nhưng gộp thì ít việc hơn mà vẫn đủ dùng.
+ * Trước đây bảng bookmarks gộp luôn "đang đọc tới chương mấy", nên mở một
+ * chương là truyện tự nhảy vào tủ sách và "Bỏ lưu" thì mất vị trí đọc. Giờ
+ * vị trí đọc nằm ở reading_progress (xem migration-027); hai trường
+ * lastChapterId / lastChapterNo dưới đây chỉ được LEFT JOIN sang lúc liệt kê.
  */
 public class Bookmark implements Serializable {
 
@@ -17,9 +17,8 @@ public class Bookmark implements Serializable {
     private int storyId;
 
     /**
+     * Chương đang đọc dở, LEFT JOIN từ reading_progress.
      * 0 = đã lưu nhưng chưa đọc chương nào.
-     * Cột trong database cho phép NULL, và khoá ngoại dùng ON DELETE SET NULL —
-     * tác giả xoá chương đang đọc dở thì chỉ mất vị trí đọc, KHÔNG mất bookmark.
      */
     private int lastChapterId;
 

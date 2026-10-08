@@ -159,6 +159,7 @@ public class ApiServlet extends HttpServlet {
             .append("\"description\":").append(jsonEscape(s.getDescription() != null ? s.getDescription() : "")).append(",")
             .append("\"chapterCount\":").append(s.getChapterCount()).append(",")
             .append("\"viewCount\":").append(s.getViewCount()).append(",")
+            .append("\"type\":").append(jsonEscape(s.getStoryType())).append(",")
             .append("\"completed\":").append(s.isCompleted())
             .append("}");
     }

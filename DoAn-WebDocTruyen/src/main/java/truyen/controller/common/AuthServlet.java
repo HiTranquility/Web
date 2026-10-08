@@ -164,8 +164,11 @@ public class AuthServlet extends HttpServlet {
 
         User user = userDAO.findByUsername(username);
 
-        /* MỘT THÔNG BÁO CHUNG CHO CẢ HAI TRƯỜNG HỢP SAI. */
-        if (user == null || !PasswordUtil.verify(password, user.getPasswordHash())) {
+        /* MỘT THÔNG BÁO CHUNG CHO CẢ HAI TRƯỜNG HỢP SAI.
+           Mật khẩu dài quá trần thì không thể đúng (đăng ký không cho đặt) —
+           coi là sai luôn, khỏi chạy PBKDF2 trên vài MB dữ liệu rác. */
+        if (user == null || password.length() > PasswordUtil.MAX_LENGTH
+                || !PasswordUtil.verify(password, user.getPasswordHash())) {
             RateLimiter.recordLoginFailure(clientIp, username);
             int remaining = RateLimiter.getRemainingAttempts(clientIp, username);
             String warn = remaining > 0 ? " (Bạn còn " + remaining + " lần thử)" : " (Tài khoản bị tạm khóa 15 phút)";
@@ -328,11 +331,12 @@ public class AuthServlet extends HttpServlet {
         if (!username.matches("[a-zA-Z0-9_]+")) {
             return "Tên đăng nhập chỉ được dùng chữ, số và dấu gạch dưới.";
         }
-        if (!email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
-            return "Email không hợp lệ.";
+        if (!truyen.util.ServletHelper.isValidEmail(email)) {
+            return "Email không hợp lệ (tối đa " + truyen.util.ServletHelper.EMAIL_MAX + " ký tự).";
         }
-        if (password.length() < 6) {
-            return "Mật khẩu phải từ 6 ký tự trở lên.";
+        String pwError = truyen.util.PasswordUtil.lengthError(password);
+        if (pwError != null) {
+            return pwError;
         }
         if (!password.equals(confirm)) {
             return "Hai ô mật khẩu không khớp nhau.";
@@ -425,8 +429,9 @@ public class AuthServlet extends HttpServlet {
         String pass    = request.getParameter("password");
         String confirm = request.getParameter("confirmPassword");
 
-        if (pass == null || pass.length() < 6) {
-            request.setAttribute("message", "Mật khẩu phải từ 6 ký tự.");
+        String pwError = truyen.util.PasswordUtil.lengthError(pass);
+        if (pwError != null) {
+            request.setAttribute("message", pwError);
             return "/WEB-INF/views/auth/reset.jsp";
         }
         if (!pass.equals(confirm)) {

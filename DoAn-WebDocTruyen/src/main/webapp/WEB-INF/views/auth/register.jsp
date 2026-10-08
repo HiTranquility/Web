@@ -24,18 +24,18 @@
            title="3-50 ký tự, chỉ chữ, số và dấu gạch dưới" autofocus required>
 
     <label for="email">Email</label>
-    <input type="email" id="email" name="email"
+    <input type="email" id="email" name="email" maxlength="150"
            value="<c:out value='${email}'/>" required>
 
     <label for="password">Mật khẩu</label>
     <div class="password-wrap">
-        <input type="password" id="password" name="password" minlength="6" required>
+        <input type="password" id="password" name="password" minlength="6" maxlength="128" required>
         <button type="button" class="pwd-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="togglePassword('password', this)" tabindex="-1">👁️</button>
     </div>
 
     <label for="confirm">Nhập lại mật khẩu</label>
     <div class="password-wrap">
-        <input type="password" id="confirm" name="confirm" minlength="6" required>
+        <input type="password" id="confirm" name="confirm" minlength="6" maxlength="128" required>
         <button type="button" class="pwd-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="togglePassword('confirm', this)" tabindex="-1">👁️</button>
     </div>
 

@@ -96,6 +96,13 @@ public class DriveBackupServlet extends HttpServlet {
             return;
         }
 
+        // Sao lưu ghi từng chương thành file .txt — truyện tranh là ảnh, chưa hỗ trợ.
+        if (story.isComic()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Truyện tranh chưa hỗ trợ sao lưu Google Drive.");
+            return;
+        }
+
         String action = request.getParameter("action");
         if (action == null) {
             action = "chapters";

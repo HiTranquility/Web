@@ -66,6 +66,18 @@ public final class ServletHelper {
      *
      * Giúp servlet không cần kiểm tra null riêng cho mỗi tham số form.
      */
+    /** Khớp cột users.email VARCHAR(150) — dài hơn là CSDL báo lỗi, ra trang 500. */
+    public static final int EMAIL_MAX = 150;
+
+    /**
+     * MỘT luật email cho đăng ký và sửa hồ sơ. Trước đây sửa hồ sơ chỉ kiểm
+     * "có chứa @" — đăng ký thì chặt, đổi email sau đó thì lỏng, vô lý.
+     */
+    public static boolean isValidEmail(String email) {
+        return email != null && email.length() <= EMAIL_MAX
+                && email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+");
+    }
+
     public static String trimOrEmpty(String s) {
         return s == null ? "" : s.trim();
     }

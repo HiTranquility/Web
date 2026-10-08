@@ -26,10 +26,14 @@ public class CommentServlet extends HttpServlet {
     private static final int MAX_LENGTH = 1000;
 
     private CommentDAO commentDAO;
+    private truyen.dao.StoryDAO storyDAO;
+    private truyen.dao.ChapterDAO chapterDAO;
 
     @Override
     public void init() throws ServletException {
         commentDAO = new CommentDAO();
+        storyDAO = new truyen.dao.StoryDAO();
+        chapterDAO = new truyen.dao.ChapterDAO();
     }
 
     @Override
@@ -132,6 +136,23 @@ public class CommentServlet extends HttpServlet {
 
         if (content.length() > MAX_LENGTH) {
             content = content.substring(0, MAX_LENGTH);
+        }
+
+        /*
+         * Truyện phải TỒN TẠI và người này phải THẤY được (không phải nháp
+         * của người khác, chưa bị gỡ); chương nếu có phải THUỘC đúng truyện.
+         * Không kiểm thì storyId bịa ra đụng khoá ngoại -> trang 500, còn
+         * chapterId của truyện khác làm bình luận hiện lạc sang chương lạ.
+         */
+        truyen.model.Story story = storyDAO.findById(storyId);
+        if (!truyen.util.ChapterAccess.canSeeStory(me, story)) {
+            return;
+        }
+        if (chapterId > 0) {
+            truyen.model.Chapter ch = chapterDAO.findById(chapterId);
+            if (ch == null || ch.getStoryId() != storyId) {
+                return;
+            }
         }
 
         Comment c = new Comment();

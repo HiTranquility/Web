@@ -37,7 +37,20 @@ public class Chapter implements Serializable {
     /** Giá xu mở khoá chương VIP. */
     private int coinPrice;
 
+    /**
+     * Trang ảnh — CHỈ có ở chương truyện tranh, và chỉ khi servlet đã nạp
+     * (ChapterPageDAO.findByChapter). Chương chữ hoặc chương VIP đang khoá
+     * thì để rỗng: JSP duyệt list rỗng là 0 vòng, không cần kiểm null.
+     */
+    private java.util.List<ChapterPage> pages = new java.util.ArrayList<>();
+
     public Chapter() { }
+
+    public java.util.List<ChapterPage> getPages() { return pages; }
+    public void setPages(java.util.List<ChapterPage> pages) {
+        this.pages = pages == null ? new java.util.ArrayList<>() : pages;
+    }
+    public int getPageCount() { return pages.size(); }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

@@ -26,6 +26,7 @@ import truyen.model.UserIdentity;
 import truyen.util.GoogleConfig;
 import truyen.util.GoogleTokenVerifier;
 import truyen.util.PasswordUtil;
+import truyen.util.ServletHelper;
 import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.currentUser;
 import static truyen.util.ServletHelper.trimOrEmpty;
@@ -369,8 +370,11 @@ public class UserServlet extends HttpServlet {
                 error = "Tên hiển thị không được để trống.";
             } else if (name.length() > 100) {
                 error = "Tên hiển thị tối đa 100 ký tự.";
-            } else if (!email.contains("@") || email.length() > 150) {
-                error = "Email không hợp lệ.";
+            } else if (!ServletHelper.isValidEmail(email)) {
+                error = "Email không hợp lệ (tối đa " + ServletHelper.EMAIL_MAX + " ký tự).";
+            } else if (avatar.length() > 1000) {
+                // khớp cột users.avatar_url VARCHAR(1000) — dài hơn là trang 500
+                error = "Đường dẫn ảnh đại diện quá dài (tối đa 1000 ký tự).";
             } else if (bio.length() > 500) {
                 error = "Giới thiệu tối đa 500 ký tự.";
             } else {
@@ -457,10 +461,13 @@ public class UserServlet extends HttpServlet {
         User full = userDAO.findById(me.getId());
         String error = null;
 
-        if (full == null || !PasswordUtil.verify(oldPass, full.getPasswordHash())) {
+        // Kiểm độ dài TRƯỚC khi verify: verify chạy PBKDF2 trên cả chuỗi gửi lên.
+        if (oldPass != null && oldPass.length() > PasswordUtil.MAX_LENGTH) {
             error = "Mật khẩu hiện tại không đúng.";
-        } else if (newPass == null || newPass.length() < 6) {
-            error = "Mật khẩu mới phải từ 6 ký tự.";
+        } else if (full == null || !PasswordUtil.verify(oldPass, full.getPasswordHash())) {
+            error = "Mật khẩu hiện tại không đúng.";
+        } else if (PasswordUtil.lengthError(newPass) != null) {
+            error = PasswordUtil.lengthError(newPass);
         } else if (!newPass.equals(confirm)) {
             error = "Hai lần nhập mật khẩu mới không khớp.";
         }
@@ -515,8 +522,8 @@ public class UserServlet extends HttpServlet {
         String confirm = request.getParameter("confirmPassword");
         String error = null;
 
-        if (newPass == null || newPass.length() < 6) {
-            error = "Mật khẩu mới phải từ 6 ký tự trở lên.";
+        if (PasswordUtil.lengthError(newPass) != null) {
+            error = PasswordUtil.lengthError(newPass);
         } else if (!newPass.equals(confirm)) {
             error = "Hai lần nhập mật khẩu không khớp.";
         }

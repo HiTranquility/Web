@@ -4,27 +4,35 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import truyen.util.ChapterAccess;
 import truyen.util.DBConnection;
 import truyen.util.ServletHelper;
+import truyen.util.UploadUtil;
 
 import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.trimOrEmpty;
 import truyen.dao.BookmarkDAO;
+import truyen.dao.ChapterBookmarkDAO;
 import truyen.dao.ChapterDAO;
+import truyen.dao.ChapterPageDAO;
 import truyen.dao.CommentDAO;
 import truyen.dao.FollowDAO;
 import truyen.dao.NotificationDAO;
+import truyen.dao.ReadingProgressDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.UnlockDAO;
 import truyen.dao.WalletDAO;
 import truyen.model.Chapter;
+import truyen.model.ChapterPage;
 import truyen.model.Comment;
+import truyen.model.ReadingProgress;
 import truyen.model.Story;
 import truyen.model.User;
 
@@ -35,27 +43,44 @@ import truyen.model.User;
  *
  * Trang đọc dùng layout `reader` — bỏ hết nav và footer để không có gì phân
  * tán khi đọc. Đây là ví dụ rõ nhất cho luật "layout mới chỉ khi KHUNG khác".
+ *
+ * @MultipartConfig: chương TRUYỆN TRANH gửi ảnh từng trang lên bằng form
+ * multipart. Form chương chữ vẫn là form thường — cấu hình này chỉ có tác
+ * dụng khi request thật sự là multipart, không ảnh hưởng gì tới nó.
+ *   maxFileSize    — một trang, khớp UploadUtil.MAX_PAGE_BYTES (5 MB) + dư
+ *   maxRequestSize — một lần lưu: ~30 trang x 5 MB. Nhiều hơn thì tải làm
+ *                    nhiều lần (form cho thêm trang vào chương đã có).
  */
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024,         // > 1 MB thì ghi tạm ra đĩa, không giữ RAM
+        maxFileSize       = 6L * 1024 * 1024,
+        maxRequestSize    = 160L * 1024 * 1024)
 @WebServlet("/chapter")
 public class ChapterServlet extends HttpServlet {
 
     private ChapterDAO chapterDAO;
+    private ChapterPageDAO pageDAO;
     private CommentDAO commentDAO;
     private FollowDAO followDAO;
     private NotificationDAO notificationDAO;
     private StoryDAO storyDAO;
     private BookmarkDAO bookmarkDAO;
+    private ChapterBookmarkDAO markDAO;
+    private ReadingProgressDAO progressDAO;
     private UnlockDAO unlockDAO;
     private WalletDAO walletDAO;
 
     @Override
     public void init() throws ServletException {
         chapterDAO = new ChapterDAO();
+        pageDAO = new ChapterPageDAO();
         commentDAO = new CommentDAO();
         followDAO = new FollowDAO();
         notificationDAO = new NotificationDAO();
         storyDAO = new StoryDAO();
         bookmarkDAO = new BookmarkDAO();
+        markDAO = new ChapterBookmarkDAO();
+        progressDAO = new ReadingProgressDAO();
         unlockDAO = new UnlockDAO();
         walletDAO = new WalletDAO();
     }
@@ -192,37 +217,44 @@ public class ChapterServlet extends HttpServlet {
         }
 
         // Chương của truyện NHÁP chỉ tác giả và admin được đọc.
-        if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
+        if (!ChapterAccess.canSeeStory(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
 
-        // Hàng rào chương VIP (ISSUE-020)
-        boolean isLocked = false;
-        if (chapter.isVip()) {
-            if (me == null) {
-                isLocked = true;
-            } else if (canEdit(me, story) || "ADMIN".equals(me.getRole())) {
-                isLocked = false; // Tác giả và Admin đọc miễn phí
-            } else {
-                isLocked = !unlockDAO.hasUnlocked(me.getId(), chapter.getId());
-            }
-        }
+        // Hàng rào chương VIP (ISSUE-020) — luật chung ở ChapterAccess
+        boolean isLocked = ChapterAccess.isLocked(me, story, chapter, unlockDAO::hasUnlocked);
 
         if (isLocked) {
-            request.setAttribute("isLocked", true);
-            request.setAttribute("unlockPrice", chapter.getCoinPrice());
-            request.setAttribute("walletBalance", me != null ? walletDAO.getBalance(me.getId()) : 0);
-            chapter.setContent(""); // Triệt tiêu nội dung khỏi HTML ngăn ngừa lộ qua Ctrl+U
+            hideLockedContent(request, me, chapter);
         } else {
-            /* Tự động ghi lại vị trí đọc cho người đã đăng nhập (chỉ khi được đọc). */
-            if (me != null) {
-                try {
-                    bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
-                } catch (SQLException e) {
-                    log("Không lưu được vị trí đọc, userId=" + me.getId(), e);
+            openChapter(request, story, chapter);
+            /*
+             * Tự động ghi lại vị trí đọc (chỉ khi được đọc).
+             *
+             * ĐỌC vị trí cũ TRƯỚC rồi mới GHI: nếu người đọc quay lại đúng
+             * chương đang dở, trang đọc cần biết đoạn cũ để cuộn tới — ghi
+             * trước thì không còn gì để hỏi. touch() cũng giữ nguyên số đoạn
+             * khi mở lại cùng chương, nên mở trang không xoá mất vị trí.
+             *
+             * Hỏng thì chỉ mất tính năng nhớ chỗ — KHÔNG được làm hỏng việc đọc.
+             */
+            try {
+                ReadingProgress old = progressDAO.find(me.getId(), story.getId());
+                if (old != null && old.getChapterId() == chapter.getId() && old.getParaNo() > 1) {
+                    request.setAttribute("resumePara", old.getParaNo());
                 }
+                progressDAO.touch(me.getId(), story.getId(), chapter.getId());
+            } catch (SQLException e) {
+                log("Không lưu được vị trí đọc, userId=" + me.getId(), e);
             }
+            setMarkedParas(request, me, chapter);
+        }
+
+        try {
+            request.setAttribute("bookmarked", bookmarkDAO.exists(me.getId(), story.getId()));
+        } catch (SQLException e) {
+            log("Không đọc được trạng thái lưu truyện, userId=" + me.getId(), e);
         }
 
         /* Nạp danh sách bình luận của chương */
@@ -300,14 +332,14 @@ public class ChapterServlet extends HttpServlet {
      *   forward toi raw.jsp roi tra null, dung quy uoc chung cua servlet nay:
      *   null = "da xu ly xong, dung forward nua".
      *
-     * VI SAO VAN GHI VI TRI DOC O DAY
-     *   Day la cai bay de sot nhat cua doc lien tuc. read() ghi vi tri moi
-     *   lan TAI TRANG — nhung doc lien tuc chi tai trang MOT lan, roi noi
-     *   them 20 chuong ma khong tai lai lan nao. Khong ghi o day thi tu
-     *   truyen mai mai bao "dang doc chuong 1".
+     * VI SAO KHONG GHI VI TRI DOC O DAY NUA
+     *   Truoc day raw() ghi vi tri moi lan nap — nhung JavaScript nap chuong
+     *   sau TRUOC khi nguoi doc toi do 600px (de khoi phai cho). Ket qua: vua
+     *   doc toi cuoi chuong 5 la he thong da ghi "dang doc chuong 6", thoat
+     *   ra roi "Doc tiep" la nhay qua mat doan cuoi chuong 5.
      *
-     *   Ghi ngay trong chinh request nap chuong: khong ton them mot vong goi
-     *   nao, va khong the quen.
+     *   Gio trang doc tu bao vi tri THAT (chuong + doan dang hien tren man
+     *   hinh) qua /bookmark?action=progress. raw() chi con lo tra noi dung.
      */
     private String raw(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException, ServletException {
@@ -333,36 +365,17 @@ public class ChapterServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Vui lòng đăng nhập để đọc tiếp");
             return null;
         }
-        if ("DRAFT".equals(story.getStatus()) && !canEdit(me, story)) {
+        if (!ChapterAccess.canSeeStory(me, story)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
 
-        // Hàng rào VIP đối với raw()
-        boolean isLocked = false;
-        if (chapter.isVip()) {
-            if (me == null) {
-                isLocked = true;
-            } else if (canEdit(me, story) || "ADMIN".equals(me.getRole())) {
-                isLocked = false;
-            } else {
-                isLocked = !unlockDAO.hasUnlocked(me.getId(), chapter.getId());
-            }
-        }
-
-        if (isLocked) {
-            request.setAttribute("isLocked", true);
-            request.setAttribute("unlockPrice", chapter.getCoinPrice());
-            request.setAttribute("walletBalance", me != null ? walletDAO.getBalance(me.getId()) : 0);
-            chapter.setContent("");
+        // Hàng rào VIP đối với raw() — CÙNG luật với read(), xem ChapterAccess
+        if (ChapterAccess.isLocked(me, story, chapter, unlockDAO::hasUnlocked)) {
+            hideLockedContent(request, me, chapter);
         } else {
-            if (me != null) {
-                try {
-                    bookmarkDAO.updateProgress(me.getId(), story.getId(), chapter.getId());
-                } catch (SQLException e) {
-                    log("Khong luu duoc vi tri doc, userId=" + me.getId(), e);
-                }
-            }
+            openChapter(request, story, chapter);
+            setMarkedParas(request, me, chapter);
         }
 
         request.setAttribute("chapter", chapter);
@@ -470,13 +483,17 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
+        // Truyện tranh soạn bằng form khác (tải ảnh), truyện chữ dùng trình soạn văn bản.
+        String formView = story.isComic()
+                ? "/WEB-INF/views/user/chapter/form-comic.jsp"
+                : "/WEB-INF/views/user/chapter/form.jsp";
+
         if (!"POST".equals(request.getMethod())) {
-            request.setAttribute("chapter", chapter);
-            request.setAttribute("story", story);
-            request.setAttribute("pageTitle", isCreate ? "Thêm chương" : "Sửa chương");
-            request.setAttribute("editorBack",
-                    "/story?action=detail&id=" + story.getId());
-            return "/WEB-INF/views/user/chapter/form.jsp";
+            if (story.isComic() && !isCreate) {
+                chapter.setPages(pageDAO.findByChapter(chapter.getId()));
+                ChapterAccess.grant(request.getSession(), chapter.getId());   // để form hiện ảnh xem trước
+            }
+            return showForm(request, story, chapter, isCreate, formView, null);
         }
 
         String title = trimOrEmpty(request.getParameter("title"));
@@ -493,34 +510,47 @@ public class ChapterServlet extends HttpServlet {
         }
 
         chapter.setTitle(title);
-        chapter.setContent(content == null ? "" : content);
+        // Chương truyện tranh không có chữ — content để rỗng (cột NOT NULL).
+        chapter.setContent(story.isComic() || content == null ? "" : content);
         chapter.setChapterNo(chapterNo);
         chapter.setVip(isVip);
         chapter.setCoinPrice(coinPrice);
 
         String error = null;
-        if (title.isEmpty() || chapter.getContent().trim().isEmpty()) {
-            error = "Tiêu đề và nội dung chương không được để trống.";
+        if (title.isEmpty()) {
+            error = "Tiêu đề chương không được để trống.";
+        } else if (!story.isComic() && chapter.getContent().trim().isEmpty()) {
+            error = "Nội dung chương không được để trống.";
         } else if (title.length() > 200) {
             error = "Tiêu đề chương tối đa 200 ký tự.";
         } else if (chapterNo <= 0) {
             error = "Số thứ tự chương phải là số nguyên dương lớn hơn 0.";
+        } else if (chapterNo > 100000) {
+            error = "Số thứ tự chương quá lớn.";
+        } else if (chapterDAO.chapterNoExists(story.getId(), chapterNo, chapter.getId())) {
+            error = "Truyện đã có Chương " + chapterNo + ". Chọn số khác (gợi ý: "
+                    + chapterDAO.nextChapterNo(story.getId()) + ").";
         }
-
         if (error != null) {
-            request.setAttribute("message", error);
-            request.setAttribute("chapter", chapter);
-            request.setAttribute("story", story);
-            request.setAttribute("editorBack", "/story?action=detail&id=" + story.getId());
-            request.setAttribute("pageTitle", isCreate ? "Thêm chương" : "Sửa chương");
-            return "/WEB-INF/views/user/chapter/form.jsp";
+            if (story.isComic() && !isCreate) chapter.setPages(pageDAO.findByChapter(chapter.getId()));
+            return showForm(request, story, chapter, isCreate, formView, error);
         }
 
         boolean notifyUpdate = "1".equals(request.getParameter("notifyFollowers"))
                 || "true".equalsIgnoreCase(request.getParameter("notifyFollowers"))
                 || "on".equalsIgnoreCase(request.getParameter("notifyFollowers"));
 
-        if (isCreate) {
+        if (story.isComic()) {
+            String comicError = saveComicChapter(request, story, chapter, isCreate);
+            if (comicError != null) {
+                return showForm(request, story, chapter, isCreate, formView, comicError);
+            }
+            if (isCreate) {
+                notifyFollowers(story, chapter, false);
+            } else if (notifyUpdate) {
+                notifyFollowers(story, chapter, true);
+            }
+        } else if (isCreate) {
             chapterDAO.insert(chapter);
             notifyFollowers(story, chapter, false);
         } else {
@@ -533,6 +563,117 @@ public class ChapterServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + story.getId());
         return null;
+    }
+
+    private String showForm(HttpServletRequest request, Story story, Chapter chapter,
+                            boolean isCreate, String view, String error) {
+        if (error != null) request.setAttribute("message", error);
+        request.setAttribute("chapter", chapter);
+        request.setAttribute("story", story);
+        request.setAttribute("editorBack", "/story?action=detail&id=" + story.getId());
+        request.setAttribute("pageTitle", isCreate ? "Thêm chương" : "Sửa chương");
+        request.setAttribute("maxPages", ChapterPageDAO.MAX_PAGES_PER_CHAPTER);
+        request.setAttribute("maxPageMb", UploadUtil.MAX_PAGE_BYTES / 1024 / 1024);
+        return view;
+    }
+
+    /**
+     * Lưu chương TRUYỆN TRANH: thông tin chương + danh sách trang ảnh.
+     *
+     * THỨ TỰ CÁC BƯỚC LÀ CỐ Ý
+     *   1. Chương mới thì INSERT trước — cần chapterId để đặt thư mục ảnh.
+     *   2. Ghi file ảnh mới ra đĩa. Hỏng giữa chừng (ảnh sai định dạng, quá
+     *      nặng) thì xoá các file vừa ghi, và với chương MỚI xoá luôn chương
+     *      vừa INSERT — không để lại chương rỗng hay file mồ côi.
+     *   3. Ghi danh sách trang vào CSDL trong MỘT transaction (replaceAll).
+     *   4. Chỉ SAU KHI commit mới xoá file của các trang bị bỏ. Xoá trước mà
+     *      transaction hỏng thì CSDL còn trỏ tới ảnh đã mất.
+     *
+     * @return thông báo lỗi cho người dùng, hoặc null nếu lưu xong.
+     */
+    private String saveComicChapter(HttpServletRequest request, Story story, Chapter chapter,
+                                    boolean isCreate) throws SQLException, IOException {
+        List<javax.servlet.http.Part> files = new java.util.ArrayList<>();
+        try {
+            for (javax.servlet.http.Part p : request.getParts()) {
+                if ("pages".equals(p.getName()) && p.getSize() > 0) files.add(p);
+            }
+        } catch (ServletException | IllegalStateException e) {
+            // Vượt maxFileSize / maxRequestSize của @MultipartConfig
+            log("Form chương truyện tranh vượt giới hạn tải lên", e);
+            return "Ảnh tải lên quá lớn. Mỗi trang tối đa " + (UploadUtil.MAX_PAGE_BYTES / 1024 / 1024)
+                    + " MB; nhiều trang thì chia làm vài lần lưu.";
+        }
+
+        List<ChapterPage> existing = isCreate
+                ? new java.util.ArrayList<>() : pageDAO.findByChapter(chapter.getId());
+        java.util.Set<Integer> remove = parseIds(request.getParameter("removePages"));
+        int keptOld = 0;
+        for (ChapterPage p : existing) if (!remove.contains(p.getId())) keptOld++;
+
+        int total = keptOld + files.size();
+        if (total == 0) {
+            chapter.setPages(existing);
+            return "Chương truyện tranh cần ít nhất một trang ảnh.";
+        }
+        if (total > ChapterPageDAO.MAX_PAGES_PER_CHAPTER) {
+            chapter.setPages(existing);
+            return "Một chương tối đa " + ChapterPageDAO.MAX_PAGES_PER_CHAPTER
+                    + " trang (đang là " + total + "). Tách bớt sang chương sau nhé.";
+        }
+
+        if (isCreate) {
+            chapterDAO.insert(chapter);
+        }
+
+        List<ChapterPage> added = new java.util.ArrayList<>();
+        try {
+            for (javax.servlet.http.Part part : files) {
+                UploadUtil.SavedPage saved = UploadUtil.savePage(
+                        part, story.getId(), chapter.getId(), getServletContext());
+                ChapterPage p = new ChapterPage();
+                p.setChapterId(chapter.getId());
+                p.setImagePath(saved.path);
+                p.setWidth(saved.width);
+                p.setHeight(saved.height);
+                added.add(p);
+            }
+        } catch (UploadUtil.UploadException e) {
+            for (ChapterPage p : added) UploadUtil.deletePage(p.getImagePath(), getServletContext());
+            if (isCreate) {
+                chapterDAO.delete(chapter.getId());
+                chapter.setId(0);
+            }
+            chapter.setPages(existing);
+            return e.getMessage();
+        }
+
+        List<String> order = java.util.Arrays.asList(
+                trimOrEmpty(request.getParameter("pageOrder")).split(","));
+        List<ChapterPage> finalPages = ChapterPage.arrange(existing, added, order, remove);
+
+        List<String> removedPaths;
+        try {
+            if (!isCreate) chapterDAO.update(chapter);
+            removedPaths = pageDAO.replaceAll(chapter.getId(), finalPages);
+        } catch (SQLException e) {
+            for (ChapterPage p : added) UploadUtil.deletePage(p.getImagePath(), getServletContext());
+            if (isCreate) chapterDAO.delete(chapter.getId());
+            throw e;
+        }
+        for (String path : removedPaths) UploadUtil.deletePage(path, getServletContext());
+        return null;
+    }
+
+    /** "12,15,x,15" -> {12, 15}. Bỏ qua mọi thứ không phải số nguyên dương. */
+    private static java.util.Set<Integer> parseIds(String csv) {
+        java.util.Set<Integer> out = new java.util.HashSet<>();
+        if (csv == null) return out;
+        for (String s : csv.split(",")) {
+            int id = parseIntOr(s.trim(), 0);
+            if (id > 0) out.add(id);
+        }
+        return out;
     }
 
     private String delete(HttpServletRequest request, HttpServletResponse response)
@@ -553,7 +694,13 @@ public class ChapterServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return null;
         }
+        // Truyện tranh: nhớ đường dẫn ảnh TRƯỚC khi xoá (dòng chapter_pages đi
+        // theo khoá ngoại CASCADE), xoá xong chương mới dọn file trên đĩa.
+        List<String> imagePaths = story.isComic()
+                ? pageDAO.findPaths(chapter.getId()) : java.util.Collections.emptyList();
         chapterDAO.delete(chapter.getId());
+        for (String path : imagePaths) UploadUtil.deletePage(path, getServletContext());
+
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + story.getId());
         return null;
@@ -561,9 +708,53 @@ public class ChapterServlet extends HttpServlet {
 
     // ---- tiện ích ----------------------------------------------------------
 
+    /**
+     * Các đoạn người đọc đã đánh dấu trong chương này, dạng "3,17,42".
+     * _block.jsp in ra data-marked để JavaScript tô sẵn — dùng chung cho cả
+     * read() lẫn raw(), nên chương nối thêm khi đọc liên tục cũng được tô.
+     */
+    private void setMarkedParas(HttpServletRequest request, User me, Chapter chapter) {
+        if (me == null) return;
+        try {
+            StringBuilder sb = new StringBuilder();
+            for (Integer p : markDAO.findParaNos(me.getId(), chapter.getId())) {
+                if (sb.length() > 0) sb.append(',');
+                sb.append(p);
+            }
+            request.setAttribute("markedParas", sb.toString());
+        } catch (SQLException e) {
+            log("Không đọc được đoạn đánh dấu, userId=" + me.getId(), e);
+        }
+    }
+
+    /**
+     * Chương VIP đang khoá: rút SẠCH nội dung trước khi tới JSP.
+     * Ẩn bằng CSS là không đủ — Ctrl+U vẫn thấy. Với truyện tranh cũng
+     * không nạp danh sách trang: không có đường dẫn ảnh nào lọt ra HTML.
+     */
+    private void hideLockedContent(HttpServletRequest request, User me, Chapter chapter)
+            throws SQLException {
+        request.setAttribute("isLocked", true);
+        request.setAttribute("unlockPrice", chapter.getCoinPrice());
+        request.setAttribute("walletBalance", me != null ? walletDAO.getBalance(me.getId()) : 0);
+        chapter.setContent("");
+        chapter.setPages(null);
+    }
+
+    /**
+     * Chương được đọc: nạp trang ảnh (truyện tranh) và CẤP QUYỀN theo phiên để
+     * UploadedFileServlet phát ảnh mà khỏi hỏi lại CSDL cho từng trang.
+     */
+    private void openChapter(HttpServletRequest request, Story story, Chapter chapter)
+            throws SQLException {
+        if (story.isComic()) {
+            chapter.setPages(pageDAO.findByChapter(chapter.getId()));
+            ChapterAccess.grant(request.getSession(), chapter.getId());
+        }
+    }
+
     private boolean canEdit(User user, Story story) {
-        return user != null && story != null
-                && (user.getId() == story.getAuthorId() || user.isAdmin());
+        return ChapterAccess.canEdit(user, story);
     }
 
     /** Báo cho những người đang theo dõi tác giả và những người đã lưu truyện rằng có chương mới hoặc có cập nhật nội dung. */

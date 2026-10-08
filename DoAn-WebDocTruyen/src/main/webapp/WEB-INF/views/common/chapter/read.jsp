@@ -149,9 +149,21 @@
 </p>
 
 <%--
+  Khối gợi ý cuối truyện. Để TRỐNG — JavaScript nạp từ
+  /story?action=recommend khi người đọc tới cuối chương cuối cùng, dùng CÙNG
+  mảnh _recommend.jsp với trang chi tiết. Không in sẵn: phần lớn lượt mở
+  trang đọc không phải chương cuối, in sẵn là tốn ba câu SQL cho không.
+--%>
+<div class="reader-recs" id="reader-recs" data-story-id="${story.id}"></div>
+
+<%--
   Ghi chú về "tự động ghi nhớ vị trí đọc".
 
-  Không có nút "Lưu vị trí" — cố ý. ChapterServlet ghi ngay khi trang được mở,
-  và action=raw cũng ghi mỗi lần nối thêm một chương. Người đọc không phải
-  bấm gì cả.
+  Không có nút "Lưu vị trí" — cố ý. ChapterServlet ghi CHƯƠNG ngay khi trang
+  được mở (chạy được cả khi tắt JavaScript). JavaScript ở layout/reader.jsp
+  ghi thêm ĐOẠN đang đọc mỗi khi người đọc dừng cuộn hoặc rời trang, nên
+  "Đọc tiếp" đưa về đúng đoạn chứ không chỉ đầu chương.
+
+  Còn nút 🔖 trên thanh công cụ là việc khác: ĐÁNH DẤU một đoạn để đọc lại
+  sau, xem ở Tủ sách → "Đoạn đã đánh dấu".
 --%>

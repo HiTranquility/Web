@@ -118,6 +118,17 @@
         <param-value>C:/truyen-uploads</param-value>
     </context-param>
 
+    <!--
+      NẠP XU MÔ PHỎNG (WalletServlet action=buy) — cộng xu ngay, KHÔNG thu tiền.
+      true : bật để demo đồ án (có trần 3 lần / 2.000 xu mỗi người mỗi ngày)
+      false: tắt hẳn — đặt false khi đưa lên mạng thật hoặc khi đã tích hợp
+             cổng thanh toán thật.
+    -->
+    <context-param>
+        <param-name>demoTopup</param-name>
+        <param-value>true</param-value>
+    </context-param>
+
     <!-- Số truyện mỗi trang ở kho truyện. Chỉnh mà không cần biên dịch lại. -->
     <context-param>
         <param-name>pageSize</param-name>

@@ -364,3 +364,72 @@ body.zen-active .editor-stats-bar {
     .editor-stats-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
     .tool-btn span.btn-label { display: none; }
 }
+
+/* ============================================================================
+   SOẠN CHƯƠNG TRUYỆN TRANH (chapter/form-comic.jsp)
+   ========================================================================= */
+.comic-editor {
+    margin-top: 18px; padding: 16px;
+    background: var(--ink-850); border: 1px solid var(--ink-700);
+    border-radius: var(--r-lg);
+}
+.comic-editor-head {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    margin-bottom: 12px;
+}
+.comic-count {
+    flex: none; padding: 3px 12px; border-radius: 99px;
+    background: var(--ink-800); color: var(--text-dim); font-weight: 700; font-size: .85rem;
+}
+.comic-count.is-over { background: rgba(239, 68, 68, .15); color: #ef4444; }
+
+/* Vùng chọn / thả ảnh. Input thật nằm trong label nên bấm đâu cũng mở hộp chọn file. */
+.comic-drop {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 22px 16px; margin: 0 0 14px;
+    border: 2px dashed var(--ink-600); border-radius: var(--r-sm);
+    background: var(--ink-900); color: var(--text-dim);
+    text-align: center; cursor: pointer;
+    transition: border-color .16s var(--ease), background .16s var(--ease);
+}
+.comic-drop:hover, .comic-drop.is-over { border-color: var(--ember); background: var(--ember-ghost); }
+.comic-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.comic-drop-icon { font-size: 1.8rem; }
+.comic-drop small { color: var(--text-mut); }
+
+/* Lưới ảnh thu nhỏ — tỉ lệ dọc giống trang truyện */
+.comic-grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
+}
+.comic-thumb {
+    position: relative; aspect-ratio: 2 / 3;
+    border-radius: var(--r-sm); overflow: hidden;
+    background: var(--ink-800); border: 1px solid var(--ink-700);
+    cursor: grab;
+}
+.comic-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.comic-thumb.is-dragging { opacity: .4; }
+.comic-thumb.is-new { border-color: var(--ember-border); }
+.comic-thumb.is-too-big { border: 2px solid #ef4444; }
+.comic-thumb-no {
+    position: absolute; top: 6px; left: 6px;
+    min-width: 24px; padding: 1px 7px; border-radius: 99px;
+    background: rgba(10, 13, 20, .8); color: #fff; font-size: .75rem; font-weight: 700; text-align: center;
+}
+.comic-thumb-badge {
+    position: absolute; top: 6px; right: 6px; padding: 1px 7px; border-radius: 99px;
+    background: var(--ember); color: #fff; font-size: .68rem; font-weight: 700;
+}
+.comic-thumb-tools {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: center; gap: 4px; padding: 6px;
+    background: linear-gradient(transparent, rgba(10, 13, 20, .85));
+}
+.comic-thumb-tools button {
+    width: 28px; height: 28px; border-radius: 6px; border: 0; cursor: pointer;
+    background: rgba(255, 255, 255, .14); color: #fff; font-size: .85rem;
+}
+.comic-thumb-tools button:hover { background: var(--ember); }
+.comic-thumb-tools button[data-remove]:hover { background: #ef4444; }
+#sizeWarn { color: #ef4444; margin-top: 10px; }

@@ -33,9 +33,9 @@ public class AuthFilter implements Filter {
      */
     private static String[] publicActionsFor(String path) {
         switch (path) {
-            // Kho truyện, chi tiết truyện, tìm kiếm, gợi ý tự động — nội dung công khai.
+            // Kho truyện, chi tiết truyện, tìm kiếm, gợi ý tìm kiếm, khối gợi ý truyện — nội dung công khai.
             case "/story":
-                return new String[] { "list", "detail", "search", "suggest" };
+                return new String[] { "list", "detail", "search", "suggest", "recommend" };
 
             // Hồ sơ tác giả công khai. me, edit, save, password thì cần đăng nhập.
             case "/user":

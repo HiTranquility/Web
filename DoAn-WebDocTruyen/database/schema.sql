@@ -126,6 +126,11 @@ CREATE TABLE stories (
     -- ONGOING: đang ra chương;  COMPLETED: đã hoàn thành
     progress     ENUM('ONGOING','COMPLETED')         NOT NULL DEFAULT 'ONGOING',
 
+    -- TEXT : truyện chữ — nội dung chương nằm ở chapters.content
+    -- COMIC: truyện tranh — mỗi chương là một dãy ảnh trong chapter_pages
+    -- Thêm loại mới: xem ghi chú đầu database/migration-028-story-type.sql
+    story_type   ENUM('TEXT','COMIC')                NOT NULL DEFAULT 'TEXT',
+
     -- Đếm sẵn lượt xem thay vì COUNT() mỗi lần tải trang — nhanh hơn nhiều.
     view_count   INT NOT NULL DEFAULT 0,
 
@@ -155,7 +160,8 @@ CREATE TABLE stories (
 
     INDEX idx_stories_status  (status),
     INDEX idx_stories_author  (author_id),
-    INDEX idx_stories_updated (updated_at)
+    INDEX idx_stories_updated (updated_at),
+    INDEX idx_stories_type    (status, story_type)
 ) ENGINE=InnoDB;
 
 
@@ -220,6 +226,34 @@ CREATE TABLE chapters (
       chuong, khong phai chi ruot truyen.
     */
     FULLTEXT INDEX ft_chapter_text (title, content)
+) ENGINE=InnoDB;
+
+
+-- =============================================================================
+--  chapter_pages — ảnh từng trang của chương TRUYỆN TRANH
+-- =============================================================================
+--  Chương truyện chữ không có dòng nào ở đây. Chương truyện tranh để
+--  chapters.content rỗng và đọc ảnh theo page_no. Xem migration-028.
+-- =============================================================================
+CREATE TABLE chapter_pages (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    chapter_id  INT NOT NULL,
+
+    -- Thứ tự trang, đếm từ 1 — cũng là "para_no" khi đánh dấu / đọc tiếp.
+    page_no     INT NOT NULL,
+
+    -- Tương đối trong thư mục uploads: pages/{storyId}/{chapterId}/x.jpg.
+    -- UploadedFileServlet kiểm quyền đọc chương trước khi phát ảnh pages/.
+    image_path  VARCHAR(255) NOT NULL,
+
+    -- Kích thước gốc — trang đọc giữ chỗ đúng tỉ lệ trước khi ảnh tải xong.
+    width       INT NULL,
+    height      INT NULL,
+
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_chapter_page (chapter_id, page_no),
+    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 
@@ -314,17 +348,16 @@ CREATE TABLE comments (
 -- =============================================================================
 --  bookmarks — đánh dấu truyện
 -- =============================================================================
---  Gộp HAI nhu cầu vào một bảng:
---    1. "lưu truyện để đọc sau"      -> chỉ cần (user_id, story_id)
---    2. "nhớ đang đọc tới chương mấy" -> cột last_chapter_id
---  Tách làm hai bảng cũng được, nhưng gộp thì ít việc hơn mà vẫn đủ dùng.
+--  CHỈ những truyện người dùng TỰ BẤM "Lưu truyện".
+--
+--  Trước đây bảng này còn gánh luôn "đang đọc tới chương mấy" (cột
+--  last_chapter_id). Hậu quả: mở một chương là truyện tự nhảy vào tủ sách,
+--  bấm "Bỏ lưu" thì mất luôn vị trí đọc. Vị trí đọc giờ nằm ở
+--  reading_progress ngay bên dưới (xem migration-027).
 -- =============================================================================
 CREATE TABLE bookmarks (
     user_id         INT NOT NULL,
     story_id        INT NOT NULL,
-
-    -- NULL = đã lưu nhưng chưa đọc chương nào.
-    last_chapter_id INT NULL,
 
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -332,11 +365,56 @@ CREATE TABLE bookmarks (
     PRIMARY KEY (user_id, story_id),
 
     FOREIGN KEY (user_id)         REFERENCES users(id)    ON DELETE CASCADE,
-    FOREIGN KEY (story_id)        REFERENCES stories(id)  ON DELETE CASCADE,
+    FOREIGN KEY (story_id)        REFERENCES stories(id)  ON DELETE CASCADE
+) ENGINE=InnoDB;
 
-    -- SET NULL chứ không CASCADE: tác giả xoá chương đang đọc dở thì chỉ mất
-    -- vị trí đọc, KHÔNG mất luôn cả bookmark.
-    FOREIGN KEY (last_chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
+
+-- =============================================================================
+--  reading_progress — vị trí đọc (tự ghi, người dùng không phải bấm gì)
+-- =============================================================================
+--  Lưu theo ĐOẠN VĂN chứ không theo pixel: đổi cỡ chữ hay đổi máy thì số
+--  pixel vô nghĩa, còn "đoạn thứ 37 của chương 12" thì vẫn đúng.
+-- =============================================================================
+CREATE TABLE reading_progress (
+    user_id     INT NOT NULL,
+    story_id    INT NOT NULL,
+
+    -- SET NULL: tác giả xoá đúng chương đang đọc dở thì chỉ mất vị trí.
+    chapter_id  INT NULL,
+
+    -- Đoạn trên cùng màn hình lúc rời trang, đếm từ 1. 0 = đầu chương.
+    para_no     INT NOT NULL DEFAULT 0,
+
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id, story_id),
+    FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
+    FOREIGN KEY (story_id)   REFERENCES stories(id)  ON DELETE CASCADE,
+    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+
+-- =============================================================================
+--  chapter_bookmarks — đoạn văn người dùng đánh dấu để đọc lại
+-- =============================================================================
+CREATE TABLE chapter_bookmarks (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT NOT NULL,
+    chapter_id  INT NOT NULL,
+
+    -- Đoạn được đánh dấu, đếm từ 1. 0 = cả chương.
+    para_no     INT NOT NULL DEFAULT 0,
+
+    -- Vài chục chữ đầu của đoạn, chụp lúc đánh dấu — danh sách hiện được
+    -- ngay mà không phải nạp lại nội dung từng chương.
+    snippet     VARCHAR(200) NULL,
+
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_chapter_bookmark (user_id, chapter_id, para_no),
+    INDEX idx_cb_user (user_id, created_at),
+    FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
+    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 

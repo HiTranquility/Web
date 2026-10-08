@@ -30,11 +30,13 @@ public class DownloadServlet extends HttpServlet {
 
     private StoryDAO storyDAO;
     private ChapterDAO chapterDAO;
+    private truyen.dao.UnlockDAO unlockDAO;
 
     @Override
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
         chapterDAO = new ChapterDAO();
+        unlockDAO = new truyen.dao.UnlockDAO();
     }
 
     @Override
@@ -74,7 +76,29 @@ public class DownloadServlet extends HttpServlet {
                 return;
             }
 
+            // Truyện tranh là ảnh — ghép thành .txt / EPUB chữ thì ra file rỗng.
+            if (story.isComic()) {
+                request.getSession().setAttribute("flash",
+                        "Truyện tranh chưa hỗ trợ tải về — mời bạn đọc trực tuyến nhé.");
+                response.sendRedirect(request.getContextPath()
+                        + "/story?action=detail&id=" + storyId);
+                return;
+            }
+
             chapters = chapterDAO.findAllWithContent(storyId);
+
+            /*
+             * CHƯƠNG VIP CHƯA MỞ KHOÁ: giữ tên chương trong mục lục, THAY nội
+             * dung bằng một dòng nhắc. Trước đây file tải về chứa trọn nội dung
+             * mọi chương VIP — đọc chùa chỉ cần một cú bấm "Tải .txt".
+             * Cùng luật với trang đọc, đi qua ChapterAccess.
+             */
+            for (Chapter c : chapters) {
+                if (truyen.util.ChapterAccess.isLocked(currentUser, story, c, unlockDAO::hasUnlocked)) {
+                    c.setContent("[Chương VIP — mở khoá " + c.getCoinPrice()
+                            + " xu trên web để đọc nội dung chương này.]");
+                }
+            }
         } catch (SQLException e) {
             log("DownloadServlet: không đọc được truyện id=" + storyId, e);
 

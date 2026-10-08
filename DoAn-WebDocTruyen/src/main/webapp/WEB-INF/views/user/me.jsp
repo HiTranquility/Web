@@ -28,12 +28,21 @@
             <span><b>${me.storyCount}</b> truyện</span>
             <span><b><fmt:formatNumber pattern="#,##0" value="${totalViews}"/></b> lượt xem</span>
             <span><b>${me.followerCount}</b> người theo dõi</span>
+            <a href="${pageContext.request.contextPath}/wallet?action=topup" class="profile-coin-pill" title="Ví xu cá nhân. Bấm để nạp thêm">
+                <span>🪙</span>
+                <b><fmt:formatNumber pattern="#,##0" value="${walletBalance}"/></b> xu
+                <span class="profile-coin-pill-add">+ Nạp</span>
+            </a>
             <c:if test="${me.admin}">
                 <span class="pill pill-warn">Quản trị viên</span>
             </c:if>
         </div>
 
         <div class="profile-actions">
+            <a class="btn btn-warning btn-coin-topup"
+               href="${pageContext.request.contextPath}/wallet?action=topup">
+                🪙 Nạp xu
+            </a>
             <a class="btn btn-primary"
                href="${pageContext.request.contextPath}/user?action=edit">Sửa hồ sơ</a>
             <a class="btn btn-ghost"
@@ -171,11 +180,14 @@
             </dd>
 
             <dt>Số dư ví xu</dt>
-            <dd>
-                <span class="badge badge-amber" style="font-size:0.9rem; padding:4px 14px; background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.35); border-radius:99px;">
+            <dd style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span class="badge badge-amber" style="font-size:0.92rem; padding:4px 14px; background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.35); border-radius:99px; font-weight:800; display:inline-flex; align-items:center; gap:5px;">
                     🪙 <b><fmt:formatNumber pattern="#,##0" value="${walletBalance}"/></b> xu
                 </span>
-                <span class="muted" style="font-size:0.82em; margin-left:6px;">(Mở khoá VIP, tặng quà)</span>
+                <a href="${pageContext.request.contextPath}/wallet?action=topup" class="btn btn-sm btn-outline-amber" style="padding:3px 12px; font-size:0.82rem; font-weight:700; color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.45); border-radius:99px; background:rgba(245, 158, 11, 0.08); text-decoration:none;">
+                    + Nạp thêm xu
+                </a>
+                <span class="muted" style="font-size:0.82em;">(Mở khoá VIP, tặng quà tác giả)</span>
             </dd>
 
             <dt>Vai trò</dt>
@@ -214,13 +226,23 @@
             </a>
             <a class="shortcut" href="${pageContext.request.contextPath}/bookmark" style="text-decoration:none;">
                 <span class="shortcut-icon" style="font-size:1.6rem;">🔖</span>
-                <b style="color:var(--text); font-size:0.95rem;">Truyện đã lưu</b>
-                <span class="muted" style="font-size:0.82rem;">Đọc tiếp từ chương dở</span>
+                <b style="color:var(--text); font-size:0.95rem;">Tủ sách</b>
+                <span class="muted" style="font-size:0.82rem;">Truyện đã lưu &amp; đoạn đã đánh dấu</span>
             </a>
             <a class="shortcut" href="${pageContext.request.contextPath}/follow?action=list" style="text-decoration:none;">
                 <span class="shortcut-icon" style="font-size:1.6rem;">👥</span>
                 <b style="color:var(--text); font-size:0.95rem;">Đang theo dõi</b>
                 <span class="muted" style="font-size:0.82rem;">Tác giả bạn quan tâm</span>
+            </a>
+            <a class="shortcut" href="${pageContext.request.contextPath}/wallet?action=topup" style="text-decoration:none;">
+                <span class="shortcut-icon" style="font-size:1.6rem;">🪙</span>
+                <b style="color:var(--text); font-size:0.95rem;">Ví &amp; Nạp xu</b>
+                <span class="muted" style="font-size:0.82rem;">Nạp xu, lịch sử giao dịch</span>
+            </a>
+            <a class="shortcut" href="#gamification" style="text-decoration:none;">
+                <span class="shortcut-icon" style="font-size:1.6rem;">🎁</span>
+                <b style="color:var(--text); font-size:0.95rem;">Nhận xu miễn phí</b>
+                <span class="muted" style="font-size:0.82rem;">Điểm danh &amp; nhiệm vụ hàng ngày</span>
             </a>
         </div>
     </div>

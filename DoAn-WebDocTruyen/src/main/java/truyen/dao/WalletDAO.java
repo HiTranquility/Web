@@ -189,6 +189,81 @@ public class WalletDAO {
     }
 
     /**
+     * Nạp xu vào ví người dùng (Thanh toán / Khuyến mãi / Thưởng).
+     * Atomic transaction:
+     * 1. Cộng balance vào wallets.
+     * 2. Ghi log vào transactions (from_user_id = NULL đại diện hệ thống nạp).
+     * @return true nếu thành công
+     */
+    public boolean addCoins(int userId, int amount, String message) throws SQLException {
+        if (amount <= 0 || userId <= 0) return false;
+        if (!DBConnection.isReady()) return true;
+
+        String addSql = "INSERT INTO wallets (user_id, balance) VALUES (?, ?) "
+                      + "ON DUPLICATE KEY UPDATE balance = balance + ?";
+        String logSql = "INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message) "
+                      + "VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection con = DBConnection.get()) {
+            con.setAutoCommit(false);
+            try {
+                // Đảm bảo ví tồn tại trước khi cộng
+                getBalance(userId);
+
+                // 1. Cộng balance
+                try (PreparedStatement ps = con.prepareStatement(addSql)) {
+                    ps.setInt(1, userId);
+                    ps.setInt(2, amount);
+                    ps.setInt(3, amount);
+                    ps.executeUpdate();
+                }
+
+                // 2. Ghi log giao dịch nạp xu (from_user_id = NULL)
+                try (PreparedStatement ps = con.prepareStatement(logSql)) {
+                    ps.setNull(1, Types.INTEGER);
+                    ps.setInt(2, userId);
+                    ps.setNull(3, Types.INTEGER);
+                    ps.setInt(4, amount);
+                    ps.setString(5, message != null && !message.trim().isEmpty() ? message.trim() : "Nạp xu vào ví");
+                    ps.executeUpdate();
+                }
+
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
+     * Số lần và tổng số xu đã NẠP (mô phỏng) trong hôm nay — để chặn trần.
+     *
+     * Nhận diện giao dịch nạp: from_user_id NULL (hệ thống cộng), không gắn
+     * truyện, và message bắt đầu bằng "Nạp " — đúng chuỗi addCoins() được gọi
+     * từ WalletServlet. Thưởng điểm danh / nhiệm vụ cũng có from_user_id NULL
+     * nhưng message khác, nên không bị đếm nhầm.
+     *
+     * @return {số lần, tổng xu}
+     */
+    public int[] topupToday(int userId) throws SQLException {
+        if (!DBConnection.isReady()) return new int[] { 0, 0 };
+        String sql = "SELECT COUNT(*), COALESCE(SUM(amount), 0) FROM transactions "
+                   + "WHERE to_user_id = ? AND from_user_id IS NULL AND story_id IS NULL "
+                   + "  AND message LIKE 'Nạp %' AND created_at >= CURDATE()";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? new int[] { rs.getInt(1), rs.getInt(2) } : new int[] { 0, 0 };
+            }
+        }
+    }
+
+    /**
      * Tìm thông tin ví xu theo userId.
      */
     public truyen.model.Wallet findByUserId(int userId) throws SQLException {

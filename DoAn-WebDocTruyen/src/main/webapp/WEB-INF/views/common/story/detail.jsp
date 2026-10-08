@@ -38,7 +38,8 @@
     </div>
 
     <div class="detail-info">
-        <h1><c:out value="${story.title}"/></h1>
+        <h1><c:out value="${story.title}"/>
+            <c:if test="${story.comic}"><span class="badge badge-comic detail-type-badge">🎨 Truyện tranh</span></c:if></h1>
 
         <p class="detail-author">
             ✍️
@@ -86,7 +87,7 @@
         </div>
 
         <div class="detail-stats">
-            <span>📄 ${story.chapterCount} chương</span>
+            <span>${story.comic ? '🎨' : '📄'} ${story.chapterCount} chương</span>
             <span>👁️ <fmt:formatNumber pattern="#,##0" value="${story.viewCount}"/> lượt xem</span>
             <span class="${story.completed ? 'yes' : ''}">
                 ${story.completed ? '✓ Hoàn thành' : '⏳ Đang ra'}</span>
@@ -154,13 +155,17 @@
                 </c:otherwise>
             </c:choose>
 
-            <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/download?storyId=${story.id}">
-                ⬇ Tải .txt</a>
-            <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/download?storyId=${story.id}&amp;format=epub"
-               title="Tải sách điện tử EPUB (đọc trên Kindle, Apple Books, Moon+ Reader)">
-                📕 Tải EPUB</a>
+            <%-- Tải .txt / EPUB chỉ dành cho truyện CHỮ — truyện tranh là ảnh,
+                 ghép thành .txt thì ra file rỗng. DownloadServlet cũng chặn. --%>
+            <c:if test="${not story.comic}">
+                <a class="btn btn-ghost"
+                   href="${pageContext.request.contextPath}/download?storyId=${story.id}">
+                    ⬇ Tải .txt</a>
+                <a class="btn btn-ghost"
+                   href="${pageContext.request.contextPath}/download?storyId=${story.id}&amp;format=epub"
+                   title="Tải sách điện tử EPUB (đọc trên Kindle, Apple Books, Moon+ Reader)">
+                    📕 Tải EPUB</a>
+            </c:if>
 
             <%-- canEdit do servlet tính: chủ truyện HOẶC admin --%>
             <c:if test="${canEdit}">
@@ -169,7 +174,7 @@
                 <a class="btn btn-ghost"
                    href="${pageContext.request.contextPath}/chapter?action=create&amp;storyId=${story.id}">+ Thêm chương</a>
             </c:if>
-            <c:if test="${googleDriveEnabled and not empty currentUser and currentUser.id eq story.authorId}">
+            <c:if test="${googleDriveEnabled and not story.comic and not empty currentUser and currentUser.id eq story.authorId}">
                 <button type="button" class="btn btn-ghost btn-drive-backup"
                         data-story-id="${story.id}"
                         data-story-title="<c:out value='${story.title}'/>"
@@ -526,7 +531,7 @@
 </section>
 
 <%--
-  ---- Gợi ý truyện tương tự ----
+  ---- Gợi ý truyện ----
 
   Đặt SAU phần bình luận, không đặt trên.
 
@@ -534,39 +539,11 @@
   đang ở đúng thời điểm cần câu hỏi "đọc gì tiếp". Đặt khối gợi ý ngay dưới
   mô tả thì nó tranh chỗ với chính truyện mà người ta vừa bấm vào.
 
-  Cách đo "tương tự" là đếm số thể loại trùng nhau — xem ghi chú trong
-  StoryDAO.findSimilar(). Không có truyện nào trùng thì khối này biến mất
-  hẳn, không hiện ô rỗng.
+  MỘT khối, MỘT mẫu — xem _partials/_recommend.jsp và
+  StoryDAO.findRecommendations() (độc giả cũng đọc → cùng thể loại → đang
+  được đọc nhiều, bỏ trùng).
 --%>
-<c:if test="${not empty similar}">
-    <div class="section-head" style="margin-top:44px">
-        <h2>Có thể bạn cũng thích</h2>
-        <span class="more">cùng thể loại</span>
-    </div>
-
-    <div class="story-grid">
-        <c:forEach var="story" items="${similar}">
-            <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
-        </c:forEach>
-    </div>
-</c:if>
-
-<%--
-  ---- Gợi ý truyện: Độc giả đọc truyện này cũng đọc ----
-  Thuật toán Collaborative Filtering đo lường mức độ đồng tương tác từ view_logs và bookmarks.
---%>
-<c:if test="${not empty alsoRead}">
-    <div class="section-head" style="margin-top:44px">
-        <h2>Độc giả đọc truyện này cũng đọc</h2>
-        <span class="more">gợi ý thông minh</span>
-    </div>
-
-    <div class="story-grid">
-        <c:forEach var="story" items="${alsoRead}">
-            <%@ include file="/WEB-INF/views/_partials/_card.jsp" %>
-        </c:forEach>
-    </div>
-</c:if>
+<%@ include file="/WEB-INF/views/_partials/_recommend.jsp" %>
 
 <%--
   ĐÁNH DẤU CHƯƠNG ĐÃ ĐỌC.
@@ -576,7 +553,7 @@
 
   Chạy được cho cả khách chưa đăng nhập — đó là ưu điểm so với lưu vào CSDL,
   và cũng là hạn chế: đổi máy là mất. Vị trí đọc "chính thức" vẫn nằm ở bảng
-  bookmarks cho người đã đăng nhập.
+  reading_progress cho người đã đăng nhập.
 --%>
 <script>
 (function () {
@@ -827,7 +804,7 @@
 })();
 </script>
 
-<c:if test="${googleDriveEnabled and not empty currentUser and currentUser.id eq story.authorId}">
+<c:if test="${googleDriveEnabled and not story.comic and not empty currentUser and currentUser.id eq story.authorId}">
     <script>
         window.APP_CONTEXT = '${pageContext.request.contextPath}';
         window.GOOGLE_CLIENT_ID = '<c:out value="${googleClientId}"/>';

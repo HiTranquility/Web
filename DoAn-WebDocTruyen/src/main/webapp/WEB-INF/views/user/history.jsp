@@ -66,9 +66,9 @@
                                 </c:when>
                                 <c:otherwise>
                                     <%-- Có trong lịch sử mà không có vị trí đọc:
-                                         mở truyện ra xem nhưng chưa lưu, nên
-                                         bookmarks không có dòng nào. --%>
-                                    ${h.totalChapters} chương &middot; chưa lưu
+                                         mới xem trang giới thiệu, chưa mở
+                                         chương nào (reading_progress trống). --%>
+                                    ${h.totalChapters} chương &middot; chưa đọc chương nào
                                 </c:otherwise>
                             </c:choose>
                         </p>

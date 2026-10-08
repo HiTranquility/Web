@@ -39,10 +39,10 @@
     <div class="filter-group">
         <span class="filter-label">Tìm theo</span>
         <a class="chip"
-           href="${pageContext.request.contextPath}/story?action=list&amp;q=${keyword}">
+           href="${pageContext.request.contextPath}/story?action=list&amp;q=${keywordUrl}">
             Tên truyện / tác giả</a>
         <a class="chip is-on"
-           href="${pageContext.request.contextPath}/story?action=search&amp;q=${keyword}">
+           href="${pageContext.request.contextPath}/story?action=search&amp;q=${keywordUrl}">
             Nội dung chương</a>
     </div>
 </div>

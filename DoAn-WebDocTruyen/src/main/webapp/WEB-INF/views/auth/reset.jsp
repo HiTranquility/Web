@@ -30,14 +30,14 @@
         <div class="field">
             <label for="password">Mật khẩu mới</label>
             <input type="password" id="password" name="password"
-                   minlength="6" required autofocus>
+                   minlength="6" maxlength="128" required autofocus>
             <p class="field-hint">Từ 6 ký tự trở lên.</p>
         </div>
 
         <div class="field">
             <label for="confirmPassword">Nhập lại mật khẩu mới</label>
             <input type="password" id="confirmPassword" name="confirmPassword"
-                   minlength="6" required>
+                   minlength="6" maxlength="128" required>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">Đổi mật khẩu</button>

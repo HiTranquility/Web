@@ -22,7 +22,7 @@ public class StoryDAO {
      */
     private static final String SELECT_BASE =
         "SELECT s.id, s.title, s.slug, s.description, s.cover_url, "
-      + "       s.author_id, s.status, s.progress, s.view_count, "
+      + "       s.author_id, s.status, s.progress, s.story_type, s.view_count, "
       + "       s.rating_sum, s.rating_count, "
       + "       s.created_at, s.updated_at, "
       // COALESCE: chua dat ten hien thi thi lay tam ten dang nhap, khong de trong.
@@ -104,10 +104,21 @@ public class StoryDAO {
     public List<Story> findPage(String tagSlug, String keyword, String sort,
                                 String progress, int offset, int limit)
             throws SQLException {
+        return findPage(tagSlug, keyword, sort, progress, null, offset, limit);
+    }
+
+    /**
+     * Như trên, thêm lọc theo LOẠI TRUYỆN.
+     *
+     * @param storyType "TEXT" / "COMIC" (đã qua Story.filterType), null = mọi loại
+     */
+    public List<Story> findPage(String tagSlug, String keyword, String sort,
+                                String progress, String storyType, int offset, int limit)
+            throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) {
             return DemoData.slice(
-                    DemoData.sort(DemoData.filter(tagSlug, keyword, progress), sort),
+                    DemoData.sort(DemoData.filter(tagSlug, keyword, progress, storyType), sort),
                     offset, limit);
         }
 
@@ -138,6 +149,7 @@ public class StoryDAO {
         } else if ("completed".equals(progress)) {
             sql.append("AND s.progress = 'COMPLETED' ");
         }
+        appendTypeFilter(sql, params, storyType);
 
         /*
          * ORDER BY khong nhan dau ? — ten cot khong phai gia tri. Nen o day
@@ -175,9 +187,15 @@ public class StoryDAO {
     /** Tong so truyen khop bo loc — de tinh so trang. */
     public int countPage(String tagSlug, String keyword, String progress)
             throws SQLException {
+        return countPage(tagSlug, keyword, progress, null);
+    }
+
+    /** Như trên, thêm lọc loại truyện — PHẢI cùng điều kiện với findPage(). */
+    public int countPage(String tagSlug, String keyword, String progress, String storyType)
+            throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) {
-            return DemoData.filter(tagSlug, keyword, progress).size();
+            return DemoData.filter(tagSlug, keyword, progress, storyType).size();
         }
 
         /*
@@ -212,6 +230,7 @@ public class StoryDAO {
         } else if ("completed".equals(progress)) {
             sql.append("AND s.progress = 'COMPLETED' ");
         }
+        appendTypeFilter(sql, params, storyType);
 
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql.toString())) {
@@ -219,6 +238,19 @@ public class StoryDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
+        }
+    }
+
+    /**
+     * Lọc loại truyện — MỘT chỗ cho cả findPage() lẫn countPage(), để số
+     * truyện đếm được và số truyện hiện ra không bao giờ lệch nhau.
+     * Đi qua Story.filterType nên chỉ có thể là TEXT, COMIC hoặc không lọc.
+     */
+    private void appendTypeFilter(StringBuilder sql, List<Object> params, String storyType) {
+        String t = Story.filterType(storyType);
+        if (t != null) {
+            sql.append("AND s.story_type = ? ");
+            params.add(t);
         }
     }
 
@@ -290,17 +322,18 @@ public class StoryDAO {
     }
 
     public void insert(Story s) throws SQLException {
-        String sql = "INSERT INTO stories (title, slug, description, cover_url, "
-                   + "author_id, status, progress) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO stories (title, slug, description, cover_url, story_type, "
+                   + "author_id, status, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, s.getTitle());
             ps.setString(2, s.getSlug());
             ps.setString(3, s.getDescription());
             ps.setString(4, s.getCoverUrl());
-            ps.setInt(5, s.getAuthorId());
-            ps.setString(6, s.getStatus());
-            ps.setString(7, s.getProgress());
+            ps.setString(5, s.getStoryType());
+            ps.setInt(6, s.getAuthorId());
+            ps.setString(7, s.getStatus());
+            ps.setString(8, s.getProgress());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -312,7 +345,7 @@ public class StoryDAO {
 
     public void update(Story s) throws SQLException {
         String sql = "UPDATE stories SET title = ?, slug = ?, description = ?, "
-                   + "cover_url = ?, status = ?, progress = ? WHERE id = ?";
+                   + "cover_url = ?, status = ?, progress = ?, story_type = ? WHERE id = ?";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, s.getTitle());
@@ -321,7 +354,8 @@ public class StoryDAO {
             ps.setString(4, s.getCoverUrl());
             ps.setString(5, s.getStatus());
             ps.setString(6, s.getProgress());
-            ps.setInt(7, s.getId());
+            ps.setString(7, s.getStoryType());
+            ps.setInt(8, s.getId());
             ps.executeUpdate();
         }
     }
@@ -570,6 +604,49 @@ public class StoryDAO {
         return list;
     }
 
+    /**
+     * GỢI Ý TRUYỆN — một khối duy nhất, một quy tắc duy nhất.
+     *
+     * Trước đây trang chi tiết có HAI khối riêng ("cùng thể loại" và "độc giả
+     * cũng đọc"), mỗi khối 0–4 truyện, tự biến mất khi rỗng và có thể trùng
+     * nhau. Trang thì hai khối, trang một, trang không có gì.
+     *
+     * Giờ gộp theo thứ tự ưu tiên, bỏ trùng, cố cho đủ limit:
+     *   1. Độc giả đọc truyện này cũng đọc   — hành vi thật, tín hiệu mạnh nhất
+     *   2. Cùng thể loại                      — truyện mới ít người đọc vẫn có gợi ý
+     *   3. Đang được đọc nhiều (30 ngày)      — lưới an toàn, gần như luôn có
+     *
+     * Mỗi nguồn lấy dư (limit + 1) vì chính truyện đang xem có thể lọt vào.
+     */
+    public truyen.model.RecommendationSet findRecommendations(int storyId, int limit)
+            throws SQLException {
+        if (storyId <= 0 || limit <= 0) return new truyen.model.RecommendationSet();
+
+        List<List<Story>> sources = new ArrayList<>();
+        List<String> reasons = new ArrayList<>();
+
+        sources.add(findAlsoRead(storyId, limit));
+        reasons.add(truyen.model.RecommendationSet.REASON_ALSO_READ);
+        sources.add(findSimilar(storyId, limit));
+        reasons.add(truyen.model.RecommendationSet.REASON_SAME_TAG);
+
+        truyen.model.RecommendationSet partial =
+                truyen.model.RecommendationSet.merge(storyId, limit, sources, reasons);
+        if (partial.size() < limit) {
+            // Chỉ hỏi bảng xếp hạng khi hai nguồn trên chưa đủ — đỡ một câu SQL
+            // cho phần lớn các truyện đã có độc giả.
+            List<Story> trending = findTopByPeriod(30, limit + 1);
+            if (trending.size() < limit + 1) {
+                trending = new ArrayList<>(trending);
+                trending.addAll(findPopular(limit + 1));   // web mới, ít lượt xem gần đây
+            }
+            sources.add(trending);
+            reasons.add(truyen.model.RecommendationSet.REASON_TRENDING);
+            partial = truyen.model.RecommendationSet.merge(storyId, limit, sources, reasons);
+        }
+        return partial;
+    }
+
     /** Bang xep hang THEO KHOANG THOI GIAN — trang 5. */
     public List<Story> findTopByPeriod(int days, int limit) throws SQLException {
         if (!DBConnection.isReady()) return DemoData.topByPeriod(days, limit);
@@ -780,6 +857,11 @@ public class StoryDAO {
         try {
             s.setRatingSum(rs.getInt("rating_sum"));
             s.setRatingCount(rs.getInt("rating_count"));
+        } catch (SQLException ignore) { }
+
+        // Cùng lý do: câu viết tay không có cột này thì giữ mặc định TEXT.
+        try {
+            s.setStoryType(rs.getString("story_type"));
         } catch (SQLException ignore) { }
 
         // getTimestamp trả về null nếu cột NULL, nên phải kiểm tra trước khi

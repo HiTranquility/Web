@@ -180,6 +180,27 @@ public class ChapterDAO {
         }
     }
 
+    /**
+     * Truyện này đã có chương mang số này chưa (trừ chính chương exceptId).
+     *
+     * (story_id, chapter_no) là UNIQUE trong CSDL — đó là chốt chặn cuối. Nhưng
+     * để CSDL chặn thì người dùng nhận trang 500 khó hiểu và mất hết chữ vừa
+     * gõ. Hỏi trước ở đây để quay lại form với một câu báo lỗi tử tế.
+     */
+    public boolean chapterNoExists(int storyId, int chapterNo, int exceptId) throws SQLException {
+        if (!DBConnection.isReady()) return false;
+        String sql = "SELECT 1 FROM chapters WHERE story_id = ? AND chapter_no = ? AND id <> ? LIMIT 1";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId);
+            ps.setInt(2, chapterNo);
+            ps.setInt(3, exceptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     public void insert(Chapter c) throws SQLException {
         String sql = "INSERT INTO chapters (story_id, chapter_no, title, content, is_vip, coin_price) "
                    + "VALUES (?, ?, ?, ?, ?, ?)";
@@ -337,7 +358,9 @@ public class ChapterDAO {
     public List<Chapter> findAllWithContent(int storyId) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.chapters(storyId);
-        String sql = "SELECT id, story_id, chapter_no, title, content, created_at, updated_at "
+        // is_vip PHẢI có: thiếu cột này mọi chương đều thành "không VIP" và
+        // DownloadServlet đưa luôn nội dung chương VIP chưa mở khoá vào file.
+        String sql = "SELECT id, story_id, chapter_no, title, content, is_vip, coin_price, created_at, updated_at "
                    + "FROM chapters WHERE story_id = ? ORDER BY chapter_no";
         List<Chapter> list = new ArrayList<>();
         try (Connection con = DBConnection.get();

@@ -8,12 +8,14 @@
   TẦNG: views/  — chỉ hiển thị. Dữ liệu do StoryServlet chuẩn bị sẵn.
 
   Nhận từ servlet:
-      stories · tags · currentTag · keyword · sort · progress
+      stories · tags · currentTag · keyword · sort · progress · storyType
+      keywordUrl · tagUrl   (bản đã mã hoá URL — CHỈ dùng hai biến này trong href)
       page · totalPages · totalStories
 
-  MỘT TRANG GÁNH BỐN VIỆC: duyệt, lọc thể loại, lọc tình trạng, tìm kiếm.
-  Không tách trang riêng cho kết quả tìm kiếm — cùng giao diện, chỉ khác tham
-  số URL. Tách ra là nhân đôi code mà không được gì.
+  MỘT TRANG GÁNH NĂM VIỆC: duyệt, lọc thể loại, lọc tình trạng, lọc loại
+  truyện (chữ / tranh), tìm kiếm. Không tách trang riêng cho kết quả tìm kiếm
+  — cùng giao diện, chỉ khác tham số URL. Tách ra là nhân đôi code mà không
+  được gì.
 ================================================================================
 --%>
 <div class="section-head">
@@ -21,11 +23,32 @@
         <c:choose>
             <c:when test="${not empty keyword}">Tìm: "<c:out value='${keyword}'/>"</c:when>
             <c:when test="${not empty currentTag}">Lọc theo thể loại</c:when>
+            <c:when test="${storyType eq 'comic'}">Truyện tranh</c:when>
+            <c:when test="${storyType eq 'text'}">Truyện chữ</c:when>
             <c:otherwise>Kho truyện</c:otherwise>
         </c:choose>
     </h2>
     <span class="more">${totalStories} truyện</span>
 </div>
+
+<%--
+  keepXxx = "&ten=giatri" của mọi bộ lọc ĐANG bật, để bấm đổi một bộ lọc
+  không làm mất các bộ lọc còn lại.
+
+  PHẢI ĐẶT TRƯỚC MỌI CHỖ DÙNG. Trước đây khối này nằm SAU hàng "Tìm theo",
+  nên hai link ở đó luôn nhận chuỗi rỗng — đổi chế độ tìm là mất sạch bộ lọc.
+
+  Giá trị người dùng gõ (từ khoá, thể loại) chỉ được ghép bản ĐÃ MÃ HOÁ URL
+  (keywordUrl, tagUrl — servlet chuẩn bị). Ghép thẳng ${keyword} vào href là
+  lỗ XSS: từ khoá chứa dấu " phá được thuộc tính href.
+  progress / sort / storyType thì an toàn: chỉ được so với chuỗi hằng số, và
+  servlet đã lọc storyType qua Story.filterType().
+--%>
+<c:set var="keepTag"  value="${not empty tagUrl ? '&tag='.concat(tagUrl) : ''}"/>
+<c:set var="keepQ"    value="${not empty keywordUrl ? '&q='.concat(keywordUrl) : ''}"/>
+<c:set var="keepSort" value="${sort eq 'popular' or sort eq 'rating' or sort eq 'updated' ? '&sort='.concat(sort) : ''}"/>
+<c:set var="keepProg" value="${progress eq 'ongoing' or progress eq 'completed' ? '&progress='.concat(progress) : ''}"/>
+<c:set var="keepType" value="${not empty storyType ? '&type='.concat(storyType) : ''}"/>
 
 <div class="filter-panel">
     <%-- Ô tìm kiếm. method="get" vì tìm kiếm chỉ ĐỌC — nhờ vậy URL kết quả
@@ -44,6 +67,9 @@
         <c:if test="${not empty sort}">
             <input type="hidden" name="sort" value="<c:out value='${sort}'/>">
         </c:if>
+        <c:if test="${not empty storyType}">
+            <input type="hidden" name="type" value="${storyType}">
+        </c:if>
 
         <input type="text" name="q" placeholder="Tìm theo tên truyện hoặc tên tác giả…"
                value="<c:out value='${keyword}'/>">
@@ -56,52 +82,56 @@
         <div class="filter-group">
             <span class="filter-label">Tìm theo</span>
             <a class="chip ${empty searchIn or searchIn eq 'title' ? 'is-on' : ''}"
-            href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepProg}${keepSort}&amp;q=${keyword}">
+            href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepProg}${keepSort}${keepType}${keepQ}">
                 Tên truyện / tác giả</a>
+            <%-- Tìm trong nội dung chỉ có nghĩa với truyện CHỮ — truyện tranh
+                 là ảnh, không có chữ để tìm. --%>
             <a class="chip ${searchIn eq 'content' ? 'is-on' : ''}"
-            href="${pageContext.request.contextPath}/story?action=search${keepTag}${keepProg}${keepSort}&amp;q=${keyword}">
+            href="${pageContext.request.contextPath}/story?action=search${keepQ}">
                 🔎 Nội dung chương</a>
         </div>
     </div>
 
-    <%-- MẢNH: bộ lọc thể loại --%>
-    <c:set var="tfBase" value="story?action=list" scope="request"/>
+    <%-- MẢNH: bộ lọc thể loại. Giữ loại truyện khi đổi thể loại. --%>
+    <c:set var="tfBase" value="story?action=list${keepType}" scope="request"/>
     <%@ include file="/WEB-INF/views/_partials/_tag-filter.jsp" %>
 
     <%--
-      HAI HÀNG LỌC PHỤ: tình trạng và cách sắp xếp.
+      BA HÀNG LỌC PHỤ: loại truyện, tình trạng và cách sắp xếp.
 
       Là thẻ <a> chứ không phải <select> + JavaScript. Mỗi tổ hợp lọc có một URL
       riêng — chia sẻ được, lưu được, nút Back chạy đúng. Đây là ưu điểm lớn nhất
       của trang dựng ở máy chủ, bỏ đi để lấy một cái menu đổ xuống là lỗ vốn.
-
-      filterQ gom mọi tham số ĐANG bật trừ cái sắp đổi, để bấm lọc tình trạng
-      không làm mất từ khoá và ngược lại.
     --%>
-    <c:set var="keepTag"  value="${not empty currentTag ? '&tag='.concat(currentTag) : ''}"/>
-    <c:set var="keepQ"    value="${not empty keyword ? '&q='.concat(keyword) : ''}"/>
-    <c:set var="keepSort" value="${not empty sort ? '&sort='.concat(sort) : ''}"/>
-    <c:set var="keepProg" value="${not empty progress ? '&progress='.concat(progress) : ''}"/>
-
     <div class="filter-bar" style="margin-bottom:0">
+        <div class="filter-group">
+            <span class="filter-label">Loại truyện</span>
+            <a class="chip ${empty storyType ? 'is-on' : ''}"
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}${keepProg}">Tất cả</a>
+            <a class="chip ${storyType eq 'text' ? 'is-on' : ''}"
+               href="${pageContext.request.contextPath}/story?action=list&amp;type=text${keepTag}${keepQ}${keepSort}${keepProg}">📖 Truyện chữ</a>
+            <a class="chip ${storyType eq 'comic' ? 'is-on' : ''}"
+               href="${pageContext.request.contextPath}/story?action=list&amp;type=comic${keepTag}${keepQ}${keepSort}${keepProg}">🎨 Truyện tranh</a>
+        </div>
+
         <div class="filter-group">
             <span class="filter-label">Tình trạng</span>
             <a class="chip ${empty progress ? 'is-on' : ''}"
-               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}">Tất cả</a>
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}${keepType}">Tất cả</a>
             <a class="chip ${progress eq 'ongoing' ? 'is-on' : ''}"
-               href="${pageContext.request.contextPath}/story?action=list&amp;progress=ongoing${keepTag}${keepQ}${keepSort}">Đang ra</a>
+               href="${pageContext.request.contextPath}/story?action=list&amp;progress=ongoing${keepTag}${keepQ}${keepSort}${keepType}">Đang ra</a>
             <a class="chip ${progress eq 'completed' ? 'is-on' : ''}"
-               href="${pageContext.request.contextPath}/story?action=list&amp;progress=completed${keepTag}${keepQ}${keepSort}">Hoàn thành</a>
+               href="${pageContext.request.contextPath}/story?action=list&amp;progress=completed${keepTag}${keepQ}${keepSort}${keepType}">Hoàn thành</a>
         </div>
 
         <div class="filter-group">
             <span class="filter-label">Sắp xếp</span>
             <a class="chip ${empty sort or sort eq 'updated' ? 'is-on' : ''}"
-               href="${pageContext.request.contextPath}/story?action=list&amp;sort=updated${keepTag}${keepQ}${keepProg}">Mới cập nhật</a>
+               href="${pageContext.request.contextPath}/story?action=list&amp;sort=updated${keepTag}${keepQ}${keepProg}${keepType}">Mới cập nhật</a>
             <a class="chip ${sort eq 'popular' ? 'is-on' : ''}"
-               href="${pageContext.request.contextPath}/story?action=list&amp;sort=popular${keepTag}${keepQ}${keepProg}">Đọc nhiều</a>
+               href="${pageContext.request.contextPath}/story?action=list&amp;sort=popular${keepTag}${keepQ}${keepProg}${keepType}">Đọc nhiều</a>
             <a class="chip ${sort eq 'rating' ? 'is-on' : ''}"
-               href="${pageContext.request.contextPath}/story?action=list&amp;sort=rating${keepTag}${keepQ}${keepProg}">Điểm cao</a>
+               href="${pageContext.request.contextPath}/story?action=list&amp;sort=rating${keepTag}${keepQ}${keepProg}${keepType}">Điểm cao</a>
         </div>
     </div>
 </div>
@@ -111,40 +141,41 @@
   HÀNG "ĐANG LỌC" — mỗi điều kiện là một thẻ có dấu × để gỡ riêng
 ================================================================================
   VÌ SAO CẦN dù các chip ở trên đã tô sáng cái đang chọn
-    Bốn điều kiện nằm ở BỐN chỗ khác nhau trên trang: từ khoá ở ô nhập, thể
-    loại ở hàng thẻ loại, tình trạng và sắp xếp ở hai nhóm chip. Muốn biết
-    "mình đang lọc những gì" phải đưa mắt quét cả bốn chỗ rồi tự ghép lại.
+    Năm điều kiện nằm ở năm chỗ khác nhau trên trang. Muốn biết "mình đang lọc
+    những gì" phải đưa mắt quét cả năm chỗ rồi tự ghép lại. Hàng này gom tất cả
+    về một dòng, và cho gỡ TỪNG CÁI.
 
-    Hàng này gom tất cả về một dòng, và quan trọng hơn: cho gỡ TỪNG CÁI. Trước
-    đây muốn bỏ mỗi thể loại mà giữ nguyên từ khoá thì phải bấm lại chip "Tất
-    cả" ở đúng nhóm của nó — mà nhóm đó nằm cách xa nơi đang nhìn.
-
-  Chỉ hiện khi CÓ lọc. Không lọc gì mà vẫn chừa một hàng trống là chiếm chỗ vô ích.
-
-  Mỗi dấu × là một LINK dựng sẵn, bỏ đúng một tham số và giữ nguyên phần còn
-  lại — dùng lại các biến keepXxx đã tính ở trên, không tính lại lần nữa.
+  Chỉ hiện khi CÓ lọc. Mỗi dấu × là một LINK dựng sẵn, bỏ đúng một tham số và
+  giữ nguyên phần còn lại — dùng lại các biến keepXxx đã tính ở trên.
 ================================================================================
 --%>
-<c:if test="${not empty keyword or not empty currentTag
+<c:if test="${not empty keyword or not empty currentTag or not empty storyType
               or not empty progress or not empty sort}">
     <div class="active-filters">
         <span class="filter-label">Đang lọc</span>
 
         <c:if test="${not empty keyword}">
             <a class="chip chip-clear"
-               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepSort}${keepProg}">
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepSort}${keepProg}${keepType}">
                 Từ khoá: <b><c:out value="${keyword}"/></b> <span class="chip-x">×</span></a>
         </c:if>
 
         <c:if test="${not empty currentTag}">
             <a class="chip chip-clear"
-               href="${pageContext.request.contextPath}/story?action=list${keepQ}${keepSort}${keepProg}">
+               href="${pageContext.request.contextPath}/story?action=list${keepQ}${keepSort}${keepProg}${keepType}">
                 Thể loại: <b><c:out value="${currentTag}"/></b> <span class="chip-x">×</span></a>
+        </c:if>
+
+        <c:if test="${not empty storyType}">
+            <a class="chip chip-clear"
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}${keepProg}">
+                <b>${storyType eq 'comic' ? 'Truyện tranh' : 'Truyện chữ'}</b>
+                <span class="chip-x">×</span></a>
         </c:if>
 
         <c:if test="${not empty progress}">
             <a class="chip chip-clear"
-               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}">
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepSort}${keepType}">
                 <b>${progress eq 'completed' ? 'Hoàn thành' : 'Đang ra'}</b>
                 <span class="chip-x">×</span></a>
         </c:if>
@@ -153,7 +184,7 @@
              có, gọi nó là một bộ lọc đang bật thì gây hiểu nhầm. --%>
         <c:if test="${not empty sort and sort ne 'updated'}">
             <a class="chip chip-clear"
-               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepProg}">
+               href="${pageContext.request.contextPath}/story?action=list${keepTag}${keepQ}${keepProg}${keepType}">
                 <b>${sort eq 'popular' ? 'Đọc nhiều' : 'Điểm cao'}</b>
                 <span class="chip-x">×</span></a>
         </c:if>
@@ -173,19 +204,19 @@
 
         <%--
           MẢNH: phân trang.
-          pgQuery giữ lại tag / từ khoá / sắp xếp / tình trạng khi chuyển
-          trang — không thì bấm sang trang 2 là mất sạch bộ lọc.
+          pgQuery giữ lại mọi bộ lọc khi chuyển trang — không thì bấm sang
+          trang 2 là mất sạch bộ lọc.
         --%>
         <c:set var="pgBase" value="story?action=list" scope="request"/>
-        <c:set var="pgQuery" value="${keepTag}${keepQ}${keepSort}${keepProg}" scope="request"/>
+        <c:set var="pgQuery" value="${keepTag}${keepQ}${keepSort}${keepProg}${keepType}" scope="request"/>
         <%@ include file="/WEB-INF/views/_partials/_pagination.jsp" %>
     </c:when>
 
     <c:otherwise>
         <%-- MẢNH: trạng thái rỗng --%>
         <c:set var="emIcon"  value="🔍"/>
-        <c:set var="emTitle" value="Không tìm thấy truyện nào"/>
-        <c:set var="emText"  value="Thử bỏ bớt bộ lọc, hoặc tìm bằng từ khoá khác."/>
+        <c:set var="emTitle" value="${storyType eq 'comic' ? 'Chưa có truyện tranh nào' : 'Không tìm thấy truyện nào'}"/>
+        <c:set var="emText"  value="${storyType eq 'comic' ? 'Kho truyện tranh đang chờ tác giả đầu tiên. Đăng truyện mới và chọn loại Truyện tranh nhé.' : 'Thử bỏ bớt bộ lọc, hoặc tìm bằng từ khoá khác.'}"/>
         <c:set var="emUrl"   value="/story?action=list"/>
         <c:set var="emBtn"   value="Xem tất cả truyện"/>
         <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>

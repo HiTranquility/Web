@@ -7,6 +7,7 @@
 #    1. Tao database + 13 bang       (schema.sql)
 #    2. Tao tai khoan MySQL cho app
 #    3. Nap du lieu mau              (sample_data.sql)
+#       + chay MOI migration-*.sql theo thu tu (chuong VIP, danh gia, ...)
 #    4. Sinh file db.properties
 #
 #  CHI HOI MAT KHAU ROOT MOT LAN.
@@ -157,6 +158,27 @@ FLUSH PRIVILEGES;
         Write-Host '  That bai o buoc 3 - nap du lieu mau.' -ForegroundColor Red
         Write-Host '  Database va cac bang da tao xong; chi thieu du lieu mau.' -ForegroundColor Yellow
         exit 1
+    }
+
+    # ---- 3b. Migration -----------------------------------------------------
+    # schema.sql KHONG chua het: chuong VIP (020), danh gia (022), diem danh
+    # (026)... nam trong cac file migration-*.sql. Truoc day script nay bo qua
+    # buoc nay, nen cai MOI la thieu cot chapters.is_vip -> mo chuong nao
+    # cung loi 500. Chay het theo thu tu ten file (so thu tu o dau ten).
+    #
+    # Moi migration deu viet de CHAY LAI DUOC (kiem INFORMATION_SCHEMA truoc
+    # khi ALTER, CREATE TABLE IF NOT EXISTS) — chay tren database da co san
+    # cung khong hong gi. Chay SAU du lieu mau vi vai migration sua du lieu
+    # mau (vd. 020 dat chuong 3 truyen 1 thanh chuong VIP).
+    Write-Host '[3b/4] Chay cac migration...' -ForegroundColor Yellow
+    $migrations = Get-ChildItem 'database' -Filter 'migration-*.sql' | Sort-Object Name
+    foreach ($m in $migrations) {
+        Write-Host "        $($m.Name)" -ForegroundColor DarkGray
+        & $mysql "--defaults-extra-file=$cnf" webdoctruyen -e "source database/$($m.Name)"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  That bai o migration $($m.Name)." -ForegroundColor Red
+            exit 1
+        }
     }
 
     $ok = $true

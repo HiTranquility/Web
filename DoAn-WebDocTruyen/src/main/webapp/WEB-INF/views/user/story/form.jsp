@@ -4,15 +4,13 @@
   story/form.jsp — MẢNH nội dung. Form đăng / sửa truyện.          CASE 05
   Nhận: story (rỗng khi tạo mới) · allTags · selectedTags · message
 --%>
+<%-- Thông báo lỗi (message) do layout in sẵn ở đầu trang — KHÔNG in lại ở đây, kẻo hiện hai lần. --%>
 <div class="form-studio-wrapper">
     <div class="form-header-banner">
         <h1>${empty story.id or story.id eq 0 ? '✨ Đăng truyện mới' : '✍️ Chỉnh sửa truyện'}</h1>
         <p class="form-subtitle">Thiết lập nội dung, ảnh bìa và thể loại để phát hành tác phẩm trên hệ thống</p>
     </div>
 
-    <c:if test="${not empty message}">
-        <p class="form-error"><c:out value="${message}"/></p>
-    </c:if>
 
     <form id="storyForm" action="${pageContext.request.contextPath}/story?_csrf=${csrfToken}" method="post"
           class="wide-form" enctype="multipart/form-data">
@@ -90,6 +88,38 @@
 
         <fieldset class="form-group">
             <legend>🏷️ Phân loại &amp; Phát hành</legend>
+
+        <%--
+          LOẠI TRUYỆN — quyết định chương sẽ soạn bằng chữ hay bằng ảnh.
+          Khoá lại khi truyện đã có chương (xem StoryServlet.createOrEdit):
+          radio bị disabled thì trình duyệt KHÔNG gửi, nên kèm một ô ẩn giữ
+          nguyên giá trị hiện tại.
+        --%>
+        <c:set var="typeLocked" value="${story.chapterCount gt 0}"/>
+        <label style="margin-bottom:6px">Loại truyện</label>
+        <div class="type-picker" role="radiogroup" aria-label="Loại truyện">
+            <label class="type-option ${typeLocked ? 'is-locked' : ''}">
+                <input type="radio" name="storyType" value="TEXT" ${story.comic ? '' : 'checked'} ${typeLocked ? 'disabled' : ''}>
+                <span class="type-icon">📖</span>
+                <span><b>Truyện chữ</b><small>Viết chương bằng trình soạn thảo văn bản</small></span>
+            </label>
+            <label class="type-option ${typeLocked ? 'is-locked' : ''}">
+                <input type="radio" name="storyType" value="COMIC" ${story.comic ? 'checked' : ''} ${typeLocked ? 'disabled' : ''}>
+                <span class="type-icon">🎨</span>
+                <span><b>Truyện tranh</b><small>Mỗi chương là một dãy ảnh, đọc cuộn dọc</small></span>
+            </label>
+        </div>
+        <c:choose>
+            <c:when test="${typeLocked}">
+                <input type="hidden" name="storyType" value="${story.storyType}">
+                <p class="field-hint" style="margin:6px 0 16px">
+                    🔒 Truyện đã có ${story.chapterCount} chương nên không đổi được loại.</p>
+            </c:when>
+            <c:otherwise>
+                <p class="field-hint" style="margin:6px 0 16px">
+                    Chọn kỹ trước khi thêm chương — đã có chương thì không đổi được nữa.</p>
+            </c:otherwise>
+        </c:choose>
 
         <div style="display:flex; align-items:baseline; gap:8px;">
             <label style="margin-bottom:0">Thể loại</label>

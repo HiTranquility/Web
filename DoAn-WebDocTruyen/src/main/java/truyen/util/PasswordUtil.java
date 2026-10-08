@@ -19,6 +19,29 @@ public class PasswordUtil {
     // dùng cho salt là vô hiệu hoá luôn tác dụng của salt.
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    public static final int MIN_LENGTH = 6;
+
+    /**
+     * Có TRẦN độ dài. PBKDF2 chạy 120.000 vòng trên TỪNG ký tự của mật khẩu;
+     * không có trần thì ai đó gửi một "mật khẩu" vài MB vào ô đăng ký là bắt
+     * máy chủ đốt CPU vài giây cho mỗi request. 128 thừa sức cho mật khẩu thật.
+     */
+    public static final int MAX_LENGTH = 128;
+
+    /**
+     * MỘT luật độ dài cho cả đăng ký, đổi mật khẩu và đặt lại mật khẩu.
+     * @return câu báo lỗi, hoặc null nếu hợp lệ
+     */
+    public static String lengthError(String password) {
+        if (password == null || password.length() < MIN_LENGTH) {
+            return "Mật khẩu phải từ " + MIN_LENGTH + " ký tự trở lên.";
+        }
+        if (password.length() > MAX_LENGTH) {
+            return "Mật khẩu tối đa " + MAX_LENGTH + " ký tự.";
+        }
+        return null;
+    }
+
     /**
      * Băm mật khẩu để lưu vào database.
      * Gọi hai lần với cùng một mật khẩu sẽ ra HAI chuỗi khác nhau — vì salt

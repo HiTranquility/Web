@@ -14,14 +14,12 @@
     một quy tắc kiểm tra riêng, và hỏng cái này không xoá mất cái kia.
 ================================================================================
 --%>
+<%-- Thông báo lỗi (message) do layout in sẵn ở đầu trang — KHÔNG in lại ở đây, kẻo hiện hai lần. --%>
 <div class="section-head">
     <h2>Sửa hồ sơ</h2>
     <a class="more" href="${pageContext.request.contextPath}/user?action=me">← Quay lại</a>
 </div>
 
-<c:if test="${not empty message}">
-    <div class="panel panel-err" style="margin-bottom:16px;"><c:out value="${message}"/></div>
-</c:if>
 <c:if test="${not empty sessionScope.flashError}">
     <div class="panel panel-err" style="margin-bottom:16px;"><c:out value="${sessionScope.flashError}"/></div>
     <c:remove var="flashError" scope="session"/>
@@ -181,7 +179,7 @@
 
             <div class="field">
                 <label for="oldPassword">Mật khẩu hiện tại *</label>
-                <input type="password" id="oldPassword" name="oldPassword" required>
+                <input type="password" id="oldPassword" name="oldPassword" maxlength="128" required>
                 <p class="field-hint">
                     Phải nhập dù bạn đang đăng nhập — để người mượn máy lúc bạn quên
                     đăng xuất không chiếm được tài khoản.
@@ -191,14 +189,14 @@
             <div class="field">
                 <label for="newPassword">Mật khẩu mới *</label>
                 <input type="password" id="newPassword" name="newPassword"
-                       minlength="6" required>
+                       minlength="6" maxlength="128" required>
                 <p class="field-hint">Từ 6 ký tự trở lên.</p>
             </div>
 
             <div class="field">
                 <label for="confirmPassword">Nhập lại mật khẩu mới *</label>
                 <input type="password" id="confirmPassword" name="confirmPassword"
-                       minlength="6" required>
+                       minlength="6" maxlength="128" required>
             </div>
 
             <div class="form-actions">
@@ -224,14 +222,14 @@
             <div class="field">
                 <label for="newPassword">Mật khẩu mới *</label>
                 <input type="password" id="newPassword" name="newPassword"
-                       minlength="6" required>
+                       minlength="6" maxlength="128" required>
                 <p class="field-hint">Từ 6 ký tự trở lên.</p>
             </div>
 
             <div class="field">
                 <label for="confirmPassword">Nhập lại mật khẩu mới *</label>
                 <input type="password" id="confirmPassword" name="confirmPassword"
-                       minlength="6" required>
+                       minlength="6" maxlength="128" required>
             </div>
 
             <div class="form-actions">

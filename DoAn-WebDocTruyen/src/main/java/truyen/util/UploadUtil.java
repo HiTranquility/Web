@@ -224,6 +224,107 @@ public final class UploadUtil {
      * Xác định thư mục lưu ảnh, tự động fallback an toàn nếu đường dẫn cấu hình
      * trong web.xml không khả dụng (ví dụ: Windows hardcode C:/ khi chạy trên macOS/Linux).
      */
+    // ========================================================================
+    //  Trang truyện tranh
+    // ========================================================================
+
+    /** Tiền tố thư mục ảnh trang — UploadedFileServlet KIỂM QUYỀN ĐỌC trước khi phát. */
+    public static final String PAGES_PREFIX = "pages/";
+
+    /**
+     * Trang truyện tranh nặng hơn ảnh bìa nhiều (khổ dọc, chi tiết), nên giới
+     * hạn riêng. Vẫn phải có trần: không có thì một chương 50 trang x 30 MB là
+     * 1.5 GB cho một lần bấm "Lưu".
+     */
+    public static final long MAX_PAGE_BYTES = 5L * 1024 * 1024;   // 5 MB
+
+    /** Kết quả lưu một trang: đường dẫn tương đối + kích thước (0 nếu không đọc được). */
+    public static class SavedPage {
+        public final String path;
+        public final int width;
+        public final int height;
+        SavedPage(String path, int width, int height) {
+            this.path = path; this.width = width; this.height = height;
+        }
+    }
+
+    /**
+     * Lưu một ảnh trang vào pages/{storyId}/{chapterId}/ với tên ngẫu nhiên.
+     *
+     * Thư mục theo chương: xoá chương là xoá gọn cả thư mục, và UploadedFileServlet
+     * đọc được chapterId ngay từ đường dẫn để kiểm quyền mà khỏi tra CSDL.
+     */
+    public static SavedPage savePage(Part part, int storyId, int chapterId, ServletContext ctx)
+            throws UploadException, IOException {
+        if (part == null || part.getSize() == 0) return null;
+        if (part.getSize() > MAX_PAGE_BYTES) {
+            throw new UploadException("Có trang nặng quá " + (MAX_PAGE_BYTES / 1024 / 1024)
+                    + " MB (" + safeName(part) + "). Nén ảnh lại rồi thử lại nhé.");
+        }
+        String ext;
+        try (InputStream in = part.getInputStream()) {
+            ext = sniff(in);
+        }
+        if (ext == null) {
+            throw new UploadException("\"" + safeName(part) + "\" không phải ảnh PNG, JPG, GIF hay WebP.");
+        }
+        int[] dim;
+        try (InputStream in = part.getInputStream()) {
+            dim = ImageInfo.dimensions(in);
+        }
+
+        String sub = PAGES_PREFIX + storyId + "/" + chapterId;
+        Path dir = resolveUploadFolder(ctx).toPath().resolve(sub);
+        Files.createDirectories(dir);
+
+        byte[] bytes = new byte[12];
+        RANDOM.nextBytes(bytes);
+        String name = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes) + ext;
+        try (InputStream in = part.getInputStream()) {
+            Files.copy(in, dir.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+        }
+        return new SavedPage(sub + "/" + name, dim == null ? 0 : dim[0], dim == null ? 0 : dim[1]);
+    }
+
+    /** Xoá một file trang. Chỉ nhận đường dẫn trong pages/ — không bao giờ xoá lan ra ngoài. */
+    public static boolean deletePage(String relPath, ServletContext ctx) {
+        if (relPath == null || !relPath.startsWith(PAGES_PREFIX) || relPath.contains("..")) {
+            return false;
+        }
+        try {
+            Path root = resolveUploadFolder(ctx).toPath().toAbsolutePath().normalize();
+            Path target = root.resolve(relPath).normalize();
+            if (!target.startsWith(root.resolve(PAGES_PREFIX))) return false;
+            return Files.deleteIfExists(target);
+        } catch (UploadException | IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Lấy chapterId từ đường dẫn "pages/{storyId}/{chapterId}/x.jpg".
+     * @return chapterId, hoặc 0 nếu đường dẫn không đúng dạng.
+     */
+    public static int chapterIdOfPage(String relPath) {
+        if (relPath == null || !relPath.startsWith(PAGES_PREFIX)) return 0;
+        String[] seg = relPath.substring(PAGES_PREFIX.length()).split("/");
+        if (seg.length != 3) return 0;
+        try {
+            int id = Integer.parseInt(seg[1]);
+            return id > 0 ? id : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /** Tên file người dùng chọn — CHỈ để in vào thông báo lỗi, đã cắt ngắn. */
+    private static String safeName(Part part) {
+        String n = part.getSubmittedFileName();
+        if (n == null || n.isEmpty()) return "ảnh";
+        n = n.replaceAll("[\\r\\n\"<>]", "");
+        return n.length() > 60 ? n.substring(0, 60) + "…" : n;
+    }
+
     public static File resolveUploadFolder(ServletContext ctx) throws UploadException {
         String dir = ctx.getInitParameter("uploadDir");
         File folder = null;

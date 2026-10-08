@@ -28,47 +28,68 @@ Làm tuần tự, mỗi case chạy được rồi mới sang case sau.
 
 ✅ **Dự án đã hoàn thiện trọn vẹn cả 11 CASE và kiểm thử đầy đủ:**
 - Biên dịch sạch toàn bộ mã nguồn Java.
-- Cơ sở dữ liệu `webdoctruyen` đã được cấu hình với 13 bảng và nạp dữ liệu mẫu hoàn chỉnh.
-- Vượt qua toàn bộ 28 bài kiểm thử tự động (JUnit 5).
+- Cơ sở dữ liệu `webdoctruyen`: 25 bảng (`schema.sql` + các `migration-*.sql`), có dữ liệu mẫu.
+  Cài mới bằng `setup-db.ps1` đã được thử trên một MySQL trống.
+- Vượt qua toàn bộ 154 bài kiểm thử tự động (JUnit 5) — `scripts\test.ps1`.
 - Các bộ lọc bảo mật (`EncodingFilter`, `CsrfFilter`, `AuthFilter`, `AdminFilter`) hoạt động chính xác, chặn các lỗ hổng phổ biến như SQLi, XSS, CSRF, Account Takeover và Path Traversal.
+
+**Mở rộng sau 11 CASE:** ví xu & chương VIP, đánh giá, điểm danh, **truyện tranh**
+(chương là dãy ảnh, ảnh chương VIP được kiểm quyền), **đánh dấu đoạn / trang** và
+**đọc tiếp đúng đoạn**, khối gợi ý truyện thống nhất.
 
 ---
 
 ## Cài đặt
 
-### 1. Tạo database
+### Cách nhanh (khuyên dùng) — một lệnh
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\setup-db.ps1
+```
+
+Script hỏi mật khẩu root MySQL **một lần**, rồi tự: tạo database → tạo tài khoản
+`truyen_app` → nạp dữ liệu mẫu → **chạy mọi `database/migration-*.sql` theo thứ tự**
+→ sinh `src/main/resources/db.properties`.
+
+> ⚠️ Script **xoá và tạo lại** database `webdoctruyen`. Database đang có dữ liệu thật
+> thì dùng cách "Nâng cấp database cũ" bên dưới.
+
+### Cách làm tay
 
 ```bash
 mysql -u root -p < database/schema.sql
-```
-
-### 2. Tạo tài khoản riêng cho app
-
-Mở `database/setup_user.sql`, **đổi mật khẩu** ở dòng `IDENTIFIED BY`, rồi:
-
-```bash
-mysql -u root -p < database/setup_user.sql
-```
-
-> Không dùng `root` cho ứng dụng: `root` có toàn quyền trên mọi database của máy.
-
-### 3. Khai báo mật khẩu cho app
-
-```bash
-cp src/main/resources/db.properties.example src/main/resources/db.properties
-```
-
-Mở `db.properties` điền mật khẩu vừa đặt. File này đã nằm trong `.gitignore`.
-
-### 4. Nạp dữ liệu mẫu (tuỳ chọn, nên làm để có cái mà nhìn)
-
-```bash
+mysql -u root -p < database/setup_user.sql        # nhớ đổi mật khẩu ở dòng IDENTIFIED BY
 mysql -u root -p webdoctruyen < database/sample_data.sql
 ```
 
-7 truyện, 10 thể loại, 5 tài khoản. Mật khẩu tài khoản mẫu đều là `123456`.
+Rồi chạy **từng** file `database/migration-*.sql` theo thứ tự số (001 → 028):
 
-### 5. Chạy
+```bash
+mysql -u root -p webdoctruyen < database/migration-001-google.sql
+```
+
+`schema.sql` **chưa có** chương VIP, đánh giá, điểm danh… — bỏ bước migration là mở
+chương nào cũng lỗi. Cuối cùng chép `db.properties.example` thành `db.properties` và
+điền mật khẩu `truyen_app` (file này đã nằm trong `.gitignore`).
+
+> Không dùng `root` cho ứng dụng: `root` có toàn quyền trên mọi database của máy.
+
+### Nâng cấp database cũ
+
+Chỉ cần chạy lại **các migration** (không chạy `schema.sql` — file đó xoá database).
+Mọi migration đều chạy lại được nhiều lần mà không hỏng dữ liệu.
+
+### Tài khoản mẫu
+
+| Đăng nhập | Mật khẩu | Vai trò |
+|-----------|----------|---------|
+| `admin` | `admin123` | Quản trị viên |
+| `mocmien`, `haiduong`, `kiemvu` | `123456` | Tác giả |
+| `thuytien` | `123456` | Độc giả |
+| `spammer` | `123456` | Đã bị khoá |
+
+### Chạy
+
 
 ```bash
 powershell -ExecutionPolicy Bypass -File scripts\run.ps1
@@ -76,7 +97,7 @@ powershell -ExecutionPolicy Bypass -File scripts\run.ps1
 
 → <http://localhost:8080/>
 
-Chưa làm bước 1–3 web vẫn chạy: trang chủ sẽ hiện hướng dẫn cài đặt thay vì báo lỗi.
+Chưa cài database web vẫn chạy ở chế độ xem giao diện (dữ liệu giả), không báo lỗi.
 
 > Tomcat **9**, không phải 10+. Dự án dùng `javax.servlet`, Tomcat 10 đổi sang `jakarta.servlet`.
 
@@ -87,7 +108,8 @@ Chưa làm bước 1–3 web vẫn chạy: trang chủ sẽ hiện hướng dẫ
 ```
 DoAn-WebDocTruyen/
 ├── database/
-│   ├── schema.sql              7 bảng, có chú thích từng cột
+│   ├── schema.sql              bảng gốc, có chú thích từng cột
+│   ├── migration-*.sql         các nâng cấp sau (VIP, đánh giá, truyện tranh…) — chạy theo thứ tự
 │   ├── setup_user.sql          tạo tài khoản MySQL riêng cho app
 │   └── sample_data.sql         dữ liệu demo
 ├── docs/                       ERD, use case, báo cáo

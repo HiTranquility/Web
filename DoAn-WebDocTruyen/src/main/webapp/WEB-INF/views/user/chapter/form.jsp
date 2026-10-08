@@ -4,6 +4,7 @@
   chapter/form.jsp — MẢNH nội dung. Thêm / sửa chương.             CASE 06
   Nhận: chapter · story · message
 --%>
+<%-- Thông báo lỗi (message) do layout in sẵn ở đầu trang — KHÔNG in lại ở đây, kẻo hiện hai lần. --%>
 <div class="editor-header-meta">
     <h1>${empty chapter.id or chapter.id eq 0 ? 'Thêm chương mới' : 'Sửa chương'}</h1>
     <p class="muted-note">
@@ -11,9 +12,6 @@
     </p>
 </div>
 
-<c:if test="${not empty message}">
-    <p class="form-error"><c:out value="${message}"/></p>
-</c:if>
 
 <%-- Thông báo khôi phục bản nháp nếu có --%>
 <div id="draftAlert" class="draft-restore-alert">

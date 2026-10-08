@@ -19,6 +19,7 @@
     JSP lo dữ liệu, JS lo hành vi, ranh giới nằm đúng ở đây.
 
   Nhận: chapter · story · next (có thể null ở chương cuối)
+        markedParas (tuỳ chọn) — "3,17": các đoạn người đọc đã đánh dấu
 ================================================================================
 --%>
 <article class="chapter-block"
@@ -28,6 +29,7 @@
          data-story-title="<c:out value='${story.title}'/>"
          data-chapter-title="<c:out value='${chapter.title}'/>"
          data-next-id="${empty next ? '' : next.id}"
+         data-marked="${markedParas}"
          data-title="Chương ${chapter.chapterNo} — <c:out value='${story.title}'/>"
          data-url="${pageContext.request.contextPath}/chapter?action=read&amp;id=${chapter.id}">
 
@@ -40,14 +42,48 @@
         <c:when test="${isLocked}">
             <%@ include file="/WEB-INF/views/common/chapter/_locked.jsp" %>
         </c:when>
+        <c:when test="${story.comic}">
+            <%--
+              TRUYỆN TRANH — mỗi trang một <figure>, cuộn dọc liên tục.
+
+              data-para dùng LẠI đúng như đoạn văn: đánh dấu, "đọc tiếp đúng
+              chỗ" và thanh tiến độ ở layout/reader.jsp chỉ tìm [data-para]
+              trong .chapter-content, không cần biết đó là chữ hay ảnh.
+
+              width/height in sẵn (khi biết) để trình duyệt GIỮ CHỖ đúng tỉ lệ
+              trước khi ảnh tải xong — không thì trang nhảy liên tục và cuộn
+              tới "trang 20" rơi sai chỗ. Ba trang đầu tải ngay (eager), còn
+              lại để trình duyệt tải dần khi gần tới (lazy).
+
+              Ảnh đi qua /uploads/pages/… — UploadedFileServlet kiểm quyền đọc
+              chương trước khi phát, nên link ảnh chương VIP không chia sẻ được.
+            --%>
+            <div class="chapter-content comic-pages">
+                <c:forEach var="pg" items="${chapter.pages}" varStatus="ps">
+                    <figure class="comic-page" data-para="${ps.count}">
+                        <img src="${pageContext.request.contextPath}${pg.url}"
+                             alt="Trang ${ps.count}"
+                             <c:if test="${pg.sized}">width="${pg.width}" height="${pg.height}"</c:if>
+                             loading="${ps.count le 3 ? 'eager' : 'lazy'}" decoding="async">
+                    </figure>
+                </c:forEach>
+                <c:if test="${empty chapter.pages}">
+                    <p class="muted comic-empty">Chương này chưa có trang ảnh nào.</p>
+                </c:if>
+            </div>
+        </c:when>
         <c:otherwise>
             <div class="chapter-content">
                 <%--
                   Mỗi đoạn văn một thẻ <p>.
-                  chapter.formattedParagraphs do model cắt và định dạng an toàn.
+                  chapter.paragraphs do model cắt (xem ChapterParagraphTest).
+
+                  data-para = số thứ tự đoạn, đếm từ 1. Đánh dấu đoạn và "đọc
+                  tiếp đúng đoạn" đều dựa vào số này — server dùng CÙNG hàm
+                  getParagraphs() để cắt đoạn trích, nên hai bên luôn khớp.
                 --%>
-                <c:forEach var="para" items="${chapter.paragraphs}">
-                    <p><c:out value="${para}"/></p>
+                <c:forEach var="para" items="${chapter.paragraphs}" varStatus="ps">
+                    <p data-para="${ps.count}"><c:out value="${para}"/></p>
                 </c:forEach>
             </div>
         </c:otherwise>

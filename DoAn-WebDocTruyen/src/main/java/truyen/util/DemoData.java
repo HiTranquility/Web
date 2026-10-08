@@ -380,8 +380,15 @@ public final class DemoData {
      * khó tìm vì ai cũng tưởng mình đang nhìn cùng một thứ.
      */
     public static List<Story> filter(String tagSlug, String keyword, String progress) {
+        return filter(tagSlug, keyword, progress, null);
+    }
+
+    /** Như trên, thêm lọc loại truyện — dữ liệu mẫu toàn truyện chữ (TEXT). */
+    public static List<Story> filter(String tagSlug, String keyword, String progress, String storyType) {
+        String type = Story.filterType(storyType);
         List<Story> out = new ArrayList<>();
         for (Story s : stories()) {
+            if (type != null && !type.equals(s.getStoryType())) continue;
             if (tagSlug != null && !tagSlug.isEmpty()) {
                 boolean hit = false;
                 for (Tag t : s.getTags()) {

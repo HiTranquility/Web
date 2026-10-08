@@ -46,6 +46,7 @@
         <a class="story-row-title"
            href="${pageContext.request.contextPath}/story?action=detail&amp;id=${srStory.id}">
             <c:out value="${srStory.title}"/></a>
+        <c:if test="${srStory.comic}"><span class="badge badge-comic" style="margin-left:6px">🎨 Tranh</span></c:if>
 
         <p class="story-row-meta">
             <a href="${pageContext.request.contextPath}/user?action=profile&amp;id=${srStory.authorId}">

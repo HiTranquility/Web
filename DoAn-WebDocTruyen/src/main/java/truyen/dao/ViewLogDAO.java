@@ -33,9 +33,9 @@ public class ViewLogDAO {
      *   Gom theo story_id, lấy MAX(viewed_at) làm mốc "lần gần nhất", và
      *   COUNT(*) thành thông tin có ích: "đã mở 12 lần".
      *
-     * LEFT JOIN bookmarks — KHÔNG PHẢI JOIN
-     *   Vị trí đọc nằm ở bookmarks.last_chapter_id, mà view_logs thì ghi cả
-     *   truyện người ta chỉ ngó qua rồi thôi, không lưu. Dùng JOIN thường là
+     * LEFT JOIN reading_progress — KHÔNG PHẢI JOIN
+     *   Vị trí đọc nằm ở reading_progress.chapter_id, mà view_logs thì ghi cả
+     *   truyện người ta chỉ ngó qua trang giới thiệu. Dùng JOIN thường là
      *   những truyện đó biến mất khỏi lịch sử — đúng cái loại truyện người
      *   dùng cần lịch sử để tìm lại nhất.
      *
@@ -52,7 +52,7 @@ public class ViewLogDAO {
           + "       COALESCE(u.display_name, u.username) AS author_name, "
           + "       (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) AS total_chapters, "
           + "       v.last_viewed, v.times, "
-          + "       COALESCE(b.last_chapter_id, 0) AS last_chapter_id, "
+          + "       COALESCE(rp.chapter_id, 0) AS last_chapter_id, "
           + "       COALESCE(ch.chapter_no, 0)     AS last_chapter_no "
           + "FROM ( "
           + "   SELECT story_id, MAX(viewed_at) AS last_viewed, COUNT(*) AS times "
@@ -62,8 +62,8 @@ public class ViewLogDAO {
           + ") v "
           + "JOIN stories s ON s.id = v.story_id "
           + "JOIN users   u ON u.id = s.author_id "
-          + "LEFT JOIN bookmarks b ON b.story_id = s.id AND b.user_id = ? "
-          + "LEFT JOIN chapters  ch ON ch.id = b.last_chapter_id "
+          + "LEFT JOIN reading_progress rp ON rp.story_id = s.id AND rp.user_id = ? "
+          + "LEFT JOIN chapters  ch ON ch.id = rp.chapter_id "
           + "WHERE s.status = 'PUBLISHED' "
           + "ORDER BY v.last_viewed DESC "
           + "LIMIT ?";
@@ -121,9 +121,14 @@ public class ViewLogDAO {
      *   đủ 3 dòng cần dùng. Điều kiện thuộc về câu SQL thì để SQL làm.
      *
      * CHƯA ĐỌC HẾT MỚI TÍNH LÀ ĐANG DỞ
-     *   ch.chapter_no < tổng số chương. Đọc xong chương cuối rồi mà vẫn nằm ở
-     *   "Đọc tiếp" thì bấm vào lại rơi đúng chương vừa đọc — mỗi lần vào trang
-     *   chủ lại thấy một truyện đã xong nằm đó, không bỏ đi được.
+     *   ch.chapter_no < số chương LỚN NHẤT. Đọc xong chương cuối rồi mà vẫn
+     *   nằm ở "Đọc tiếp" thì bấm vào lại rơi đúng chương vừa đọc — mỗi lần vào
+     *   trang chủ lại thấy một truyện đã xong nằm đó, không bỏ đi được.
+     *
+     *   So với MAX(chapter_no), KHÔNG so với COUNT(*): tác giả xoá chương 3
+     *   của truyện 10 chương thì còn 9 dòng nhưng chương cuối vẫn là số 10 —
+     *   so với COUNT là người đang ở chương 9 bị coi như đã đọc hết và biến
+     *   mất khỏi "Đọc tiếp", dù vẫn còn chương 10 chưa đọc.
      */
     public List<ReadHistory> findResumable(int userId, int limit) throws SQLException {
         if (!DBConnection.isReady()) {
@@ -139,7 +144,7 @@ public class ViewLogDAO {
           + "       COALESCE(u.display_name, u.username) AS author_name, "
           + "       (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) AS total_chapters, "
           + "       v.last_viewed, v.times, "
-          + "       b.last_chapter_id, ch.chapter_no AS last_chapter_no "
+          + "       rp.chapter_id AS last_chapter_id, ch.chapter_no AS last_chapter_no "
           + "FROM ( "
           + "   SELECT story_id, MAX(viewed_at) AS last_viewed, COUNT(*) AS times "
           + "   FROM view_logs "
@@ -148,10 +153,10 @@ public class ViewLogDAO {
           + ") v "
           + "JOIN stories  s  ON s.id = v.story_id "
           + "JOIN users    u  ON u.id = s.author_id "
-          + "JOIN bookmarks b ON b.story_id = s.id AND b.user_id = ? "
-          + "JOIN chapters ch ON ch.id = b.last_chapter_id "
+          + "JOIN reading_progress rp ON rp.story_id = s.id AND rp.user_id = ? "
+          + "JOIN chapters ch ON ch.id = rp.chapter_id "
           + "WHERE s.status = 'PUBLISHED' "
-          + "  AND ch.chapter_no < (SELECT COUNT(*) FROM chapters c2 WHERE c2.story_id = s.id) "
+          + "  AND ch.chapter_no < (SELECT MAX(c2.chapter_no) FROM chapters c2 WHERE c2.story_id = s.id) "
           + "ORDER BY v.last_viewed DESC "
           + "LIMIT ?";
 

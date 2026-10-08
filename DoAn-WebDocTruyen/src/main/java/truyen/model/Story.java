@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Một truyện. */
+/** Một truyện — truyện chữ hoặc truyện tranh (xem storyType). */
 public class Story implements Serializable {
+
+    public static final String TYPE_TEXT  = "TEXT";
+    public static final String TYPE_COMIC = "COMIC";
 
     private int id;
     private String title;
@@ -21,6 +24,13 @@ public class Story implements Serializable {
 
     private String status;      // DRAFT | PUBLISHED | DELETED
     private String progress;    // ONGOING | COMPLETED
+
+    /**
+     * Loại truyện: TEXT (chữ) | COMIC (tranh). Mặc định TEXT — truyện cũ và
+     * DemoData không phải khai gì. Luôn đi qua normalizeType() khi nhận từ
+     * ngoài vào, để giá trị lạ không bao giờ lọt xuống CSDL.
+     */
+    private String storyType = TYPE_TEXT;
     private int viewCount;
     private int chapterCount;   // đếm sẵn, tránh COUNT() cho từng thẻ truyện
 
@@ -129,5 +139,44 @@ public class Story implements Serializable {
 
     public boolean isCompleted() {
         return "COMPLETED".equals(progress);
+    }
+
+    // ---- Loại truyện --------------------------------------------------------
+
+    public String getStoryType() { return storyType; }
+    public void setStoryType(String storyType) { this.storyType = normalizeType(storyType); }
+
+    /** Cho JSP: ${story.comic} — rẽ nhánh hiển thị trang ảnh thay vì đoạn văn. */
+    public boolean isComic() { return TYPE_COMIC.equals(storyType); }
+
+    /** Nhãn hiển thị: "Truyện tranh" / "Truyện chữ". */
+    public String getTypeLabel() { return isComic() ? "Truyện tranh" : "Truyện chữ"; }
+
+    /**
+     * Đơn vị nhỏ nhất để đánh dấu / đọc tiếp: "trang" với truyện tranh,
+     * "đoạn" với truyện chữ. Một chỗ quyết định thay vì mỗi thông báo tự viết
+     * một câu if.
+     */
+    public String getUnitLabel() { return isComic() ? "trang" : "đoạn"; }
+
+    /**
+     * Chuẩn hoá giá trị loại truyện nhận từ form / URL / CSDL.
+     * Không phân biệt hoa thường; giá trị lạ hoặc null -> TEXT.
+     */
+    public static String normalizeType(String raw) {
+        return raw != null && TYPE_COMIC.equalsIgnoreCase(raw.trim()) ? TYPE_COMIC : TYPE_TEXT;
+    }
+
+    /**
+     * Bộ lọc loại ở kho truyện: "text" / "comic" -> giá trị CSDL, còn lại
+     * (kể cả rỗng) -> null = không lọc. Khác normalizeType() ở chỗ KHÔNG ép
+     * về TEXT: không chọn gì nghĩa là "tất cả", không phải "truyện chữ".
+     */
+    public static String filterType(String raw) {
+        if (raw == null) return null;
+        String t = raw.trim();
+        if (TYPE_COMIC.equalsIgnoreCase(t)) return TYPE_COMIC;
+        if (TYPE_TEXT.equalsIgnoreCase(t))  return TYPE_TEXT;
+        return null;
     }
 }

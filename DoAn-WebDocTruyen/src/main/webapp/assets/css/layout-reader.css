@@ -544,13 +544,23 @@ kbd {
     .reader-meta {
         display: none;
     }
+    /* KHÔNG dùng justify-content: flex-end ở đây: khi dải nút tràn ra, phần
+       tràn nằm bên TRÁI và overflow-x KHÔNG cuộn ngược về trái được — cụm nút
+       đầu (lưu truyện, đánh dấu, cỡ chữ) bị cắt mất, không vuốt tới được.
+       margin-left:auto trên nút đầu đẩy cả dải sang phải khi CÒN chỗ, và tự
+       về 0 khi tràn — nên vuốt được tới mọi nút. */
     .reader-tools {
         flex: 1;
-        justify-content: flex-end;
+        justify-content: flex-start;
         overflow-x: auto;
         padding-bottom: 2px;
         -webkit-overflow-scrolling: touch;
     }
+    .reader-tools > :first-child { margin-left: auto; }
+    /* Không cho cụm nút co lại: .tool-group có overflow:hidden nên co là nút
+       bên trong bị cắt cụt ("A" chỉ còn nửa chữ). Giữ nguyên cỡ, để cả dải
+       cuộn ngang. */
+    .reader-tools > .tool-group { flex: none; }
     .reader-wrap {
         padding: 24px 16px 80px;
     }
@@ -1082,6 +1092,135 @@ kbd {
 }
 
 /* ============================================================================
+   ĐÁNH DẤU ĐOẠN · ĐỌC TIẾP ĐÚNG ĐOẠN · THÔNG BÁO NGẮN
+   ========================================================================= */
+
+/* Đoạn đã đánh dấu (🔖): vạch màu bên trái + biểu tượng nhỏ ở lề.
+   Dùng box-shadow inset thay cho border-left để chữ KHÔNG bị đẩy lệch —
+   bấm đánh dấu mà cả đoạn nhảy sang phải vài pixel thì mất chỗ đang đọc. */
+.chapter-content .is-marked {
+    position: relative;
+    box-shadow: inset 3px 0 0 var(--ember);
+    background: linear-gradient(90deg, rgba(255, 122, 26, .10), transparent 70%);
+    border-radius: 0 6px 6px 0;
+    padding-left: .75rem;
+    margin-left: -.75rem;
+}
+.chapter-content .is-marked::before {
+    content: '🔖';
+    position: absolute; left: -1.7rem; top: .1em;
+    font-size: .85rem; opacity: .85;
+}
+/* Màn hẹp: lề chỉ ~18px, biểu tượng ở lề sẽ tràn ra ngoài và sinh thanh cuộn
+   ngang. Vạch màu bên trái là đủ nhận ra. */
+@media (max-width: 700px) {
+    .chapter-content .is-marked::before { display: none; }
+}
+
+/* Lóe sáng một nhịp ở đoạn vừa được cuộn tới (đọc tiếp / mở từ tủ sách) */
+.chapter-content .is-flash {
+    animation: para-flash 1.8s var(--ease) 1;
+}
+@keyframes para-flash {
+    0%, 35% { background-color: rgba(255, 122, 26, .22); }
+    100%    { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .chapter-content .is-flash { animation: none; outline: 2px solid var(--ember); outline-offset: 4px; }
+}
+
+/* Thông báo ngắn, nổi ở giữa đáy màn hình */
+.reader-toast {
+    position: fixed; left: 50%; bottom: 28px; z-index: 60;
+    transform: translate(-50%, 12px);
+    display: flex; align-items: center; gap: 12px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 16px;
+    background: var(--rd-toc-bg); color: var(--rd-text);
+    border: 1px solid var(--rd-line); border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+    font-size: .88rem;
+    opacity: 0;
+    transition: opacity .2s var(--ease), transform .2s var(--ease);
+}
+.reader-toast.is-show { opacity: 1; transform: translate(-50%, 0); }
+.reader-toast-btn {
+    flex: none;
+    padding: 4px 10px; border-radius: 8px;
+    background: transparent; color: var(--ember);
+    border: 1px solid var(--ember); cursor: pointer;
+    font: inherit; font-weight: 600;
+}
+.reader-toast-btn:hover { background: var(--ember); color: #fff; }
+
+/* ============================================================================
+   TRUYỆN TRANH — cùng khung đọc, khác phần thân
+   ========================================================================= */
+
+/* Nút chỉ dành cho một loại truyện: ẩn ở loại kia. Một bộ luật thay cho
+   hai bản layout — mọi thứ khác (mục lục, đọc liên tục, đánh dấu, đọc tiếp,
+   bình luận) dùng chung y nguyên. */
+.reader-body[data-kind="comic"] .text-only { display: none !important; }
+.reader-body:not([data-kind="comic"]) .comic-only { display: none !important; }
+
+/* Cột đọc chữ chỉ ~38em cho mắt khỏi quét ngang xa. Tranh thì cần rộng:
+   "Vừa" ~ khổ webtoon, "Rộng" gần hết màn hình. */
+.reader-body[data-kind="comic"] .reader-wrap { max-width: 760px; }
+.reader-body[data-kind="comic"][data-cwidth="wide"] .reader-wrap { max-width: 1280px; }
+
+/* Các trang nối liền nhau, không khe hở — truyện tranh cuộn dọc đọc như
+   một dải dài. Ảnh luôn co theo bề rộng cột, giữ đúng tỉ lệ. */
+.comic-pages { display: flex; flex-direction: column; }
+.comic-page {
+    position: relative;
+    margin: 0;
+    background: var(--rd-line);          /* khung giữ chỗ khi ảnh chưa tải xong */
+}
+.comic-page img {
+    display: block;
+    width: 100%; height: auto;
+    -webkit-user-drag: none; user-select: none;
+}
+.comic-empty { text-align: center; padding: 40px 0; }
+
+/* Trang đã đánh dấu: KHÔNG dùng vạch trái của đoạn văn (ảnh che mất), mà
+   gắn một nhãn nổi ở góc trên. */
+.chapter-content .comic-page.is-marked {
+    box-shadow: none; background: var(--rd-line);
+    padding-left: 0; margin-left: 0; border-radius: 0;
+}
+.chapter-content .comic-page.is-marked::before {
+    content: '🔖 Đã đánh dấu';
+    left: 10px; top: 10px; z-index: 2;
+    padding: 3px 10px; border-radius: 99px;
+    background: rgba(10, 13, 20, .78); color: #fff;
+    font-size: .78rem; font-weight: 600; opacity: 1;
+}
+@media (max-width: 700px) {
+    /* trên màn hẹp vẫn hiện — nhãn nằm TRONG ảnh nên không tràn ra lề */
+    .chapter-content .comic-page.is-marked::before { display: block; }
+    .reader-body[data-kind="comic"] .reader-wrap { padding-left: 0; padding-right: 0; }
+    .reader-body[data-kind="comic"] .chapter-h,
+    .reader-body[data-kind="comic"] .reader-sub { padding: 0 16px; }
+}
+
+/* Lóe sáng trang vừa cuộn tới: đổi nền vô ích vì ảnh che, nên làm sáng ảnh */
+.chapter-content .comic-page.is-flash { animation: none; }
+.chapter-content .comic-page.is-flash img { animation: page-glow 1.8s var(--ease) 1; }
+@keyframes page-glow {
+    0%, 35% { filter: brightness(1.18); }
+    100%    { filter: none; }
+}
+
+/* Khối gợi ý cuối truyện — cột đọc chỉ ~38em nên 2 x 2 thay vì 4 x 1.
+   Thẻ dùng token màu của site, nên ở nền sáng / nền giấy của trang đọc
+   vẫn giữ nền thẻ riêng — giống hệt thẻ ở trang chi tiết. */
+.reader-recs:empty { display: none; }
+.reader-recs .rec-section { margin-top: 28px; }
+.reader-recs .rec-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+
+/* ============================================================================
    CHẾ ĐỘ IN ẤN THÂN THIỆN & XUẤT EBOOK (PRINT-FRIENDLY CSS)
    ========================================================================= */
 @media print {
@@ -1094,6 +1233,8 @@ kbd {
     .reader-tts-bar,
     .chapter-loading,
     .chapter-done,
+    .reader-recs,
+    .reader-toast,
     .shortcuts-modal,
     #reader-back-to-top {
         display: none !important;

@@ -244,16 +244,27 @@ public class TagDAO {
                 }
 
                 if (tagIds != null && tagIds.length > 0) {
+                    /*
+                     * Lọc trùng + INSERT IGNORE: form gửi cùng một tag hai lần,
+                     * hoặc một id tag không tồn tại (ai đó sửa HTML), trước đây
+                     * đụng khoá chính / khoá ngoại -> cả trang lưu truyện ra 500
+                     * dù truyện đã được tạo xong. Giờ tag lạ bị bỏ qua lặng lẽ.
+                     */
+                    java.util.Set<Integer> unique = new java.util.LinkedHashSet<>();
+                    for (String tagId : tagIds) {
+                        try {
+                            unique.add(Integer.parseInt(tagId.trim()));
+                        } catch (NumberFormatException | NullPointerException ignore) {
+                            // tagId không phải số -> ai đó sửa form. Bỏ qua.
+                        }
+                    }
                     try (PreparedStatement ins = con.prepareStatement(
-                            "INSERT INTO story_tags (story_id, tag_id) VALUES (?, ?)")) {
-                        for (String tagId : tagIds) {
-                            try {
-                                ins.setInt(1, storyId);
-                                ins.setInt(2, Integer.parseInt(tagId));
-                                ins.addBatch();     // gom lại, gửi một lần
-                            } catch (NumberFormatException ignore) {
-                                // tagId không phải số -> ai đó sửa form. Bỏ qua.
-                            }
+                            "INSERT IGNORE INTO story_tags (story_id, tag_id) "
+                          + "SELECT ?, id FROM tags WHERE id = ?")) {
+                        for (Integer id : unique) {
+                            ins.setInt(1, storyId);
+                            ins.setInt(2, id);
+                            ins.addBatch();     // gom lại, gửi một lần
                         }
                         ins.executeBatch();
                     }

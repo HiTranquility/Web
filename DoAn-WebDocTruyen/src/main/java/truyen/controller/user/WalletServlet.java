@@ -20,6 +20,10 @@ public class WalletServlet extends HttpServlet {
 
     private final WalletDAO walletDAO = new WalletDAO();
 
+    /** Trần nạp xu MÔ PHỎNG mỗi người mỗi ngày — xem handleBuy(). */
+    static final int MAX_TOPUPS_PER_DAY = 3;
+    static final int MAX_TOPUP_COINS_PER_DAY = 2000;
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -27,6 +31,8 @@ public class WalletServlet extends HttpServlet {
         String action = req.getParameter("action");
         if ("balance".equals(action)) {
             handleBalance(req, resp);
+        } else if (action == null || "topup".equals(action) || "history".equals(action) || "view".equals(action)) {
+            handleTopupView(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -39,6 +45,8 @@ public class WalletServlet extends HttpServlet {
         String action = req.getParameter("action");
         if ("tip".equals(action)) {
             handleTip(req, resp);
+        } else if ("buy".equals(action) || "topup".equals(action)) {
+            handleBuy(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -119,5 +127,184 @@ public class WalletServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private void handleTopupView(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        User currentUser = requireLogin(req, resp);
+        if (currentUser == null) return;
+
+        try {
+            int balance = walletDAO.getBalance(currentUser.getId());
+            java.util.List<truyen.model.Transaction> history = walletDAO.findHistoryByUserId(currentUser.getId(), 25);
+            req.setAttribute("walletBalance", balance);
+            req.setAttribute("history", history);
+            req.setAttribute("pageTitle", "Ví Xu & Nạp Xu");
+            req.setAttribute("activeNav", "wallet");
+            req.setAttribute("contentPage", "/WEB-INF/views/user/wallet.jsp");
+            req.getRequestDispatcher("/WEB-INF/views/layout/main.jsp").forward(req, resp);
+        } catch (SQLException e) {
+            log("WalletServlet: lỗi truy vấn ví xu", e);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void handleBuy(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        User currentUser = requireLogin(req, resp);
+        if (currentUser == null) return;
+
+        String packageId = req.getParameter("packageId");
+        int coins = 0;
+        int price = 0;
+        String packageName = "";
+
+        if ("pkg_20k".equals(packageId)) {
+            coins = 55; // 50 + 5 bonus
+            price = 20000;
+            packageName = "Gói Khởi Động (50 + 5 xu)";
+        } else if ("pkg_50k".equals(packageId)) {
+            coins = 135; // 120 + 15 bonus
+            price = 50000;
+            packageName = "Gói Phổ Thông (120 + 15 xu)";
+        } else if ("pkg_100k".equals(packageId)) {
+            coins = 300; // 260 + 40 bonus
+            price = 100000;
+            packageName = "Gói Tiết Kiệm (260 + 40 xu)";
+        } else if ("pkg_200k".equals(packageId)) {
+            coins = 650; // 550 + 100 bonus
+            price = 200000;
+            packageName = "Gói Bạc (550 + 100 xu)";
+        } else if ("pkg_500k".equals(packageId)) {
+            coins = 1850; // 1500 + 350 bonus
+            price = 500000;
+            packageName = "Gói Kim Cương (1500 + 350 xu)";
+        } else {
+            coins = parseInt(req.getParameter("coins"), 0);
+            if (coins > 0 && coins <= MAX_TOPUP_COINS_PER_DAY) {
+                price = coins * 400;
+                packageName = "Gói Tuỳ Chọn (" + coins + " xu)";
+            }
+        }
+
+        if (coins <= 0) {
+            if (isAjax(req)) {
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"message\":\"Gói nạp xu không hợp lệ.\"}");
+            } else {
+                req.getSession().setAttribute("flashError", "Gói nạp xu không hợp lệ.");
+                resp.sendRedirect(req.getContextPath() + "/wallet?action=topup");
+            }
+            return;
+        }
+
+        String paymentMethod = req.getParameter("paymentMethod");
+        String methodName = "Cổng thanh toán";
+        if ("vnpay".equalsIgnoreCase(paymentMethod)) {
+            methodName = "VNPAY QR";
+        } else if ("momo".equalsIgnoreCase(paymentMethod)) {
+            methodName = "Ví MoMo";
+        } else if ("bank_transfer".equalsIgnoreCase(paymentMethod)) {
+            methodName = "Chuyển khoản VietQR";
+        } else if ("card".equalsIgnoreCase(paymentMethod)) {
+            methodName = "Thẻ cào";
+        }
+
+        /*
+         * NẠP XU Ở ĐÂY LÀ MÔ PHỎNG — không có cổng thanh toán thật.
+         *
+         * Không chặn gì thì ai cũng gọi thẳng POST này để có xu vô hạn, rồi
+         * dùng xu đó mở mọi chương VIP và "tặng" xu cho tài khoản phụ — toàn
+         * bộ cơ chế chương trả phí thành vô nghĩa. Hai lớp chặn:
+         *   1. context-param demoTopup trong web.xml: đặt false là TẮT hẳn
+         *      (khi nào tích hợp VNPAY/MoMo thật thì tắt mô phỏng đi).
+         *   2. Trần mỗi ngày: tối đa MAX_TOPUPS_PER_DAY lần và
+         *      MAX_TOPUP_COINS_PER_DAY xu — đủ để demo đồ án, không đủ để phá.
+         */
+        if (!"true".equalsIgnoreCase(getServletContext().getInitParameter("demoTopup"))) {
+            replyBuy(req, resp, false, "Nạp xu đang tắt — cổng thanh toán thật chưa được tích hợp.");
+            return;
+        }
+        try {
+            int[] today = walletDAO.topupToday(currentUser.getId());
+            if (today[0] >= MAX_TOPUPS_PER_DAY || today[1] + coins > MAX_TOPUP_COINS_PER_DAY) {
+                replyBuy(req, resp, false, "Hôm nay bạn đã nạp " + today[0] + " lần (" + today[1]
+                        + " xu). Bản mô phỏng giới hạn " + MAX_TOPUPS_PER_DAY + " lần / "
+                        + MAX_TOPUP_COINS_PER_DAY + " xu mỗi ngày — điểm danh để nhận thêm xu nhé!");
+                return;
+            }
+        } catch (SQLException e) {
+            log("WalletServlet: không kiểm được trần nạp xu", e);
+            replyBuy(req, resp, false, "Lỗi máy chủ khi nạp xu.");
+            return;
+        }
+
+        String txMessage = "Nạp " + coins + " xu (" + packageName + ") qua " + methodName;
+
+        try {
+            boolean ok = walletDAO.addCoins(currentUser.getId(), coins, txMessage);
+            if (ok) {
+                int newBalance = walletDAO.getBalance(currentUser.getId());
+                if (isAjax(req)) {
+                    resp.setContentType("application/json; charset=UTF-8");
+                    resp.getWriter().write("{\"success\":true,\"coins\":" + coins
+                            + ",\"newBalance\":" + newBalance
+                            + ",\"message\":\"🎉 Nạp thành công " + coins + " xu vào ví!\"}");
+                } else {
+                    req.getSession().setAttribute("flash",
+                            "🎉 Nạp thành công " + coins + " xu vào ví (" + packageName + ")! Chúc bạn đọc truyện vui vẻ.");
+                    resp.sendRedirect(req.getContextPath() + "/wallet?action=topup");
+                }
+            } else {
+                if (isAjax(req)) {
+                    resp.setContentType("application/json; charset=UTF-8");
+                    resp.getWriter().write("{\"success\":false,\"message\":\"Không thể thực hiện nạp xu. Vui lòng thử lại.\"}");
+                } else {
+                    req.getSession().setAttribute("flashError", "Không thể nạp xu lúc này. Vui lòng thử lại sau.");
+                    resp.sendRedirect(req.getContextPath() + "/wallet?action=topup");
+                }
+            }
+        } catch (SQLException e) {
+            log("WalletServlet: lỗi nạp xu", e);
+            if (isAjax(req)) {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi máy chủ khi nạp xu.\"}");
+            } else {
+                req.getSession().setAttribute("flashError", "Lỗi máy chủ khi nạp xu.");
+                resp.sendRedirect(req.getContextPath() + "/wallet?action=topup");
+            }
+        }
+    }
+
+    /** Trả lời yêu cầu nạp: JSON cho AJAX, flash + quay lại trang ví cho form thường. */
+    private void replyBuy(HttpServletRequest req, HttpServletResponse resp, boolean success, String message)
+            throws IOException {
+        if (isAjax(req)) {
+            resp.setContentType("application/json; charset=UTF-8");
+            // message chỉ gồm chuỗi cố định + số nguyên — không có gì cần escape JSON
+            resp.getWriter().write("{\"success\":" + success + ",\"message\":\"" + message + "\"}");
+        } else {
+            req.getSession().setAttribute(success ? "flash" : "flashError", message);
+            resp.sendRedirect(req.getContextPath() + "/wallet?action=topup");
+        }
+    }
+
+    private User requireLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        User me = session != null ? (User) session.getAttribute("currentUser") : null;
+        if (me == null) {
+            request.getSession(true).setAttribute("redirectAfterLogin",
+                    request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
+            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            return null;
+        }
+        return me;
+    }
+
+    private boolean isAjax(HttpServletRequest req) {
+        String xrw = req.getHeader("X-Requested-With");
+        String accept = req.getHeader("Accept");
+        return "XMLHttpRequest".equalsIgnoreCase(xrw) || (accept != null && accept.contains("application/json"));
     }
 }

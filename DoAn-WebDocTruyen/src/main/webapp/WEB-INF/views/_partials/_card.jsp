@@ -48,10 +48,22 @@
             <c:if test="${story.recent}">
                 <span class="badge badge-new">✨ Mới</span>
             </c:if>
+
+            <%-- LOẠI TRUYỆN — chỉ gắn nhãn cho truyện tranh. Truyện chữ là
+                 mặc định của web, gắn nhãn cho mọi thẻ chỉ thêm nhiễu. --%>
+            <c:if test="${story.comic}">
+                <span class="badge badge-comic">🎨 Tranh</span>
+            </c:if>
         </div>
     </div>
 
     <div class="story-body">
+        <%-- Nhãn "vì sao gợi ý" — chỉ khối gợi ý (_recommend.jsp) đặt cardReason,
+             mọi trang khác không đặt nên dòng này không hiện. --%>
+        <c:if test="${not empty cardReason}">
+            <span class="rec-reason"><c:out value="${cardReason}"/></span>
+        </c:if>
+
         <%-- <c:out> escape HTML -> chống XSS. Xem ghi chú ở home.jsp. --%>
         <div class="story-title"><c:out value="${story.title}"/></div>
 

@@ -65,8 +65,13 @@ public class HomeServlet extends HttpServlet {
              * chủ là trang đông lượt truy cập nhất.
              *
              * Dữ liệu đã có sẵn từ trước: view_logs biết đọc lúc nào,
-             * bookmarks.last_chapter_id biết dừng ở đâu. Trang chủ chỉ là chỗ
-             * thứ hai dùng lại chúng, không thêm bảng hay cột nào.
+             * reading_progress biết dừng ở chương nào, đoạn nào. Trang chủ chỉ
+             * là chỗ thứ hai dùng lại chúng.
+             *
+             * Đây là NGUỒN DUY NHẤT của "đọc tiếp" ở trang chủ. Từng có thêm
+             * một khung đọc từ localStorage — trùng với dải này, lại không gắn
+             * với tài khoản nên máy dùng chung thì người sau thấy truyện của
+             * người trước. Đã bỏ.
              */
             User me = (User) request.getSession().getAttribute("currentUser");
             if (me != null) {

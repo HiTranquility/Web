@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--
   parts/nav.jsp — thanh menu trên cùng.
 
@@ -49,6 +50,15 @@
 
             <c:choose>
                 <c:when test="${not empty currentUser}">
+                    <%-- Huy hiệu Ví Xu trên Header --%>
+                    <a class="header-coin-badge" href="${pageContext.request.contextPath}/wallet?action=topup"
+                       title="Ví xu: ${walletBalance != null ? walletBalance : 0} xu. Bấm để nạp thêm">
+                        <span class="coin-badge-icon">🪙</span>
+                        <span class="coin-badge-val"><fmt:formatNumber pattern="#,##0" value="${walletBalance != null ? walletBalance : 0}"/></span>
+                        <span class="coin-badge-unit">xu</span>
+                        <span class="coin-badge-plus" title="Nạp xu">+</span>
+                    </a>
+
                     <%-- Chuông thông báo --%>
                     <a class="action-icon-btn bell" title="Thông báo"
                        href="${pageContext.request.contextPath}/notification">
@@ -113,8 +123,15 @@
 
                             <div class="dropdown-sep"></div>
 
-                            <%-- Mục 3: Tài khoản --%>
-                            <div class="dropdown-section-title">Tài khoản</div>
+                            <%-- Mục 3: Tài khoản & Ví xu --%>
+                            <div class="dropdown-section-title">Tài khoản &amp; Ví xu</div>
+                            <a href="${pageContext.request.contextPath}/wallet?action=topup" class="dropdown-item ${activeNav eq 'wallet' ? 'is-active' : ''}">
+                                <span class="dropdown-item-icon">🪙</span>
+                                <span class="dropdown-coin-flex">
+                                    <span>Ví &amp; Nạp xu</span>
+                                    <span class="dropdown-coin-tag"><fmt:formatNumber pattern="#,##0" value="${walletBalance != null ? walletBalance : 0}"/> xu</span>
+                                </span>
+                            </a>
                             <a href="${pageContext.request.contextPath}/user?action=me" class="dropdown-item ${activeNav eq 'me' ? 'is-active' : ''}">
                                 <span class="dropdown-item-icon">👤</span>
                                 <span>Hồ sơ cá nhân</span>

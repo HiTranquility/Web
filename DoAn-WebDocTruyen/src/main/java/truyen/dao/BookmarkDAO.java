@@ -12,27 +12,34 @@ import java.util.List;
 import truyen.model.Bookmark;
 import truyen.util.DBConnection;
 
-/** CASE 08 — Đánh dấu truyện. */
+/**
+ * CASE 08 — Truyện đã lưu (bảng bookmarks).
+ *
+ * CHỈ những truyện người dùng tự bấm "Lưu truyện". Vị trí đọc nằm ở
+ * ReadingProgressDAO, đoạn văn đánh dấu nằm ở ChapterBookmarkDAO.
+ */
 public class BookmarkDAO {
 
     /**
      * Danh sách truyện người dùng đã lưu.
      *
-     * LEFT JOIN sang chapters vì last_chapter_id CÓ THỂ NULL (đã lưu nhưng
-     * chưa đọc chương nào). JOIN thường sẽ loại mất những dòng đó — bookmark
-     * chưa đọc sẽ biến mất khỏi danh sách một cách khó hiểu.
+     * LEFT JOIN sang reading_progress vì truyện đã lưu CÓ THỂ chưa đọc chương
+     * nào. JOIN thường sẽ loại mất những dòng đó — truyện lưu để dành đọc sau
+     * sẽ biến mất khỏi danh sách một cách khó hiểu.
      */
     public List<Bookmark> findByUser(int userId) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.bookmarks(userId);
         String sql =
-            "SELECT b.user_id, b.story_id, b.last_chapter_id, b.created_at, "
+            "SELECT b.user_id, b.story_id, b.created_at, "
+          + "       COALESCE(rp.chapter_id, 0) AS last_chapter_id, "
           + "       s.title AS story_title, s.slug AS story_slug, s.cover_url, "
           + "       COALESCE(c.chapter_no, 0) AS last_chapter_no, "
           + "       (SELECT COUNT(*) FROM chapters ch WHERE ch.story_id = s.id) AS total_chapters "
           + "FROM bookmarks b "
           + "JOIN stories s ON s.id = b.story_id "
-          + "LEFT JOIN chapters c ON c.id = b.last_chapter_id "
+          + "LEFT JOIN reading_progress rp ON rp.user_id = b.user_id AND rp.story_id = b.story_id "
+          + "LEFT JOIN chapters c ON c.id = rp.chapter_id "
           + "WHERE b.user_id = ? AND s.status = 'PUBLISHED' "
           + "ORDER BY b.created_at DESC";
 
@@ -76,33 +83,6 @@ public class BookmarkDAO {
         }
     }
 
-    /** Lấy tiến độ đọc của người dùng với một truyện (chương đang đọc dở). */
-    public Bookmark findProgress(int userId, int storyId) throws SQLException {
-        if (!DBConnection.isReady()) return null;
-        String sql =
-            "SELECT b.user_id, b.story_id, b.last_chapter_id, "
-          + "       COALESCE(c.chapter_no, 0) AS last_chapter_no "
-          + "FROM bookmarks b "
-          + "JOIN chapters c ON c.id = b.last_chapter_id "
-          + "WHERE b.user_id = ? AND b.story_id = ?";
-        try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, storyId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Bookmark b = new Bookmark();
-                    b.setUserId(rs.getInt("user_id"));
-                    b.setStoryId(rs.getInt("story_id"));
-                    b.setLastChapterId(rs.getInt("last_chapter_id"));
-                    b.setLastChapterNo(rs.getInt("last_chapter_no"));
-                    return b;
-                }
-                return null;
-            }
-        }
-    }
-
     /**
      * Thêm bookmark. Đã có rồi thì bỏ qua, KHÔNG báo lỗi.
      *
@@ -120,6 +100,7 @@ public class BookmarkDAO {
         }
     }
 
+    /** Bỏ lưu. KHÔNG đụng tới vị trí đọc — bỏ lưu không có nghĩa là quên mình đang đọc tới đâu. */
     public void remove(int userId, int storyId) throws SQLException {
         String sql = "DELETE FROM bookmarks WHERE user_id = ? AND story_id = ?";
         try (Connection con = DBConnection.get();
@@ -130,42 +111,28 @@ public class BookmarkDAO {
         }
     }
 
-    /** Lấy danh sách ID người dùng đã lưu truyện này vào tủ sách để gửi thông báo chương mới. */
+    /**
+     * Những người cần báo khi truyện có chương mới: đã LƯU truyện, hoặc đang
+     * ĐỌC DỞ truyện.
+     *
+     * Trước khi tách bảng, ai mở một chương cũng tự có bookmark nên tự được
+     * báo. UNION với reading_progress giữ nguyên hành vi đó cho người đang
+     * đọc; UNION (không phải UNION ALL) để một người không nhận hai thông báo.
+     */
     public List<Integer> findBookmarkedUserIds(int storyId) throws SQLException {
         if (!DBConnection.isReady()) return java.util.Collections.emptyList();
-        String sql = "SELECT user_id FROM bookmarks WHERE story_id = ?";
+        String sql = "SELECT user_id FROM bookmarks WHERE story_id = ? "
+                   + "UNION "
+                   + "SELECT user_id FROM reading_progress WHERE story_id = ?";
         List<Integer> list = new ArrayList<>();
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, storyId);
+            ps.setInt(2, storyId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(rs.getInt("user_id"));
             }
         }
         return list;
-    }
-
-    /**
-     * Ghi lại vị trí đọc. Gọi mỗi khi người dùng mở một chương.
-     *
-     * ON DUPLICATE KEY UPDATE: chưa có bookmark thì tạo mới, có rồi thì cập
-     * nhật vị trí. Một câu lệnh thay cho "SELECT xem có chưa, rồi INSERT hoặc
-     * UPDATE" — vừa ngắn hơn, vừa tránh được trường hợp hai request cùng lúc
-     * cùng thấy "chưa có" rồi cùng INSERT.
-     */
-    public void updateProgress(int userId, int storyId, int chapterId) throws SQLException {
-        // CHE DO XEM GIAO DIEN: bo qua, ly do giong increaseView().
-        if (!DBConnection.isReady()) return;
-
-        String sql = "INSERT INTO bookmarks (user_id, story_id, last_chapter_id) "
-                   + "VALUES (?, ?, ?) "
-                   + "ON DUPLICATE KEY UPDATE last_chapter_id = VALUES(last_chapter_id)";
-        try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, storyId);
-            ps.setInt(3, chapterId);
-            ps.executeUpdate();
-        }
     }
 }
