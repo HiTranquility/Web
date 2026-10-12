@@ -24,6 +24,7 @@ import truyen.dao.FollowDAO;
 import truyen.dao.RatingDAO;
 import truyen.dao.TagDAO;
 import truyen.util.AppListener;
+import truyen.model.Chapter;
 import truyen.model.Story;
 import truyen.model.Tag;
 import truyen.model.User;
@@ -64,6 +65,8 @@ public class StoryServlet extends HttpServlet {
     private BookmarkDAO bookmarkDAO;
     private truyen.dao.ReadingProgressDAO progressDAO;
     private truyen.dao.ReviewDAO reviewDAO;
+    private truyen.dao.UnlockDAO unlockDAO;
+    private truyen.dao.WalletDAO walletDAO;
 
     /** Số truyện mỗi trang. Đọc từ context-param nên đổi được mà khỏi biên dịch lại. */
     private int pageSize = 24;
@@ -92,6 +95,8 @@ public class StoryServlet extends HttpServlet {
         bookmarkDAO = new BookmarkDAO();
         progressDAO = new truyen.dao.ReadingProgressDAO();
         reviewDAO = new truyen.dao.ReviewDAO();
+        unlockDAO = new truyen.dao.UnlockDAO();
+        walletDAO = new truyen.dao.WalletDAO();
 
         String cfg = getServletContext().getInitParameter("pageSize");
         if (cfg != null) {
@@ -122,7 +127,11 @@ public class StoryServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if (action == null) {
-            action = "list";
+            if (request.getParameter("id") != null || request.getParameter("slug") != null) {
+                action = "detail";
+            } else {
+                action = "list";
+            }
         }
 
         String url;
@@ -351,6 +360,8 @@ public class StoryServlet extends HttpServlet {
             request.setAttribute("myRating", ratingDAO.findScore(me.getId(), id));
             request.setAttribute("following",
                     followDAO.isFollowing(me.getId(), story.getAuthorId()));
+            request.setAttribute("unlockedChapterIds",
+                    unlockDAO.findUnlockedChapterIds(me.getId(), id));
             truyen.model.ReadingProgress progress = progressDAO.find(me.getId(), id);
             if (progress != null && progress.getChapterId() > 0) {
                 request.setAttribute("resumeChapterId", progress.getChapterId());
@@ -410,13 +421,18 @@ public class StoryServlet extends HttpServlet {
          * trong dự án mang theo ba trường luôn bằng 0.
          */
         Map<Integer, int[]> stats = new LinkedHashMap<>();
-        int totalViews = 0, totalSaves = 0, totalComments = 0;
+        Map<Integer, Integer> storyIncomes = new LinkedHashMap<>();
+        int totalViews = 0, totalSaves = 0, totalComments = 0, totalEarnings = 0;
         for (Story s : stories) {
             int[] row = storyDAO.statsOf(s.getId());
             stats.put(s.getId(), row);
             totalViews += row[0];
             totalSaves += row[1];
             totalComments += row[2];
+
+            int inc = walletDAO.getStoryIncome(me.getId(), s.getId());
+            storyIncomes.put(s.getId(), inc);
+            totalEarnings += inc;
         }
 
         /*
@@ -437,13 +453,17 @@ public class StoryServlet extends HttpServlet {
             request.setAttribute("topStory", top);
             request.setAttribute("dViews", d);
             request.setAttribute("mViews", m);
+            List<Chapter> topChapters = chapterDAO.findByStory(top.getId());
+            request.setAttribute("topChapters", topChapters);
         }
 
         request.setAttribute("stories", stories);
         request.setAttribute("stats", stats);
+        request.setAttribute("storyIncomes", storyIncomes);
         request.setAttribute("totalViews", totalViews);
         request.setAttribute("totalSaves", totalSaves);
         request.setAttribute("totalComments", totalComments);
+        request.setAttribute("totalEarnings", totalEarnings);
         request.setAttribute("pageTitle", "Thống kê truyện của tôi");
         return "/WEB-INF/views/user/story/stats.jsp";
     }
@@ -520,6 +540,7 @@ public class StoryServlet extends HttpServlet {
                 .append("\"author\":").append(jsonEscape(s.getAuthorName())).append(",")
                 .append("\"cover\":").append(jsonEscape(s.getCoverUrl() != null ? s.getCoverUrl() : "")).append(",")
                 .append("\"chapters\":").append(s.getChapterCount()).append(",")
+                .append("\"views\":").append(s.getViewCount()).append(",")
                 .append("\"completed\":").append(s.isCompleted())
                 .append("}");
         }

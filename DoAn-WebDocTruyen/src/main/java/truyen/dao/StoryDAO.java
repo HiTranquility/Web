@@ -136,10 +136,12 @@ public class StoryDAO {
             params.add(tagSlug);
         }
         if (keyword != null && !keyword.isEmpty()) {
-            /* Tim theo TEN TRUYEN hoac TEN TAC GIA. */
-            sql.append("AND (s.title LIKE ? OR u.display_name LIKE ? OR u.username LIKE ?) ");
-            // Dau % nam trong GIA TRI, khong nam trong cau lenh -> van an toan
+            /* Tìm theo TÊN TRUYỆN, SLUG KHÔNG DẤU, TÊN TÁC GIẢ hoặc TÓM TẮT TRUYỆN. */
+            sql.append("AND (s.title LIKE ? OR s.slug LIKE ? OR u.display_name LIKE ? OR u.username LIKE ? OR s.description LIKE ?) ");
             String like = "%" + keyword + "%";
+            String slugLike = "%" + keyword.trim().toLowerCase().replaceAll("\\s+", "-") + "%";
+            params.add(like);
+            params.add(slugLike);
             params.add(like);
             params.add(like);
             params.add(like);
@@ -219,8 +221,12 @@ public class StoryDAO {
             params.add(tagSlug);
         }
         if (keyword != null && !keyword.isEmpty()) {
-            sql.append("AND (s.title LIKE ? OR u.display_name LIKE ? OR u.username LIKE ?) ");
+            /* Tìm theo TÊN TRUYỆN, SLUG KHÔNG DẤU, TÊN TÁC GIẢ hoặc TÓM TẮT TRUYỆN. */
+            sql.append("AND (s.title LIKE ? OR s.slug LIKE ? OR u.display_name LIKE ? OR u.username LIKE ? OR s.description LIKE ?) ");
             String like = "%" + keyword + "%";
+            String slugLike = "%" + keyword.trim().toLowerCase().replaceAll("\\s+", "-") + "%";
+            params.add(like);
+            params.add(slugLike);
             params.add(like);
             params.add(like);
             params.add(like);

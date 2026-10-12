@@ -65,8 +65,38 @@ public class Bookmark implements Serializable {
         return lastChapterId > 0;
     }
 
+    /**
+     * Phần trăm đã đọc (0-100%) để vẽ thanh tiến độ trên giao diện Tủ sách.
+     */
+    public int getProgressPercent() {
+        if (totalChapters <= 0 || lastChapterNo <= 0) {
+            return 0;
+        }
+        int pct = lastChapterNo * 100 / totalChapters;
+        return pct > 100 ? 100 : pct;
+    }
+
+    /**
+     * Mã trạng thái đọc phục vụ bộ lọc: "unread" | "reading" | "completed".
+     */
+    public String getReadingStatus() {
+        if (!isStarted()) return "unread";
+        if (lastChapterNo >= totalChapters && totalChapters > 0) return "completed";
+        return "reading";
+    }
+
+    /**
+     * Nhãn hiển thị trạng thái đọc trực quan.
+     */
+    public String getStatusBadge() {
+        if (!isStarted()) return "Chưa đọc";
+        if (lastChapterNo >= totalChapters && totalChapters > 0) return "Đã đọc xong";
+        return "Đang đọc";
+    }
+
     public String getInitial() {
         return (storyTitle == null || storyTitle.isEmpty())
                 ? "?" : storyTitle.substring(0, 1).toUpperCase();
     }
 }
+

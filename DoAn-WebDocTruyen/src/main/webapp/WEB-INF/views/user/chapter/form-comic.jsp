@@ -67,9 +67,10 @@
             <span>🔒 Đặt làm Chương VIP (Có tính phí xu để mở khoá)</span>
         </label>
         <div id="coinPriceWrapper" style="display:${chapter.vip ? 'flex' : 'none'}; align-items:center; gap:8px;">
-            <label for="coinPrice" style="margin-bottom:0; font-size:0.9rem">Giá mở khoá (Xu):</label>
-            <input type="number" id="coinPrice" name="coinPrice" min="1" max="10000" style="width:7em; padding:6px 10px;"
+            <label for="coinPrice" style="margin-bottom:0; font-size:0.9rem">Giá mở khoá (xu):</label>
+            <input type="number" id="coinPrice" name="coinPrice" min="1" max="10000" style="width:6.5em; padding:6px 10px;"
                    value="${chapter.coinPrice > 0 ? chapter.coinPrice : 10}">
+            <span class="muted small" style="font-size:0.82rem; opacity:0.8;">(khuyên dùng: 5 - 20 xu)</span>
         </div>
     </div>
 

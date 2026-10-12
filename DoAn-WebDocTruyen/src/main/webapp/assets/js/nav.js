@@ -81,7 +81,7 @@
     });
 
     // ========================================================================
-    // 3. TÌM KIẾM TỰ ĐỘNG GỢI Ý (LIVE SEARCH AUTOCOMPLETE)
+    // 3. TÌM KIẾM TỰ ĐỘNG GỢI Ý (LIVE SEARCH AUTOCOMPLETE & RECENT SEARCHES)
     // ========================================================================
     var searchInput = document.getElementById('nav-search-input');
     var suggestPanel = document.getElementById('nav-search-suggest');
@@ -91,6 +91,41 @@
     var timer = null;
     var currentQuery = '';
     var activeIdx = -1;
+
+    // Quản lý Lịch sử tìm kiếm gần đây trong localStorage
+    var STORAGE_KEY = 'truyen_recent_searches';
+    function getRecentSearches() {
+        try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveRecentSearch(q) {
+        if (!q || !q.trim()) return;
+        q = q.trim();
+        try {
+            var list = getRecentSearches().filter(function (item) { return item.toLowerCase() !== q.toLowerCase(); });
+            list.unshift(q);
+            if (list.length > 6) list = list.slice(0, 6);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {}
+    }
+
+    function removeRecentSearch(q) {
+        try {
+            var list = getRecentSearches().filter(function (item) { return item.toLowerCase() !== q.toLowerCase(); });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {}
+    }
+
+    function clearRecentSearches() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+    }
 
     function hideSuggest() {
         suggestPanel.style.display = 'none';
@@ -113,11 +148,114 @@
         return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // Hiển thị Lịch sử tìm kiếm gần đây và các Thể loại xu hướng khi ô tìm kiếm rỗng
+    function showDefaultSuggest() {
+        var recents = getRecentSearches();
+        var html = '';
+
+        if (recents.length > 0) {
+            html += '<div class="suggest-section-head">'
+                  +   '<span>Tìm kiếm gần đây</span>'
+                  +   '<button type="button" class="suggest-clear-btn" id="btn-clear-recent-searches">Xoá hết</button>'
+                  + '</div>';
+            recents.forEach(function (term) {
+                html += '<div class="suggest-recent-item" data-term="' + escapeHtml(term) + '">'
+                      +   '<div class="suggest-recent-left">'
+                      +     '<span class="suggest-recent-icon">🕒</span>'
+                      +     '<span class="suggest-recent-text">' + escapeHtml(term) + '</span>'
+                      +   '</div>'
+                      +   '<button type="button" class="suggest-recent-del" data-del="' + escapeHtml(term) + '" title="Xoá từ này" aria-label="Xoá">&times;</button>'
+                      + '</div>';
+            });
+        }
+
+        var trending = [
+            { name: 'Tiên hiệp', q: 'Tiên hiệp' },
+            { name: 'Kiếm hiệp', q: 'Kiếm hiệp' },
+            { name: 'Đô thị', q: 'Đô thị' },
+            { name: 'Huyền huyễn', q: 'Huyền huyễn' },
+            { name: 'Trọng sinh', q: 'Trọng sinh' },
+            { name: 'Truyện tranh', url: CTX + '/story?action=list&type=comic' },
+            { name: 'Ngôn tình', q: 'Ngôn tình' }
+        ];
+
+        html += '<div class="suggest-section-head"><span>Chủ đề nổi bật</span></div>';
+        html += '<div class="suggest-tags-wrap">';
+        trending.forEach(function (t) {
+            var href = t.url ? t.url : (CTX + '/story?action=list&q=' + encodeURIComponent(t.q));
+            html += '<a href="' + href + '" class="suggest-tag-chip" data-term="' + (t.q ? escapeHtml(t.q) : '') + '">' + escapeHtml(t.name) + '</a>';
+        });
+        html += '</div>';
+
+        suggestPanel.innerHTML = html;
+        suggestPanel.style.display = 'block';
+        searchInput.setAttribute('aria-expanded', 'true');
+        activeIdx = -1;
+
+        // Bắt sự kiện xoá lịch sử và click vào từ khoá gần đây
+        var clearBtn = suggestPanel.querySelector('#btn-clear-recent-searches');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                clearRecentSearches();
+                showDefaultSuggest();
+            });
+        }
+
+        suggestPanel.querySelectorAll('.suggest-recent-del').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var delTerm = this.getAttribute('data-del');
+                removeRecentSearch(delTerm);
+                showDefaultSuggest();
+            });
+        });
+
+        suggestPanel.querySelectorAll('.suggest-recent-item').forEach(function (item) {
+            item.addEventListener('click', function (e) {
+                if (e.target.closest('.suggest-recent-del')) return;
+                var term = this.getAttribute('data-term');
+                if (term) {
+                    saveRecentSearch(term);
+                    window.location.href = CTX + '/story?action=list&q=' + encodeURIComponent(term);
+                }
+            });
+        });
+
+        suggestPanel.querySelectorAll('.suggest-tag-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                var term = this.getAttribute('data-term');
+                if (term) saveRecentSearch(term);
+            });
+        });
+    }
+
+    searchInput.addEventListener('focus', function () {
+        var q = (this.value || '').trim();
+        if (q.length < 2) {
+            showDefaultSuggest();
+        }
+    });
+
+    searchInput.addEventListener('click', function () {
+        var q = (this.value || '').trim();
+        if (q.length < 2 && suggestPanel.style.display === 'none') {
+            showDefaultSuggest();
+        }
+    });
+
+    searchForm.addEventListener('submit', function () {
+        var q = (searchInput.value || '').trim();
+        if (q) saveRecentSearch(q);
+    });
+
     searchInput.addEventListener('input', function () {
         var q = (this.value || '').trim();
         if (timer) clearTimeout(timer);
         if (q.length < 2) {
-            hideSuggest();
+            showDefaultSuggest();
             return;
         }
 
@@ -141,11 +279,15 @@
                             : '<span class="suggest-thumb-icon">📖</span>';
                         var statusLabel = s.completed ? '<span class="suggest-status is-completed">Hoàn thành</span>' : '<span class="suggest-status">Đang ra</span>';
 
+                        var viewsLabel = (typeof s.views === 'number' && s.views > 0)
+                            ? ' · 👁️ ' + (s.views >= 1000 ? (s.views / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : s.views)
+                            : '';
+
                         html += '<a href="' + CTX + '/story?action=detail&id=' + s.id + '" class="suggest-item" data-index="' + idx + '" role="option">'
                               +   coverHtml
                               +   '<div class="suggest-info">'
                               +     '<div class="suggest-title">' + highlightText(s.title, q) + '</div>'
-                              +     '<div class="suggest-meta">' + escapeHtml(s.author) + ' · ' + s.chapters + ' chương · ' + statusLabel + '</div>'
+                              +     '<div class="suggest-meta">' + escapeHtml(s.author) + ' · ' + s.chapters + ' chương' + viewsLabel + ' · ' + statusLabel + '</div>'
                               +   '</div>'
                               + '</a>';
                     });
@@ -158,6 +300,13 @@
                     suggestPanel.style.display = 'block';
                     searchInput.setAttribute('aria-expanded', 'true');
                     activeIdx = -1;
+
+                    // Lưu từ khoá khi click vào kết quả
+                    suggestPanel.querySelectorAll('.suggest-item, .suggest-all-link').forEach(function (el) {
+                        el.addEventListener('click', function () {
+                            saveRecentSearch(q);
+                        });
+                    });
                 })
                 .catch(function () {
                     hideSuggest();

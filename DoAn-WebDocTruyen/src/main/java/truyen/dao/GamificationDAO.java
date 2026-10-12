@@ -83,11 +83,18 @@ public class GamificationDAO {
      * @return DailyCheckin nếu thành công, null nếu đã điểm danh rồi hoặc lỗi.
      */
     public DailyCheckin doCheckin(int userId) throws SQLException {
+        return doCheckin(userId, 1.0);
+    }
+
+    /**
+     * Thực hiện điểm danh hôm nay có áp dụng hệ số nhân cấp bậc / VIP độc giả.
+     */
+    public DailyCheckin doCheckin(int userId, double multiplier) throws SQLException {
         if (userId <= 0 || !DBConnection.isReady()) return null;
 
         // Kiểm tra xem hôm nay đã điểm danh chưa
         DailyCheckin existing = getTodayCheckin(userId);
-        if (existing != null) return existing;
+        if (existing != null) return null;
 
         LocalDate today = LocalDate.now();
         int prevStreak = 0;
@@ -108,7 +115,10 @@ public class GamificationDAO {
         }
 
         int newStreak = (prevStreak % 7) + 1;
-        int rewardCoins = STREAK_REWARDS[newStreak - 1];
+        int baseReward = STREAK_REWARDS[newStreak - 1];
+        if (multiplier < 1.0) multiplier = 1.0;
+        int rewardCoins = (int) Math.round(baseReward * multiplier);
+        if (rewardCoins < baseReward) rewardCoins = baseReward;
 
         String insertSql = "INSERT INTO daily_checkins (user_id, checkin_date, streak_days, reward_coins) "
                          + "VALUES (?, CURRENT_DATE(), ?, ?)";
@@ -140,7 +150,8 @@ public class GamificationDAO {
                 try (PreparedStatement ps = con.prepareStatement(logTxSql)) {
                     ps.setInt(1, userId);
                     ps.setInt(2, rewardCoins);
-                    ps.setString(3, "Thưởng điểm danh ngày " + newStreak + " (" + rewardCoins + " xu)");
+                    String bonusNote = multiplier > 1.0 ? " (x" + multiplier + " cấp bậc/VIP)" : "";
+                    ps.setString(3, "Thưởng điểm danh ngày " + newStreak + ": " + rewardCoins + " xu" + bonusNote);
                     ps.executeUpdate();
                 }
 

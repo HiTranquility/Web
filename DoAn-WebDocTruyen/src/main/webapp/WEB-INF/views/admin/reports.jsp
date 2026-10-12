@@ -72,7 +72,7 @@
                         </span>
                         <%-- Loại nặng tô đỏ: mỗi giờ chậm là thêm người nhìn thấy. --%>
                         <span class="pill report-cat ${r.severe ? 'pill-severe' : 'pill-muted'}">
-                            <c:if test="${r.severe}">🔴 </c:if>${r.categoryLabel}
+                            <c:if test="${r.severe}"><span class="badge-dot-severe" aria-hidden="true"></span></c:if>${r.categoryLabel}
                         </span>
                         <c:if test="${r.hasEvidence}">
                             <span class="pill pill-muted">📎 ${fn:length(r.evidences)} ảnh</span>

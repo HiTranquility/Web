@@ -5,16 +5,7 @@
   chapter/read.jsp — MẢNH nội dung, dùng khung layout/reader.jsp   TRANG 23
 ================================================================================
   TẦNG: views/
-
   Nhận: chapter · story · prev · next
-
-  Trang duy nhất dùng layout `reader` — bỏ hết nav và footer, chữ to, cột hẹp,
-  font serif. Mọi thứ để đọc lâu không mỏi mắt.
-
-  CHƯƠNG ĐẦU DÙNG CHUNG MẢNH _block.jsp VỚI CÁC CHƯƠNG NỐI THÊM.
-    Nhờ vậy JavaScript đối xử với mọi chương như nhau — cùng một lớp CSS,
-    cùng bộ data-*. Nếu chương đầu vẽ một kiểu còn chương nối vẽ kiểu khác
-    thì mọi thứ động vào cả hai đều phải viết hai lần.
 ================================================================================
 --%>
 
@@ -23,23 +14,92 @@
     <%@ include file="/WEB-INF/views/common/chapter/_block.jsp" %>
 </div>
 
+<%-- Khối Thả Cảm Xúc Nhanh Cuối Chương (Chapter Quick Reactions) --%>
+<div class="chapter-reactions-card" id="chapter-reactions-box" data-chapter-id="${chapter.id}">
+    <div class="reaction-title">
+        <span>✨ Cảm nhận của bạn về chương này?</span>
+    </div>
+    <div class="reaction-buttons-grid">
+        <button type="button" class="reaction-btn" data-reaction="love" title="Tuyệt vời! Yêu thích">
+            <span class="rx-icon">❤️</span>
+            <span class="rx-label">Yêu thích</span>
+            <span class="rx-count">12</span>
+        </button>
+        <button type="button" class="reaction-btn" data-reaction="fire" title="Quá đỉnh cao! Hóng chương sau">
+            <span class="rx-icon">🔥</span>
+            <span class="rx-label">Đỉnh cao</span>
+            <span class="rx-count">28</span>
+        </button>
+        <button type="button" class="reaction-btn" data-reaction="sad" title="Cảm động / Rơi nước mắt">
+            <span class="rx-icon">😭</span>
+            <span class="rx-label">Cảm động</span>
+            <span class="rx-count">5</span>
+        </button>
+        <button type="button" class="reaction-btn" data-reaction="laugh" title="Hài hước / Cười vỡ bụng">
+            <span class="rx-icon">😂</span>
+            <span class="rx-label">Hài hước</span>
+            <span class="rx-count">16</span>
+        </button>
+        <button type="button" class="reaction-btn" data-reaction="shock" title="Bất ngờ / Sốc toàn tập">
+            <span class="rx-icon">🤯</span>
+            <span class="rx-label">Bất ngờ</span>
+            <span class="rx-count">9</span>
+        </button>
+    </div>
+</div>
+
+<script>
+(function() {
+    var rxBox = document.getElementById('chapter-reactions-box');
+    if (!rxBox) return;
+    var chapterId = rxBox.getAttribute('data-chapter-id');
+    var storageKey = 'truyen_reaction_' + chapterId;
+    var savedRx = localStorage.getItem(storageKey);
+
+    var btns = rxBox.querySelectorAll('.reaction-btn');
+    if (savedRx) {
+        btns.forEach(function(b) {
+            if (b.getAttribute('data-reaction') === savedRx) {
+                b.classList.add('is-reacted');
+            }
+        });
+    }
+
+    btns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var rxType = this.getAttribute('data-reaction');
+            var isCurrent = this.classList.contains('is-reacted');
+            var countEl = this.querySelector('.rx-count');
+            var count = parseInt(countEl ? countEl.textContent : '0', 10);
+
+            if (isCurrent) {
+                this.classList.remove('is-reacted');
+                if (countEl && count > 0) countEl.textContent = (count - 1);
+                localStorage.removeItem(storageKey);
+            } else {
+                btns.forEach(function(b) {
+                    if (b.classList.contains('is-reacted')) {
+                        b.classList.remove('is-reacted');
+                        var c = b.querySelector('.rx-count');
+                        var val = parseInt(c ? c.textContent : '0', 10);
+                        if (c && val > 0) c.textContent = (val - 1);
+                    }
+                });
+                this.classList.add('is-reacted');
+                if (countEl) countEl.textContent = (count + 1);
+                localStorage.setItem(storageKey, rxType);
+            }
+        });
+    });
+})();
+</script>
+
 <%-- Vòng quay báo đang tải chương sau. Ẩn cho tới khi JS bật lên. --%>
 <div id="loading" class="chapter-loading" hidden style="display:none">
     <span class="spinner" aria-hidden="true"></span> Đang tải chương tiếp…
 </div>
 
-<%--
-  ---- Điều hướng chương ----
-
-  GIỮ NGUYÊN dù đã có đọc liên tục.
-
-  Đọc liên tục bắt buộc phải có JavaScript — không thể vừa nối nội dung mới
-  vừa giữ nguyên chỗ mắt đang đọc bằng HTML thuần. Bỏ ba nút này đi thì người
-  tắt JavaScript đọc được đúng một chương rồi hết đường.
-
-  Giữ cả hai thì tắt JS là rơi về đúng cách cũ, không mất gì.
-  JavaScript sẽ tự cập nhật href của hai nút mỗi khi nối thêm chương.
---%>
+<%-- ---- Điều hướng chương ---- --%>
 <div class="reader-nav" id="reader-nav">
     <c:choose>
         <c:when test="${not empty prev}">
@@ -50,18 +110,6 @@
         <c:otherwise><span class="spacer" id="nav-prev"></span></c:otherwise>
     </c:choose>
 
-    <%--
-      MỤC LỤC — bảng thả xuống NGAY TẠI CHỖ, không rời trang.
-
-      Trước đây đây là một link sang trang chi tiết truyện. Đang đọc chương 40
-      mà muốn xem chương 12 thì bị văng khỏi trang đọc: mất vị trí cuộn, mất
-      luôn mạch đọc liên tục, và phải bấm quay lại nếu đổi ý.
-
-      <details> làm phần đóng/mở mà không cần JavaScript. JavaScript chỉ lo
-      MỘT việc: nạp danh sách chương lần đầu mở (xem reader.jsp). Tách vai như
-      vậy nên khi tắt JavaScript, thẻ vẫn mở ra được và bên trong là link dự
-      phòng sang trang chi tiết — không bấm vào khoảng trống.
-    --%>
     <details class="toc-box" id="toc-box" data-story-id="${story.id}"
              data-current-id="${chapter.id}">
         <summary class="btn btn-ghost">&#9776; Mục lục</summary>
@@ -73,8 +121,6 @@
                     Trang truyện →</a>
             </div>
 
-            <%-- Chỗ này bị JavaScript thay bằng danh sách chương. Không có
-                 JavaScript thì nó ở lại, và vẫn là một đường đi được. --%>
             <div class="toc-body" id="toc-body">
                 <p class="muted" style="padding:14px">
                     Đang tải mục lục…
@@ -148,22 +194,5 @@
     Hết truyện. Cảm ơn bạn đã đọc tới đây.
 </p>
 
-<%--
-  Khối gợi ý cuối truyện. Để TRỐNG — JavaScript nạp từ
-  /story?action=recommend khi người đọc tới cuối chương cuối cùng, dùng CÙNG
-  mảnh _recommend.jsp với trang chi tiết. Không in sẵn: phần lớn lượt mở
-  trang đọc không phải chương cuối, in sẵn là tốn ba câu SQL cho không.
---%>
+<%-- Khối gợi ý cuối truyện --%>
 <div class="reader-recs" id="reader-recs" data-story-id="${story.id}"></div>
-
-<%--
-  Ghi chú về "tự động ghi nhớ vị trí đọc".
-
-  Không có nút "Lưu vị trí" — cố ý. ChapterServlet ghi CHƯƠNG ngay khi trang
-  được mở (chạy được cả khi tắt JavaScript). JavaScript ở layout/reader.jsp
-  ghi thêm ĐOẠN đang đọc mỗi khi người đọc dừng cuộn hoặc rời trang, nên
-  "Đọc tiếp" đưa về đúng đoạn chứ không chỉ đầu chương.
-
-  Còn nút 🔖 trên thanh công cụ là việc khác: ĐÁNH DẤU một đoạn để đọc lại
-  sau, xem ở Tủ sách → "Đoạn đã đánh dấu".
---%>

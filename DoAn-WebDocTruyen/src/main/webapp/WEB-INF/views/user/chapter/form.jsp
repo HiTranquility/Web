@@ -52,8 +52,9 @@
             <span>🔒 Đặt làm Chương VIP (Có tính phí xu để mở khoá)</span>
         </label>
         <div id="coinPriceWrapper" style="display:${chapter.vip ? 'flex' : 'none'}; align-items:center; gap:8px;">
-            <label for="coinPrice" style="margin-bottom:0; font-size:0.9rem">Giá mở khoá (Xu):</label>
-            <input type="number" id="coinPrice" name="coinPrice" min="1" max="10000" style="width:7em; padding:6px 10px;" value="${chapter.coinPrice > 0 ? chapter.coinPrice : 10}">
+            <label for="coinPrice" style="margin-bottom:0; font-size:0.9rem">Giá mở khoá (xu):</label>
+            <input type="number" id="coinPrice" name="coinPrice" min="1" max="10000" style="width:6.5em; padding:6px 10px;" value="${chapter.coinPrice > 0 ? chapter.coinPrice : 10}">
+            <span class="muted small" style="font-size:0.82rem; opacity:0.8;">(khuyên dùng: 5 - 20 xu)</span>
         </div>
     </div>
 
@@ -117,6 +118,14 @@
 
                 <span class="toolbar-sep"></span>
 
+                <%-- Tiện ích tìm kiếm & ghi chú bối cảnh --%>
+                <button type="button" class="tool-btn" id="toolFindReplace" title="Tìm kiếm & Thay thế từ trong chương (Ctrl+F)">
+                    <span>🔍</span> <span class="btn-label">Tìm &amp; Thay thế</span>
+                </button>
+                <button type="button" class="tool-btn" id="toolLore" title="Mở Sổ tay bối cảnh & Nhân vật">
+                    <span>📖</span> <span class="btn-label">Sổ tay bối cảnh</span>
+                </button>
+
                 <%-- Chuẩn hoá & dọn dẹp văn bản --%>
                 <button type="button" class="tool-btn" id="toolClean" title="Xóa khoảng trắng thừa và chuẩn hóa dòng trống">
                     <span>🧹</span> <span class="btn-label">Làm sạch</span>
@@ -130,6 +139,45 @@
                 <button type="button" class="tool-btn" id="toolZen" title="Chế độ toàn màn hình không phân tâm (Zen Mode)">
                     <span>⛶</span> <span class="btn-label">Tập trung</span>
                 </button>
+            </div>
+        </div>
+
+        <%-- THANH TÌM KIẾM & THAY THẾ --%>
+        <div class="find-replace-bar" id="findReplaceBar" style="display:none;">
+            <div class="frb-inputs">
+                <div class="frb-field">
+                    <span class="frb-icon">🔍</span>
+                    <input type="text" id="findInput" placeholder="Tìm kiếm từ hoặc cụm từ..." autocomplete="off">
+                    <span class="frb-match-count" id="matchCount">0 kết quả</span>
+                </div>
+                <div class="frb-field">
+                    <span class="frb-icon">✏️</span>
+                    <input type="text" id="replaceInput" placeholder="Thay thế bằng..." autocomplete="off">
+                </div>
+            </div>
+            <div class="frb-actions">
+                <button type="button" class="btn btn-sm btn-ghost" id="btnFindNext" title="Tìm kết quả tiếp theo">Tiếp theo ↓</button>
+                <button type="button" class="btn btn-sm btn-ghost" id="btnFindPrev" title="Tìm kết quả trước">Trước ↑</button>
+                <button type="button" class="btn btn-sm btn-secondary" id="btnReplace">Thay thế</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btnReplaceAll">Thay thế tất cả</button>
+                <button type="button" class="btn btn-sm btn-ghost frb-close" id="btnCloseFind" title="Đóng thanh tìm kiếm">✕</button>
+            </div>
+        </div>
+
+        <%-- SỔ TAY BỐI CẢNH & NHÂN VẬT (LORE NOTES) --%>
+        <div class="lore-drawer" id="loreDrawer" style="display:none;">
+            <div class="lore-header">
+                <div class="lore-title">
+                    <span>📖 Sổ tay bối cảnh &amp; Nhân vật tác phẩm</span>
+                    <small>Ghi chú riêng của bạn về nhân vật, chiêu thức, bối cảnh cho bộ truyện này (tự động lưu vào máy)</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-ghost" id="btnCloseLore">✕ Đóng</button>
+            </div>
+            <div class="lore-body">
+                <textarea id="loreNotesArea" placeholder="• Nhân vật chính: Lâm Phong (Hắc Kiếm, Trúc Cơ kỳ)&#10;• Thế lực: Vạn Kiếm Tông, Ma Tộc Tây Vực&#10;• Cảnh giới: Luyện Khí → Trúc Cơ → Kim Đan → Nguyên Anh..."></textarea>
+            </div>
+            <div class="lore-footer">
+                <span id="loreSaveStatus" style="font-size:0.8rem; color:var(--text-mut);">💾 Đã đồng bộ vào bộ nhớ sáng tác</span>
             </div>
         </div>
 
@@ -593,7 +641,220 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {}
     }
 
-    // 8. CLIENT-SIDE FORM VALIDATION
+    // 8. TÍNH NĂNG TÌM KIẾM & THAY THẾ (FIND & REPLACE)
+    var toolFindReplace = document.getElementById('toolFindReplace');
+    var findReplaceBar = document.getElementById('findReplaceBar');
+    var findInput = document.getElementById('findInput');
+    var replaceInput = document.getElementById('replaceInput');
+    var matchCountEl = document.getElementById('matchCount');
+    var btnFindNext = document.getElementById('btnFindNext');
+    var btnFindPrev = document.getElementById('btnFindPrev');
+    var btnReplace = document.getElementById('btnReplace');
+    var btnReplaceAll = document.getElementById('btnReplaceAll');
+    var btnCloseFind = document.getElementById('btnCloseFind');
+
+    function toggleFindReplace() {
+        if (!findReplaceBar) return;
+        var isVisible = findReplaceBar.style.display !== 'none';
+        if (isVisible) {
+            findReplaceBar.style.display = 'none';
+        } else {
+            findReplaceBar.style.display = 'flex';
+            if (findInput) {
+                findInput.focus();
+                findInput.select();
+                updateMatches();
+            }
+        }
+    }
+
+    if (toolFindReplace) {
+        toolFindReplace.addEventListener('click', toggleFindReplace);
+    }
+    if (btnCloseFind) {
+        btnCloseFind.addEventListener('click', function () {
+            if (findReplaceBar) findReplaceBar.style.display = 'none';
+            if (contentArea) contentArea.focus();
+        });
+    }
+
+    // Phím tắt Ctrl+F / Ctrl+H
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+            e.preventDefault();
+            if (findReplaceBar && findReplaceBar.style.display === 'none') {
+                toggleFindReplace();
+            } else if (findInput) {
+                findInput.focus();
+                findInput.select();
+            }
+        } else if (e.key === 'Escape' && findReplaceBar && findReplaceBar.style.display !== 'none') {
+            findReplaceBar.style.display = 'none';
+            if (contentArea) contentArea.focus();
+        }
+    });
+
+    var currentMatchIndex = -1;
+    var matches = [];
+
+    function escapeReg(str) {
+        return str.replace(/[.*+?^()|[\]\\]/g, '\\$&').replace(/\$/g, '\\$').replace(/\{/g, '\\{').replace(/\}/g, '\\}');
+    }
+
+    function updateMatches() {
+        matches = [];
+        currentMatchIndex = -1;
+        if (!contentArea || !findInput || !matchCountEl) return;
+        var query = findInput.value;
+        if (!query) {
+            matchCountEl.textContent = '0 kết quả';
+            return;
+        }
+
+        var text = contentArea.value;
+        var regex = new RegExp(escapeReg(query), 'gi');
+        var match;
+        while ((match = regex.exec(text)) !== null) {
+            matches.push({ start: match.index, end: match.index + match[0].length });
+        }
+
+        matchCountEl.textContent = matches.length + ' kết quả';
+        if (matches.length > 0) {
+            currentMatchIndex = 0;
+            highlightMatch(currentMatchIndex);
+        }
+    }
+
+    function highlightMatch(idx) {
+        if (idx < 0 || idx >= matches.length || !contentArea) return;
+        var m = matches[idx];
+        contentArea.focus();
+        contentArea.setSelectionRange(m.start, m.end);
+        if (matchCountEl) {
+            matchCountEl.textContent = (idx + 1) + ' / ' + matches.length;
+        }
+    }
+
+    if (findInput) {
+        findInput.addEventListener('input', updateMatches);
+    }
+
+    if (btnFindNext) {
+        btnFindNext.addEventListener('click', function () {
+            if (matches.length === 0) updateMatches();
+            if (matches.length > 0) {
+                currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+                highlightMatch(currentMatchIndex);
+            }
+        });
+    }
+
+    if (btnFindPrev) {
+        btnFindPrev.addEventListener('click', function () {
+            if (matches.length === 0) updateMatches();
+            if (matches.length > 0) {
+                currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+                highlightMatch(currentMatchIndex);
+            }
+        });
+    }
+
+    if (btnReplace) {
+        btnReplace.addEventListener('click', function () {
+            if (!contentArea || !findInput || !replaceInput) return;
+            var findVal = findInput.value;
+            var replVal = replaceInput.value;
+            if (!findVal) return;
+
+            var start = contentArea.selectionStart;
+            var end = contentArea.selectionEnd;
+            var selected = contentArea.value.substring(start, end);
+
+            if (selected.toLowerCase() === findVal.toLowerCase()) {
+                contentArea.setRangeText(replVal, start, end, 'end');
+                updateStats();
+                triggerAutoSave();
+                updateMatches();
+            } else {
+                if (btnFindNext) btnFindNext.click();
+            }
+        });
+    }
+
+    if (btnReplaceAll) {
+        btnReplaceAll.addEventListener('click', function () {
+            if (!contentArea || !findInput || !replaceInput) return;
+            var findVal = findInput.value;
+            var replVal = replaceInput.value;
+            if (!findVal) return;
+
+            var text = contentArea.value;
+            var regex = new RegExp(escapeReg(findVal), 'gi');
+            var count = (text.match(regex) || []).length;
+            if (count === 0) {
+                alert('Không tìm thấy từ "' + findVal + '" để thay thế.');
+                return;
+            }
+
+            contentArea.value = text.replace(regex, replVal);
+            updateStats();
+            triggerAutoSave();
+            updateMatches();
+            alert('✓ Đã thay thế thành công ' + count + ' vị trí!');
+        });
+    }
+
+    // 9. TÍNH NĂNG SỔ TAY BỐI CẢNH & NHÂN VẬT (LORE NOTES)
+    var toolLore = document.getElementById('toolLore');
+    var loreDrawer = document.getElementById('loreDrawer');
+    var loreNotesArea = document.getElementById('loreNotesArea');
+    var btnCloseLore = document.getElementById('btnCloseLore');
+    var loreSaveStatus = document.getElementById('loreSaveStatus');
+    var loreStorageKey = 'truyen_lore_notes_' + storyId;
+
+    if (toolLore && loreDrawer) {
+        toolLore.addEventListener('click', function () {
+            var isVis = loreDrawer.style.display !== 'none';
+            loreDrawer.style.display = isVis ? 'none' : 'block';
+            if (!isVis && loreNotesArea) {
+                loreNotesArea.focus();
+            }
+        });
+    }
+    if (btnCloseLore && loreDrawer) {
+        btnCloseLore.addEventListener('click', function () {
+            loreDrawer.style.display = 'none';
+        });
+    }
+
+    // Nạp ghi chú bối cảnh cũ nếu có
+    try {
+        var savedLore = localStorage.getItem(loreStorageKey);
+        if (savedLore && loreNotesArea) {
+            loreNotesArea.value = savedLore;
+        }
+    } catch (e) {}
+
+    // Tự động lưu ghi chú bối cảnh khi gõ
+    var loreTimer = null;
+    if (loreNotesArea) {
+        loreNotesArea.addEventListener('input', function () {
+            clearTimeout(loreTimer);
+            if (loreSaveStatus) loreSaveStatus.textContent = '⏳ Đang lưu...';
+            loreTimer = setTimeout(function () {
+                try {
+                    localStorage.setItem(loreStorageKey, loreNotesArea.value);
+                    if (loreSaveStatus) {
+                        var now = new Date();
+                        var timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        loreSaveStatus.textContent = '💾 Đã lưu sổ tay lúc ' + timeStr;
+                    }
+                } catch (e) {}
+            }, 800);
+        });
+    }
+
+    // 10. CLIENT-SIDE FORM VALIDATION
     function validateForm() {
         if (!titleInput || !contentArea) return true;
         var t = titleInput.value.trim();

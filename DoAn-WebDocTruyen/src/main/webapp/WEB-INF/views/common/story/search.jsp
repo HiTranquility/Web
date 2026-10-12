@@ -49,7 +49,7 @@
 
 <c:choose>
     <c:when test="${not empty results}">
-        <div class="hit-list">
+        <div class="hit-list" data-keyword="<c:out value='${keyword}'/>">
             <c:forEach var="ch" items="${results}">
                 <a class="hit"
                    href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${ch.id}">
@@ -72,6 +72,40 @@
             Không thấy thứ cần tìm thì thử một cụm từ dài hơn — cụm dài lọc
             chính xác hơn một từ đơn.
         </p>
+
+        <script>
+        (function() {
+            var hitList = document.querySelector('.hit-list');
+            var kw = hitList ? hitList.getAttribute('data-keyword') : '';
+            if (!kw || !kw.trim()) return;
+            var terms = kw.trim().split(/\s+/).filter(function(t) { return t.length > 0; });
+            if (!terms.length) return;
+            // Escape regex dac biet
+            var specials = ['-', '[', ']', '/', '{', '}', '(', ')', '*', '+', '?', '.', '\\', '^', '$', '|'];
+            var patternStr = terms.map(function(t) {
+                var escaped = '';
+                for (var i = 0; i < t.length; i++) {
+                    var ch = t.charAt(i);
+                    if (specials.indexOf(ch) !== -1) escaped += '\\';
+                    escaped += ch;
+                }
+                return escaped;
+            }).join('|');
+            var regex = new RegExp('(' + patternStr + ')', 'gi');
+
+            var snippets = document.querySelectorAll('.hit-snippet');
+            snippets.forEach(function(el) {
+                var text = el.textContent;
+                var safeHtml = text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+                el.innerHTML = safeHtml.replace(regex, '<mark class="hit-highlight">$1</mark>');
+            });
+        })();
+        </script>
     </c:when>
 
     <c:when test="${not empty keyword}">
@@ -96,3 +130,4 @@
         <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
     </c:otherwise>
 </c:choose>
+

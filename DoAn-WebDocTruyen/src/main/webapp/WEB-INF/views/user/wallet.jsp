@@ -134,6 +134,20 @@
                         <div class="pkg-price">500.000 ₫</div>
                         <div class="pkg-select-indicator">Đã chọn</div>
                     </div>
+
+                    <%-- Gói 6 - Tuỳ Chọn --%>
+                    <div class="package-card is-custom" id="custom-package-card" data-pkg="custom" data-coins="100" data-base="100" data-bonus="0" data-price="40000" data-name="Gói Tuỳ Chọn">
+                        <div class="pkg-top">
+                            <span class="pkg-name">Tuỳ Chọn Số Xu</span>
+                        </div>
+                        <div class="pkg-coin-amount" style="gap:4px;">
+                            <input type="number" id="custom-coins-input" min="10" max="2000" step="10" value="100" style="width:78px; text-align:center; padding:3px 4px; font-weight:800; font-size:1.1rem; background:rgba(255,255,255,0.08); border:1px solid rgba(245,158,11,0.5); border-radius:6px; color:#f59e0b;" onclick="event.stopPropagation();">
+                            <span class="coin-text">xu</span>
+                        </div>
+                        <div class="pkg-bonus" style="color:var(--text-muted); font-size:0.75rem;">Tỷ giá: 400 ₫ / xu</div>
+                        <div class="pkg-price" id="custom-pkg-price">40.000 ₫</div>
+                        <div class="pkg-select-indicator">Đã chọn</div>
+                    </div>
                 </div>
             </div>
 
@@ -222,89 +236,73 @@
                         <span class="cr-val price-total" id="checkout-total-price">50.000 ₫</span>
                     </div>
 
-                    <%-- QR Code Mockup Box --%>
+                    <%-- Real Dynamic VietQR Box --%>
                     <div class="qr-mockup-wrap">
+                        <div class="qr-timer-pill" id="qr-timer-pill">⏳ Hết hạn sau: <b id="qr-countdown">14:59</b></div>
                         <div class="qr-frame">
-                            <svg class="qr-svg" viewBox="0 0 160 160" width="140" height="140">
-                                <rect width="160" height="160" fill="#ffffff" rx="8"/>
-                                <%-- Corner 1 --%>
-                                <rect x="15" y="15" width="35" height="35" fill="#1e293b" rx="4"/>
-                                <rect x="22" y="22" width="21" height="21" fill="#ffffff" rx="2"/>
-                                <rect x="27" y="27" width="11" height="11" fill="#1e293b" rx="1"/>
-                                <%-- Corner 2 --%>
-                                <rect x="110" y="15" width="35" height="35" fill="#1e293b" rx="4"/>
-                                <rect x="117" y="22" width="21" height="21" fill="#ffffff" rx="2"/>
-                                <rect x="122" y="27" width="11" height="11" fill="#1e293b" rx="1"/>
-                                <%-- Corner 3 --%>
-                                <rect x="15" y="110" width="35" height="35" fill="#1e293b" rx="4"/>
-                                <rect x="22" y="117" width="21" height="21" fill="#ffffff" rx="2"/>
-                                <rect x="27" y="122" width="11" height="11" fill="#1e293b" rx="1"/>
-                                <%-- QR Matrix Dots Pattern --%>
-                                <rect x="60" y="20" width="10" height="10" fill="#1e293b"/>
-                                <rect x="75" y="20" width="10" height="10" fill="#1e293b"/>
-                                <rect x="90" y="20" width="10" height="10" fill="#1e293b"/>
-                                <rect x="60" y="35" width="10" height="10" fill="#1e293b"/>
-                                <rect x="75" y="45" width="10" height="10" fill="#1e293b"/>
-                                <rect x="90" y="35" width="10" height="10" fill="#1e293b"/>
-                                <rect x="20" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="35" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="50" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="65" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="80" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="95" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="110" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="130" y="60" width="10" height="10" fill="#1e293b"/>
-                                <rect x="20" y="75" width="10" height="10" fill="#1e293b"/>
-                                <rect x="40" y="80" width="10" height="10" fill="#1e293b"/>
-                                <rect x="60" y="75" width="10" height="10" fill="#1e293b"/>
-                                <rect x="75" y="75" width="10" height="10" fill="#1e293b"/>
-                                <rect x="90" y="75" width="10" height="10" fill="#1e293b"/>
-                                <rect x="110" y="75" width="10" height="10" fill="#1e293b"/>
-                                <rect x="130" y="80" width="10" height="10" fill="#1e293b"/>
-                                <rect x="20" y="95" width="10" height="10" fill="#1e293b"/>
-                                <rect x="35" y="95" width="10" height="10" fill="#1e293b"/>
-                                <rect x="60" y="95" width="10" height="10" fill="#1e293b"/>
-                                <rect x="80" y="95" width="10" height="10" fill="#1e293b"/>
-                                <rect x="100" y="95" width="10" height="10" fill="#1e293b"/>
-                                <rect x="120" y="95" width="10" height="10" fill="#1e293b"/>
-                                <rect x="60" y="115" width="10" height="10" fill="#1e293b"/>
-                                <rect x="75" y="125" width="10" height="10" fill="#1e293b"/>
-                                <rect x="90" y="115" width="10" height="10" fill="#1e293b"/>
-                                <rect x="105" y="125" width="10" height="10" fill="#1e293b"/>
-                                <rect x="125" y="115" width="10" height="10" fill="#1e293b"/>
-                                <rect x="60" y="135" width="10" height="10" fill="#1e293b"/>
-                                <rect x="75" y="135" width="10" height="10" fill="#1e293b"/>
-                                <rect x="90" y="135" width="10" height="10" fill="#1e293b"/>
-                                <rect x="110" y="135" width="10" height="10" fill="#1e293b"/>
-                                <rect x="130" y="135" width="10" height="10" fill="#1e293b"/>
-                                <%-- Center logo icon --%>
-                                <circle cx="80" cy="80" r="14" fill="#f59e0b"/>
-                                <text x="80" y="85" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">🪙</text>
-                            </svg>
+                            <img id="dynamic-qr-img"
+                                 src="https://img.vietqr.io/image/MB-888899992026-compact2.png?amount=50000&addInfo=NAPXU%20PKG50K%20ORD-9428&accountName=DOCTRUYEN%20PLATFORM"
+                                 alt="Mã QR Chuyển khoản VietQR"
+                                 loading="lazy"
+                                 style="width:160px; height:auto; border-radius:6px; display:block; background:#fff; margin:0 auto;"
+                                 onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=NAPXU_PKG50K';">
                         </div>
                         <div class="qr-info">
-                            <span class="qr-bank-name" id="qr-method-name">VNPAY QR</span>
-                            <span class="qr-hint">Quét mã bằng ứng dụng hỗ trợ để thanh toán tức thì</span>
-                            <span class="qr-memo" id="qr-memo-text">ND: NAPXU PKG50K ORD-9428</span>
+                            <span class="qr-bank-name" id="qr-method-name">Chuyển khoản VietQR 24/7</span>
+                            <span class="qr-hint">Mở app Ngân hàng hoặc MoMo quét mã QR để thanh toán tự động</span>
                         </div>
                     </div>
 
-                    <%-- Form Xác Nhận Thanh Toán (Simulated Instant Top-up) --%>
+                    <%-- Chi tiết chuyển khoản có nút Sao chép --%>
+                    <div class="bank-transfer-details" id="bank-transfer-details">
+                        <div class="btd-row">
+                            <span class="btd-label">Ngân hàng:</span>
+                            <span class="btd-val"><b>MB Bank (Quân Đội)</b></span>
+                        </div>
+                        <div class="btd-row">
+                            <span class="btd-label">Số tài khoản:</span>
+                            <span class="btd-val">
+                                <b id="copy-acc-num">888899992026</b>
+                                <button type="button" class="btn-copy-chip" onclick="copyText('copy-acc-num', 'Số tài khoản')">📋 Sao chép</button>
+                            </span>
+                        </div>
+                        <div class="btd-row">
+                            <span class="btd-label">Chủ tài khoản:</span>
+                            <span class="btd-val"><b>DOCTRUYEN PLATFORM</b></span>
+                        </div>
+                        <div class="btd-row">
+                            <span class="btd-label">Số tiền:</span>
+                            <span class="btd-val">
+                                <b id="copy-amount-val" style="color:#f59e0b;">50.000 ₫</b>
+                                <button type="button" class="btn-copy-chip" onclick="copyText('copy-amount-val', 'Số tiền')">📋 Sao chép</button>
+                            </span>
+                        </div>
+                        <div class="btd-row">
+                            <span class="btd-label">Nội dung CK:</span>
+                            <span class="btd-val">
+                                <b id="copy-memo-val" style="color:#38bdf8;">NAPXU PKG50K ORD-9428</b>
+                                <button type="button" class="btn-copy-chip" onclick="copyText('copy-memo-val', 'Nội dung chuyển khoản')">📋 Sao chép</button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <%-- Form Xác Nhận Thanh Toán --%>
                     <form action="${pageContext.request.contextPath}/wallet" method="post" id="wallet-buy-form">
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="buy">
                         <input type="hidden" name="packageId" id="input-package-id" value="pkg_50k">
-                        <input type="hidden" name="paymentMethod" id="input-payment-method" value="vnpay">
+                        <input type="hidden" name="coins" id="input-coins" value="0">
+                        <input type="hidden" name="paymentMethod" id="input-payment-method" value="bank_transfer">
 
                         <button type="submit" class="btn-wallet-confirm" id="btn-submit-topup">
-                            <span class="btn-text">🚀 Xác Nhận Nạp Xu (Mô Phỏng)</span>
+                            <span class="btn-text">✅ Tôi Đã Chuyển Khoản — Xác Nhận Nạp Xu</span>
                         </button>
                     </form>
 
                     <div class="checkout-disclaimer">
                         <span class="disclaimer-icon">💡</span>
                         <div class="disclaimer-text">
-                            <b>Môi trường thử nghiệm đồ án:</b> Giao dịch thanh toán được mô phỏng an toàn, hệ thống tự động cộng xu ảo ngay lập tức vào ví mà không phát sinh chi phí tiền thật. Giới hạn 3 lần / 2.000 xu mỗi ngày.
+                            <b>Hệ thống tự động:</b> Sau khi quét mã QR thành công, bạn nhấn nút <i>"Tôi Đã Chuyển Khoản"</i> để hệ thống đối soát giao dịch và cộng xu vào tài khoản ngay lập tức.
                         </div>
                     </div>
                 </div>
@@ -443,6 +441,7 @@
     var packageCards = document.querySelectorAll('.package-card');
     var methodCards = document.querySelectorAll('.payment-method-card');
     var inputPkg = document.getElementById('input-package-id');
+    var inputCoins = document.getElementById('input-coins');
     var inputMethod = document.getElementById('input-payment-method');
 
     var textPkgName = document.getElementById('checkout-pkg-name');
@@ -454,12 +453,46 @@
     var qrMemoText = document.getElementById('qr-memo-text');
     var orderCodeDisplay = document.getElementById('order-code-display');
 
+    var customCard = document.getElementById('custom-package-card');
+    var customCoinsInput = document.getElementById('custom-coins-input');
+    var customPkgPrice = document.getElementById('custom-pkg-price');
+
     // Tạo mã đơn ngẫu nhiên
     var randCode = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
     if (orderCodeDisplay) orderCodeDisplay.textContent = randCode;
 
     function formatNumber(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function syncCustomData() {
+        if (!customCoinsInput) return;
+        var c = parseInt(customCoinsInput.value, 10) || 10;
+        if (c < 1) c = 1;
+        if (c > 2000) c = 2000;
+        var p = c * 400;
+        if (customPkgPrice) customPkgPrice.textContent = formatNumber(p) + ' ₫';
+        if (customCard) {
+            customCard.setAttribute('data-coins', c);
+            customCard.setAttribute('data-base', c);
+            customCard.setAttribute('data-price', p);
+            customCard.setAttribute('data-name', 'Gói Tuỳ Chọn (' + c + ' xu)');
+        }
+        if (customCard && customCard.classList.contains('is-selected')) {
+            if (inputPkg) inputPkg.value = 'custom';
+            if (inputCoins) inputCoins.value = c;
+            if (textPkgName) textPkgName.textContent = 'Gói Tuỳ Chọn (' + c + ' xu)';
+            if (textBaseCoins) textBaseCoins.textContent = formatNumber(c) + ' xu';
+            if (textBonusCoins) textBonusCoins.textContent = '+0 xu';
+            if (textTotalCoins) textTotalCoins.textContent = formatNumber(c) + ' xu';
+            if (textTotalPrice) textTotalPrice.textContent = formatNumber(p) + ' ₫';
+            updateQrMemo();
+        }
+    }
+
+    if (customCoinsInput) {
+        customCoinsInput.addEventListener('input', syncCustomData);
+        customCoinsInput.addEventListener('change', syncCustomData);
     }
 
     // Xử lý chọn gói
@@ -475,12 +508,21 @@
             var totalCoins = parseInt(card.getAttribute('data-coins'), 10);
             var price = parseInt(card.getAttribute('data-price'), 10);
 
-            if (inputPkg) inputPkg.value = pkgId;
-            if (textPkgName) textPkgName.textContent = pkgName;
-            if (textBaseCoins) textBaseCoins.textContent = formatNumber(baseCoins) + ' xu';
-            if (textBonusCoins) textBonusCoins.textContent = '+' + formatNumber(bonusCoins) + ' xu';
-            if (textTotalCoins) textTotalCoins.textContent = formatNumber(totalCoins) + ' xu';
-            if (textTotalPrice) textTotalPrice.textContent = formatNumber(price) + ' ₫';
+            if (pkgId === 'custom') {
+                if (inputPkg) inputPkg.value = 'custom';
+                if (inputCoins && customCoinsInput) inputCoins.value = customCoinsInput.value;
+                currentPrice = parseInt(customCoinsInput.value, 10) * 400 || 40000;
+                syncCustomData();
+            } else {
+                currentPrice = price;
+                if (inputPkg) inputPkg.value = pkgId;
+                if (inputCoins) inputCoins.value = '0';
+                if (textPkgName) textPkgName.textContent = pkgName;
+                if (textBaseCoins) textBaseCoins.textContent = formatNumber(baseCoins) + ' xu';
+                if (textBonusCoins) textBonusCoins.textContent = '+' + formatNumber(bonusCoins) + ' xu';
+                if (textTotalCoins) textTotalCoins.textContent = formatNumber(totalCoins) + ' xu';
+                if (textTotalPrice) textTotalPrice.textContent = formatNumber(price) + ' ₫';
+            }
 
             updateQrMemo();
         });
@@ -504,11 +546,63 @@
         });
     });
 
+    var currentPrice = 50000;
+
     function updateQrMemo() {
-        if (!qrMemoText) return;
         var curPkg = inputPkg ? inputPkg.value.toUpperCase().replace('_', '') : 'PKG50K';
-        qrMemoText.textContent = 'ND: NAPXU ' + curPkg + ' ' + randCode;
+        if (curPkg === 'CUSTOM' && inputCoins && parseInt(inputCoins.value, 10) > 0) {
+            curPkg = inputCoins.value + 'XU';
+        }
+        var memo = 'NAPXU ' + curPkg + ' ' + randCode;
+        if (qrMemoText) qrMemoText.textContent = 'ND: ' + memo;
+
+        var copyMemoEl = document.getElementById('copy-memo-val');
+        if (copyMemoEl) copyMemoEl.textContent = memo;
+
+        var copyAmtEl = document.getElementById('copy-amount-val');
+        if (copyAmtEl) copyAmtEl.textContent = formatNumber(currentPrice) + ' ₫';
+
+        // Tạo URL ảnh VietQR chuẩn Napas 247
+        var qrImg = document.getElementById('dynamic-qr-img');
+        if (qrImg) {
+            var qrUrl = 'https://img.vietqr.io/image/MB-888899992026-compact2.png?amount='
+                      + currentPrice + '&addInfo=' + encodeURIComponent(memo)
+                      + '&accountName=DOCTRUYEN%20PLATFORM';
+            qrImg.src = qrUrl;
+        }
     }
+
+    // Đếm ngược 15 phút
+    var totalSeconds = 15 * 60;
+    var timerEl = document.getElementById('qr-countdown');
+    if (timerEl) {
+        setInterval(function() {
+            if (totalSeconds <= 0) {
+                timerEl.textContent = '00:00 (Hết hạn)';
+                return;
+            }
+            totalSeconds--;
+            var m = Math.floor(totalSeconds / 60);
+            var s = totalSeconds % 60;
+            timerEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        }, 1000);
+    }
+
+    window.copyText = function(elId, label) {
+        var el = document.getElementById(elId);
+        if (!el) return;
+        var text = el.innerText || el.textContent;
+        text = text.replace(/[^0-9a-zA-Z\s_-]/g, '').trim(); // lọc ký tự tiền tệ nếu có
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('✅ Đã sao chép ' + label + ': ' + text);
+            }).catch(function() {
+                prompt('Sao chép ' + label + ':', text);
+            });
+        } else {
+            prompt('Sao chép ' + label + ':', text);
+        }
+    };
 
     updateQrMemo();
 })();

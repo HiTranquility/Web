@@ -95,6 +95,10 @@
                     title="${bookmarked ? 'Đã lưu vào tủ sách — bấm để bỏ lưu' : 'Lưu truyện vào tủ sách'}">📚</button>
             <button type="button" class="tool-btn" id="btn-mark-para"
                     title="Đánh dấu ${story.unitLabel} đang đọc (B)" aria-label="Đánh dấu ${story.unitLabel} đang đọc">🔖</button>
+            <button type="button" class="tool-btn text-only" id="btn-highlights-drawer"
+                    title="Xem các đoạn tô màu & trích dẫn (H)" aria-label="Tô màu & Trích dẫn">🖍️<span class="tool-badge-pill" id="hl-counter-badge" style="display:none">0</span></button>
+            <button type="button" class="tool-btn text-only" id="btn-toggle-hl-visibility"
+                    title="Ẩn / Hiện màu tô đoạn văn (Chế độ đọc sạch sẽ - Alt+H)" aria-label="Ẩn hiện màu tô">👁️</button>
         </div>
 
         <%--
@@ -104,8 +108,9 @@
           <body>, CSS lo phần còn lại, lựa chọn nhớ trong localStorage.
         --%>
         <div class="tool-group comic-only" role="group" aria-label="Bề rộng trang">
-            <button type="button" class="tool-btn" data-set="cwidth" data-val="fit" title="Vừa khung đọc">▭</button>
-            <button type="button" class="tool-btn" data-set="cwidth" data-val="wide" title="Rộng hết màn hình">⬌</button>
+            <button type="button" class="tool-btn" data-set="cwidth" data-val="fit" title="Vừa khung đọc (760px)">▭</button>
+            <button type="button" class="tool-btn" data-set="cwidth" data-val="wide" title="Rộng (1100px)">⬌</button>
+            <button type="button" class="tool-btn" data-set="cwidth" data-val="full" title="Toàn màn hình (100%)">⛶</button>
         </div>
 
         <div class="tool-group text-only" role="group" aria-label="Cỡ chữ">
@@ -132,9 +137,11 @@
         </div>
 
         <%--
-          Bật / tắt đọc liên tục, Giọng đọc TTS, Mưa thư giãn, In chương và Phím tắt trợ giúp.
+          Bật / tắt đọc liên tục, Tự cuộn trang, Giọng đọc TTS, Mưa thư giãn, In chương và Phím tắt trợ giúp.
         --%>
         <div class="tool-group">
+            <button type="button" class="tool-btn" id="toggle-autoscroll"
+                    title="Tự động cuộn trang (C)" aria-label="Tự động cuộn">⚡📜</button>
             <button type="button" class="tool-btn text-only" id="toggle-tts"
                     title="Đọc truyện bằng giọng nói (Text-to-Speech)" aria-label="Đọc giọng nói">🎧</button>
             <button type="button" class="tool-btn" id="toggle-ambient"
@@ -237,6 +244,18 @@
                 <span>Đánh dấu / bỏ đánh dấu đoạn đang đọc</span>
             </div>
             <div class="shortcut-row">
+                <span class="key-combo"><kbd>C</kbd></span>
+                <span>Bật / tắt Tự động cuộn trang</span>
+            </div>
+            <div class="shortcut-row comic-only">
+                <span class="key-combo"><kbd>J</kbd> / <kbd>K</kbd></span>
+                <span>Cuộn nhanh 1 trang ảnh (Truyện tranh)</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>H</kbd></span>
+                <span>Bật / tắt Bảng trích dẫn & tô màu</span>
+            </div>
+            <div class="shortcut-row">
                 <span class="key-combo"><kbd>?</kbd></span>
                 <span>Hiện bảng phím tắt này</span>
             </div>
@@ -247,6 +266,127 @@
         </div>
     </div>
 </dialog>
+
+<%-- BỘ CÔNG CỤ TÔ MÀU NỔI (FLOATING HIGHLIGHT TOOLBAR) --%>
+<div class="reader-hl-toolbar" id="reader-hl-toolbar" aria-hidden="true">
+    <div class="hl-colors">
+        <button type="button" class="hl-color-btn hl-c-yellow" data-color="yellow" title="Tô Vàng nắng">
+            <span class="hl-swatch"></span>
+        </button>
+        <button type="button" class="hl-color-btn hl-c-green" data-color="green" title="Tô Xanh ngọc">
+            <span class="hl-swatch"></span>
+        </button>
+        <button type="button" class="hl-color-btn hl-c-blue" data-color="blue" title="Tô Xanh lam">
+            <span class="hl-swatch"></span>
+        </button>
+        <button type="button" class="hl-color-btn hl-c-purple" data-color="purple" title="Tô Tím mộng mơ">
+            <span class="hl-swatch"></span>
+        </button>
+        <button type="button" class="hl-color-btn hl-c-pink" data-color="pink" title="Tô Hồng san hô">
+            <span class="hl-swatch"></span>
+        </button>
+    </div>
+    <div class="hl-divider"></div>
+    <div class="hl-actions">
+        <button type="button" class="hl-action-btn" id="hl-action-mark" title="Đánh dấu đoạn này vào Tủ sách">
+            <span>🔖</span><span class="hl-lbl">Đánh dấu</span>
+        </button>
+        <button type="button" class="hl-action-btn" id="hl-action-copy" title="Sao chép trích dẫn">
+            <span>📋</span><span class="hl-lbl">Trích dẫn</span>
+        </button>
+        <button type="button" class="hl-action-btn hl-remove-btn" id="hl-action-clear" title="Xóa tô màu">
+            <span>🗑️</span>
+        </button>
+    </div>
+</div>
+
+<%-- NGĂN KÉO / DIALOG DANH SÁCH ĐIỂM NHẤN & TRÍCH DẪN --%>
+<dialog id="highlights-drawer" class="reader-dialog hl-drawer">
+    <div class="dialog-card hl-drawer-card">
+        <div class="dialog-head">
+            <div class="hl-drawer-title-box">
+                <h3>🖍️ Điểm nhấn & Trích dẫn</h3>
+                <span class="hl-story-tag"><c:out value="${story.title}"/></span>
+            </div>
+            <button type="button" class="dialog-close" id="close-highlights" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="dialog-body hl-drawer-body">
+            <%-- Thanh tìm kiếm & chuyển đổi phạm vi --%>
+            <div class="hl-toolbar-controls">
+                <div class="hl-search-wrap">
+                    <input type="search" id="hl-search-input" class="hl-search-input" placeholder="🔍 Tìm kiếm từ khoá trong trích dẫn..." autocomplete="off">
+                </div>
+                <div class="hl-scope-toggle">
+                    <button type="button" class="hl-scope-btn is-active" id="hl-scope-chapter" data-scope="chapter">Chương này</button>
+                    <button type="button" class="hl-scope-btn" id="hl-scope-all" data-scope="all">Cả bộ truyện</button>
+                </div>
+            </div>
+
+            <%-- Bộ lọc màu sắc --%>
+            <div class="hl-filter-tabs" id="hl-filter-tabs">
+                <button type="button" class="hl-filter-btn is-active" data-filter="all">Tất cả (<span id="hl-tab-all-count">0</span>)</button>
+                <button type="button" class="hl-filter-btn" data-filter="yellow">🟡 Vàng (<span id="hl-tab-yellow-count">0</span>)</button>
+                <button type="button" class="hl-filter-btn" data-filter="green">🟢 Xanh (<span id="hl-tab-green-count">0</span>)</button>
+                <button type="button" class="hl-filter-btn" data-filter="blue">🔵 Lam (<span id="hl-tab-blue-count">0</span>)</button>
+                <button type="button" class="hl-filter-btn" data-filter="purple">🟣 Tím (<span id="hl-tab-purple-count">0</span>)</button>
+                <button type="button" class="hl-filter-btn" data-filter="pink">🔴 Hồng (<span id="hl-tab-pink-count">0</span>)</button>
+            </div>
+
+            <%-- Thanh tác vụ nhanh hàng loạt --%>
+            <div class="hl-batch-bar">
+                <span class="hl-summary-label" id="hl-summary-label">Đang hiển thị 0 đoạn</span>
+                <div class="hl-batch-actions">
+                    <button type="button" class="btn-batch-action" id="hl-btn-export-all" title="Sao chép danh sách trích dẫn đang xem ra clipboard">📋 Chép tất cả</button>
+                    <button type="button" class="btn-batch-action btn-batch-danger" id="hl-btn-clear-chapter" title="Dọn dẹp các điểm nhấn trong chương này">🧹 Xóa sạch chương này</button>
+                </div>
+            </div>
+
+            <div class="hl-list-items" id="hl-drawer-list">
+                <!-- Nội dung danh sách trích dẫn nạp bằng JavaScript -->
+            </div>
+        </div>
+    </div>
+</dialog>
+
+
+<%-- ĐIỀU HƯỚNG TRANG NỔI CHO TRUYỆN TRANH (COMIC FLOAT NAV) --%>
+<c:if test="${story.comic}">
+    <div class="comic-page-nav" id="comicPageNav" aria-label="Điều hướng trang truyện tranh">
+        <button type="button" class="comic-nav-btn" id="comicNavPrev" title="Trang trước (K)">▲</button>
+        <button type="button" class="comic-page-badge" id="comicPageBadge" title="Bấm để nhảy trang">
+            <span>🖼️</span>
+            <span id="comicPageNum">Trang 1</span> / <span id="comicPageTotal">${chapter.pageCount > 0 ? chapter.pageCount : 1}</span>
+        </button>
+        <button type="button" class="comic-nav-btn" id="comicNavNext" title="Trang sau (J)">▼</button>
+    </div>
+
+    <div class="comic-jump-pop" id="comicJumpPop" hidden>
+        <div class="comic-jump-head">
+            <span>Chuyển nhanh đến trang</span>
+            <button type="button" class="comic-jump-close" id="comicJumpClose">&times;</button>
+        </div>
+        <div class="comic-jump-body">
+            <input type="range" id="comicJumpSlider" min="1" max="${chapter.pageCount > 0 ? chapter.pageCount : 1}" value="1" class="comic-slider">
+            <div class="comic-jump-val"><span id="comicJumpVal">1</span> / ${chapter.pageCount > 0 ? chapter.pageCount : 1}</div>
+            <button type="button" class="btn btn-primary btn-sm" id="comicJumpConfirm">Tới trang này</button>
+        </div>
+    </div>
+</c:if>
+
+<%-- THANH ĐIỀU KHIỂN TỰ ĐỘNG CUỘN TRANG (AUTO-SCROLL) --%>
+<div class="reader-autoscroll-bar" id="reader-autoscroll-bar" style="display: none;">
+    <span class="as-label">⚡ Tự cuộn</span>
+    <button type="button" class="as-btn" id="as-toggle-btn" title="Phát / Tạm dừng">⏸</button>
+    <div class="as-speeds">
+        <button type="button" class="as-spd-btn is-active" data-speed="1">1x</button>
+        <button type="button" class="as-spd-btn" data-speed="2">2x</button>
+        <button type="button" class="as-spd-btn" data-speed="3">3x</button>
+    </div>
+    <button type="button" class="as-close-btn" id="as-close-btn" title="Tắt tự cuộn">&times;</button>
+</div>
+
+<%-- CANVAS HIỆU ỨNG ĂN MỪNG MỞ KHOÁ / TẶNG XU (CELEBRATION CONFETTI & COIN SHOWER) --%>
+<canvas class="celebration-canvas" id="celebration-canvas" style="display: none;"></canvas>
 
 <%-- CỤM NÚT ĐIỀU HƯỚNG NỔI (FLOATING DOCK): LÊN ĐẦU TRANG ↑ & XUỐNG BÌNH LUẬN ↓ --%>
 <div class="reader-fab-dock" id="reader-fab-dock">
@@ -865,7 +1005,9 @@ try {
         var m = location.hash.match(/^#doan-(\d+)$/);
         var target = m ? parseInt(m[1], 10)
                        : parseInt(document.body.getAttribute('data-resume-para') || '0', 10);
-        if (target > 1 && scrollToPara(first, target) && !m) {
+        if (m) {
+            if (target >= 1) scrollToPara(first, target);
+        } else if (target > 1 && scrollToPara(first, target)) {
             toast('Đã đưa bạn về ' + UNIT + ' ' + target + ', chỗ đang đọc dở.', 'Về đầu chương', function () {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -935,6 +1077,82 @@ try {
                 .catch(function () { toast('Mất kết nối, thử lại sau nhé.'); })
                 .then(function () { saveBtn.disabled = false; });
         });
+    }
+
+    /* ------------------------------------------------ điều hướng trang truyện tranh (Comic Nav) */
+    if (COMIC) {
+        var pageNumEl = document.getElementById('comicPageNum');
+        var pageTotalEl = document.getElementById('comicPageTotal');
+        var navPrev = document.getElementById('comicNavPrev');
+        var navNext = document.getElementById('comicNavNext');
+        var badgeBtn = document.getElementById('comicPageBadge');
+        var jumpPop = document.getElementById('comicJumpPop');
+        var jumpClose = document.getElementById('comicJumpClose');
+        var jumpSlider = document.getElementById('comicJumpSlider');
+        var jumpVal = document.getElementById('comicJumpVal');
+        var jumpConfirm = document.getElementById('comicJumpConfirm');
+
+        function updateComicNav() {
+            var pos = position();
+            if (!pos || !pos.block) return;
+            var curPage = pos.paraNo || 1;
+            var pages = pos.block.querySelectorAll('.comic-page');
+            var tot = pages.length;
+            if (pageNumEl) pageNumEl.textContent = 'Trang ' + curPage;
+            if (pageTotalEl && tot > 0) pageTotalEl.textContent = tot;
+            if (jumpSlider && tot > 0) {
+                jumpSlider.max = tot;
+                if (!jumpPop || jumpPop.hidden) {
+                    jumpSlider.value = curPage;
+                    if (jumpVal) jumpVal.textContent = curPage;
+                }
+            }
+        }
+
+        window.addEventListener('scroll', updateComicNav, { passive: true });
+        updateComicNav();
+
+        if (badgeBtn && jumpPop) {
+            badgeBtn.addEventListener('click', function () {
+                jumpPop.hidden = !jumpPop.hidden;
+            });
+        }
+        if (jumpClose && jumpPop) {
+            jumpClose.addEventListener('click', function () {
+                jumpPop.hidden = true;
+            });
+        }
+        if (jumpSlider && jumpVal) {
+            jumpSlider.addEventListener('input', function () {
+                jumpVal.textContent = jumpSlider.value;
+            });
+        }
+        if (jumpConfirm) {
+            jumpConfirm.addEventListener('click', function () {
+                var targetPage = parseInt(jumpSlider.value, 10);
+                var curB = currentBlock();
+                if (curB && targetPage > 0) {
+                    scrollToPara(curB, targetPage);
+                }
+                if (jumpPop) jumpPop.hidden = true;
+            });
+        }
+
+        function scrollComicStep(direction) {
+            var pos = position();
+            if (!pos || !pos.block) return;
+            var curPage = pos.paraNo || 1;
+            var pages = pos.block.querySelectorAll('.comic-page');
+            var target = curPage + direction;
+            if (target >= 1 && target <= pages.length) {
+                scrollToPara(pos.block, target);
+            }
+        }
+
+        if (navPrev) navPrev.addEventListener('click', function () { scrollComicStep(-1); });
+        if (navNext) navNext.addEventListener('click', function () { scrollComicStep(1); });
+
+        window.scrollComicStep = scrollComicStep;
     }
 })();
 
@@ -1206,6 +1424,21 @@ try {
             e.preventDefault();
             var markToggle = document.getElementById('btn-mark-para');
             if (markToggle) markToggle.click();
+            return;
+        }
+
+        // Phím C -> Bật / tắt Tự động cuộn trang
+        if (code === 'KeyC' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            var asToggle = document.getElementById('toggle-autoscroll');
+            if (asToggle) asToggle.click();
+            return;
+        }
+
+        // Phím J / K cuộn trang trong truyện tranh
+        if (window.scrollComicStep && (code === 'KeyJ' || code === 'KeyK')) {
+            e.preventDefault();
+            window.scrollComicStep(code === 'KeyJ' ? 1 : -1);
             return;
         }
 
@@ -1795,6 +2028,1071 @@ try {
 })();
 </script>
 
+<script>
+/* ===========================================================================
+   TỰ ĐỘNG CUỘN TRANG (SMOOTH AUTO-SCROLL)
+   ===========================================================================
+   - Tự động cuộn trang mượt mà bằng requestAnimationFrame
+   - Tương thích cả truyện tranh Webtoon và truyện chữ
+   - 3 mức tốc độ (1x ~ 60px/s, 2x ~ 130px/s, 3x ~ 240px/s)
+   - Tự tạm dừng khi người dùng tự lăn chuột hoặc chạm vuốt màn hình
+   - Dừng mượt mà khi chạm đáy trang
+   - Phím tắt C để bật / tắt tức thì
+   ======================================================================== */
+(function () {
+    var toggleBtn = document.getElementById('toggle-autoscroll');
+    var bar = document.getElementById('reader-autoscroll-bar');
+    var playPauseBtn = document.getElementById('as-toggle-btn');
+    var closeBtn = document.getElementById('as-close-btn');
+    var speedBtns = document.querySelectorAll('.as-spd-btn');
+
+    var isRunning = false;
+    var isPaused = false;
+    var userInteracting = false;
+    var userResumeTimer = null;
+    var rafId = null;
+
+    var speedMultipliers = { '1': 1.0, '2': 2.2, '3': 4.0 };
+    var currentSpeed = localStorage.getItem('reader_as_speed') || '1';
+
+    function setSpeed(spd) {
+        currentSpeed = spd;
+        localStorage.setItem('reader_as_speed', spd);
+        speedBtns.forEach(function (b) {
+            b.classList.toggle('is-active', b.getAttribute('data-speed') === spd);
+        });
+    }
+    setSpeed(currentSpeed);
+
+    speedBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            setSpeed(b.getAttribute('data-speed'));
+        });
+    });
+
+    function scrollStep() {
+        if (!isRunning) return;
+        if (!isPaused && !userInteracting) {
+            var px = speedMultipliers[currentSpeed] || 1.0;
+            window.scrollBy({ top: px, behavior: 'instant' });
+
+            // Kiểm tra xem đã chạm đáy trang chưa
+            var scrollPos = window.innerHeight + window.scrollY;
+            var maxScroll = document.documentElement.scrollHeight || document.body.scrollHeight;
+            if (scrollPos >= maxScroll - 8) {
+                stopAutoScroll();
+                return;
+            }
+        }
+        rafId = requestAnimationFrame(scrollStep);
+    }
+
+    function startAutoScroll() {
+        isRunning = true;
+        isPaused = false;
+        if (bar) bar.style.display = 'flex';
+        if (toggleBtn) toggleBtn.classList.add('is-on');
+        if (playPauseBtn) playPauseBtn.textContent = '⏸';
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(scrollStep);
+    }
+
+    function stopAutoScroll() {
+        isRunning = false;
+        isPaused = false;
+        cancelAnimationFrame(rafId);
+        if (bar) bar.style.display = 'none';
+        if (toggleBtn) toggleBtn.classList.remove('is-on');
+    }
+
+    function togglePlayPause() {
+        if (!isRunning) return;
+        isPaused = !isPaused;
+        if (playPauseBtn) playPauseBtn.textContent = isPaused ? '▶' : '⏸';
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+            if (isRunning) stopAutoScroll();
+            else startAutoScroll();
+        });
+    }
+
+    if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
+    if (closeBtn) closeBtn.addEventListener('click', stopAutoScroll);
+
+    // Tự tạm dừng khi người dùng lăn chuột hoặc touch, sau 1.2s tự động cuộn tiếp
+    function onUserScrollIntervention() {
+        if (!isRunning || isPaused) return;
+        userInteracting = true;
+        clearTimeout(userResumeTimer);
+        userResumeTimer = setTimeout(function () {
+            userInteracting = false;
+        }, 1200);
+    }
+    window.addEventListener('wheel', onUserScrollIntervention, { passive: true });
+    window.addEventListener('touchmove', onUserScrollIntervention, { passive: true });
+
+    window.toggleAutoScroll = function () {
+        if (isRunning) stopAutoScroll();
+        else startAutoScroll();
+    };
+})();
+
+/* ===========================================================================
+   HIỆU ỨNG ĂN MỪNG MỞ KHOÁ VIP & TẶNG XU (CELEBRATION ENGINE)
+   ===========================================================================
+   - Confetti đa sắc màu & Cơn mưa đồng xu vàng (Golden Coins Shower)
+   - Âm thanh khánh tiết chúc mừng & tiếng xu kêu lách cách (Web Audio Synth)
+   - Kích hoạt khi mở khoá chương thành công hoặc khi tặng xu cho tác giả
+   ======================================================================== */
+(function () {
+    var canvas = document.getElementById('celebration-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var animId = null;
+    var particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Sinh âm thanh chúc mừng bằng Web Audio API
+    function playCelebrationSound(type) {
+        try {
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            var ctxAudio = new AudioContext();
+
+            if (type === 'unlock') {
+                // Hợp âm chiến thắng rạng rỡ C5 - E5 - G5 - C6
+                var notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach(function (freq, idx) {
+                    var osc = ctxAudio.createOscillator();
+                    var gain = ctxAudio.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, ctxAudio.currentTime + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0, ctxAudio.currentTime + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.25, ctxAudio.currentTime + idx * 0.08 + 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctxAudio.currentTime + idx * 0.08 + 0.8);
+
+                    osc.connect(gain);
+                    gain.connect(ctxAudio.destination);
+                    osc.start(ctxAudio.currentTime + idx * 0.08);
+                    osc.stop(ctxAudio.currentTime + idx * 0.08 + 0.85);
+                });
+            } else {
+                // Tiếng đồng xu lách cách leng keng
+                [1800, 2400, 2900, 3400].forEach(function (freq, idx) {
+                    var osc = ctxAudio.createOscillator();
+                    var gain = ctxAudio.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctxAudio.currentTime + idx * 0.09);
+
+                    gain.gain.setValueAtTime(0, ctxAudio.currentTime + idx * 0.09);
+                    gain.gain.linearRampToValueAtTime(0.2, ctxAudio.currentTime + idx * 0.09 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctxAudio.currentTime + idx * 0.09 + 0.45);
+
+                    osc.connect(gain);
+                    gain.connect(ctxAudio.destination);
+                    osc.start(ctxAudio.currentTime + idx * 0.09);
+                    osc.stop(ctxAudio.currentTime + idx * 0.09 + 0.5);
+                });
+            }
+        } catch (e) {
+            // Audio policy ignore
+        }
+    }
+
+    var COLORS = ['#f59e0b', '#fbbf24', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff'];
+
+    function createParticle(type) {
+        var isCoin = (type === 'coins') || (type === 'unlock' && Math.random() < 0.4);
+        return {
+            isCoin: isCoin,
+            x: Math.random() * canvas.width,
+            y: -20 - Math.random() * 50,
+            vx: (Math.random() - 0.5) * 4,
+            vy: Math.random() * 3 + 2.5,
+            size: isCoin ? (Math.random() * 8 + 14) : (Math.random() * 8 + 6),
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            rotation: Math.random() * 360,
+            rotSpeed: (Math.random() - 0.5) * 8,
+            wobble: Math.random() * Math.PI * 2,
+            wobbleSpeed: Math.random() * 0.1 + 0.05,
+            opacity: 1
+        };
+    }
+
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        var alive = false;
+
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            p.y += p.vy;
+            p.x += p.vx + Math.sin(p.wobble) * 1.5;
+            p.wobble += p.wobbleSpeed;
+            p.rotation += p.rotSpeed;
+
+            if (p.y > canvas.height - 40) {
+                p.opacity -= 0.03;
+            }
+
+            if (p.opacity > 0 && p.y < canvas.height + 40) {
+                alive = true;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.opacity);
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+
+                if (p.isCoin) {
+                    var scaleX = Math.cos(p.wobble);
+                    ctx.scale(scaleX, 1);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size / 3.5, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#d97706';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+                }
+                ctx.restore();
+            }
+        }
+
+        if (alive) {
+            animId = requestAnimationFrame(loop);
+        } else {
+            canvas.style.display = 'none';
+            particles = [];
+            cancelAnimationFrame(animId);
+        }
+    }
+
+    window.launchCelebration = function (type) {
+        type = type || 'unlock';
+        resize();
+        canvas.style.display = 'block';
+        particles = [];
+        var count = type === 'coins' ? 70 : 110;
+        for (var i = 0; i < count; i++) {
+            particles.push(createParticle(type));
+        }
+        playCelebrationSound(type);
+        cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(loop);
+    };
+
+    <c:if test="${not empty sessionScope.flash and sessionScope.flash.contains('khoá')}">
+    window.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+            window.launchCelebration('unlock');
+        }, 350);
+    });
+    </c:if>
+})();
+</script>
+
+<%-- ========================================================================
+     JAVASCRIPT: BỘ CÔNG CỤ TÔ MÀU ĐOẠN VĂN & ĐÁNH DẤU TRÍCH DẪN
+     ======================================================================== --%>
+<script>
+(function () {
+
+    'use strict';
+
+    var STORY_ID = '${story.id}';
+    var STORY_TITLE = '<c:out value="${story.title}"/>';
+    var CURRENT_CHAPTER_ID = '${chapter.id}';
+    var CURRENT_CHAPTER_NO = '${chapter.chapterNo}';
+    var CTX = (document.body && document.body.dataset && document.body.dataset.ctx) || '';
+    var STORAGE_KEY = 'truyen_hl_' + STORY_ID;
+    var VISIBILITY_KEY = 'truyen_hl_hidden';
+
+    var toolbar = document.getElementById('reader-hl-toolbar');
+    var drawer = document.getElementById('highlights-drawer');
+    var drawerBtn = document.getElementById('btn-highlights-drawer');
+    var drawerCloseBtn = document.getElementById('close-highlights');
+    var toggleHlBtn = document.getElementById('btn-toggle-hl-visibility');
+    var counterBadge = document.getElementById('hl-counter-badge');
+    var drawerList = document.getElementById('hl-drawer-list');
+    var filterTabs = document.getElementById('hl-filter-tabs');
+    var searchInput = document.getElementById('hl-search-input');
+    var scopeChapterBtn = document.getElementById('hl-scope-chapter');
+    var scopeAllBtn = document.getElementById('hl-scope-all');
+    var summaryLabel = document.getElementById('hl-summary-label');
+    var exportAllBtn = document.getElementById('hl-btn-export-all');
+    var clearChapterBtn = document.getElementById('hl-btn-clear-chapter');
+
+    var currentSelectionContext = null;
+    var activeFilter = 'all';
+    var activeScope = 'chapter'; // 'chapter' hoặc 'all'
+    var searchKeyword = '';
+
+    // ---- 1. Chế độ đọc sạch sẽ (Ẩn/Hiện màu tô để không bị rối mắt khi có quá nhiều) ----
+    function initVisibilityMode() {
+        var isHidden = localStorage.getItem(VISIBILITY_KEY) === '1';
+        if (isHidden) {
+            document.body.classList.add('hl-hidden-mode');
+            if (toggleHlBtn) {
+                toggleHlBtn.classList.add('is-hl-off');
+                toggleHlBtn.textContent = '👁️‍🗨️';
+                toggleHlBtn.title = 'Đang ẩn màu tô (Bấm để hiện lại)';
+            }
+        }
+    }
+    initVisibilityMode();
+
+    if (toggleHlBtn) {
+        toggleHlBtn.addEventListener('click', toggleHighlightVisibility);
+    }
+
+    function toggleHighlightVisibility() {
+        var isCurrentlyHidden = document.body.classList.toggle('hl-hidden-mode');
+        localStorage.setItem(VISIBILITY_KEY, isCurrentlyHidden ? '1' : '0');
+        if (toggleHlBtn) {
+            toggleHlBtn.classList.toggle('is-hl-off', isCurrentlyHidden);
+            toggleHlBtn.textContent = isCurrentlyHidden ? '👁️‍🗨️' : '👁️';
+            toggleHlBtn.title = isCurrentlyHidden ? 'Đang ẩn màu tô (Bấm để hiện lại)' : 'Ẩn màu tô đoạn văn (Alt+H)';
+        }
+        showToast(isCurrentlyHidden ? 'Đã ẩn màu tô (Chế độ đọc thuần khiết)' : 'Đã hiển thị lại các đoạn tô màu');
+    }
+
+    // ---- 2. Quản lý Dữ liệu LocalStorage ----
+    function getHighlights() {
+        try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveHighlights(list) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {}
+        updateCounter();
+    }
+
+    function updateCounter() {
+        var list = getHighlights();
+        // Đếm số lượng của chương hiện tại cho badge trên thanh đọc
+        var currentChapHighlights = list.filter(function(h) {
+            return String(h.chapterId) === String(CURRENT_CHAPTER_ID) || String(h.chapterNo) === String(CURRENT_CHAPTER_NO);
+        });
+        var count = currentChapHighlights.length;
+        if (counterBadge) {
+            counterBadge.textContent = count;
+            counterBadge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+
+        // Cập nhật số đếm trên các tab màu
+        var tabAllCount = document.getElementById('hl-tab-all-count');
+        var tabYellowCount = document.getElementById('hl-tab-yellow-count');
+        var tabGreenCount = document.getElementById('hl-tab-green-count');
+        var tabBlueCount = document.getElementById('hl-tab-blue-count');
+        var tabPurpleCount = document.getElementById('hl-tab-purple-count');
+        var tabPinkCount = document.getElementById('hl-tab-pink-count');
+
+        var scopedList = activeScope === 'chapter' ? currentChapHighlights : list;
+
+        if (tabAllCount) tabAllCount.textContent = scopedList.length;
+        if (tabYellowCount) tabYellowCount.textContent = scopedList.filter(function(h){return h.color==='yellow';}).length;
+        if (tabGreenCount) tabGreenCount.textContent = scopedList.filter(function(h){return h.color==='green';}).length;
+        if (tabBlueCount) tabBlueCount.textContent = scopedList.filter(function(h){return h.color==='blue';}).length;
+        if (tabPurpleCount) tabPurpleCount.textContent = scopedList.filter(function(h){return h.color==='purple';}).length;
+        if (tabPinkCount) tabPinkCount.textContent = scopedList.filter(function(h){return h.color==='pink';}).length;
+    }
+
+    // ---- 3. Hiển thị Toast ----
+    function showToast(msg) {
+        if (typeof window.toast === 'function') {
+            window.toast(msg);
+        } else {
+            var t = document.createElement('div');
+            t.className = 'reader-toast';
+            t.textContent = msg;
+            t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,0.95);color:#fff;padding:8px 18px;border-radius:99px;font-size:0.85rem;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,0.3);';
+            document.body.appendChild(t);
+            setTimeout(function() { t.remove(); }, 2400);
+        }
+    }
+
+    // ---- 4. Vị trí và Hiện / Ẩn Floating Toolbar ----
+    function showToolbarAt(rect) {
+        if (!toolbar) return;
+        var left = rect.left + (rect.width / 2);
+        var isTopNear = rect.top < 70;
+        var top = isTopNear ? (rect.bottom + 12) : (rect.top - 10);
+
+        toolbar.style.left = Math.max(120, Math.min(window.innerWidth - 120, left)) + 'px';
+        toolbar.style.top = top + 'px';
+        toolbar.classList.toggle('hl-below', isTopNear);
+        toolbar.classList.add('is-visible');
+        toolbar.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideToolbar() {
+        if (!toolbar) return;
+        toolbar.classList.remove('is-visible');
+        toolbar.setAttribute('aria-hidden', 'true');
+        currentSelectionContext = null;
+    }
+
+    // ---- 5. Xử lý Bôi đen văn bản & Click vào đoạn đã tô ----
+    document.addEventListener('mouseup', handleTextSelection);
+    document.addEventListener('touchend', function() {
+        setTimeout(handleTextSelection, 80);
+    });
+
+    function handleTextSelection(e) {
+        if (toolbar && toolbar.contains(e.target)) return;
+
+        var sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) {
+            // Không có text chọn, kiểm tra nếu click trúng một thẻ .hl-mark có sẵn
+            if (e.target && e.target.classList && e.target.classList.contains('hl-mark')) {
+                var markEl = e.target;
+                var rect = markEl.getBoundingClientRect();
+                var hlId = markEl.getAttribute('data-hl-id');
+                currentSelectionContext = {
+                    isExistingMark: true,
+                    markElement: markEl,
+                    hlId: hlId,
+                    text: markEl.textContent
+                };
+                showToolbarAt(rect);
+                return;
+            }
+            hideToolbar();
+            return;
+        }
+
+        var text = sel.toString().trim();
+        if (text.length < 2) {
+            hideToolbar();
+            return;
+        }
+
+        var range = sel.getRangeAt(0);
+        var container = range.commonAncestorContainer;
+        if (container.nodeType === 3) container = container.parentNode;
+
+        var contentWrap = container.closest ? container.closest('.chapter-content') : null;
+        if (!contentWrap) {
+            hideToolbar();
+            return;
+        }
+
+        var pEl = container.closest ? container.closest('[data-para]') : null;
+        var block = container.closest ? container.closest('.chapter-block') : null;
+
+        var paraNo = pEl ? parseInt(pEl.getAttribute('data-para'), 10) : 0;
+        var chapterId = block ? block.getAttribute('data-chapter-id') : CURRENT_CHAPTER_ID;
+        var chapterNo = block ? block.getAttribute('data-chapter-no') : CURRENT_CHAPTER_NO;
+        var chapterTitle = block ? block.getAttribute('data-chapter-title') : '<c:out value="${chapter.title}"/>';
+
+        currentSelectionContext = {
+            range: range.cloneRange(),
+            text: text,
+            paraNo: paraNo,
+            pEl: pEl,
+            chapterId: chapterId,
+            chapterNo: chapterNo,
+            chapterTitle: chapterTitle
+        };
+
+        var rect = range.getBoundingClientRect();
+        if ((!rect || (rect.width === 0 && rect.height === 0)) && pEl) {
+            rect = pEl.getBoundingClientRect();
+        }
+        showToolbarAt(rect);
+    }
+
+    document.addEventListener('mousedown', function (e) {
+        if (toolbar && !toolbar.contains(e.target)) {
+            var sel = window.getSelection();
+            if (!sel || sel.isCollapsed) {
+                hideToolbar();
+            }
+        }
+    });
+
+    // ---- 6. Hành động: Chọn màu Highlight ----
+    var colorBtns = toolbar ? toolbar.querySelectorAll('.hl-color-btn') : [];
+    colorBtns.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentSelectionContext) return;
+
+            var color = this.getAttribute('data-color');
+            var ctx = currentSelectionContext;
+
+            if (ctx.isExistingMark && ctx.markElement) {
+                var oldColor = ctx.markElement.className.match(/hl-(yellow|green|blue|purple|pink)/);
+                if (oldColor) ctx.markElement.classList.remove(oldColor[0]);
+                ctx.markElement.classList.add('hl-' + color);
+
+                var list = getHighlights();
+                var item = list.find(function(h) { return h.id === ctx.hlId; });
+                if (item) {
+                    item.color = color;
+                    saveHighlights(list);
+                }
+                showToast('Đã đổi màu sang ' + getColorName(color));
+                hideToolbar();
+                return;
+            }
+
+            var hlId = 'hl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            var mark = document.createElement('mark');
+            mark.className = 'hl-mark hl-' + color;
+            mark.setAttribute('data-hl-id', hlId);
+
+            try {
+                ctx.range.surroundContents(mark);
+            } catch (err) {
+                var frag = ctx.range.extractContents();
+                mark.appendChild(frag);
+                ctx.range.insertNode(mark);
+            }
+
+            var newItem = {
+                id: hlId,
+                storyId: STORY_ID,
+                chapterId: ctx.chapterId,
+                chapterNo: ctx.chapterNo,
+                chapterTitle: ctx.chapterTitle,
+                paraNo: ctx.paraNo,
+                color: color,
+                text: ctx.text,
+                createdAt: new Date().toISOString()
+            };
+
+            var list = getHighlights();
+            list.unshift(newItem);
+            saveHighlights(list);
+
+            showToast('Đã tô màu đoạn trích (' + getColorName(color) + ')');
+
+            if (window.getSelection) window.getSelection().removeAllRanges();
+            hideToolbar();
+        });
+    });
+
+    function getColorName(c) {
+        switch(c) {
+            case 'yellow': return 'Vàng nắng';
+            case 'green':  return 'Xanh ngọc';
+            case 'blue':   return 'Xanh lam';
+            case 'purple': return 'Tím mộng mơ';
+            case 'pink':   return 'Hồng san hô';
+            default: return c;
+        }
+    }
+
+    // ---- 7. Hành động: Đánh dấu đoạn vào Tủ sách 🔖 ----
+    var markActionBtn = document.getElementById('hl-action-mark');
+    if (markActionBtn) {
+        markActionBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentSelectionContext) return;
+            var ctx = currentSelectionContext;
+
+            if (!ctx.isExistingMark) {
+                var btnYellow = toolbar.querySelector('.hl-c-yellow');
+                if (btnYellow) btnYellow.click();
+            }
+
+            if (ctx.chapterId && ctx.paraNo > 0) {
+                var body = new URLSearchParams();
+                body.append('action', 'mark');
+                body.append('chapterId', ctx.chapterId);
+                body.append('paraNo', ctx.paraNo);
+                body.append('snippet', (ctx.text || '').substring(0, 180));
+
+                fetch(CTX + '/bookmark', {
+                    method: 'POST',
+                    body: body,
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.success) {
+                        if (ctx.pEl) ctx.pEl.classList.add('is-marked');
+                        showToast('Đã lưu đoạn văn vào Tủ sách!');
+                    } else {
+                        showToast(res.message || 'Chưa lưu được vào Tủ sách.');
+                    }
+                })
+                .catch(function() {
+                    showToast('Đã lưu vào bộ nhớ cục bộ trên máy!');
+                });
+            } else {
+                showToast('Đã lưu đánh dấu đoạn!');
+            }
+            hideToolbar();
+        });
+    }
+
+    // ---- 8. Hành động: Sao chép trích dẫn 📋 ----
+    var copyActionBtn = document.getElementById('hl-action-copy');
+    if (copyActionBtn) {
+        copyActionBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentSelectionContext) return;
+            var ctx = currentSelectionContext;
+
+            var quoteText = '“' + ctx.text + '”\n\n— Trích Chương ' + (ctx.chapterNo || '') + ': '
+                + (ctx.chapterTitle || '') + ' (' + STORY_TITLE + ')';
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(quoteText).then(function() {
+                    showToast('Đã sao chép trích dẫn vào bộ nhớ tạm!');
+                }).catch(function() {
+                    fallbackCopy(quoteText);
+                });
+            } else {
+                fallbackCopy(quoteText);
+            }
+            hideToolbar();
+        });
+    }
+
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast('Đã sao chép trích dẫn!');
+        } catch (e) {
+            showToast('Không thể sao chép.');
+        }
+        ta.remove();
+    }
+
+    // ---- 9. Hành động: Xóa Tô màu 🗑️ ----
+    var clearActionBtn = document.getElementById('hl-action-clear');
+    if (clearActionBtn) {
+        clearActionBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentSelectionContext) return;
+            var ctx = currentSelectionContext;
+
+            if (ctx.isExistingMark && ctx.markElement) {
+                removeMarkElement(ctx.markElement, ctx.hlId);
+                showToast('Đã xóa tô màu đoạn này.');
+            } else {
+                var parentMark = ctx.range && ctx.range.commonAncestorContainer.nodeType === 1
+                    ? ctx.range.commonAncestorContainer.closest('.hl-mark')
+                    : (ctx.range ? ctx.range.commonAncestorContainer.parentNode.closest('.hl-mark') : null);
+                if (parentMark) {
+                    removeMarkElement(parentMark, parentMark.getAttribute('data-hl-id'));
+                    showToast('Đã xóa tô màu đoạn này.');
+                }
+            }
+            hideToolbar();
+        });
+    }
+
+    function removeMarkElement(markEl, hlId) {
+        if (!markEl) return;
+        var parent = markEl.parentNode;
+        while (markEl.firstChild) {
+            parent.insertBefore(markEl.firstChild, markEl);
+        }
+        markEl.remove();
+
+        if (hlId) {
+            var list = getHighlights().filter(function(h) { return h.id !== hlId; });
+            saveHighlights(list);
+        }
+    }
+
+    // ---- 10. Phục hồi Highlights khi tải trang hoặc nối chương mới ----
+    function applySavedHighlights(container) {
+        var list = getHighlights();
+        if (!list || !list.length) return;
+
+        var blocks = (container || document).querySelectorAll('.chapter-block');
+        blocks.forEach(function (block) {
+            var chId = block.getAttribute('data-chapter-id');
+            var chNo = block.getAttribute('data-chapter-no');
+
+            var itemsForChapter = list.filter(function(h) {
+                return (h.chapterId && String(h.chapterId) === String(chId))
+                    || (h.chapterNo && String(h.chapterNo) === String(chNo));
+            });
+
+            if (!itemsForChapter.length) return;
+
+            itemsForChapter.forEach(function (item) {
+                var pEl = block.querySelector('.chapter-content [data-para="' + item.paraNo + '"]');
+                if (!pEl) return;
+
+                if (pEl.querySelector('[data-hl-id="' + item.id + '"]')) return;
+
+                var text = item.text;
+                if (!text || pEl.textContent.indexOf(text) === -1) return;
+
+                highlightTextInElement(pEl, text, item.color, item.id);
+            });
+        });
+    }
+
+    function highlightTextInElement(element, searchText, color, id) {
+        var innerHTML = element.innerHTML;
+        var idx = innerHTML.indexOf(searchText);
+        if (idx !== -1 && innerHTML.indexOf('data-hl-id="' + id + '"') === -1) {
+            var replacement = '<mark class="hl-mark hl-' + color + '" data-hl-id="' + id + '">' + searchText + '</mark>';
+            element.innerHTML = innerHTML.replace(searchText, replacement);
+        }
+    }
+
+    applySavedHighlights(document);
+    updateCounter();
+
+    var wrap = document.getElementById('chapters');
+    if (wrap && window.MutationObserver) {
+        new MutationObserver(function (records) {
+            records.forEach(function (r) {
+                [].forEach.call(r.addedNodes, function (n) {
+                    if (n.nodeType === 1 && n.classList.contains('chapter-block')) {
+                        applySavedHighlights(n);
+                    }
+                });
+            });
+        }).observe(wrap, { childList: true });
+    }
+
+    // ---- 11. Ngăn kéo / Modal Quản lý Trích dẫn & Điểm nhấn ----
+    function getFilteredList() {
+        var list = getHighlights();
+
+        // 1. Lọc theo phạm vi (Chương này vs Cả bộ truyện)
+        if (activeScope === 'chapter') {
+            list = list.filter(function(h) {
+                return String(h.chapterId) === String(CURRENT_CHAPTER_ID) || String(h.chapterNo) === String(CURRENT_CHAPTER_NO);
+            });
+        }
+
+        // 2. Lọc theo màu
+        if (activeFilter !== 'all') {
+            list = list.filter(function(h) { return h.color === activeFilter; });
+        }
+
+        // 3. Lọc theo từ khóa tìm kiếm
+        if (searchKeyword) {
+            var kw = searchKeyword.toLowerCase();
+            list = list.filter(function(h) {
+                return (h.text && h.text.toLowerCase().indexOf(kw) !== -1)
+                    || (h.chapterTitle && h.chapterTitle.toLowerCase().indexOf(kw) !== -1);
+            });
+        }
+
+        return list;
+    }
+
+    function renderDrawerList() {
+        if (!drawerList) return;
+        var list = getFilteredList();
+
+        if (summaryLabel) {
+            var scopeName = activeScope === 'chapter' ? ('Chương ' + CURRENT_CHAPTER_NO) : 'Toàn bộ truyện';
+            summaryLabel.textContent = 'Đang hiển thị ' + list.length + ' đoạn (' + scopeName + ')';
+        }
+
+        updateCounter();
+
+        if (!list.length) {
+            var emptyHint = searchKeyword ? 'Không tìm thấy trích dẫn phù hợp từ khoá "' + searchKeyword + '".'
+                          : (activeScope === 'chapter' ? 'Chương này chưa có đoạn nào được tô màu.' : 'Chưa có đoạn trích dẫn nào được lưu.');
+            drawerList.innerHTML = '<div class="hl-empty-note">'
+                + '<span>🖍️</span>'
+                + '<p>' + emptyHint + '</p>'
+                + '<small class="muted">' + (activeScope === 'chapter' ? 'Bạn có thể chuyển sang xem "Cả bộ truyện" hoặc bôi đen văn bản để tô màu ngay.' : 'Hãy bôi đen bất kỳ đoạn văn nào trong truyện để tô màu!') + '</small>'
+                + '</div>';
+            return;
+        }
+
+        var html = '';
+        list.forEach(function (item) {
+            var d = new Date(item.createdAt || Date.now());
+            var dateStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            var isLong = item.text && item.text.length > 180;
+
+            html += '<div class="hl-item-card c-' + item.color + '" data-hl-id="' + item.id + '" data-chapter-id="' + item.chapterId + '" data-para="' + item.paraNo + '">'
+                + '<div class="hl-item-meta">'
+                + '<span class="hl-item-chapter">Chương ' + (item.chapterNo || '') + ' &middot; Đoạn ' + item.paraNo + '</span>'
+                + '<span>' + dateStr + '</span>'
+                + '</div>'
+                + '<p class="hl-item-text" id="text-' + item.id + '">“' + escapeHtml(item.text) + '”</p>'
+                + (isLong ? '<button type="button" class="hl-btn-toggle-expand" data-target="text-' + item.id + '">Xem thêm &darr;</button>' : '')
+                + '<div class="hl-item-actions">'
+                + '<button type="button" class="hl-item-btn btn-jump">🚀 Đi tới đoạn</button>'
+                + '<button type="button" class="hl-item-btn btn-copy">📋 Sao chép</button>'
+                + '<button type="button" class="hl-item-btn btn-del">🗑️ Xoá</button>'
+                + '</div>'
+                + '</div>';
+        });
+
+        drawerList.innerHTML = html;
+
+        // Bắt sự kiện trên từng item
+        drawerList.querySelectorAll('.hl-item-card').forEach(function (card) {
+            var hlId = card.getAttribute('data-hl-id');
+            var paraNo = card.getAttribute('data-para');
+            var chId = card.getAttribute('data-chapter-id');
+
+            // Bấm vào card -> Nhảy tới đoạn
+            card.addEventListener('click', function (e) {
+                if (e.target.closest('.btn-copy') || e.target.closest('.btn-del') || e.target.closest('.hl-btn-toggle-expand')) return;
+                closeDrawer();
+                jumpToHighlight(chId, paraNo, hlId);
+            });
+
+            // Nút Xem thêm / Thu gọn
+            var btnExpand = card.querySelector('.hl-btn-toggle-expand');
+            if (btnExpand) {
+                btnExpand.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var targetId = this.getAttribute('data-target');
+                    var textEl = document.getElementById(targetId);
+                    if (textEl) {
+                        var expanded = textEl.classList.toggle('is-expanded');
+                        this.innerHTML = expanded ? 'Thu gọn &uarr;' : 'Xem thêm &darr;';
+                    }
+                });
+            }
+
+            // Nút Sao chép
+            var btnCopy = card.querySelector('.btn-copy');
+            if (btnCopy) {
+                btnCopy.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var item = getHighlights().find(function(h) { return h.id === hlId; });
+                    if (!item) return;
+                    var q = '“' + item.text + '”\n\n— Trích Chương ' + item.chapterNo + ' (' + STORY_TITLE + ')';
+                    if (navigator.clipboard) navigator.clipboard.writeText(q);
+                    showToast('Đã sao chép trích dẫn!');
+                });
+            }
+
+            // Nút Xóa
+            var btnDel = card.querySelector('.btn-del');
+            if (btnDel) {
+                btnDel.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var list = getHighlights().filter(function(h) { return h.id !== hlId; });
+                    saveHighlights(list);
+
+                    var markEl = document.querySelector('[data-hl-id="' + hlId + '"]');
+                    if (markEl) removeMarkElement(markEl, null);
+
+                    renderDrawerList();
+                    showToast('Đã xóa đoạn trích dẫn.');
+                });
+            }
+        });
+    }
+
+    function jumpToHighlight(chapterId, paraNo, hlId) {
+        var markEl = hlId ? document.querySelector('[data-hl-id="' + hlId + '"]') : null;
+        if (markEl) {
+            markEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            markEl.classList.add('is-flash');
+            setTimeout(function() { markEl.classList.remove('is-flash'); }, 1800);
+            return;
+        }
+
+        var block = document.querySelector('.chapter-block[data-chapter-id="' + chapterId + '"]');
+        if (block && typeof window.scrollToPara === 'function') {
+            window.scrollToPara(block, parseInt(paraNo, 10));
+        } else {
+            var p = document.querySelector('[data-para="' + paraNo + '"]');
+            if (p) {
+                p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                p.classList.add('is-flash');
+                setTimeout(function() { p.classList.remove('is-flash'); }, 1800);
+            }
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ---- 12. Gắn sự kiện các bộ lọc, tìm kiếm và thao tác hàng loạt ----
+    if (filterTabs) {
+        filterTabs.querySelectorAll('.hl-filter-btn').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                filterTabs.querySelectorAll('.hl-filter-btn').forEach(function(b) { b.classList.remove('is-active'); });
+                this.classList.add('is-active');
+                activeFilter = this.getAttribute('data-filter');
+                renderDrawerList();
+            });
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            searchKeyword = this.value.trim();
+            renderDrawerList();
+        });
+    }
+
+    if (scopeChapterBtn && scopeAllBtn) {
+        scopeChapterBtn.addEventListener('click', function() {
+            scopeChapterBtn.classList.add('is-active');
+            scopeAllBtn.classList.remove('is-active');
+            activeScope = 'chapter';
+            renderDrawerList();
+        });
+        scopeAllBtn.addEventListener('click', function() {
+            scopeAllBtn.classList.add('is-active');
+            scopeChapterBtn.classList.remove('is-active');
+            activeScope = 'all';
+            renderDrawerList();
+        });
+    }
+
+    // Sao chép toàn bộ danh sách trích dẫn đang xem
+    if (exportAllBtn) {
+        exportAllBtn.addEventListener('click', function() {
+            var list = getFilteredList();
+            if (!list.length) {
+                showToast('Không có đoạn nào để sao chép.');
+                return;
+            }
+            var text = '=== DANH SÁCH TRÍCH DẪN: ' + STORY_TITLE + ' ===\n\n';
+            list.forEach(function(item, idx) {
+                text += (idx + 1) + '. Chương ' + (item.chapterNo || '') + ' (Đoạn ' + item.paraNo + '):\n';
+                text += '“' + item.text + '”\n\n';
+            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showToast('Đã sao chép tất cả ' + list.length + ' đoạn trích dẫn!');
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        });
+    }
+
+    // Dọn dẹp / Xóa tất cả điểm nhấn của chương này
+    if (clearChapterBtn) {
+        clearChapterBtn.addEventListener('click', function() {
+            var list = getHighlights();
+            var chapCount = list.filter(function(h) {
+                return String(h.chapterId) === String(CURRENT_CHAPTER_ID) || String(h.chapterNo) === String(CURRENT_CHAPTER_NO);
+            }).length;
+
+            if (chapCount === 0) {
+                showToast('Chương này hiện không có điểm nhấn nào để xoá.');
+                return;
+            }
+
+            if (!confirm('Bạn có chắc chắn muốn xoá tất cả ' + chapCount + ' đoạn tô màu trong Chương ' + CURRENT_CHAPTER_NO + ' không?')) {
+                return;
+            }
+
+            // Gỡ toàn bộ thẻ mark trong DOM
+            var block = document.querySelector('.chapter-block[data-chapter-id="' + CURRENT_CHAPTER_ID + '"]') || document;
+            block.querySelectorAll('.hl-mark').forEach(function(el) {
+                var parent = el.parentNode;
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                el.remove();
+            });
+
+            // Lọc bỏ khỏi storage
+            var remaining = list.filter(function(h) {
+                return String(h.chapterId) !== String(CURRENT_CHAPTER_ID) && String(h.chapterNo) !== String(CURRENT_CHAPTER_NO);
+            });
+            saveHighlights(remaining);
+
+            renderDrawerList();
+            showToast('Đã dọn dẹp sạch sẽ toàn bộ ' + chapCount + ' điểm nhấn của chương này!');
+        });
+    }
+
+    function openDrawer() {
+        if (!drawer) return;
+        renderDrawerList();
+        try {
+            if (drawer.showModal) drawer.showModal();
+            else drawer.setAttribute('open', '');
+        } catch (e) {
+            drawer.setAttribute('open', '');
+        }
+    }
+
+    function closeDrawer() {
+        if (!drawer) return;
+        if (typeof drawer.close === 'function') {
+            drawer.close();
+        } else {
+            drawer.removeAttribute('open');
+        }
+    }
+
+    if (drawerBtn) drawerBtn.addEventListener('click', openDrawer);
+    if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
+
+    if (drawer) {
+        drawer.addEventListener('click', function (e) {
+            if (e.target === drawer) closeDrawer();
+        });
+    }
+
+    // Phím tắt H: Bật/tắt Drawer; Alt+H: Bật/tắt Chế độ đọc sạch sẽ (Ẩn/Hiện màu tô)
+    document.addEventListener('keydown', function (e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.altKey && (e.key === 'h' || e.key === 'H')) {
+            e.preventDefault();
+            toggleHighlightVisibility();
+            return;
+        }
+        if (e.key === 'h' || e.key === 'H') {
+            e.preventDefault();
+            if (drawer && drawer.open) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+        }
+    });
+
+})();
+</script>
+
 </body>
 </html>
+
 

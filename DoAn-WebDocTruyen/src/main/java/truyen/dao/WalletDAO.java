@@ -240,6 +240,48 @@ public class WalletDAO {
     }
 
     /**
+     * Trừ xu khi mua gói dịch vụ, nâng cấp VIP.
+     */
+    public boolean deductCoins(int userId, int amount, String message) throws SQLException {
+        if (amount <= 0 || userId <= 0) return false;
+        if (!DBConnection.isReady()) return true;
+
+        String deductSql = "UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND balance >= ?";
+        String logSql = "INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message) "
+                      + "VALUES (?, NULL, NULL, ?, ?)";
+
+        try (Connection con = DBConnection.get()) {
+            con.setAutoCommit(false);
+            try {
+                getBalance(userId);
+                try (PreparedStatement ps = con.prepareStatement(deductSql)) {
+                    ps.setInt(1, amount);
+                    ps.setInt(2, userId);
+                    ps.setInt(3, amount);
+                    if (ps.executeUpdate() == 0) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+                try (PreparedStatement ps = con.prepareStatement(logSql)) {
+                    ps.setInt(1, userId);
+                    ps.setInt(2, amount);
+                    ps.setString(3, message != null ? message : "Chi tiêu xu");
+                    ps.executeUpdate();
+                }
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
+
      * Số lần và tổng số xu đã NẠP (mô phỏng) trong hôm nay — để chặn trần.
      *
      * Nhận diện giao dịch nạp: from_user_id NULL (hệ thống cộng), không gắn
@@ -314,5 +356,38 @@ public class WalletDAO {
             }
         }
         return list;
+    }
+
+    /**
+     * Tổng số xu tác giả kiếm được từ một truyện (từ mở khoá VIP và tặng xu).
+     */
+    public int getStoryIncome(int authorId, int storyId) throws SQLException {
+        if (authorId <= 0 || storyId <= 0 || !DBConnection.isReady()) return 0;
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE to_user_id = ? AND story_id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            ps.setInt(2, storyId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
+     * Tổng số xu tác giả nhận được từ độc giả (cả mở khoá chương và tặng xu).
+     */
+    public int getTotalAuthorIncome(int authorId) throws SQLException {
+        if (authorId <= 0 || !DBConnection.isReady()) return 0;
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions "
+                   + "WHERE to_user_id = ? AND from_user_id IS NOT NULL AND from_user_id <> ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            ps.setInt(2, authorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
     }
 }

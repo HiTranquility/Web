@@ -19,6 +19,7 @@ import truyen.model.User;
 public class WalletServlet extends HttpServlet {
 
     private final WalletDAO walletDAO = new WalletDAO();
+    private final truyen.dao.NotificationDAO notificationDAO = new truyen.dao.NotificationDAO();
 
     /** Trần nạp xu MÔ PHỎNG mỗi người mỗi ngày — xem handleBuy(). */
     static final int MAX_TOPUPS_PER_DAY = 3;
@@ -100,6 +101,15 @@ public class WalletServlet extends HttpServlet {
             boolean ok = walletDAO.transfer(currentUser.getId(), toUserId, storyId, amount, message);
             if (ok) {
                 int newBalance = walletDAO.getBalance(currentUser.getId());
+                try {
+                    String senderName = currentUser.getName() != null && !currentUser.getName().isEmpty()
+                            ? currentUser.getName() : currentUser.getUsername();
+                    String notifMsg = senderName + " đã tặng bạn " + amount + " xu"
+                            + (message != null && !message.trim().isEmpty() ? " với lời nhắn: \"" + message.trim() + "\"" : ".");
+                    notificationDAO.sendNotification(toUserId, storyId, null, "TIP", notifMsg);
+                } catch (Exception ignore) {
+                    // Không ngắt luồng nếu lỗi ghi thông báo
+                }
                 resp.getWriter().write("{\"success\":true,\"newBalance\":" + newBalance
                         + ",\"message\":\"✨ Tặng " + amount + " xu cho tác giả thành công!\"}");
             } else {

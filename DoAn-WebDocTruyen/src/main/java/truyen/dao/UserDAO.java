@@ -22,10 +22,23 @@ import truyen.util.DBConnection;
  */
 public class UserDAO {
 
+    private static volatile boolean vipColumnChecked = false;
+
+    private static void ensureVipColumn() {
+        if (vipColumnChecked || !DBConnection.isReady()) return;
+        vipColumnChecked = true;
+        try (Connection con = DBConnection.get(); Statement st = con.createStatement()) {
+            st.executeUpdate("ALTER TABLE users ADD COLUMN vip_expire_at DATETIME NULL");
+        } catch (Exception ignored) {
+            // Cột đã tồn tại hoặc không đủ quyền ALTER
+        }
+    }
+
     private static final String SELECT_BASE =
         "SELECT id, username, email, password_hash, display_name, avatar_url, "
-      + "       bio, role, status, ban_reason, created_at "
+      + "       bio, role, status, ban_reason, created_at, vip_expire_at "
       + "FROM users ";
+
 
     /**
      * Tìm theo username — dùng lúc đăng nhập.
@@ -359,6 +372,61 @@ public class UserDAO {
         if (rs.getTimestamp("created_at") != null) {
             u.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         }
+        try {
+            java.sql.Timestamp vipTs = rs.getTimestamp("vip_expire_at");
+            if (vipTs != null) {
+                u.setVipExpireAt(vipTs.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {}
         return u;
     }
+
+    /**
+     * Nâng cấp / gia hạn Hội viên VIP thêm số ngày chỉ định.
+     */
+    public boolean upgradeVip(int userId, int days) throws SQLException {
+        if (userId <= 0 || days <= 0 || !DBConnection.isReady()) return true;
+        ensureVipColumn();
+        String sql = "UPDATE users SET vip_expire_at = CASE "
+                   + "    WHEN vip_expire_at IS NOT NULL AND vip_expire_at > NOW() "
+                   + "    THEN DATE_ADD(vip_expire_at, INTERVAL ? DAY) "
+                   + "    ELSE DATE_ADD(NOW(), INTERVAL ? DAY) "
+                   + "END WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, days);
+            ps.setInt(2, days);
+            ps.setInt(3, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Đếm tổng số chương truyện người này đã đọc tích luỹ.
+     */
+    public int countReadChapters(int userId) throws SQLException {
+        if (userId <= 0 || !DBConnection.isReady()) return 0;
+        String sql = "SELECT COUNT(DISTINCT chapter_id) FROM view_logs WHERE user_id = ? AND chapter_id IS NOT NULL";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int c = rs.getInt(1);
+                    if (c > 0) return c;
+                }
+            }
+        } catch (SQLException ignored) {}
+
+        // Fallback đếm từ reading_progress
+        String sqlRp = "SELECT COUNT(*) FROM reading_progress WHERE user_id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sqlRp)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
 }
+

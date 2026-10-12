@@ -37,9 +37,25 @@
                         </span>
                         <span class="chapter-title"><c:out value="${ch.title}"/></span>
                         <c:if test="${ch.vip}">
-                            <span class="badge-vip">
-                                🔒 VIP <c:out value="${ch.coinPrice}"/> xu
-                            </span>
+                            <c:set var="chUnlocked" value="false"/>
+                            <c:if test="${not empty unlockedChapterIds}">
+                                <c:forEach var="uId" items="${unlockedChapterIds}">
+                                    <c:if test="${uId eq ch.id}">
+                                        <c:set var="chUnlocked" value="true"/>
+                                    </c:if>
+                                </c:forEach>
+                            </c:if>
+                            <c:choose>
+                                <c:when test="${clCanEdit or (not empty currentUser and currentUser.admin)}">
+                                    <span class="badge-vip badge-author" title="Bạn có quyền tác giả / quản trị viên (Đọc miễn phí)">👑 VIP <c:out value="${ch.coinPrice}"/> xu</span>
+                                </c:when>
+                                <c:when test="${chUnlocked}">
+                                    <span class="badge-unlocked" title="Bạn đã mở khoá chương này">🔓 Đã mở</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge-vip">🔒 VIP <c:out value="${ch.coinPrice}"/> xu</span>
+                                </c:otherwise>
+                            </c:choose>
                         </c:if>
                     </a>
 

@@ -433,3 +433,121 @@ body.zen-active .editor-stats-bar {
 .comic-thumb-tools button:hover { background: var(--ember); }
 .comic-thumb-tools button[data-remove]:hover { background: #ef4444; }
 #sizeWarn { color: #ef4444; margin-top: 10px; }
+
+/* Find & Replace Bar */
+.find-replace-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--ink-800);
+    border-bottom: 1px solid var(--ink-700);
+    flex-wrap: wrap;
+    animation: slideDown .18s var(--ease);
+}
+html[data-site-theme="light"] .find-replace-bar {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+.frb-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 280px;
+}
+.frb-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink-900);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-sm);
+    padding: 4px 10px;
+    flex: 1;
+}
+html[data-site-theme="light"] .frb-field {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+.frb-field input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: .86rem;
+    width: 100%;
+}
+.frb-match-count {
+    font-size: .74rem;
+    color: var(--text-mut);
+    white-space: nowrap;
+    font-weight: 600;
+}
+.frb-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Lore Notes Drawer */
+.lore-drawer {
+    background: var(--ink-850);
+    border-bottom: 1px solid var(--ink-700);
+    padding: 14px 16px;
+    animation: slideDown .18s var(--ease);
+}
+html[data-site-theme="light"] .lore-drawer {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+.lore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+.lore-title span {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+}
+.lore-title small {
+    font-size: .78rem;
+    color: var(--text-mut);
+}
+.lore-body textarea {
+    width: 100%;
+    min-height: 120px;
+    max-height: 250px;
+    resize: vertical;
+    background: var(--ink-900);
+    border: 1px solid var(--ink-700);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: .88rem;
+    line-height: 1.5;
+    outline: none;
+}
+html[data-site-theme="light"] .lore-body textarea {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+.lore-body textarea:focus {
+    border-color: var(--ember);
+}
+.lore-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+

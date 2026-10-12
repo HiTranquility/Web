@@ -117,8 +117,135 @@ public class User implements Serializable {
     }
 
     /** Chữ cái đầu, dùng làm avatar thay thế khi chưa có ảnh. */
+    /** Thời hạn Hội viên VIP Premium (null hoặc quá khứ = không có VIP). */
+    private LocalDateTime vipExpireAt;
+
+    /** Tổng số chương người dùng đã đọc (được tổng hợp từ lịch sử đọc). */
+    private int readChapters;
+
+    public LocalDateTime getVipExpireAt() { return vipExpireAt; }
+    public void setVipExpireAt(LocalDateTime vipExpireAt) { this.vipExpireAt = vipExpireAt; }
+
+    public int getReadChapters() { return readChapters; }
+    public void setReadChapters(int readChapters) { this.readChapters = readChapters; }
+
+    /** Kiểm tra xem tài khoản có đang sở hữu gói Hội Viên VIP còn hiệu lực hay không. */
+    public boolean isVip() {
+        return vipExpireAt != null && vipExpireAt.isAfter(LocalDateTime.now());
+    }
+
+    /** Số ngày người dùng đã đồng hành cùng website kể từ ngày tạo tài khoản. */
+    public int getAccountAgeDays() {
+        if (createdAt == null) return 1;
+        long days = java.time.temporal.ChronoUnit.DAYS.between(createdAt, LocalDateTime.now());
+        return Math.max(1, (int) days);
+    }
+
+    /**
+     * Xác định Cấp bậc Độc giả Lâu năm (Seniority & Loyalty Tier).
+     * Phân cấp:
+     * - VIP: Đang sở hữu thẻ Hội Viên VIP
+     * - LEGEND (Đại Tông Sư): Tuổi tài khoản >= 180 ngày HOẶC đã đọc >= 500 chương
+     * - LOYAL (Tri Kỷ): Tuổi tài khoản >= 60 ngày HOẶC đã đọc >= 150 chương
+     * - COMPANION (Đồng Hành): Tuổi tài khoản >= 15 ngày HOẶC đã đọc >= 30 chương
+     * - NEWBIE (Tân Thủ): Người dùng mới gia nhập
+     */
+    public String getSeniorityTier() {
+        if (isVip()) return "vip";
+        int days = getAccountAgeDays();
+        if (days >= 180 || readChapters >= 500) return "grandmaster";
+        if (days >= 60 || readChapters >= 150)  return "confidant";
+        if (days >= 15 || readChapters >= 30)   return "companion";
+        return "newbie";
+    }
+
+    /** Tên hiển thị thân thiện của cấp bậc độc giả. */
+    public String getTierName() {
+        switch (getSeniorityTier().toLowerCase()) {
+            case "vip":         return "Hội Viên VIP";
+            case "grandmaster":
+            case "legend":      return "Đại Tông Sư";
+            case "confidant":
+            case "loyal":       return "Tri Kỷ";
+            case "companion":   return "Đồng Hành";
+            default:            return "Tân Thủ";
+        }
+    }
+
+    /** Biểu tượng đại diện của cấp bậc. */
+    public String getTierIcon() {
+        switch (getSeniorityTier().toLowerCase()) {
+            case "vip":         return "⭐";
+            case "grandmaster":
+            case "legend":      return "🔥";
+            case "confidant":
+            case "loyal":       return "👑";
+            case "companion":   return "⚔️";
+            default:            return "🌱";
+        }
+    }
+
+    /** Phần trăm giảm giá khi mở khóa chương VIP (% chiết khấu). */
+    public int getDiscountPercent() {
+        switch (getSeniorityTier().toLowerCase()) {
+            case "vip":         return 25; // Giảm 25% cho VIP
+            case "grandmaster":
+            case "legend":      return 15; // Giảm 15% cho Đại Tông Sư
+            case "confidant":
+            case "loyal":       return 10; // Giảm 10% cho Tri Kỷ
+            case "companion":   return 5;  // Giảm 5% cho Đồng Hành
+            default:            return 0;  // Tân Thủ nguyên giá
+        }
+    }
+
+    /** Hệ số nhân thưởng xu khi điểm danh hàng ngày. */
+    public double getCheckinMultiplier() {
+        switch (getSeniorityTier().toLowerCase()) {
+            case "vip":         return 2.0; // Nhân đôi xu
+            case "grandmaster":
+            case "legend":      return 1.8; // Tăng 80% xu
+            case "confidant":
+            case "loyal":       return 1.5; // Tăng 50% xu
+            case "companion":   return 1.2; // Tăng 20% xu
+            default:            return 1.0;
+        }
+    }
+
+    /** Tiến độ phần trăm thăng hạng tiếp theo (0 - 100%). */
+    public int getNextTierProgressPercent() {
+        String tier = getSeniorityTier().toLowerCase();
+        if (isVip() || "grandmaster".equals(tier) || "legend".equals(tier)) return 100;
+        int days = getAccountAgeDays();
+
+        if ("newbie".equals(tier)) {
+            int p1 = (int) Math.min(100, (days * 100.0) / 15);
+            int p2 = (int) Math.min(100, (readChapters * 100.0) / 30);
+            return Math.max(p1, p2);
+        } else if ("companion".equals(tier)) {
+            int p1 = (int) Math.min(100, ((days - 15) * 100.0) / (60 - 15));
+            int p2 = (int) Math.min(100, ((readChapters - 30) * 100.0) / (150 - 30));
+            return Math.max(p1, p2);
+        } else if ("confidant".equals(tier) || "loyal".equals(tier)) {
+            int p1 = (int) Math.min(100, ((days - 60) * 100.0) / (180 - 60));
+            int p2 = (int) Math.min(100, ((readChapters - 150) * 100.0) / (500 - 150));
+            return Math.max(p1, p2);
+        }
+        return 100;
+    }
+
+    /** Mục tiêu thăng hạng tiếp theo để hiển thị gợi ý. */
+    public String getNextTierTargetText() {
+        if (isVip()) return "Đặc quyền VIP tối thượng đang kích hoạt!";
+        String tier = getSeniorityTier().toLowerCase();
+        if ("grandmaster".equals(tier) || "legend".equals(tier)) return "Đã đạt Đẳng Cấp Huyền Thoại cao nhất!";
+        if ("confidant".equals(tier) || "loyal".equals(tier)) return "Cần 180 ngày hoặc 500 chương đọc để thăng cấp 🔥 Đại Tông Sư";
+        if ("companion".equals(tier)) return "Cần 60 ngày hoặc 150 chương đọc để thăng cấp 👑 Tri Kỷ";
+        return "Cần 15 ngày hoặc 30 chương đọc để thăng cấp ⚔️ Đồng Hành";
+    }
+
     public String getInitial() {
         String n = getName();
         return (n == null || n.isEmpty()) ? "?" : n.substring(0, 1).toUpperCase();
     }
 }
+

@@ -396,6 +396,11 @@ public class AuthServlet extends HttpServlet {
 
                 // Gửi thư ngầm (không làm chậm trang web)
                 truyen.util.MailSender.sendPasswordResetEmailAsync(u.getEmail(), u.getName(), resetUrl);
+
+                // Nếu đang ở môi trường phát triển / đồ án (chưa có SMTP thật), cung cấp devLink để demo
+                if (!truyen.util.MailSender.isMailEnabled()) {
+                    request.setAttribute("devLink", resetUrl);
+                }
             }
             // Luôn báo sent = true để không lộ thông tin email có tồn tại hay không (OWASP recommendation)
             request.setAttribute("sent", true);

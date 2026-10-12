@@ -487,8 +487,8 @@ CREATE TABLE notifications (
     story_id   INT NULL,
     chapter_id INT NULL,
 
-    -- Để sẵn cho các loại sau: bình luận mới, truyện bị gỡ...
-    type       ENUM('NEW_CHAPTER', 'SYSTEM') NOT NULL DEFAULT 'NEW_CHAPTER',
+    -- Loại thông báo: NEW_CHAPTER, SYSTEM, TIP, UPDATE_CHAPTER...
+    type       VARCHAR(32) NOT NULL DEFAULT 'SYSTEM',
 
     message    VARCHAR(255) NOT NULL,
     is_read    BOOLEAN  NOT NULL DEFAULT FALSE,

@@ -28,6 +28,7 @@ import truyen.dao.NotificationDAO;
 import truyen.dao.ReadingProgressDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.UnlockDAO;
+import truyen.dao.UserDAO;
 import truyen.dao.WalletDAO;
 import truyen.model.Chapter;
 import truyen.model.ChapterPage;
@@ -69,6 +70,7 @@ public class ChapterServlet extends HttpServlet {
     private ReadingProgressDAO progressDAO;
     private UnlockDAO unlockDAO;
     private WalletDAO walletDAO;
+    private UserDAO userDAO;
 
     @Override
     public void init() throws ServletException {
@@ -83,6 +85,7 @@ public class ChapterServlet extends HttpServlet {
         progressDAO = new ReadingProgressDAO();
         unlockDAO = new UnlockDAO();
         walletDAO = new WalletDAO();
+        userDAO = new UserDAO();
     }
 
     @Override
@@ -311,11 +314,28 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
-        boolean success = walletDAO.unlockChapter(me.getId(), chapter.getId(), story.getAuthorId(), story.getId(), chapter.getCoinPrice());
+        // Nạp số chương đọc để tính đúng cấp bậc ưu đãi
+        try {
+            me.setReadChapters(userDAO.countReadChapters(me.getId()));
+        } catch (Exception ignored) {}
+
+        int origPrice = chapter.getCoinPrice();
+        int discount = me.getDiscountPercent();
+        int finalPrice = origPrice;
+        if (discount > 0) {
+            finalPrice = Math.max(1, (int) Math.round(origPrice * (100.0 - discount) / 100.0));
+        }
+
+        boolean success = walletDAO.unlockChapter(me.getId(), chapter.getId(), story.getAuthorId(), story.getId(), finalPrice);
         if (success) {
-            request.getSession().setAttribute("flash", "🎉 Mở khoá chương thành công! Chúc bạn đọc truyện vui vẻ.");
+            if (discount > 0) {
+                request.getSession().setAttribute("flash", "🎉 Mở khoá chương thành công! Bạn được giảm " + discount
+                        + "% nhờ cấp " + me.getTierName() + " (chỉ tốn " + finalPrice + " xu thay vì " + origPrice + " xu).");
+            } else {
+                request.getSession().setAttribute("flash", "🎉 Mở khoá chương thành công! Chúc bạn đọc truyện vui vẻ.");
+            }
         } else {
-            request.getSession().setAttribute("flashError", "Số dư xu của bạn không đủ để mở khoá chương này (cần " + chapter.getCoinPrice() + " xu). Hãy điểm danh nhận xu nhé!");
+            request.getSession().setAttribute("flashError", "Số dư xu của bạn không đủ để mở khoá chương này (cần " + finalPrice + " xu). Hãy điểm danh nhận xu nhé!");
         }
         response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
         return null;

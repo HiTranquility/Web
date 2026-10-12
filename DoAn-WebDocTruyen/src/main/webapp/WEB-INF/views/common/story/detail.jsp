@@ -67,12 +67,20 @@
                             <span id="author-follow-label">${following ? '✓ Đang theo dõi' : '+ Theo dõi'}</span>
                         </button>
                     </form>
+                    <button type="button" class="btn btn-warning btn-sm" style="margin-left:8px;"
+                            onclick="openTipModal(${story.authorId}, '<c:out value="${story.authorName}"/>', ${story.id}, '<c:out value="${story.title}"/>')"
+                            title="Tặng xu khích lệ tác giả">🪙 Tặng xu</button>
                 </c:when>
                 <c:when test="${empty currentUser}">
                     <a class="btn btn-ghost btn-sm" id="author-follow-btn-guest" style="margin-left:10px"
                        href="${pageContext.request.contextPath}/auth?action=login&amp;reason=follow&amp;redirect=${pageContext.request.contextPath}/story?action=detail%26id=${story.id}"
                        title="Đăng nhập để theo dõi tác giả">
                         <span>+ Theo dõi</span>
+                    </a>
+                    <a class="btn btn-ghost btn-sm" style="margin-left:8px"
+                       href="${pageContext.request.contextPath}/auth?action=login&amp;reason=tip&amp;redirect=${pageContext.request.contextPath}/story?action=detail%26id=${story.id}"
+                       title="Đăng nhập để tặng xu tác giả">
+                        <span>🪙 Tặng xu</span>
                     </a>
                 </c:when>
             </c:choose>
@@ -167,6 +175,24 @@
                     📕 Tải EPUB</a>
             </c:if>
 
+            <%-- Tặng xu khích lệ tác giả --%>
+            <c:choose>
+                <c:when test="${not empty currentUser and currentUser.id ne story.authorId}">
+                    <button type="button" class="btn btn-warning"
+                            onclick="openTipModal(${story.authorId}, '<c:out value="${story.authorName}"/>', ${story.id}, '<c:out value="${story.title}"/>')"
+                            title="Tặng xu khích lệ tác giả sáng tác">
+                        🪙 Tặng xu
+                    </button>
+                </c:when>
+                <c:when test="${empty currentUser}">
+                    <a class="btn btn-ghost"
+                       href="${pageContext.request.contextPath}/auth?action=login&amp;reason=tip&amp;redirect=${pageContext.request.contextPath}/story?action=detail%26id=${story.id}"
+                       title="Đăng nhập để tặng xu cho tác giả">
+                        🪙 Tặng xu
+                    </a>
+                </c:when>
+            </c:choose>
+
             <%-- canEdit do servlet tính: chủ truyện HOẶC admin --%>
             <c:if test="${canEdit}">
                 <a class="btn btn-ghost"
@@ -212,8 +238,8 @@
                  chuyển trang — bắt đổi trang để tố cáo là cách chắc chắn
                  khiến không ai buồn báo cáo. --%>
             <c:if test="${not empty currentUser}">
-                <details class="report-box" style="margin-left:auto">
-                    <summary class="report-trigger-btn">🚩 Báo cáo vi phạm</summary>
+                <details class="report-box" id="story-report-box" style="margin-left:auto">
+                    <summary class="report-trigger-btn" id="btn-report-story">🚩 Báo cáo vi phạm</summary>
                     <%--
                       enctype BẮT BUỘC có, không thì ảnh không đi kèm và
                       request.getParts() ở servlet ném lỗi (ISSUE-025).
@@ -228,7 +254,7 @@
 
                         <label class="report-field">
                             <span>Loại vi phạm</span>
-                            <select name="category" class="inline-input" required>
+                            <select name="category" id="report-category-select" class="inline-input" required>
                                 <option value="">— Chọn loại vi phạm —</option>
                                 <c:forEach var="cat" items="${reportCategoriesStory}">
                                     <option value="${cat}">${reportCategoryLabels[cat]}</option>
@@ -238,19 +264,19 @@
 
                         <label class="report-field">
                             <span>Mô tả thêm</span>
-                            <input type="text" name="reason" maxlength="500"
+                            <input type="text" name="reason" id="report-reason-input" maxlength="500"
                                    class="inline-input"
                                    placeholder="Bắt buộc nếu chọn &quot;Khác&quot;">
                         </label>
 
                         <label class="report-field">
                             <span>Ảnh bằng chứng <em>(tối đa 3, mỗi ảnh ≤ 2 MB)</em></span>
-                            <input type="file" name="evidence" accept="image/*" multiple
+                            <input type="file" name="evidence" id="report-evidence-file" accept="image/*" multiple
                                    class="report-file-input" data-max="3">
                             <span class="report-file-hint"></span>
                         </label>
 
-                        <button type="submit" class="btn btn-danger btn-sm">Gửi báo cáo</button>
+                        <button type="submit" id="btn-submit-report" class="btn btn-danger btn-sm">Gửi báo cáo</button>
                     </form>
                 </details>
             </c:if>
@@ -812,4 +838,6 @@
     </script>
     <script src="${pageContext.request.contextPath}/assets/js/drive-backup.js" defer></script>
 </c:if>
+
+<%@ include file="/WEB-INF/views/_partials/_tip-modal.jsp" %>
 

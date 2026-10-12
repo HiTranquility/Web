@@ -6,35 +6,32 @@
   user/history.jsp — MẢNH NỘI DUNG: Lịch sử đọc                  TRANG 31
 ================================================================================
   TẦNG: views/ · layout: main
-
   Nhận: history (List<ReadHistory>) · totalRead (int)
-
-  KHÁC TRANG 11 (TRUYỆN ĐÃ LƯU) CHỖ NÀO
-      Trang 11 là danh sách người dùng TỰ CHỌN — nên có nút "Bỏ lưu" cho từng
-      truyện. Trang này là dấu vết TỰ ĐỘNG, không ai chọn gì cả, nên không có
-      nút xoá từng dòng: xoá một dòng trong một danh sách mình không tạo ra thì
-      chẳng để làm gì. Chỉ có một nút xoá sạch, đặt ở cuối trang.
-
-  Dùng lại lớp CSS .bookmark-list / .bookmark-item của trang 11 — hai trang
-  hiển thị cùng một dạng dữ liệu (bìa · tên · tiến độ · nút), không có lý do
-  gì để trông khác nhau.
 ================================================================================
 --%>
 <div class="section-head">
     <h2>Lịch sử đọc</h2>
-    <span class="more">${totalRead} truyện</span>
+    <span class="more">${totalRead} tác phẩm</span>
 </div>
 
 <c:choose>
     <c:when test="${not empty history}">
-        <p class="muted-note" style="margin:0 0 16px">
-            Tự động ghi lại khi bạn mở truyện — không cần bấm lưu.
-            Chỉ hiện <b>${fn:length(history)}</b> truyện gần nhất.
-        </p>
+        <div class="bookshelf-toolbar" style="margin-bottom: 14px;">
+            <p class="muted-note" style="margin: 0;">
+                Tự động ghi lại khi mở truyện. Hiển thị <b>${fn:length(history)}</b> truyện gần nhất.
+            </p>
+            <div class="bs-search-box" style="margin-left: auto;">
+                <span class="bs-search-icon">🔍</span>
+                <input type="text" id="hist-search-input" placeholder="Lọc theo tên hoặc tác giả…">
+                <button type="button" class="bs-search-clear" id="hist-search-clear">&times;</button>
+            </div>
+        </div>
 
-        <div class="bookmark-list">
+        <div class="bookmark-list" id="hist-list-container">
             <c:forEach var="h" items="${history}">
-                <div class="bookmark-item">
+                <div class="bookmark-item"
+                     data-title="${fn:toLowerCase(h.storyTitle)}"
+                     data-author="${fn:toLowerCase(h.authorName)}">
                     <div class="bm-cover">
                         <c:set var="cvUrl"     value="${h.coverUrl}"/>
                         <c:set var="cvAlt"     value="${h.storyTitle}"/>
@@ -48,12 +45,8 @@
                             <c:out value="${h.storyTitle}"/></a>
 
                         <p class="bm-progress">
-                            <%-- viewedLabel do model tính: "Hôm nay" / "Hôm qua"
-                                 / "3 ngày trước" / "12/9". Mắt tìm chữ "hôm qua"
-                                 nhanh hơn dò một cột ngày tháng. --%>
                             <b>${h.viewedLabel}</b>
                             &middot; <c:out value="${h.authorName}"/>
-
                             <c:if test="${h.viewTimes gt 1}">
                                 &middot; đã mở ${h.viewTimes} lần
                             </c:if>
@@ -62,16 +55,27 @@
                         <p class="bm-progress">
                             <c:choose>
                                 <c:when test="${h.resumable}">
-                                    Đang đọc chương ${h.lastChapterNo} / ${h.totalChapters}
+                                    Đang đọc chương <b>${h.lastChapterNo}</b> / ${h.totalChapters}
                                 </c:when>
                                 <c:otherwise>
-                                    <%-- Có trong lịch sử mà không có vị trí đọc:
-                                         mới xem trang giới thiệu, chưa mở
-                                         chương nào (reading_progress trống). --%>
                                     ${h.totalChapters} chương &middot; chưa đọc chương nào
                                 </c:otherwise>
                             </c:choose>
                         </p>
+
+                        <%-- Thanh tiến độ đọc trực quan cho lịch sử --%>
+                        <c:if test="${h.resumable}">
+                            <div class="bm-progress-row">
+                                <div class="bm-progress-bar" title="Tiến độ: ${h.progressPercent}%">
+                                    <div class="bm-progress-fill ${h.progressPercent ge 100 ? 'completed' : 'reading'}"
+                                         style="width: ${h.progressPercent}%;"></div>
+                                </div>
+                                <span class="bm-progress-pct">${h.progressPercent}%</span>
+                                <span class="bm-status-tag ${h.progressPercent ge 100 ? 'completed' : 'reading'}">
+                                    ${h.progressPercent ge 100 ? 'Đã xong' : 'Đang đọc'}
+                                </span>
+                            </div>
+                        </c:if>
                     </div>
 
                     <div class="bm-actions">
@@ -88,34 +92,25 @@
                             </c:otherwise>
                         </c:choose>
 
-                        <%-- Lưu ngay từ đây: gặp lại truyện hay trong lịch sử thì
-                             lưu được luôn, khỏi phải sang trang truyện rồi quay
-                             lại. from=history để servlet biết đường về. --%>
                         <form action="${pageContext.request.contextPath}/bookmark"
-                              method="post" style="display:inline">
+                              method="post" class="form-ajax-bookmark" style="display:inline">
                             <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="storyId" value="${h.storyId}">
                             <input type="hidden" name="from" value="history">
-                            <button type="submit" class="btn btn-ghost btn-sm">☆ Lưu</button>
+                            <button type="submit" class="btn btn-ghost btn-sm btn-bookmark-act">☆ Lưu</button>
                         </form>
                     </div>
                 </div>
             </c:forEach>
         </div>
 
-        <%--
-          XOÁ LỊCH SỬ.
+        <div id="hist-empty-filter" style="display:none; padding:30px 10px; text-align:center; color:var(--text-mut);">
+            Không tìm thấy truyện phù hợp trong lịch sử đọc.
+        </div>
 
-          Đặt ở CUỐI trang, không phải cạnh tiêu đề: người vào đây là để tìm
-          truyện đã đọc, không phải để xoá. Nút xoá nằm trên đầu thì suốt ngày
-          chắn đường thứ người ta thực sự cần.
-
-          <details> gấp lại — bấm một lần để mở, một lần nữa mới xoá được. Hai
-          bước cho một việc không hoàn tác được, mà không cần một dòng
-          JavaScript nào.
-        --%>
-        <details class="danger-zone">
+        <%-- VÙNG NGUY HIỂM: XOÁ LỊCH SỬ ĐỌC --%>
+        <details class="danger-zone" style="margin-top: 28px;">
             <summary>Xoá lịch sử đọc</summary>
             <div class="danger-body">
                 <p class="muted">
@@ -136,10 +131,76 @@
                 </form>
             </div>
         </details>
+
+        <script>
+        (function() {
+            var searchInput = document.getElementById('hist-search-input');
+            var searchClear = document.getElementById('hist-search-clear');
+            var items = document.querySelectorAll('#hist-list-container .bookmark-item');
+            var emptyNotice = document.getElementById('hist-empty-filter');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var q = (this.value || '').trim().toLowerCase();
+                    if (searchClear) searchClear.style.display = q ? 'block' : 'none';
+                    var visible = 0;
+                    items.forEach(function(item) {
+                        var title = item.getAttribute('data-title') || '';
+                        var author = item.getAttribute('data-author') || '';
+                        if (!q || title.indexOf(q) !== -1 || author.indexOf(q) !== -1) {
+                            item.style.display = '';
+                            visible++;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    if (emptyNotice) {
+                        emptyNotice.style.display = (visible === 0 && items.length > 0) ? 'block' : 'none';
+                    }
+                });
+            }
+
+            if (searchClear && searchInput) {
+                searchClear.addEventListener('click', function() {
+                    searchInput.value = '';
+                    searchClear.style.display = 'none';
+                    items.forEach(function(item) { item.style.display = ''; });
+                    if (emptyNotice) emptyNotice.style.display = 'none';
+                });
+            }
+
+            // AJAX Bookmark ngay từ lịch sử đọc
+            document.querySelectorAll('.form-ajax-bookmark').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var btn = this.querySelector('.btn-bookmark-act');
+                    var formData = new FormData(this);
+                    var params = new URLSearchParams(formData);
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: params
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data && data.success && btn) {
+                            btn.textContent = '✓ Đã lưu';
+                            btn.classList.remove('btn-ghost');
+                            btn.classList.add('btn-primary');
+                            btn.disabled = true;
+                        }
+                    })
+                    .catch(function() {
+                        form.submit();
+                    });
+                });
+            });
+        })();
+        </script>
     </c:when>
 
     <c:otherwise>
-        <%-- MẢNH: trạng thái rỗng, dùng chung với năm trang danh sách khác --%>
         <c:set var="emIcon"  value="🕘"/>
         <c:set var="emTitle" value="Chưa có lịch sử đọc"/>
         <c:set var="emText"

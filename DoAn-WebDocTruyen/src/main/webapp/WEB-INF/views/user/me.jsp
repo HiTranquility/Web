@@ -28,6 +28,10 @@
             <span><b>${me.storyCount}</b> truyện</span>
             <span><b><fmt:formatNumber pattern="#,##0" value="${totalViews}"/></b> lượt xem</span>
             <span><b>${me.followerCount}</b> người theo dõi</span>
+            <span class="tier-chip tier-${me.seniorityTier}">${me.tierIcon} ${me.tierName}</span>
+            <c:if test="${me.vip}">
+                <span class="tier-chip tier-vip-glow">⭐ VIP</span>
+            </c:if>
             <a href="${pageContext.request.contextPath}/wallet?action=topup" class="profile-coin-pill" title="Ví xu cá nhân. Bấm để nạp thêm">
                 <span>🪙</span>
                 <b><fmt:formatNumber pattern="#,##0" value="${walletBalance}"/></b> xu
@@ -49,6 +53,131 @@
                href="${pageContext.request.contextPath}/user?action=profile&amp;id=${me.id}">
                 Xem hồ sơ công khai</a>
         </div>
+    </div>
+</div>
+
+<%-- ================================================================================
+     THẺ CĂN CƯỚC ĐỘC GIẢ (READER PASSPORT & VIP SENIORITY PASS)
+     ================================================================================ --%>
+<div class="reader-passport-card" id="vip-pass">
+    <div class="passport-header">
+        <div class="passport-title-wrap">
+            <span class="passport-badge-icon">${me.tierIcon}</span>
+            <div>
+                <div class="passport-tier-title">
+                    Cấp bậc Độc giả: <b>${me.tierName}</b>
+                    <c:if test="${me.vip}">
+                        <span class="badge-vip-shimmer">⭐ VIP PREMIUM</span>
+                    </c:if>
+                </div>
+                <div class="passport-subtitle">
+                    Thẻ căn cước độc giả &amp; đặc quyền gắn bó lâu năm
+                </div>
+            </div>
+        </div>
+
+        <div class="passport-status-pill">
+            <c:choose>
+                <c:when test="${me.vip}">
+                    <span class="status-active">⭐ Đang hoạt động VIP (${me.accountAgeDays} ngày gắn bó)</span>
+                </c:when>
+                <c:otherwise>
+                    <span class="status-normal">🌱 Thành viên Tiêu chuẩn</span>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+
+    <%-- Lưới đặc quyền & Thống kê --%>
+    <div class="passport-grid">
+        <div class="passport-stat-item">
+            <span class="stat-icon">📅</span>
+            <div class="stat-meta">
+                <span class="stat-label">Thời gian gắn bó</span>
+                <span class="stat-val"><b>${me.accountAgeDays}</b> ngày</span>
+            </div>
+        </div>
+        <div class="passport-stat-item">
+            <span class="stat-icon">📖</span>
+            <div class="stat-meta">
+                <span class="stat-label">Chương truyện đã đọc</span>
+                <span class="stat-val"><b>${me.readChapters}</b> chương</span>
+            </div>
+        </div>
+        <div class="passport-stat-item">
+            <span class="stat-icon">🏷️</span>
+            <div class="stat-meta">
+                <span class="stat-label">Ưu đãi mở khoá VIP</span>
+                <span class="stat-val stat-highlight">Giảm <b>${me.discountPercent}%</b> giá</span>
+            </div>
+        </div>
+        <div class="passport-stat-item">
+            <span class="stat-icon">⚡</span>
+            <div class="stat-meta">
+                <span class="stat-label">Hệ số nhận xu điểm danh</span>
+                <span class="stat-val stat-highlight"><b>x${me.checkinMultiplier}</b></span>
+            </div>
+        </div>
+    </div>
+
+    <%-- Thanh tiến độ lên cấp bậc kế tiếp --%>
+    <div class="passport-progress-wrap">
+        <div class="passport-progress-info">
+            <span>Tiến độ thăng cấp: <b>${me.nextTierTargetText}</b></span>
+            <span class="passport-progress-pct">${me.nextTierProgressPercent}%</span>
+        </div>
+        <div class="passport-progress-bar">
+            <div class="passport-progress-fill" style="width: ${me.nextTierProgressPercent}%;"></div>
+        </div>
+    </div>
+
+    <%-- KHỐI NÂNG CẤP HỘI VIÊN VIP --%>
+    <div class="passport-vip-action-box">
+        <div class="vip-action-intro">
+            <h4>⭐ Nâng Cấp Hội Viên VIP — Đặc Quyền Đọc Truyện Đỉnh Cao</h4>
+            <p>Trở thành Hội viên VIP để mở khoá mức chiết khấu tối đa <b>-25% giá chương</b>, nhân đôi xu điểm danh <b>x2.0</b> và huy hiệu VIP vàng kim rực rỡ!</p>
+        </div>
+        
+        <form action="${pageContext.request.contextPath}/user" method="post" class="vip-upgrade-form">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
+            <input type="hidden" name="action" value="upgrade-vip">
+            
+            <div class="vip-plans-grid">
+                <label class="vip-plan-card">
+                    <input type="radio" name="days" value="30" checked>
+                    <div class="plan-content">
+                        <span class="plan-name">VIP 1 Tháng</span>
+                        <span class="plan-duration">30 ngày</span>
+                        <span class="plan-price">🪙 60 xu</span>
+                    </div>
+                </label>
+                <label class="vip-plan-card vip-plan-popular">
+                    <span class="popular-ribbon">Tiết kiệm 17%</span>
+                    <input type="radio" name="days" value="90">
+                    <div class="plan-content">
+                        <span class="plan-name">VIP 3 Tháng</span>
+                        <span class="plan-duration">90 ngày</span>
+                        <span class="plan-price">🪙 150 xu</span>
+                    </div>
+                </label>
+                <label class="vip-plan-card">
+                    <span class="popular-ribbon">Tiết kiệm 30%</span>
+                    <input type="radio" name="days" value="365">
+                    <div class="plan-content">
+                        <span class="plan-name">VIP 1 Năm</span>
+                        <span class="plan-duration">365 ngày</span>
+                        <span class="plan-price">🪙 500 xu</span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="vip-submit-wrap">
+                <button type="submit" class="btn-vip-upgrade">
+                    ⭐ Kích Hoạt / Gia Hạn VIP Ngay
+                </button>
+                <span class="vip-balance-hint">Số dư ví của bạn: 🪙 <b><fmt:formatNumber pattern="#,##0" value="${walletBalance}"/></b> xu</span>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -92,16 +221,16 @@
     <div class="checkin-action-wrap" style="text-align:center; margin-bottom:24px; padding-bottom:22px; border-bottom:1px solid var(--ink-700, #e2e8f0);">
         <c:choose>
             <c:when test="${empty todayCheckin}">
-                <form action="${pageContext.request.contextPath}/user" method="post" style="display:inline;">
+                <form id="form-daily-checkin" action="${pageContext.request.contextPath}/user" method="post" style="display:inline;">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="checkin">
-                    <button type="submit" class="btn-checkin-cta" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#ffffff; border:none; padding:12px 32px; font-size:1rem; font-weight:700; border-radius:99px; box-shadow:0 4px 16px rgba(245, 158, 11, 0.4); cursor:pointer;">
+                    <button type="submit" id="btn-daily-checkin" class="btn-checkin-cta" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#ffffff; border:none; padding:12px 32px; font-size:1rem; font-weight:700; border-radius:99px; box-shadow:0 4px 16px rgba(245, 158, 11, 0.4); cursor:pointer;">
                         ✨ Điểm Danh Ngay (+${(currentStreak % 7 + 1) eq 1 ? 5 : ((currentStreak % 7 + 1) eq 2 ? 10 : ((currentStreak % 7 + 1) eq 3 ? 15 : ((currentStreak % 7 + 1) eq 4 ? 20 : ((currentStreak % 7 + 1) eq 5 ? 25 : ((currentStreak % 7 + 1) eq 6 ? 30 : 50)))))} xu)
                     </button>
                 </form>
             </c:when>
             <c:otherwise>
-                <div class="checkin-done-pill" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:99px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.35); color:#10b981; font-weight:700; font-size:0.92rem;">
+                <div class="checkin-done-pill" id="checkin-completed-badge" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:99px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.35); color:#10b981; font-weight:700; font-size:0.92rem;">
                     ✅ Bạn đã hoàn thành điểm danh hôm nay (+${todayCheckin.rewardCoins} xu)
                 </div>
                 <p class="muted small" style="margin-top:8px; color:var(--text-mut);">Quay lại vào ngày mai để tiếp tục duy trì chuỗi nhận quà nhé!</p>
@@ -133,7 +262,7 @@
                                 <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="claim-quest">
                                 <input type="hidden" name="key" value="${q.key}">
-                                <button type="submit" class="btn-claim-reward" style="background:#10b981; color:#ffffff; border:none; font-weight:700; padding:8px 18px; border-radius:6px; box-shadow:0 2px 8px rgba(16, 185, 129, 0.35); cursor:pointer;">
+                                <button type="submit" id="btn-claim-quest-${q.key}" class="btn-claim-reward" style="background:#10b981; color:#ffffff; border:none; font-weight:700; padding:8px 18px; border-radius:6px; box-shadow:0 2px 8px rgba(16, 185, 129, 0.35); cursor:pointer;">
                                     🎁 Nhận thưởng
                                 </button>
                             </form>

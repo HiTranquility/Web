@@ -14,7 +14,7 @@ import truyen.dao.TagDAO;
 import truyen.util.AppListener;
 
 /** TRANG 25 — Bảng điều khiển quản trị. */
-@WebServlet("/admin/dashboard")
+@WebServlet({"/admin", "/admin/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
     private StoryDAO storyDAO;

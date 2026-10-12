@@ -34,6 +34,10 @@
             <span><b>${totalStories}</b> truyện</span>
             <span><b><fmt:formatNumber pattern="#,##0" value="${totalViews}"/></b> lượt xem</span>
             <span><b>${followerCount}</b> người theo dõi</span>
+            <span class="tier-chip tier-${author.seniorityTier}">${author.tierIcon} ${author.tierName}</span>
+            <c:if test="${author.vip}">
+                <span class="tier-chip tier-vip-glow">⭐ VIP</span>
+            </c:if>
             <c:if test="${author.admin}">
                 <span class="pill pill-warn">Quản trị viên</span>
             </c:if>
@@ -56,16 +60,35 @@
           nhưng ghi rõ ra thì sau này đổi mặc định không làm hỏng chỗ này.
         --%>
         <c:if test="${not empty currentUser and currentUser.id ne author.id}">
-            <form method="post" class="profile-follow"
-                  action="${pageContext.request.contextPath}/follow">
-                <input type="hidden" name="_csrf" value="${csrfToken}">
-                <input type="hidden" name="do" value="${isFollowing ? 'unfollow' : 'follow'}">
-                <input type="hidden" name="authorId" value="${author.id}">
-                <input type="hidden" name="back" value="profile">
-                <button type="submit" class="btn ${isFollowing ? 'btn-ghost' : 'btn-primary'}">
-                    ${isFollowing ? '✓ Đang theo dõi' : '+ Theo dõi'}
+            <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+                <form method="post" class="profile-follow"
+                      action="${pageContext.request.contextPath}/follow">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
+                    <input type="hidden" name="do" value="${isFollowing ? 'unfollow' : 'follow'}">
+                    <input type="hidden" name="authorId" value="${author.id}">
+                    <input type="hidden" name="back" value="profile">
+                    <button type="submit" class="btn ${isFollowing ? 'btn-ghost' : 'btn-primary'}">
+                        ${isFollowing ? '✓ Đang theo dõi' : '+ Theo dõi'}
+                    </button>
+                </form>
+                <button type="button" class="btn btn-warning"
+                        onclick="openTipModal(${author.id}, '<c:out value="${author.name}"/>')"
+                        title="Tặng xu khích lệ tác giả">
+                    🪙 Tặng xu
                 </button>
-            </form>
+            </div>
+        </c:if>
+        <c:if test="${empty currentUser}">
+            <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+                <a class="btn btn-ghost"
+                   href="${pageContext.request.contextPath}/auth?action=login&amp;reason=follow&amp;redirect=${pageContext.request.contextPath}/user?action=profile%26id=${author.id}">
+                    + Theo dõi
+                </a>
+                <a class="btn btn-ghost"
+                   href="${pageContext.request.contextPath}/auth?action=login&amp;reason=tip&amp;redirect=${pageContext.request.contextPath}/user?action=profile%26id=${author.id}">
+                    🪙 Tặng xu
+                </a>
+            </div>
         </c:if>
     </div>
 </div>
@@ -99,3 +122,6 @@
         <%@ include file="/WEB-INF/views/_partials/_empty.jsp" %>
     </c:otherwise>
 </c:choose>
+
+<%@ include file="/WEB-INF/views/_partials/_tip-modal.jsp" %>
+

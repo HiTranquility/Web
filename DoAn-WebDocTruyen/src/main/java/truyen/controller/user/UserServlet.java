@@ -107,7 +107,8 @@ public class UserServlet extends HttpServlet {
 
         if ("save".equals(action) || "password".equals(action) || "link-google".equals(action)
                 || "unlink-google".equals(action) || "set-password".equals(action)
-                || "checkin".equals(action) || "claim-quest".equals(action)) {
+                || "checkin".equals(action) || "claim-quest".equals(action)
+                || "upgrade-vip".equals(action)) {
             if (!"POST".equalsIgnoreCase(request.getMethod())) {
                 response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                 return;
@@ -120,6 +121,7 @@ public class UserServlet extends HttpServlet {
                 case "me":            url = me(request, response);            break;
                 case "checkin":       handleCheckin(request, response);       return;
                 case "claim-quest":   handleClaimQuest(request, response);    return;
+                case "upgrade-vip":   handleUpgradeVip(request, response);    return;
                 case "edit":          url = edit(request, response);          break;
                 case "save":          url = save(request, response);          break;
                 case "password":      url = password(request, response);      break;
@@ -185,6 +187,7 @@ public class UserServlet extends HttpServlet {
 
         /* KHÔNG BAO GIỜ để chuỗi băm mật khẩu đi ra ngoài tầng controller. */
         author.setPasswordHash(null);
+        author.setReadChapters(userDAO.countReadChapters(author.getId()));
 
         int page = parseIntOr(request.getParameter("page"), 1);
         if (page < 1) {
@@ -246,6 +249,10 @@ public class UserServlet extends HttpServlet {
         fresh.setPasswordHash(null);
         fresh.setStoryCount(storyDAO.countPublishedByAuthor(fresh.getId()));
         fresh.setFollowerCount(followDAO.countFollowers(fresh.getId()));
+        fresh.setReadChapters(userDAO.countReadChapters(fresh.getId()));
+
+        // Cập nhật lại session để mọi trang khác (như đọc truyện, comment) luôn có cấp bậc mới nhất
+        request.getSession().setAttribute("currentUser", fresh);
 
         UserIdentity googleIdentity = identityDAO.findByUserAndProvider(fresh.getId(), "GOOGLE");
         request.setAttribute("googleIdentity", googleIdentity);
@@ -266,9 +273,17 @@ public class UserServlet extends HttpServlet {
         User me = requireLogin(request, response);
         if (me == null) return;
 
-        DailyCheckin checkin = gamificationDAO.doCheckin(me.getId());
+        User fresh = userDAO.findById(me.getId());
+        double multiplier = 1.0;
+        if (fresh != null) {
+            fresh.setReadChapters(userDAO.countReadChapters(fresh.getId()));
+            multiplier = fresh.getCheckinMultiplier();
+        }
+
+        DailyCheckin checkin = gamificationDAO.doCheckin(me.getId(), multiplier);
         if (checkin != null) {
-            request.getSession().setAttribute("flash", "🎉 Điểm danh thành công! Bạn nhận được +" + checkin.getRewardCoins() + " xu.");
+            String bonusNote = multiplier > 1.0 ? " (Hệ số x" + multiplier + " cấp bậc/VIP)" : "";
+            request.getSession().setAttribute("flash", "🎉 Điểm danh thành công! Bạn nhận được +" + checkin.getRewardCoins() + " xu" + bonusNote + ".");
         } else {
             request.getSession().setAttribute("flash", "Bạn đã điểm danh hôm nay rồi!");
         }
@@ -279,6 +294,56 @@ public class UserServlet extends HttpServlet {
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
+    }
+
+    private void handleUpgradeVip(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        User me = requireLogin(request, response);
+        if (me == null) return;
+
+        int days = 30;
+        try {
+            days = Integer.parseInt(request.getParameter("days"));
+        } catch (Exception ignored) {
+        }
+        if (days != 30 && days != 90 && days != 365) {
+            days = 30;
+        }
+
+        int cost = 60; // 30 ngày = 60 xu
+        if (days == 90) {
+            cost = 150; // 90 ngày = 150 xu
+        } else if (days == 365) {
+            cost = 500; // 365 ngày = 500 xu
+        }
+
+        long balance = walletDAO.getBalance(me.getId());
+        if (balance < cost) {
+            request.getSession().setAttribute("flashError",
+                    "Số dư ví không đủ để kích hoạt VIP (Cần " + cost + " xu, ví hiện có " + balance + " xu). Vui lòng nạp thêm xu!");
+            response.sendRedirect(request.getContextPath() + "/user?action=me#vip-pass");
+            return;
+        }
+
+        boolean deducted = walletDAO.deductCoins(me.getId(), cost, "Nâng cấp Hội viên VIP (" + days + " ngày)");
+        if (!deducted) {
+            request.getSession().setAttribute("flashError", "Giao dịch trừ xu không thành công, vui lòng thử lại!");
+            response.sendRedirect(request.getContextPath() + "/user?action=me#vip-pass");
+            return;
+        }
+
+        userDAO.upgradeVip(me.getId(), days);
+
+        User fresh = userDAO.findById(me.getId());
+        if (fresh != null) {
+            fresh.setPasswordHash(null);
+            fresh.setReadChapters(userDAO.countReadChapters(fresh.getId()));
+            request.getSession().setAttribute("currentUser", fresh);
+        }
+
+        request.getSession().setAttribute("flash",
+                "⭐ Chúc mừng! Bạn đã kích hoạt thành công Hội viên VIP " + days + " ngày! Giảm 25% đọc truyện VIP và x2.0 xu điểm danh.");
+        response.sendRedirect(request.getContextPath() + "/user?action=me#vip-pass");
     }
 
     private void handleClaimQuest(HttpServletRequest request, HttpServletResponse response)
@@ -475,9 +540,21 @@ public class UserServlet extends HttpServlet {
         if (error != null) {
             User back = userDAO.findById(me.getId());
             if (back != null) back.setPasswordHash(null);
+            UserIdentity googleIdentity = identityDAO.findByUserAndProvider(me.getId(), "GOOGLE");
+            boolean hasPassword = userDAO.hasPassword(me.getId());
+
+            request.setAttribute("googleIdentity", googleIdentity);
+            request.setAttribute("hasPassword", hasPassword);
+            request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
+            request.setAttribute("googleApiKey", GoogleConfig.getApiKey());
+            request.setAttribute("googleAuthDomain", GoogleConfig.getAuthDomain());
+            request.setAttribute("googleProjectId", GoogleConfig.getProjectId());
+            request.setAttribute("googleAppId", GoogleConfig.getAppId());
+
             request.setAttribute("me", back);
             request.setAttribute("message", error);
             request.setAttribute("pageTitle", "Sửa hồ sơ");
+            request.setAttribute("activeNav", "me");
             return "/WEB-INF/views/user/edit.jsp";
         }
 

@@ -53,9 +53,11 @@
 
 <%-- contextPath: đổi tên lúc deploy vẫn chạy, không cần sửa link --%>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css?v=3.4">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=3.4">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=3.6">
+
+
 <c:if test="${not empty layoutCss}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${layoutCss}.css?v=3.4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${layoutCss}.css?v=3.5">
 </c:if>
 <c:if test="${not empty pageCss}">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/${pageCss}.css?v=3.4">
@@ -80,4 +82,4 @@
 <script src="${pageContext.request.contextPath}/assets/js/report-form.js?v=2.6" defer></script>
 
 <%-- Logic thanh điều hướng, tìm kiếm tự động, theme và dropdown menu (ISSUE-024) --%>
-<script src="${pageContext.request.contextPath}/assets/js/nav.js?v=2.6" defer></script>
+<script src="${pageContext.request.contextPath}/assets/js/nav.js?v=2.7" defer></script>

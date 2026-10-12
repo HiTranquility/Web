@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--
 ================================================================================
   chapter/_locked.jsp — Hàng rào chương VIP & Mở khoá bằng xu (ISSUE-020)
@@ -19,12 +20,12 @@
     <div class="vip-price-box">
         <div class="vip-info-row">
             <span class="vip-info-label">Giá mở khoá:</span>
-            <span class="vip-coin-tag"><c:out value="${unlockPrice}"/> Xu</span>
+            <span class="vip-coin-tag"><fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu</span>
         </div>
         <c:if test="${not empty sessionScope.currentUser}">
             <div class="vip-info-row">
                 <span class="vip-info-label">Số dư ví của bạn:</span>
-                <span class="vip-balance-tag"><c:out value="${walletBalance}"/> Xu</span>
+                <span class="vip-balance-tag"><fmt:formatNumber pattern="#,##0" value="${walletBalance != null ? walletBalance : 0}"/> xu</span>
             </div>
         </c:if>
     </div>
@@ -46,21 +47,24 @@
                 <input type="hidden" name="action" value="unlock">
                 <input type="hidden" name="id" value="${chapter.id}">
                 <button type="submit" class="btn btn-primary btn-lg vip-btn-unlock">
-                    🔓 Mở khoá chương ngay (<c:out value="${unlockPrice}"/> xu)
+                    🔓 Mở khoá chương ngay (<fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu)
                 </button>
             </form>
         </c:when>
 
         <c:otherwise>
-            <div class="vip-actions">
-                <button type="button" class="btn btn-secondary btn-lg" disabled>
-                    ⚠️ Số dư không đủ (Thiếu <c:out value="${unlockPrice - walletBalance}"/> xu)
+            <div class="vip-actions" style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+                <button type="button" class="btn btn-secondary btn-lg" disabled style="opacity:0.85; cursor:not-allowed;">
+                    ⚠️ Số dư không đủ (Thiếu <fmt:formatNumber pattern="#,##0" value="${unlockPrice - walletBalance}"/> xu)
                 </button>
+                <a href="${pageContext.request.contextPath}/wallet?action=topup" class="btn btn-warning btn-lg" style="font-weight:700; width:100%; max-width:320px; text-align:center;">
+                    🪙 Nạp thêm xu vào ví ngay &rarr;
+                </a>
             </div>
             <div class="vip-earn-tips text-center mt-3">
-                <p class="text-amber">💡 <strong>Mẹo kiếm xu:</strong> Bạn có thể điểm danh hàng ngày hoặc làm nhiệm vụ đọc truyện để nhận thêm xu miễn phí!</p>
-                <a href="${pageContext.request.contextPath}/user?action=me" class="btn btn-sm btn-ghost">
-                    🎁 Đến Trung tâm Nhiệm vụ &amp; Điểm danh &rarr;
+                <p class="text-amber">💡 <strong>Mẹo kiếm xu miễn phí:</strong> Bạn có thể điểm danh hàng ngày hoặc làm nhiệm vụ đọc truyện để nhận thêm xu!</p>
+                <a href="${pageContext.request.contextPath}/user?action=me#gamification" class="btn btn-sm btn-ghost">
+                    🎁 Đến Trạm Điểm danh &amp; Nhiệm vụ &rarr;
                 </a>
             </div>
         </c:otherwise>
