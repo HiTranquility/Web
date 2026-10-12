@@ -60,14 +60,23 @@
                     </a>
 
                     <%-- Huy hiệu Chuỗi Điểm Danh / Đọc Liên Tục (Reading Streak 🔥) --%>
-                    <c:if test="${currentStreak != null and currentStreak gt 0}">
-                        <a class="header-streak-badge" href="${pageContext.request.contextPath}/user?action=me#streak"
-                           title="Chuỗi điểm danh đọc truyện: ${currentStreak} ngày liên tục 🔥">
-                            <span class="streak-badge-icon">🔥</span>
-                            <span class="streak-badge-val">${currentStreak}</span>
-                            <span class="streak-badge-unit">ngày</span>
-                        </a>
-                    </c:if>
+                    <c:choose>
+                        <c:when test="${currentStreak != null and currentStreak gt 0}">
+                            <a class="header-streak-badge" href="${pageContext.request.contextPath}/user?action=me#streak"
+                               title="Chuỗi điểm danh đọc truyện: ${currentStreak} ngày liên tục 🔥">
+                                <span class="streak-badge-icon">🔥</span>
+                                <span class="streak-badge-val">${currentStreak}</span>
+                                <span class="streak-badge-unit">ngày</span>
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a class="header-streak-badge is-zero" href="${pageContext.request.contextPath}/user?action=me#streak"
+                               title="Điểm danh nhận xu & bắt đầu chuỗi ngày đọc truyện 🔥">
+                                <span class="streak-badge-icon">🔥</span>
+                                <span class="streak-badge-unit">Điểm danh</span>
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
 
                     <%-- Chuông thông báo --%>
                     <a class="action-icon-btn bell" title="Thông báo"

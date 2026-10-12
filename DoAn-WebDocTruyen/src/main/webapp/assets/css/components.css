@@ -4917,6 +4917,26 @@ html[data-site-theme="light"] .header-streak-badge:hover {
     color: #be123c;
     box-shadow: 0 4px 14px rgba(225, 29, 72, 0.18);
 }
+.header-streak-badge.is-zero {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(249, 115, 22, 0.25);
+    color: var(--text-mut, #94a3b8);
+}
+.header-streak-badge.is-zero:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.28));
+    border-color: #f97316;
+    color: #f97316;
+}
+html[data-site-theme="light"] .header-streak-badge.is-zero {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(225, 29, 72, 0.2);
+    color: #64748b;
+}
+html[data-site-theme="light"] .header-streak-badge.is-zero:hover {
+    background: #fff1f2;
+    border-color: #f43f5e;
+    color: #e11d48;
+}
 
 /* Dropdown coin item */
 .dropdown-coin-flex {
