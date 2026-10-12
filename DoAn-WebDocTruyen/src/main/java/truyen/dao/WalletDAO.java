@@ -324,7 +324,7 @@ public class WalletDAO {
                    + "       u1.display_name AS from_name, u2.display_name AS to_name, s.title AS story_title "
                    + "FROM transactions t "
                    + "LEFT JOIN users u1 ON u1.id = t.from_user_id "
-                   + "JOIN users u2 ON u2.id = t.to_user_id "
+                   + "LEFT JOIN users u2 ON u2.id = t.to_user_id "
                    + "LEFT JOIN stories s ON s.id = t.story_id "
                    + "WHERE t.from_user_id = ? OR t.to_user_id = ? "
                    + "ORDER BY t.created_at DESC LIMIT ?";
@@ -340,7 +340,8 @@ public class WalletDAO {
                     tx.setId(rs.getInt("id"));
                     int fId = rs.getInt("from_user_id");
                     tx.setFromUserId(rs.wasNull() ? null : fId);
-                    tx.setToUserId(rs.getInt("to_user_id"));
+                    int tId = rs.getInt("to_user_id");
+                    tx.setToUserId(rs.wasNull() ? null : tId);
                     int sId = rs.getInt("story_id");
                     tx.setStoryId(rs.wasNull() ? null : sId);
                     tx.setAmount(rs.getInt("amount"));

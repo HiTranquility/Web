@@ -13,7 +13,7 @@ public class Transaction implements Serializable {
 
     private int id;
     private Integer fromUserId;
-    private int toUserId;
+    private Integer toUserId;
     private Integer storyId;
     private int amount;
     private String message;
@@ -27,7 +27,7 @@ public class Transaction implements Serializable {
     public Transaction() {
     }
 
-    public Transaction(int id, Integer fromUserId, int toUserId, Integer storyId, int amount, String message) {
+    public Transaction(int id, Integer fromUserId, Integer toUserId, Integer storyId, int amount, String message) {
         this.id = id;
         this.fromUserId = fromUserId;
         this.toUserId = toUserId;
@@ -52,11 +52,11 @@ public class Transaction implements Serializable {
         this.fromUserId = fromUserId;
     }
 
-    public int getToUserId() {
+    public Integer getToUserId() {
         return toUserId;
     }
 
-    public void setToUserId(int toUserId) {
+    public void setToUserId(Integer toUserId) {
         this.toUserId = toUserId;
     }
 
