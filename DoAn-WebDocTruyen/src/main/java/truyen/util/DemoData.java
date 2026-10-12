@@ -383,8 +383,12 @@ public final class DemoData {
         return filter(tagSlug, keyword, progress, null);
     }
 
-    /** Như trên, thêm lọc loại truyện — dữ liệu mẫu toàn truyện chữ (TEXT). */
     public static List<Story> filter(String tagSlug, String keyword, String progress, String storyType) {
+        return filter(tagSlug, keyword, progress, storyType, null);
+    }
+
+    /** Như trên, thêm lọc số lượng chương (short < 10, medium 10..50, long > 50). */
+    public static List<Story> filter(String tagSlug, String keyword, String progress, String storyType, String chapters) {
         String type = Story.filterType(storyType);
         List<Story> out = new ArrayList<>();
         for (Story s : stories()) {
@@ -407,6 +411,9 @@ public final class DemoData {
             }
             if ("ongoing".equals(progress) && !"ONGOING".equals(s.getProgress())) continue;
             if ("completed".equals(progress) && !"COMPLETED".equals(s.getProgress())) continue;
+            if ("short".equals(chapters) && s.getChapterCount() >= 10) continue;
+            if ("medium".equals(chapters) && (s.getChapterCount() < 10 || s.getChapterCount() > 50)) continue;
+            if ("long".equals(chapters) && s.getChapterCount() <= 50) continue;
             out.add(s);
         }
         return out;

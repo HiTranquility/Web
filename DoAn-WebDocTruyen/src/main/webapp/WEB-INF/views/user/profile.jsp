@@ -95,7 +95,12 @@
     </div>
 </div>
 
-<div class="section-head">
+<%-- ================================================================================
+     TỦ HUY HIỆU & THÀNH TÍCH ĐỘC GIẢ / TÁC GIẢ
+     ================================================================================ --%>
+<%@ include file="/WEB-INF/views/_partials/_achievements.jsp" %>
+
+<div class="section-head" style="margin-top:28px;">
     <h2>Truyện đã đăng</h2>
     <span class="more">${totalStories} truyện</span>
 </div>

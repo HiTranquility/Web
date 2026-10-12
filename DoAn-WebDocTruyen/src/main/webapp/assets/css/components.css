@@ -6107,5 +6107,254 @@ html[data-site-theme="light"] .vip-plan-card {
     color: #f59e0b;
 }
 
+/* ============================================================================
+   READER ANNOTATIONS & NOTES (GHI CHÚ CÁ NHÂN TRÊN ĐOẠN TÔ MÀU)
+   ========================================================================= */
+.hl-mark.has-note {
+    border-bottom: 2px dashed rgba(245, 158, 11, 0.85);
+    cursor: pointer;
+    position: relative;
+}
+.hl-mark.has-note::after {
+    content: " 📝";
+    font-size: 0.72em;
+    vertical-align: super;
+    opacity: 0.85;
+}
+.hl-note-dialog .dialog-card {
+    max-width: 480px;
+    width: 90vw;
+}
+.hl-note-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.hl-note-preview {
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--surface-1, rgba(255, 255, 255, 0.04));
+    border-left: 3px solid #f59e0b;
+    border-radius: var(--r-sm, 6px);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    max-height: 100px;
+    overflow-y: auto;
+}
+.hl-note-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-mut);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.hl-note-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    background: var(--surface-2, rgba(0, 0, 0, 0.2));
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+    border-radius: var(--r-md, 8px);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.92rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s var(--ease);
+}
+.hl-note-textarea:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+.hl-note-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+.hl-item-note-box {
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: var(--r-sm, 6px);
+    font-size: 0.86rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+.hl-note-tag {
+    font-weight: 700;
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+.hl-note-text {
+    flex: 1;
+    color: var(--text);
+    word-break: break-word;
+}
+.hl-btn-edit-note {
+    background: transparent;
+    border: none;
+    color: var(--text-mut);
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+    flex-shrink: 0;
+}
+.hl-btn-edit-note:hover {
+    color: #f59e0b;
+}
+.hl-item-note-empty {
+    margin: 4px 0 8px 0;
+}
+.hl-btn-add-note {
+    background: transparent;
+    border: none;
+    color: var(--text-mut);
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.hl-btn-add-note:hover {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* ============================================================================
+   ACHIEVEMENTS SHOWCASE (TỦ HUY HIỆU THÀNH TÍCH ĐỘC GIẢ)
+   ========================================================================= */
+.achievement-showcase-panel {
+    background: var(--surface-1, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    border-radius: var(--r-xl, 16px);
+    padding: 22px 24px;
+    margin-top: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+.achievement-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: var(--r-md, 12px);
+    background: var(--surface-2, rgba(0, 0, 0, 0.2));
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s var(--ease);
+}
+.achievement-card.is-unlocked {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.03) 100%);
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
+}
+.achievement-card.is-unlocked:hover {
+    transform: translateY(-2px);
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.16);
+}
+.achievement-card.is-locked {
+    opacity: 0.62;
+    filter: grayscale(0.5);
+}
+.achievement-card.is-locked:hover {
+    opacity: 0.85;
+    filter: grayscale(0.2);
+}
+.ach-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--surface-1, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+.is-unlocked .ach-icon-wrap {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+}
+.ach-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+.ach-check-mark {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: #10b981;
+    color: #fff;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.ach-info {
+    flex: 1;
+    min-width: 0;
+}
+.ach-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+.is-unlocked .ach-title {
+    color: #f59e0b;
+}
+.ach-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.ach-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.ach-progress-text {
+    font-size: 0.72rem;
+    color: var(--text-mut);
+    font-weight: 600;
+}
+.ach-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--surface-1, rgba(255, 255, 255, 0.1));
+    border-radius: 99px;
+    overflow: hidden;
+}
+.ach-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    border-radius: 99px;
+}
+
 
 

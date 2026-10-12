@@ -201,18 +201,23 @@ public class StoryServlet extends HttpServlet {
         // Loại truyện: chữ / tranh. null = tất cả (xem Story.filterType).
         String storyType = Story.filterType(request.getParameter("type"));
 
+        // Lọc số lượng chương: short (< 10), medium (10..50), long (> 50).
+        String chaptersParam = request.getParameter("chapters");
+        String chapters = ("short".equals(chaptersParam) || "medium".equals(chaptersParam) || "long".equals(chaptersParam))
+                ? chaptersParam : null;
+
         int page = parseIntOr(request.getParameter("page"), 1);
         if (page < 1) {
             page = 1;   // ?page=-5 không được thành OFFSET âm
         }
 
-        int total = storyDAO.countPage(tag, keyword, progress, storyType);
+        int total = storyDAO.countPage(tag, keyword, progress, storyType, chapters);
         int totalPages = Math.max(1, (int) Math.ceil(total / (double) pageSize));
         if (page > totalPages) {
             page = totalPages;
         }
 
-        List<Story> stories = storyDAO.findPage(tag, keyword, sort, progress, storyType,
+        List<Story> stories = storyDAO.findPage(tag, keyword, sort, progress, storyType, chapters,
                                                 (page - 1) * pageSize, pageSize);
 
         request.setAttribute("stories", stories);
@@ -227,6 +232,7 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("sort", sort);
         request.setAttribute("progress", progress);
         request.setAttribute("storyType", storyType == null ? null : storyType.toLowerCase());
+        request.setAttribute("chapters", chapters);
 
         /*
          * Bản ĐÃ MÃ HOÁ URL của từ khoá và thể loại, cho list.jsp ghép vào href.
@@ -464,6 +470,7 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("totalSaves", totalSaves);
         request.setAttribute("totalComments", totalComments);
         request.setAttribute("totalEarnings", totalEarnings);
+        request.setAttribute("recentEarnings", walletDAO.findEarningsByAuthorId(me.getId(), 10));
         request.setAttribute("pageTitle", "Thống kê truyện của tôi");
         return "/WEB-INF/views/user/story/stats.jsp";
     }

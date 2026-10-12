@@ -577,12 +577,36 @@ Thời gian thực thi: ~1.7 giây (100% PASS).
 - **`WalletTest` (4 tests):** Kiểm thử số dư ví, nạp xu, logic chuyển xu nguyên tử, tìm ví và lịch sử giao dịch.
 - **`ApiServletTest` (2 tests):** Kiểm thử JSON serialization, mã hoá an toàn chuỗi đặc biệt.
 - **`ErrorServletTest` (2 tests):** Kiểm thử bắt lỗi 404 và 500, điều hướng view tương ứng.
+- **`AchievementTest` (4 tests):** Kiểm thử tính toán phần trăm tiến độ huy hiệu, trả về 8 danh hiệu mặc định, cập nhật trạng thái huy hiệu VIP theo phiên người dùng và kiểm thử bộ lọc độ dài chương trong `DemoData`.
+- **`SeniorityAndVipTest` (7 tests):** Kiểm thử tính toán cấp bậc gắn bó (Tân Thủ, Đồng Hành, Tri Kỷ, Đại Tông Sư), đặc quyền VIP và chiết khấu xu mở khoá chương.
 - **`StoryDAOTest` & `ViewLogDAOTest` (5 tests):** Kiểm thử truy vấn phân trang an toàn, xử lý ID âm/0, dọn dẹp log.
 - **`PasswordUtilTest`, `SlugUtilTest`, `ChapterToTxtTest` (40+ tests):** Kiểm thử các hàm thuật toán cốt lõi.
 
 ---
 
-## 11. Hướng dẫn Vận hành Nhanh
+## 11. Các Nâng Cấp Nổi Bật Gần Đây
+
+1. **Ghi Chú Cá Nhân Vào Đoạn Tô Màu (Reader Notes & Annotations):**
+   - Độc giả có thể bôi đen văn bản, chọn màu highlight (Vàng, Lục, Lam, Tím) và đính kèm ghi chú cá nhân (tối đa 500 ký tự).
+   - Thẻ `<mark>` được gắn visual dot `.has-note` cùng tooltip nội dung ghi chú.
+   - Ngăn kéo quản lý (Drawer) cho phép tìm kiếm live đồng thời trên cả trích dẫn lẫn ghi chú, hỗ trợ sửa và xoá trực tiếp.
+
+2. **Hệ Thống Tủ Huy Hiệu & Danh Hiệu Độc Giả (Badges & Achievements Showcase):**
+   - 8 danh hiệu độc đáo: `Cú Đêm` (đọc đêm 23h-5h), `Mọt Sách` (đọc 30 chương), `Đại Học Giả` (đọc 150 chương), `Mạnh Thường Quân` (tặng xu tác giả), `Nhà Phê Bình` (viết review), `Kỷ Lục Điểm Danh` (chuỗi 7 ngày), `Hội Viên Hoàng Gia` (VIP), `Nhà Sưu Tầm` (lưu >= 5 truyện).
+   - Hiển thị trực quan với thanh phần trăm tiến độ, biểu tượng mở khoá và tổng kết danh hiệu trên trang cá nhân (`me.jsp`) và hồ sơ công khai (`profile.jsp`).
+
+3. **Bảng Thống Kê Tác Giả & Thu Nhập Xu (Author Analytics & Earnings Dashboard):**
+   - Đường dẫn `/story?action=stats` được xây dựng hoàn chỉnh với thẻ tổng hợp: Lượt xem, Lượt lưu, Bình luận, Xu kiếm được.
+   - Biểu đồ lượt xem 14 ngày của truyện ăn khách nhất và mô hình phễu giữ chân độc giả qua các chương (Reader Retention).
+   - Bảng sao kê giao dịch độc giả ủng hộ và mở khoá chương gần nhất kèm thời gian và lời nhắn.
+
+4. **Bộ Lọc Tìm Kiếm Nâng Cao Đa Tiêu Chí (Multi-Tag & Chapter Length Filter):**
+   - Hỗ trợ lọc theo độ dài chương: `< 10 chương` (ngắn), `10 - 50 chương` (vừa), `> 50 chương` (dài).
+   - Giữ nguyên trạng thái tổ hợp lọc (`keepTag`, `keepProg`, `keepSort`, `keepType`, `keepChap`, `keepQ`) khi phân trang và đổi bộ lọc.
+
+---
+
+## 12. Hướng dẫn Vận hành Nhanh
 
 ### 1. Khởi động Máy chủ Ứng dụng
 ```powershell

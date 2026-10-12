@@ -288,6 +288,9 @@
     </div>
     <div class="hl-divider"></div>
     <div class="hl-actions">
+        <button type="button" class="hl-action-btn" id="hl-action-note" title="Viết ghi chú cá nhân cho đoạn này">
+            <span>📝</span><span class="hl-lbl">Ghi chú</span>
+        </button>
         <button type="button" class="hl-action-btn" id="hl-action-mark" title="Đánh dấu đoạn này vào Tủ sách">
             <span>🔖</span><span class="hl-lbl">Đánh dấu</span>
         </button>
@@ -343,6 +346,28 @@
 
             <div class="hl-list-items" id="hl-drawer-list">
                 <!-- Nội dung danh sách trích dẫn nạp bằng JavaScript -->
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<%-- MODAL NHẬP GHI CHÚ CÁ NHÂN CHO ĐOẠN TRÍCH (READER ANNOTATION MODAL) --%>
+<dialog id="hl-note-modal" class="reader-dialog hl-note-dialog">
+    <div class="dialog-card hl-note-card">
+        <div class="dialog-head">
+            <div class="hl-drawer-title-box">
+                <h4>📝 Ghi chú cá nhân</h4>
+            </div>
+            <button type="button" class="dialog-close" id="close-hl-note" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="dialog-body hl-note-body">
+            <blockquote class="hl-note-preview" id="hl-note-preview-text"></blockquote>
+            <label for="hl-note-textarea" class="hl-note-label">Cảm nghĩ / Suy ngẫm của bạn:</label>
+            <textarea id="hl-note-textarea" class="hl-note-textarea" rows="3" maxlength="500" placeholder="Viết cảm nghĩ, suy ngẫm hoặc ghi chú cá nhân của bạn vào đây..."></textarea>
+            <div class="hl-note-actions">
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-cancel-hl-note">Huỷ</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-delete-hl-note" style="display:none">Xoá ghi chú</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-save-hl-note">💾 Lưu ghi chú</button>
             </div>
         </div>
     </div>
@@ -2694,6 +2719,148 @@ try {
         ta.remove();
     }
 
+    // ---- 8b. Hành động: Thêm / Sửa Ghi Chú Cá Nhân 📝 ----
+    var noteModal = document.getElementById('hl-note-modal');
+    var notePreview = document.getElementById('hl-note-preview-text');
+    var noteTextarea = document.getElementById('hl-note-textarea');
+    var btnSaveNote = document.getElementById('btn-save-hl-note');
+    var btnCancelNote = document.getElementById('btn-cancel-hl-note');
+    var btnDeleteNote = document.getElementById('btn-delete-hl-note');
+    var btnCloseNote = document.getElementById('close-hl-note');
+    var activeEditingHlId = null;
+
+    function openNoteModalForHighlight(hlId, quoteText, existingNote) {
+        activeEditingHlId = hlId;
+        if (notePreview) notePreview.textContent = '“' + (quoteText || '') + '”';
+        if (noteTextarea) noteTextarea.value = existingNote || '';
+        if (btnDeleteNote) btnDeleteNote.style.display = existingNote ? 'inline-block' : 'none';
+        if (noteModal) {
+            if (typeof noteModal.showModal === 'function') {
+                noteModal.showModal();
+            } else {
+                noteModal.setAttribute('open', '');
+            }
+        }
+    }
+
+    function closeNoteModal() {
+        if (noteModal) {
+            if (typeof noteModal.close === 'function') {
+                noteModal.close();
+            } else {
+                noteModal.removeAttribute('open');
+            }
+        }
+        activeEditingHlId = null;
+    }
+
+    if (btnCloseNote) btnCloseNote.addEventListener('click', closeNoteModal);
+    if (btnCancelNote) btnCancelNote.addEventListener('click', closeNoteModal);
+
+    if (btnSaveNote) {
+        btnSaveNote.addEventListener('click', function() {
+            if (!activeEditingHlId) return;
+            var noteVal = noteTextarea ? noteTextarea.value.trim() : '';
+            var list = getHighlights();
+            var item = list.find(function(h) { return h.id === activeEditingHlId; });
+            if (item) {
+                item.note = noteVal;
+                saveHighlights(list);
+
+                var markEl = document.querySelector('[data-hl-id="' + activeEditingHlId + '"]');
+                if (markEl) {
+                    if (noteVal) {
+                        markEl.classList.add('has-note');
+                        markEl.setAttribute('title', '📝 Ghi chú: ' + noteVal);
+                    } else {
+                        markEl.classList.remove('has-note');
+                        markEl.removeAttribute('title');
+                    }
+                }
+                showToast(noteVal ? 'Đã lưu ghi chú cá nhân!' : 'Đã xóa ghi chú.');
+                renderDrawerList();
+            }
+            closeNoteModal();
+        });
+    }
+
+    if (btnDeleteNote) {
+        btnDeleteNote.addEventListener('click', function() {
+            if (!activeEditingHlId) return;
+            var list = getHighlights();
+            var item = list.find(function(h) { return h.id === activeEditingHlId; });
+            if (item) {
+                item.note = '';
+                saveHighlights(list);
+                var markEl = document.querySelector('[data-hl-id="' + activeEditingHlId + '"]');
+                if (markEl) {
+                    markEl.classList.remove('has-note');
+                    markEl.removeAttribute('title');
+                }
+                showToast('Đã xóa ghi chú.');
+                renderDrawerList();
+            }
+            closeNoteModal();
+        });
+    }
+
+    var noteActionBtn = document.getElementById('hl-action-note');
+    if (noteActionBtn) {
+        noteActionBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentSelectionContext) return;
+            var ctx = currentSelectionContext;
+
+            var targetHlId = ctx.hlId;
+            var targetText = ctx.text;
+            var existingNote = '';
+
+            if (ctx.isExistingMark) {
+                var item = getHighlights().find(function(h) { return h.id === targetHlId; });
+                if (item) existingNote = item.note || '';
+            } else {
+                // Nếu chưa được tô màu, tự động tô màu vàng nắng trước rồi mở ghi chú
+                var defaultColor = 'yellow';
+                var hlId = 'hl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                var mark = document.createElement('mark');
+                mark.className = 'hl-mark hl-' + defaultColor;
+                mark.setAttribute('data-hl-id', hlId);
+
+                try {
+                    ctx.range.surroundContents(mark);
+                } catch (err) {
+                    var frag = ctx.range.extractContents();
+                    mark.appendChild(frag);
+                    ctx.range.insertNode(mark);
+                }
+
+                var newItem = {
+                    id: hlId,
+                    storyId: STORY_ID,
+                    chapterId: ctx.chapterId,
+                    chapterNo: ctx.chapterNo,
+                    chapterTitle: ctx.chapterTitle,
+                    paraNo: ctx.paraNo,
+                    color: defaultColor,
+                    text: ctx.text,
+                    note: '',
+                    createdAt: new Date().toISOString()
+                };
+
+                var list = getHighlights();
+                list.unshift(newItem);
+                saveHighlights(list);
+
+                targetHlId = hlId;
+                if (window.getSelection) window.getSelection().removeAllRanges();
+            }
+
+            hideToolbar();
+            openNoteModalForHighlight(targetHlId, targetText, existingNote);
+        });
+    }
+
     // ---- 9. Hành động: Xóa Tô màu 🗑️ ----
     var clearActionBtn = document.getElementById('hl-action-clear');
     if (clearActionBtn) {
@@ -2759,16 +2926,18 @@ try {
                 var text = item.text;
                 if (!text || pEl.textContent.indexOf(text) === -1) return;
 
-                highlightTextInElement(pEl, text, item.color, item.id);
+                highlightTextInElement(pEl, text, item.color, item.id, item.note);
             });
         });
     }
 
-    function highlightTextInElement(element, searchText, color, id) {
+    function highlightTextInElement(element, searchText, color, id, note) {
         var innerHTML = element.innerHTML;
         var idx = innerHTML.indexOf(searchText);
         if (idx !== -1 && innerHTML.indexOf('data-hl-id="' + id + '"') === -1) {
-            var replacement = '<mark class="hl-mark hl-' + color + '" data-hl-id="' + id + '">' + searchText + '</mark>';
+            var noteClass = note ? ' has-note' : '';
+            var titleAttr = note ? ' title="📝 Ghi chú: ' + escapeHtml(note) + '"' : '';
+            var replacement = '<mark class="hl-mark hl-' + color + noteClass + '" data-hl-id="' + id + '"' + titleAttr + '>' + searchText + '</mark>';
             element.innerHTML = innerHTML.replace(searchText, replacement);
         }
     }
@@ -2805,11 +2974,12 @@ try {
             list = list.filter(function(h) { return h.color === activeFilter; });
         }
 
-        // 3. Lọc theo từ khóa tìm kiếm
+        // 3. Lọc theo từ khóa tìm kiếm (tìm cả trong câu trích dẫn và ghi chú)
         if (searchKeyword) {
             var kw = searchKeyword.toLowerCase();
             list = list.filter(function(h) {
                 return (h.text && h.text.toLowerCase().indexOf(kw) !== -1)
+                    || (h.note && h.note.toLowerCase().indexOf(kw) !== -1)
                     || (h.chapterTitle && h.chapterTitle.toLowerCase().indexOf(kw) !== -1);
             });
         }
@@ -2845,6 +3015,19 @@ try {
             var dateStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             var isLong = item.text && item.text.length > 180;
 
+            var noteHtml = '';
+            if (item.note) {
+                noteHtml = '<div class="hl-item-note-box">'
+                         + '<span class="hl-note-tag">📝 Ghi chú:</span> '
+                         + '<span class="hl-note-text">' + escapeHtml(item.note) + '</span>'
+                         + '<button type="button" class="hl-btn-edit-note" data-hl-id="' + item.id + '" title="Chỉnh sửa ghi chú">✏️ Sửa</button>'
+                         + '</div>';
+            } else {
+                noteHtml = '<div class="hl-item-note-empty">'
+                         + '<button type="button" class="hl-btn-add-note" data-hl-id="' + item.id + '">+ Thêm ghi chú</button>'
+                         + '</div>';
+            }
+
             html += '<div class="hl-item-card c-' + item.color + '" data-hl-id="' + item.id + '" data-chapter-id="' + item.chapterId + '" data-para="' + item.paraNo + '">'
                 + '<div class="hl-item-meta">'
                 + '<span class="hl-item-chapter">Chương ' + (item.chapterNo || '') + ' &middot; Đoạn ' + item.paraNo + '</span>'
@@ -2852,6 +3035,7 @@ try {
                 + '</div>'
                 + '<p class="hl-item-text" id="text-' + item.id + '">“' + escapeHtml(item.text) + '”</p>'
                 + (isLong ? '<button type="button" class="hl-btn-toggle-expand" data-target="text-' + item.id + '">Xem thêm &darr;</button>' : '')
+                + noteHtml
                 + '<div class="hl-item-actions">'
                 + '<button type="button" class="hl-item-btn btn-jump">🚀 Đi tới đoạn</button>'
                 + '<button type="button" class="hl-item-btn btn-copy">📋 Sao chép</button>'
@@ -2870,7 +3054,8 @@ try {
 
             // Bấm vào card -> Nhảy tới đoạn
             card.addEventListener('click', function (e) {
-                if (e.target.closest('.btn-copy') || e.target.closest('.btn-del') || e.target.closest('.hl-btn-toggle-expand')) return;
+                if (e.target.closest('.btn-copy') || e.target.closest('.btn-del') || e.target.closest('.hl-btn-toggle-expand')
+                    || e.target.closest('.hl-btn-edit-note') || e.target.closest('.hl-btn-add-note')) return;
                 closeDrawer();
                 jumpToHighlight(chId, paraNo, hlId);
             });
@@ -2889,6 +3074,30 @@ try {
                 });
             }
 
+            // Nút Thêm / Sửa Ghi Chú
+            var btnEditNote = card.querySelector('.hl-btn-edit-note');
+            if (btnEditNote) {
+                btnEditNote.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var item = getHighlights().find(function(h) { return h.id === hlId; });
+                    if (item) {
+                        closeDrawer();
+                        openNoteModalForHighlight(item.id, item.text, item.note || '');
+                    }
+                });
+            }
+            var btnAddNote = card.querySelector('.hl-btn-add-note');
+            if (btnAddNote) {
+                btnAddNote.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var item = getHighlights().find(function(h) { return h.id === hlId; });
+                    if (item) {
+                        closeDrawer();
+                        openNoteModalForHighlight(item.id, item.text, '');
+                    }
+                });
+            }
+
             // Nút Sao chép
             var btnCopy = card.querySelector('.btn-copy');
             if (btnCopy) {
@@ -2896,7 +3105,8 @@ try {
                     e.stopPropagation();
                     var item = getHighlights().find(function(h) { return h.id === hlId; });
                     if (!item) return;
-                    var q = '“' + item.text + '”\n\n— Trích Chương ' + item.chapterNo + ' (' + STORY_TITLE + ')';
+                    var q = '“' + item.text + '”' + (item.note ? ('\n[Ghi chú: ' + item.note + ']') : '')
+                          + '\n\n— Trích Chương ' + item.chapterNo + ' (' + STORY_TITLE + ')';
                     if (navigator.clipboard) navigator.clipboard.writeText(q);
                     showToast('Đã sao chép trích dẫn!');
                 });

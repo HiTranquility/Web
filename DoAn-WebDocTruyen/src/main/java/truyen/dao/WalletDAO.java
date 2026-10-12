@@ -390,4 +390,49 @@ public class WalletDAO {
             }
         }
     }
+
+    /**
+     * Danh sách các khoản xu tác giả nhận được từ độc giả gần nhất (ủng hộ & mở khoá chương).
+     */
+    public java.util.List<truyen.model.Transaction> findEarningsByAuthorId(int authorId, int limit) throws SQLException {
+        java.util.List<truyen.model.Transaction> list = new java.util.ArrayList<>();
+        if (authorId <= 0 || !DBConnection.isReady()) return list;
+
+        String sql = "SELECT t.id, t.from_user_id, t.to_user_id, t.story_id, t.amount, t.message, t.created_at, "
+                   + "       u1.display_name AS from_name, u2.display_name AS to_name, s.title AS story_title "
+                   + "FROM transactions t "
+                   + "LEFT JOIN users u1 ON u1.id = t.from_user_id "
+                   + "JOIN users u2 ON u2.id = t.to_user_id "
+                   + "LEFT JOIN stories s ON s.id = t.story_id "
+                   + "WHERE t.to_user_id = ? AND t.from_user_id IS NOT NULL AND t.from_user_id <> ? "
+                   + "ORDER BY t.created_at DESC LIMIT ?";
+
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            ps.setInt(2, authorId);
+            ps.setInt(3, limit > 0 ? limit : 15);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    truyen.model.Transaction tx = new truyen.model.Transaction();
+                    tx.setId(rs.getInt("id"));
+                    int fId = rs.getInt("from_user_id");
+                    tx.setFromUserId(rs.wasNull() ? null : fId);
+                    tx.setToUserId(rs.getInt("to_user_id"));
+                    int sId = rs.getInt("story_id");
+                    tx.setStoryId(rs.wasNull() ? null : sId);
+                    tx.setAmount(rs.getInt("amount"));
+                    tx.setMessage(rs.getString("message"));
+                    if (rs.getTimestamp("created_at") != null) {
+                        tx.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                    }
+                    tx.setFromUsername(rs.getString("from_name"));
+                    tx.setToUsername(rs.getString("to_name"));
+                    tx.setStoryTitle(rs.getString("story_title"));
+                    list.add(tx);
+                }
+            }
+        }
+        return list;
+    }
 }

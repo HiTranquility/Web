@@ -45,6 +45,7 @@ public class UserServlet extends HttpServlet {
     private IdentityDAO identityDAO;
     private WalletDAO walletDAO;
     private GamificationDAO gamificationDAO;
+    private truyen.dao.AchievementDAO achievementDAO;
     private GoogleTokenVerifier googleTokenVerifier;
 
     /** Số truyện mỗi trang trên hồ sơ tác giả. */
@@ -59,6 +60,7 @@ public class UserServlet extends HttpServlet {
         identityDAO = new IdentityDAO();
         walletDAO = new WalletDAO();
         gamificationDAO = new GamificationDAO();
+        achievementDAO = new truyen.dao.AchievementDAO();
         googleTokenVerifier = new GoogleTokenVerifier();
     }
 
@@ -219,6 +221,7 @@ public class UserServlet extends HttpServlet {
             request.setAttribute("isFollowing",
                     followDAO.isFollowing(me.getId(), id));
         }
+        request.setAttribute("achievements", achievementDAO.getAchievements(id, author));
         request.setAttribute("page", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("pageTitle", "Tác giả " + author.getName());
@@ -263,6 +266,7 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("todayCheckin", gamificationDAO.getTodayCheckin(fresh.getId()));
         request.setAttribute("currentStreak", gamificationDAO.getCurrentStreak(fresh.getId()));
         request.setAttribute("dailyQuests", gamificationDAO.getDailyQuests(fresh.getId()));
+        request.setAttribute("achievements", achievementDAO.getAchievements(fresh.getId(), fresh));
         request.setAttribute("pageTitle", "Hồ sơ của tôi");
         request.setAttribute("activeNav", "me");
         return "/WEB-INF/views/user/me.jsp";

@@ -115,10 +115,16 @@ public class StoryDAO {
     public List<Story> findPage(String tagSlug, String keyword, String sort,
                                 String progress, String storyType, int offset, int limit)
             throws SQLException {
+        return findPage(tagSlug, keyword, sort, progress, storyType, null, offset, limit);
+    }
+
+    public List<Story> findPage(String tagSlug, String keyword, String sort,
+                                String progress, String storyType, String chapters, int offset, int limit)
+            throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) {
             return DemoData.slice(
-                    DemoData.sort(DemoData.filter(tagSlug, keyword, progress, storyType), sort),
+                    DemoData.sort(DemoData.filter(tagSlug, keyword, progress, storyType, chapters), sort),
                     offset, limit);
         }
 
@@ -152,6 +158,7 @@ public class StoryDAO {
             sql.append("AND s.progress = 'COMPLETED' ");
         }
         appendTypeFilter(sql, params, storyType);
+        appendChaptersFilter(sql, chapters);
 
         /*
          * ORDER BY khong nhan dau ? — ten cot khong phai gia tri. Nen o day
@@ -189,15 +196,20 @@ public class StoryDAO {
     /** Tong so truyen khop bo loc — de tinh so trang. */
     public int countPage(String tagSlug, String keyword, String progress)
             throws SQLException {
-        return countPage(tagSlug, keyword, progress, null);
+        return countPage(tagSlug, keyword, progress, null, null);
     }
 
     /** Như trên, thêm lọc loại truyện — PHẢI cùng điều kiện với findPage(). */
     public int countPage(String tagSlug, String keyword, String progress, String storyType)
             throws SQLException {
+        return countPage(tagSlug, keyword, progress, storyType, null);
+    }
+
+    public int countPage(String tagSlug, String keyword, String progress, String storyType, String chapters)
+            throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) {
-            return DemoData.filter(tagSlug, keyword, progress, storyType).size();
+            return DemoData.filter(tagSlug, keyword, progress, storyType, chapters).size();
         }
 
         /*
@@ -237,6 +249,7 @@ public class StoryDAO {
             sql.append("AND s.progress = 'COMPLETED' ");
         }
         appendTypeFilter(sql, params, storyType);
+        appendChaptersFilter(sql, chapters);
 
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql.toString())) {
@@ -257,6 +270,16 @@ public class StoryDAO {
         if (t != null) {
             sql.append("AND s.story_type = ? ");
             params.add(t);
+        }
+    }
+
+    private void appendChaptersFilter(StringBuilder sql, String chapters) {
+        if ("short".equals(chapters)) {
+            sql.append("AND (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) < 10 ");
+        } else if ("medium".equals(chapters)) {
+            sql.append("AND (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) BETWEEN 10 AND 50 ");
+        } else if ("long".equals(chapters)) {
+            sql.append("AND (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id) > 50 ");
         }
     }
 

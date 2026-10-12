@@ -149,7 +149,66 @@
         </table>
         </div>
 
-        <p class="muted-note" style="margin-top:18px">
+        <div class="section-head" style="margin-top:34px">
+            <h3>🪙 Độc giả ủng hộ &amp; Mở khoá chương gần nhất</h3>
+            <span class="more">Tổng tích luỹ: <b style="color:#f59e0b;"><fmt:formatNumber pattern="#,##0" value="${totalEarnings != null ? totalEarnings : 0}"/> xu</b></span>
+        </div>
+
+        <c:choose>
+            <c:when test="${not empty recentEarnings}">
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Độc giả</th>
+                            <th>Truyện liên quan</th>
+                            <th>Số xu</th>
+                            <th>Lời nhắn / Lý do</th>
+                        </tr>
+                        <c:forEach var="tx" items="${recentEarnings}">
+                            <tr>
+                                <td style="white-space:nowrap; font-size:0.85rem; color:var(--text-mut);">
+                                    <c:choose>
+                                        <c:when test="${not empty tx.createdAt}">
+                                            ${tx.createdAt.dayOfMonth}/${tx.createdAt.monthValue}/${tx.createdAt.year} ${tx.createdAt.hour}:${tx.createdAt.minute lt 10 ? '0' : ''}${tx.createdAt.minute}
+                                        </c:when>
+                                        <c:otherwise>—</c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td>
+                                    <b><c:out value="${not empty tx.fromUsername ? tx.fromUsername : 'Độc giả'}"/></b>
+                                </td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${not empty tx.storyTitle}">
+                                            <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${tx.storyId}">
+                                                <c:out value="${tx.storyTitle}"/>
+                                            </a>
+                                        </c:when>
+                                        <c:otherwise><span class="muted">—</span></c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td>
+                                    <span style="color:#f59e0b; font-weight:800; font-size:0.95rem;">
+                                        +<fmt:formatNumber pattern="#,##0" value="${tx.amount}"/> xu
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="muted"><c:out value="${tx.message}"/></span>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </table>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div style="background:var(--ink-850); border:1px solid var(--ink-700); border-radius:10px; padding:18px 20px; color:var(--text-mut); font-size:0.88rem;">
+                    🪙 Chưa có giao dịch ủng hộ nào từ độc giả. Hãy tiếp tục sáng tác và đăng thêm nhiều chương hấp dẫn nhé!
+                </div>
+            </c:otherwise>
+        </c:choose>
+
+        <p class="muted-note" style="margin-top:22px">
             Biểu đồ phía trên đếm từ bảng <code>view_logs</code> — nơi ghi
             <b>từng</b> lượt xem kèm thời điểm. Cột "Lượt xem" trong bảng này
             là số cộng dồn từ ngày đăng, nên hai con số không bằng nhau và

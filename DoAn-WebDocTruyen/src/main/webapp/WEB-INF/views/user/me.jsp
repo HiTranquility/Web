@@ -278,6 +278,11 @@
 </div>
 
 <%-- ================================================================================
+     TỦ HUY HIỆU & THÀNH TÍCH ĐỘC GIẢ
+     ================================================================================ --%>
+<%@ include file="/WEB-INF/views/_partials/_achievements.jsp" %>
+
+<%-- ================================================================================
      DASHBOARD 2 CỘT: THÔNG TIN TÀI KHOẢN & LỐI TẮT QUẢN LÝ
      ================================================================================ --%>
 <div class="profile-dashboard-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:22px;">
