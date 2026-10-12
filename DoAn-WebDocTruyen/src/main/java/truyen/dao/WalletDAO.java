@@ -436,4 +436,47 @@ public class WalletDAO {
         }
         return list;
     }
+
+    /**
+     * Bảng Vàng Fan Cứng: Top những độc giả ủng hộ / mở khoá xu nhiều nhất cho tác giả.
+     */
+    public java.util.List<truyen.model.AuthorPatron> findTopPatronsByAuthor(int authorId, int limit) throws SQLException {
+        java.util.List<truyen.model.AuthorPatron> list = new java.util.ArrayList<>();
+        if (authorId <= 0 || !DBConnection.isReady()) return list;
+
+        String sql = "SELECT t.from_user_id, "
+                   + "       u.username, u.display_name, u.avatar_url, "
+                   + "       SUM(t.amount) AS total_amount, "
+                   + "       COUNT(t.id) AS donation_count, "
+                   + "       MAX(t.created_at) AS last_donated_at "
+                   + "FROM transactions t "
+                   + "JOIN users u ON u.id = t.from_user_id "
+                   + "WHERE t.to_user_id = ? AND t.from_user_id IS NOT NULL AND t.from_user_id <> ? "
+                   + "GROUP BY t.from_user_id, u.username, u.display_name, u.avatar_url "
+                   + "ORDER BY total_amount DESC, last_donated_at DESC "
+                   + "LIMIT ?";
+
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            ps.setInt(2, authorId);
+            ps.setInt(3, limit > 0 ? limit : 5);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    truyen.model.AuthorPatron ap = new truyen.model.AuthorPatron();
+                    ap.setUserId(rs.getInt("from_user_id"));
+                    ap.setUsername(rs.getString("username"));
+                    ap.setDisplayName(rs.getString("display_name"));
+                    ap.setAvatarUrl(rs.getString("avatar_url"));
+                    ap.setTotalAmount(rs.getInt("total_amount"));
+                    ap.setDonationCount(rs.getInt("donation_count"));
+                    if (rs.getTimestamp("last_donated_at") != null) {
+                        ap.setLastDonatedAt(rs.getTimestamp("last_donated_at").toLocalDateTime());
+                    }
+                    list.add(ap);
+                }
+            }
+        }
+        return list;
+    }
 }

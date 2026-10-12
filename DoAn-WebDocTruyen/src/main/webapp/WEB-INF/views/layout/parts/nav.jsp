@@ -59,6 +59,16 @@
                         <span class="coin-badge-plus" title="Nạp xu">+</span>
                     </a>
 
+                    <%-- Huy hiệu Chuỗi Điểm Danh / Đọc Liên Tục (Reading Streak 🔥) --%>
+                    <c:if test="${currentStreak != null and currentStreak gt 0}">
+                        <a class="header-streak-badge" href="${pageContext.request.contextPath}/user?action=me#streak"
+                           title="Chuỗi điểm danh đọc truyện: ${currentStreak} ngày liên tục 🔥">
+                            <span class="streak-badge-icon">🔥</span>
+                            <span class="streak-badge-val">${currentStreak}</span>
+                            <span class="streak-badge-unit">ngày</span>
+                        </a>
+                    </c:if>
+
                     <%-- Chuông thông báo --%>
                     <a class="action-icon-btn bell" title="Thông báo"
                        href="${pageContext.request.contextPath}/notification">

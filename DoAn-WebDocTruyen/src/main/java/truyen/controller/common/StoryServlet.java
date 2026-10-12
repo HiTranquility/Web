@@ -471,6 +471,7 @@ public class StoryServlet extends HttpServlet {
         request.setAttribute("totalComments", totalComments);
         request.setAttribute("totalEarnings", totalEarnings);
         request.setAttribute("recentEarnings", walletDAO.findEarningsByAuthorId(me.getId(), 10));
+        request.setAttribute("topPatrons", walletDAO.findTopPatronsByAuthor(me.getId(), 5));
         request.setAttribute("pageTitle", "Thống kê truyện của tôi");
         return "/WEB-INF/views/user/story/stats.jsp";
     }

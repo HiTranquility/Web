@@ -145,7 +145,9 @@
             <button type="button" class="tool-btn text-only" id="toggle-tts"
                     title="Đọc truyện bằng giọng nói (Text-to-Speech)" aria-label="Đọc giọng nói">🎧</button>
             <button type="button" class="tool-btn" id="toggle-ambient"
-                    title="Bật / Tắt âm thanh mưa rơi thư giãn" aria-label="Âm thanh mưa">🌧️</button>
+                    title="Âm thanh môi trường thư giãn (M)" aria-label="Âm thanh môi trường">🎵<span id="ambient-current-icon" style="font-size:0.75rem;">🌧️</span></button>
+            <button type="button" class="tool-btn" id="toggle-sleep-timer"
+                    title="Hẹn giờ tắt đọc truyện (Sleep Timer - Alt+T)" aria-label="Hẹn giờ tắt" style="position:relative;">⏱️<span id="sleep-timer-badge" class="sleep-timer-badge" style="display:none"></span></button>
             <button type="button" class="tool-btn" id="btn-print-chapter"
                     title="In chương truyện / Xuất PDF (Ctrl+P)" aria-label="In chương">🖨️</button>
             <button type="button" class="tool-btn" id="toggle-zen"
@@ -157,6 +159,38 @@
         </div>
     </div>
 </header>
+
+<%-- BẢNG ĐIỀU KHIỂN ÂM THANH MÔI TRƯỜNG THƯ GIÃN (AMBIENT SOUNDSCAPES) --%>
+<div class="reader-ambient-pop" id="reader-ambient-pop" hidden>
+    <div class="ambient-pop-head">
+        <span class="ambient-pop-title">🎵 Âm thanh thư giãn</span>
+        <button type="button" class="ambient-pop-close" id="ambient-pop-close" aria-label="Đóng">&times;</button>
+    </div>
+    <div class="ambient-sound-types">
+        <button type="button" class="ambient-type-btn is-active" data-sound="rain" title="Mưa rơi ngoài hiên">
+            <span class="amb-icon">🌧️</span><span class="amb-name">Mưa rào</span>
+        </button>
+        <button type="button" class="ambient-type-btn" data-sound="fire" title="Lò sưởi ấm cúng / Lửa trại">
+            <span class="amb-icon">🔥</span><span class="amb-name">Lò sưởi</span>
+        </button>
+        <button type="button" class="ambient-type-btn" data-sound="waves" title="Sóng biển đêm vỗ bờ">
+            <span class="amb-icon">🌊</span><span class="amb-name">Sóng biển</span>
+        </button>
+        <button type="button" class="ambient-type-btn" data-sound="night" title="Đêm hè tĩnh lặng & tiếng dế">
+            <span class="amb-icon">🦗</span><span class="amb-name">Đêm hè</span>
+        </button>
+    </div>
+    <div class="ambient-ctrl-row">
+        <button type="button" class="btn-ambient-play" id="btn-ambient-toggle-play">
+            <span id="amb-play-icon">▶</span> <span id="amb-play-text">Bật âm thanh</span>
+        </button>
+        <div class="ambient-volume-wrap">
+            <span class="vol-icon">🔊</span>
+            <input type="range" id="ambient-volume-slider" min="0" max="100" value="35" class="ambient-slider">
+            <span class="vol-pct" id="ambient-vol-val">35%</span>
+        </div>
+    </div>
+</div>
 
 <main class="reader-wrap">
     <jsp:include page="${contentPage}" />
@@ -237,7 +271,11 @@
             </div>
             <div class="shortcut-row">
                 <span class="key-combo"><kbd>M</kbd></span>
-                <span>Bật / tắt Âm thanh mưa rơi</span>
+                <span>Bật / tắt Âm thanh thư giãn (Ambient)</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>Alt</kbd> + <kbd>T</kbd></span>
+                <span>Hẹn giờ tắt đọc truyện (Sleep Timer)</span>
             </div>
             <div class="shortcut-row">
                 <span class="key-combo"><kbd>B</kbd></span>
@@ -262,6 +300,85 @@
             <div class="shortcut-row">
                 <span class="key-combo"><kbd>Esc</kbd></span>
                 <span>Đóng hộp thoại / mục lục</span>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<%-- BẢNG HẸN GIỜ TẮT ĐỌC TRUYỆN (SLEEP TIMER DIALOG) --%>
+<dialog id="sleep-timer-modal" class="reader-dialog sleep-timer-dialog">
+    <div class="dialog-card sleep-timer-card">
+        <div class="dialog-head">
+            <div class="hl-drawer-title-box">
+                <h4>⏱️ Hẹn giờ tắt đọc truyện</h4>
+            </div>
+            <button type="button" class="dialog-close" id="close-sleep-timer" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="dialog-body sleep-timer-body">
+            <p class="sleep-desc">Tự động tạm dừng giọng đọc, tắt âm thanh thư giãn, dừng tự cuộn và làm mờ màn hình khi hết giờ để bạn ngủ ngon.</p>
+            
+            <div class="sleep-status-box" id="sleep-status-box" style="display:none">
+                <div class="sleep-countdown-val" id="sleep-countdown-val">00:00</div>
+                <div class="sleep-status-lbl">Thời gian đọc truyện còn lại</div>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-cancel-sleep-timer">❌ Hủy hẹn giờ</button>
+            </div>
+
+            <div class="sleep-presets" id="sleep-presets">
+                <button type="button" class="sleep-btn" data-mins="15">
+                    <span class="sl-time">15</span><span class="sl-unit">phút</span>
+                </button>
+                <button type="button" class="sleep-btn" data-mins="30">
+                    <span class="sl-time">30</span><span class="sl-unit">phút</span>
+                </button>
+                <button type="button" class="sleep-btn" data-mins="45">
+                    <span class="sl-time">45</span><span class="sl-unit">phút</span>
+                </button>
+                <button type="button" class="sleep-btn" data-mins="60">
+                    <span class="sl-time">60</span><span class="sl-unit">phút</span>
+                </button>
+                <button type="button" class="sleep-btn sleep-btn-chapter" data-mins="chapter">
+                    <span class="sl-time">📖</span><span class="sl-unit">Tự tắt khi hết chương</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<%-- Rèm che màn đêm mờ dịu khi hết giờ --%>
+<div class="screen-sleep-curtain" id="screen-sleep-curtain" hidden>
+    <div class="sleep-curtain-msg">
+        <span class="sleep-moon">🌙</span>
+        <h3>Chúc bạn ngủ ngon!</h3>
+        <p>Hẹn giờ đọc truyện đã kết thúc. Hãy nghỉ ngơi để nạp lại năng lượng nhé.</p>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-wake-up">Tiếp tục đọc truyện</button>
+    </div>
+</div>
+
+<%-- MODAL TẠO ẢNH TRÍCH DẪN NGHỆ THUẬT (QUOTE CARD GENERATOR) --%>
+<dialog id="quote-card-modal" class="reader-dialog quote-card-dialog">
+    <div class="dialog-card quote-card-box">
+        <div class="dialog-head">
+            <div class="hl-drawer-title-box">
+                <h4>📸 Ảnh trích dẫn nghệ thuật</h4>
+            </div>
+            <button type="button" class="dialog-close" id="close-quote-card" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="dialog-body quote-card-body">
+            <div class="qc-preview-container">
+                <canvas id="quote-card-canvas" width="1080" height="1350" class="qc-canvas"></canvas>
+            </div>
+            <div class="qc-controls">
+                <div class="qc-style-label">Chọn phong cách thẩm mỹ:</div>
+                <div class="qc-themes">
+                    <button type="button" class="qc-theme-btn is-active" data-theme="sepia" title="Cổ Điển Ngà Vàng">📜 Cổ điển</button>
+                    <button type="button" class="qc-theme-btn" data-theme="dark" title="Dạ Yến Ánh Kim">🌌 Dạ yến</button>
+                    <button type="button" class="qc-theme-btn" data-theme="pastel" title="Hoàng Hôn Thơ Mộng">🌸 Thơ mộng</button>
+                    <button type="button" class="qc-theme-btn" data-theme="emerald" title="Ngọc Bích Thanh Tịnh">🍃 Ngọc bích</button>
+                </div>
+                <div class="qc-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" id="btn-copy-quote-card">📋 Sao chép ảnh</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-download-quote-card">💾 Tải ảnh PNG</button>
+                </div>
             </div>
         </div>
     </div>
@@ -296,6 +413,9 @@
         </button>
         <button type="button" class="hl-action-btn" id="hl-action-copy" title="Sao chép trích dẫn">
             <span>📋</span><span class="hl-lbl">Trích dẫn</span>
+        </button>
+        <button type="button" class="hl-action-btn" id="hl-action-quote-card" title="Tạo ảnh trích dẫn nghệ thuật">
+            <span>📸</span><span class="hl-lbl">Xuất ảnh</span>
         </button>
         <button type="button" class="hl-action-btn hl-remove-btn" id="hl-action-clear" title="Xóa tô màu">
             <span>🗑️</span>
@@ -1563,26 +1683,55 @@ try {
     }
 
     /* ========================================================================
-     * TÍNH NĂNG 2: ÂM THANH MƯA RƠI THƯ GIÃN (AMBIENT RAIN SOUND)
+     * TÍNH NĂNG 2: HỆ THỐNG ÂM THANH MÔI TRƯỜNG ĐA DẠNG (AMBIENT SOUNDSCAPES)
      *
-     * Sinh âm thanh mưa rơi thuần 100% bằng Web Audio API, không tốn băng thông,
-     * không cần tải tệp mp3 từ mạng, chạy offline mượt mà.
+     * 4 loại âm thanh môi trường thư giãn tổng hợp 100% bằng Web Audio API:
+     * 1. rain: Mưa rào ngoài hiên (Pink noise + Lowpass filter)
+     * 2. fire: Lò sưởi ấm cúng (Pink noise + crackle pops ngẫu nhiên)
+     * 3. waves: Sóng biển vỗ bờ (Pink noise + LFO điều chế tần số cắt 0.1Hz)
+     * 4. night: Đêm hè tĩnh lặng (Low ambient + sine crickets nhẹ nhàng)
      * ===================================================================== */
-    var toggleAmbient = document.getElementById('toggle-ambient');
+    var toggleAmbientBtn = document.getElementById('toggle-ambient');
+    var ambientPop = document.getElementById('reader-ambient-pop');
+    var ambientPopClose = document.getElementById('ambient-pop-close');
+    var ambientTypeBtns = document.querySelectorAll('.ambient-type-btn');
+    var btnAmbientPlay = document.getElementById('btn-ambient-toggle-play');
+    var ambPlayIcon = document.getElementById('amb-play-icon');
+    var ambPlayText = document.getElementById('amb-play-text');
+    var ambCurrentIcon = document.getElementById('ambient-current-icon');
+    var ambientVolSlider = document.getElementById('ambient-volume-slider');
+    var ambientVolVal = document.getElementById('ambient-vol-val');
+
     var audioCtx = null;
-    var noiseNode = null;
-    var gainNode = null;
+    var masterGain = null;
+    var currentSoundType = localStorage.getItem('reader.ambient_sound') || 'rain';
+    var ambientVolume = parseFloat(localStorage.getItem('reader.ambient_volume') || '0.35');
     var isAmbientPlaying = false;
+    var activeSoundNodes = [];
 
-    function initAmbientRain() {
-        if (audioCtx) return;
-        var AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        audioCtx = new AudioContext();
+    var AMBIENT_ICONS = {
+        rain: '🌧️',
+        fire: '🔥',
+        waves: '🌊',
+        night: '🦗'
+    };
 
-        // Tạo 5 giây Pink Noise (tiếng mưa êm tai)
-        var bufferSize = audioCtx.sampleRate * 5;
-        var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    function getAudioContext() {
+        if (!audioCtx) {
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                audioCtx = new AudioContext();
+                masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(ambientVolume, audioCtx.currentTime);
+                masterGain.connect(audioCtx.destination);
+            }
+        }
+        return audioCtx;
+    }
+
+    function createPinkNoiseBuffer(ctx, seconds) {
+        var bufferSize = ctx.sampleRate * (seconds || 4);
+        var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         var output = buffer.getChannelData(0);
         var b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
         for (var i = 0; i < bufferSize; i++) {
@@ -1596,48 +1745,344 @@ try {
             output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.035;
             b6 = white * 0.115926;
         }
-
-        // Bộ lọc Lowpass mô phỏng tiếng mưa rơi ngoài hiên
-        var filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(850, audioCtx.currentTime);
-
-        gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
-
-        noiseNode = audioCtx.createBufferSource();
-        noiseNode.buffer = buffer;
-        noiseNode.loop = true;
-
-        noiseNode.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        noiseNode.start(0);
+        return buffer;
     }
 
-    if (toggleAmbient) {
-        toggleAmbient.addEventListener('click', function () {
-            if (!isAmbientPlaying) {
-                try {
-                    initAmbientRain();
-                    if (audioCtx.state === 'suspended') {
-                        audioCtx.resume();
-                    }
-                    gainNode.gain.setTargetAtTime(0.35, audioCtx.currentTime, 0.1);
-                    isAmbientPlaying = true;
-                    toggleAmbient.classList.add('is-active');
-                    toggleAmbient.title = 'Đang phát tiếng mưa (Bấm để tắt)';
-                } catch (e) {
-                    if (window.console) console.warn('Không thể phát âm thanh ambient:', e);
+    function stopActiveAmbientNodes() {
+        activeSoundNodes.forEach(function (n) {
+            try {
+                if (n.stop) n.stop();
+                if (n.disconnect) n.disconnect();
+            } catch (e) {}
+        });
+        activeSoundNodes = [];
+    }
+
+    function playSoundType(type) {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        stopActiveAmbientNodes();
+
+        if (type === 'rain') {
+            var pBuffer = createPinkNoiseBuffer(ctx, 4);
+            var src = ctx.createBufferSource();
+            src.buffer = pBuffer;
+            src.loop = true;
+            var filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(820, ctx.currentTime);
+            src.connect(filter);
+            filter.connect(masterGain);
+            src.start(0);
+            activeSoundNodes.push(src, filter);
+        } else if (type === 'fire') {
+            var pBuffer2 = createPinkNoiseBuffer(ctx, 3);
+            var srcRumble = ctx.createBufferSource();
+            srcRumble.buffer = pBuffer2;
+            srcRumble.loop = true;
+            var fLow = ctx.createBiquadFilter();
+            fLow.type = 'lowpass';
+            fLow.frequency.setValueAtTime(450, ctx.currentTime);
+            srcRumble.connect(fLow);
+            fLow.connect(masterGain);
+            srcRumble.start(0);
+            activeSoundNodes.push(srcRumble, fLow);
+
+            var crackleTimer = setInterval(function () {
+                if (!isAmbientPlaying || currentSoundType !== 'fire') {
+                    clearInterval(crackleTimer);
+                    return;
                 }
-            } else {
-                if (gainNode) {
-                    gainNode.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.1);
+                if (Math.random() > 0.45) {
+                    try {
+                        var cOsc = ctx.createOscillator();
+                        var cGain = ctx.createGain();
+                        cOsc.type = 'triangle';
+                        cOsc.frequency.setValueAtTime(120 + Math.random() * 800, ctx.currentTime);
+                        cGain.gain.setValueAtTime(0.08 * (Math.random() * 0.8 + 0.2), ctx.currentTime);
+                        cGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
+                        cOsc.connect(cGain);
+                        cGain.connect(masterGain);
+                        cOsc.start();
+                        cOsc.stop(ctx.currentTime + 0.05);
+                    } catch (e) {}
                 }
-                isAmbientPlaying = false;
-                toggleAmbient.classList.remove('is-active');
-                toggleAmbient.title = 'Bật / Tắt âm thanh mưa rơi thư giãn';
+            }, 80);
+        } else if (type === 'waves') {
+            var pBuffer3 = createPinkNoiseBuffer(ctx, 5);
+            var srcWaves = ctx.createBufferSource();
+            srcWaves.buffer = pBuffer3;
+            srcWaves.loop = true;
+            var fWaves = ctx.createBiquadFilter();
+            fWaves.type = 'lowpass';
+            fWaves.frequency.setValueAtTime(350, ctx.currentTime);
+
+            var lfo = ctx.createOscillator();
+            lfo.frequency.setValueAtTime(0.1, ctx.currentTime);
+            var lfoGain = ctx.createGain();
+            lfoGain.gain.setValueAtTime(420, ctx.currentTime);
+            lfo.connect(lfoGain);
+            lfoGain.connect(fWaves.frequency);
+
+            srcWaves.connect(fWaves);
+            fWaves.connect(masterGain);
+            srcWaves.start(0);
+            lfo.start(0);
+            activeSoundNodes.push(srcWaves, fWaves, lfo, lfoGain);
+        } else if (type === 'night') {
+            var pBuffer4 = createPinkNoiseBuffer(ctx, 4);
+            var srcBreeze = ctx.createBufferSource();
+            srcBreeze.buffer = pBuffer4;
+            srcBreeze.loop = true;
+            var fBreeze = ctx.createBiquadFilter();
+            fBreeze.type = 'lowpass';
+            fBreeze.frequency.setValueAtTime(280, ctx.currentTime);
+            srcBreeze.connect(fBreeze);
+            fBreeze.connect(masterGain);
+            srcBreeze.start(0);
+            activeSoundNodes.push(srcBreeze, fBreeze);
+
+            var cricketOsc = ctx.createOscillator();
+            cricketOsc.type = 'sine';
+            cricketOsc.frequency.setValueAtTime(4600, ctx.currentTime);
+            var cricketLfo = ctx.createOscillator();
+            cricketLfo.frequency.setValueAtTime(12, ctx.currentTime);
+            var cLfoGain = ctx.createGain();
+            cLfoGain.gain.setValueAtTime(0.015, ctx.currentTime);
+            var cGainNode = ctx.createGain();
+            cGainNode.gain.setValueAtTime(0.015, ctx.currentTime);
+
+            cricketLfo.connect(cLfoGain);
+            cricketOsc.connect(cGainNode);
+            cGainNode.connect(masterGain);
+            cricketOsc.start(0);
+            cricketLfo.start(0);
+            activeSoundNodes.push(cricketOsc, cricketLfo, cLfoGain, cGainNode);
+        }
+    }
+
+    function setAmbientPlayingState(playing) {
+        isAmbientPlaying = playing;
+        if (playing) {
+            playSoundType(currentSoundType);
+            if (masterGain && audioCtx) {
+                masterGain.gain.setTargetAtTime(ambientVolume, audioCtx.currentTime, 0.1);
             }
+            if (btnAmbientPlay) {
+                btnAmbientPlay.classList.add('is-playing');
+                ambPlayIcon.textContent = '⏸';
+                ambPlayText.textContent = 'Tạm dừng âm thanh';
+            }
+            if (toggleAmbientBtn) toggleAmbientBtn.classList.add('is-on');
+        } else {
+            if (masterGain && audioCtx) {
+                masterGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.1);
+            }
+            setTimeout(stopActiveAmbientNodes, 200);
+            if (btnAmbientPlay) {
+                btnAmbientPlay.classList.remove('is-playing');
+                ambPlayIcon.textContent = '▶';
+                ambPlayText.textContent = 'Bật âm thanh';
+            }
+            if (toggleAmbientBtn) toggleAmbientBtn.classList.remove('is-on');
+        }
+    }
+
+    if (toggleAmbientBtn && ambientPop) {
+        toggleAmbientBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isHidden = ambientPop.hidden;
+            ambientPop.hidden = !isHidden;
+            toggleAmbientBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        });
+    }
+    if (ambientPopClose) {
+        ambientPopClose.addEventListener('click', function () {
+            ambientPop.hidden = true;
+            if (toggleAmbientBtn) toggleAmbientBtn.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    ambientTypeBtns.forEach(function (btn) {
+        var sType = btn.getAttribute('data-sound');
+        if (sType === currentSoundType) btn.classList.add('is-active');
+        btn.addEventListener('click', function () {
+            ambientTypeBtns.forEach(function (b) { b.classList.remove('is-active'); });
+            btn.classList.add('is-active');
+            currentSoundType = sType;
+            localStorage.setItem('reader.ambient_sound', currentSoundType);
+            if (ambCurrentIcon) ambCurrentIcon.textContent = AMBIENT_ICONS[currentSoundType] || '🎵';
+            if (isAmbientPlaying) {
+                playSoundType(currentSoundType);
+            }
+        });
+    });
+
+    if (btnAmbientPlay) {
+        btnAmbientPlay.addEventListener('click', function () {
+            setAmbientPlayingState(!isAmbientPlaying);
+        });
+    }
+
+    if (ambientVolSlider) {
+        ambientVolSlider.value = Math.round(ambientVolume * 100);
+        if (ambientVolVal) ambientVolVal.textContent = ambientVolSlider.value + '%';
+        ambientVolSlider.addEventListener('input', function () {
+            var val = parseInt(this.value, 10) / 100;
+            ambientVolume = val;
+            localStorage.setItem('reader.ambient_volume', val.toString());
+            if (ambientVolVal) ambientVolVal.textContent = this.value + '%';
+            if (masterGain && audioCtx) {
+                masterGain.gain.setValueAtTime(val, audioCtx.currentTime);
+            }
+        });
+    }
+
+    /* ========================================================================
+     * TÍNH NĂNG: BỘ HẸN GIỜ TẮT ĐỌC TRUYỆN (SLEEP TIMER & SESSION CLOCK)
+     * ===================================================================== */
+    var btnToggleSleepTimer = document.getElementById('toggle-sleep-timer');
+    var sleepTimerModal = document.getElementById('sleep-timer-modal');
+    var closeSleepTimer = document.getElementById('close-sleep-timer');
+    var sleepTimerBadge = document.getElementById('sleep-timer-badge');
+    var sleepStatusBox = document.getElementById('sleep-status-box');
+    var sleepCountdownVal = document.getElementById('sleep-countdown-val');
+    var btnCancelSleep = document.getElementById('btn-cancel-sleep-timer');
+    var sleepPresets = document.querySelectorAll('.sleep-btn');
+    var sleepCurtain = document.getElementById('screen-sleep-curtain');
+    var btnWakeUp = document.getElementById('btn-wake-up');
+
+    var sleepTimerInterval = null;
+    var sleepTargetTimestamp = 0;
+    var isSleepOnChapterEnd = false;
+
+    function openSleepTimerModal() {
+        if (sleepTimerModal) {
+            if (typeof sleepTimerModal.showModal === 'function') sleepTimerModal.showModal();
+            else sleepTimerModal.setAttribute('open', '');
+        }
+    }
+
+    function closeSleepTimerModal() {
+        if (sleepTimerModal) {
+            if (typeof sleepTimerModal.close === 'function') sleepTimerModal.close();
+            else sleepTimerModal.removeAttribute('open');
+        }
+    }
+
+    if (btnToggleSleepTimer) {
+        btnToggleSleepTimer.addEventListener('click', function () {
+            openSleepTimerModal();
+        });
+    }
+    if (closeSleepTimer) {
+        closeSleepTimer.addEventListener('click', closeSleepTimerModal);
+    }
+
+    function triggerSleepExpire() {
+        cancelSleepTimer();
+        closeSleepTimerModal();
+
+        // Tắt Ambient
+        setAmbientPlayingState(false);
+
+        // Tắt TTS
+        if (window.speechSynthesis) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+        if (typeof isTtsPlaying !== 'undefined' && isTtsPlaying) {
+            if (typeof stopTts === 'function') stopTts();
+        }
+
+        // Tắt Auto-scroll
+        if (typeof isAutoScrolling !== 'undefined' && isAutoScrolling) {
+            if (typeof stopAutoScroll === 'function') stopAutoScroll();
+        }
+
+        // Hiện rèm che màn đêm chúc ngủ ngon
+        if (sleepCurtain) {
+            sleepCurtain.hidden = false;
+        }
+    }
+
+    function cancelSleepTimer() {
+        if (sleepTimerInterval) {
+            clearInterval(sleepTimerInterval);
+            sleepTimerInterval = null;
+        }
+        sleepTargetTimestamp = 0;
+        isSleepOnChapterEnd = false;
+        if (sleepTimerBadge) sleepTimerBadge.style.display = 'none';
+        if (sleepStatusBox) sleepStatusBox.style.display = 'none';
+        if (btnToggleSleepTimer) btnToggleSleepTimer.classList.remove('is-on');
+    }
+
+    function startSleepTimer(minutes) {
+        cancelSleepTimer();
+
+        if (minutes === 'chapter') {
+            isSleepOnChapterEnd = true;
+            if (sleepTimerBadge) {
+                sleepTimerBadge.textContent = '📖';
+                sleepTimerBadge.style.display = 'inline-block';
+            }
+            if (sleepStatusBox) {
+                sleepStatusBox.style.display = 'block';
+                sleepCountdownVal.textContent = 'Hết chương';
+            }
+            if (btnToggleSleepTimer) btnToggleSleepTimer.classList.add('is-on');
+            closeSleepTimerModal();
+            if (typeof showToast === 'function') showToast('Đã hẹn giờ: Tự động tắt khi đọc xong chương này.');
+            return;
+        }
+
+        var totalSeconds = parseInt(minutes, 10) * 60;
+        sleepTargetTimestamp = Date.now() + (totalSeconds * 1000);
+        if (btnToggleSleepTimer) btnToggleSleepTimer.classList.add('is-on');
+
+        function updateCountdown() {
+            var remainingSec = Math.max(0, Math.round((sleepTargetTimestamp - Date.now()) / 1000));
+            if (remainingSec <= 0) {
+                triggerSleepExpire();
+                return;
+            }
+            var mins = Math.floor(remainingSec / 60);
+            var secs = remainingSec % 60;
+            var timeStr = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+            if (sleepCountdownVal) sleepCountdownVal.textContent = timeStr;
+            if (sleepTimerBadge) {
+                sleepTimerBadge.textContent = (mins + 1) + 'm';
+                sleepTimerBadge.style.display = 'inline-block';
+            }
+        }
+
+        if (sleepStatusBox) sleepStatusBox.style.display = 'block';
+        updateCountdown();
+        sleepTimerInterval = setInterval(updateCountdown, 1000);
+        closeSleepTimerModal();
+        if (typeof showToast === 'function') showToast('Đã hẹn giờ tắt đọc truyện sau ' + minutes + ' phút.');
+    }
+
+    sleepPresets.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var mins = this.getAttribute('data-mins');
+            startSleepTimer(mins);
+        });
+    });
+
+    if (btnCancelSleep) {
+        btnCancelSleep.addEventListener('click', function () {
+            cancelSleepTimer();
+            if (typeof showToast === 'function') showToast('Đã hủy hẹn giờ tắt đọc truyện.');
+        });
+    }
+
+    if (btnWakeUp && sleepCurtain) {
+        btnWakeUp.addEventListener('click', function () {
+            sleepCurtain.hidden = true;
         });
     }
 
@@ -2719,6 +3164,289 @@ try {
         ta.remove();
     }
 
+    /* ========================================================================
+     * TÍNH NĂNG: TRÌNH TẠO ẢNH TRÍCH DẪN NGHỆ THUẬT (QUOTE CARD GENERATOR)
+     * ===================================================================== */
+    var quoteCardModal = document.getElementById('quote-card-modal');
+    var closeQuoteCardBtn = document.getElementById('close-quote-card');
+    var quoteCardCanvas = document.getElementById('quote-card-canvas');
+    var btnCopyQuoteCard = document.getElementById('btn-copy-quote-card');
+    var btnDownloadQuoteCard = document.getElementById('btn-download-quote-card');
+    var quoteThemeBtns = document.querySelectorAll('.qc-theme-btn');
+    var hlActionQuoteCardBtn = document.getElementById('hl-action-quote-card');
+
+    var currentQuoteData = null;
+    var currentCardTheme = 'sepia';
+
+    var CARD_THEMES = {
+        sepia: {
+            bgGradient: ['#fbf2e3', '#f2deb9'],
+            frameBorder: 'rgba(180, 83, 9, 0.35)',
+            innerBorder: 'rgba(180, 83, 9, 0.15)',
+            accent: '#b45309',
+            quoteMark: 'rgba(180, 83, 9, 0.18)',
+            text: '#451a03',
+            meta: '#78350f',
+            footer: 'rgba(120, 53, 15, 0.7)'
+        },
+        dark: {
+            bgGradient: ['#0f172a', '#1e1b4b'],
+            frameBorder: 'rgba(245, 158, 11, 0.45)',
+            innerBorder: 'rgba(245, 158, 11, 0.18)',
+            accent: '#fbbf24',
+            quoteMark: 'rgba(251, 191, 36, 0.22)',
+            text: '#f8fafc',
+            meta: '#cbd5e1',
+            footer: 'rgba(203, 213, 225, 0.7)'
+        },
+        pastel: {
+            bgGradient: ['#fff1f2', '#fdf4ff'],
+            frameBorder: 'rgba(244, 63, 94, 0.35)',
+            innerBorder: 'rgba(244, 63, 94, 0.15)',
+            accent: '#e11d48',
+            quoteMark: 'rgba(244, 63, 94, 0.18)',
+            text: '#4c0519',
+            meta: '#881337',
+            footer: 'rgba(136, 19, 55, 0.7)'
+        },
+        emerald: {
+            bgGradient: ['#f0fdf4', '#ecfdf5'],
+            frameBorder: 'rgba(16, 185, 129, 0.35)',
+            innerBorder: 'rgba(16, 185, 129, 0.15)',
+            accent: '#059669',
+            quoteMark: 'rgba(16, 185, 129, 0.18)',
+            text: '#064e3b',
+            meta: '#065f46',
+            footer: 'rgba(6, 95, 70, 0.7)'
+        }
+    };
+
+    function openQuoteCardModal(data) {
+        if (!data || !data.text) return;
+        currentQuoteData = data;
+        if (quoteCardModal) {
+            if (typeof quoteCardModal.showModal === 'function') quoteCardModal.showModal();
+            else quoteCardModal.setAttribute('open', '');
+        }
+        renderQuoteCardCanvas();
+    }
+
+    function closeQuoteCardModal() {
+        if (quoteCardModal) {
+            if (typeof quoteCardModal.close === 'function') quoteCardModal.close();
+            else quoteCardModal.removeAttribute('open');
+        }
+    }
+
+    if (closeQuoteCardBtn) closeQuoteCardBtn.addEventListener('click', closeQuoteCardModal);
+    if (quoteCardModal) {
+        quoteCardModal.addEventListener('click', function(e) {
+            if (e.target === quoteCardModal) closeQuoteCardModal();
+        });
+    }
+
+    quoteThemeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            quoteThemeBtns.forEach(function(b) { b.classList.remove('is-active'); });
+            this.classList.add('is-active');
+            currentCardTheme = this.getAttribute('data-theme') || 'sepia';
+            renderQuoteCardCanvas();
+        });
+    });
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+        var words = text.split(/\s+/);
+        var lines = [];
+        var currentLine = '';
+        for (var i = 0; i < words.length; i++) {
+            var word = words[i];
+            var testLine = currentLine ? (currentLine + ' ' + word) : word;
+            var width = ctx.measureText(testLine).width;
+            if (width > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines;
+    }
+
+    function renderQuoteCardCanvas() {
+        if (!quoteCardCanvas || !currentQuoteData) return;
+        var ctx = quoteCardCanvas.getContext('2d');
+        var w = 1080;
+        var h = 1350;
+        quoteCardCanvas.width = w;
+        quoteCardCanvas.height = h;
+
+        var theme = CARD_THEMES[currentCardTheme] || CARD_THEMES.sepia;
+
+        // 1. Nền Gradient mượt mà
+        var grad = ctx.createLinearGradient(0, 0, w, h);
+        grad.addColorStop(0, theme.bgGradient[0]);
+        grad.addColorStop(1, theme.bgGradient[1]);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // 2. Khung viền nghệ thuật đôi (Double Decorative Frame)
+        var margin = 60;
+        ctx.strokeStyle = theme.frameBorder;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
+
+        var innerMargin = 74;
+        ctx.strokeStyle = theme.innerBorder;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(innerMargin, innerMargin, w - innerMargin * 2, h - innerMargin * 2);
+
+        // Họa tiết góc (Corner Diamonds)
+        function drawCornerDiamond(cx, cy) {
+            ctx.fillStyle = theme.accent;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 8);
+            ctx.lineTo(cx + 8, cy);
+            ctx.lineTo(cx, cy + 8);
+            ctx.lineTo(cx - 8, cy);
+            ctx.closePath();
+            ctx.fill();
+        }
+        drawCornerDiamond(innerMargin, innerMargin);
+        drawCornerDiamond(w - innerMargin, innerMargin);
+        drawCornerDiamond(innerMargin, h - innerMargin);
+        drawCornerDiamond(w - innerMargin, h - innerMargin);
+
+        // 3. Dấu mở ngoặc kép nghệ thuật to lớn mờ ảo
+        ctx.font = 'bold 220px Georgia, "Times New Roman", serif';
+        ctx.fillStyle = theme.quoteMark;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('“', w / 2, 130);
+
+        // 4. Nội dung trích dẫn
+        var rawText = (currentQuoteData.text || '').trim();
+        var maxTextWidth = w - 240;
+
+        // Tự động điều chỉnh kích thước chữ theo độ dài đoạn trích
+        var fontSize = 48;
+        var lineHeight = 76;
+        if (rawText.length > 280) {
+            fontSize = 38;
+            lineHeight = 60;
+        } else if (rawText.length > 180) {
+            fontSize = 42;
+            lineHeight = 68;
+        } else if (rawText.length < 80) {
+            fontSize = 54;
+            lineHeight = 84;
+        }
+
+        ctx.font = 'italic ' + fontSize + 'px Georgia, "Merriweather", "Times New Roman", serif';
+        ctx.fillStyle = theme.text;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        var lines = wrapCanvasText(ctx, rawText, maxTextWidth);
+
+        // Căn giữa theo trục Y trong vùng giữa
+        var textBlockHeight = lines.length * lineHeight;
+        var startY = 320 + Math.max(0, (560 - textBlockHeight) / 2);
+
+        for (var i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], w / 2, startY + (i * lineHeight));
+        }
+
+        // 5. Đường kẻ phân cách hoa văn giữa (Ornamental Divider)
+        var divY = Math.min(1030, startY + textBlockHeight + 60);
+        if (divY < 920) divY = 930;
+
+        ctx.strokeStyle = theme.frameBorder;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w / 2 - 140, divY);
+        ctx.lineTo(w / 2 + 140, divY);
+        ctx.stroke();
+
+        drawCornerDiamond(w / 2, divY);
+
+        // 6. Thông tin Truyện & Chương
+        var storyTitle = STORY_TITLE || 'Đọc Truyện';
+        var chapterInfo = 'Chương ' + (currentQuoteData.chapterNo || '') + (currentQuoteData.chapterTitle ? (': ' + currentQuoteData.chapterTitle) : '');
+
+        ctx.font = '700 34px "Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
+        ctx.fillStyle = theme.accent;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(storyTitle, w / 2, divY + 70);
+
+        ctx.font = 'italic 26px Georgia, serif';
+        ctx.fillStyle = theme.meta;
+        ctx.fillText(chapterInfo, w / 2, divY + 120);
+
+        // 7. Footer Watermark thương hiệu
+        ctx.font = '600 20px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.fillStyle = theme.footer;
+        ctx.letterSpacing = '1px';
+        ctx.fillText('📖 ĐọcTruyện • Tinh hoa văn học', w / 2, h - 100);
+    }
+
+    // Tải ảnh PNG về máy
+    if (btnDownloadQuoteCard) {
+        btnDownloadQuoteCard.addEventListener('click', function() {
+            if (!quoteCardCanvas) return;
+            try {
+                var link = document.createElement('a');
+                var timestamp = Date.now();
+                link.download = 'trich-dan-chuong-' + (currentQuoteData ? currentQuoteData.chapterNo : 'quote') + '-' + timestamp + '.png';
+                link.href = quoteCardCanvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                if (typeof showToast === 'function') showToast('Đã tải ảnh trích dẫn nghệ thuật thành công! 📸');
+            } catch (err) {
+                if (typeof showToast === 'function') showToast('Không thể tải ảnh: ' + err.message);
+            }
+        });
+    }
+
+    // Sao chép ảnh vào clipboard
+    if (btnCopyQuoteCard) {
+        btnCopyQuoteCard.addEventListener('click', function() {
+            if (!quoteCardCanvas) return;
+            if (quoteCardCanvas.toBlob && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+                quoteCardCanvas.toBlob(function(blob) {
+                    if (!blob) return;
+                    navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]).then(function() {
+                        if (typeof showToast === 'function') showToast('Đã sao chép ảnh trích dẫn vào bộ nhớ tạm! 📋');
+                    }).catch(function() {
+                        btnDownloadQuoteCard.click();
+                    });
+                }, 'image/png');
+            } else {
+                btnDownloadQuoteCard.click();
+            }
+        });
+    }
+
+    // Gắn sự kiện nút Xuất ảnh trên Floating Toolbar
+    if (hlActionQuoteCardBtn) {
+        hlActionQuoteCardBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!currentSelectionContext) return;
+            var ctx = currentSelectionContext;
+            hideToolbar();
+            openQuoteCardModal({
+                text: ctx.text,
+                chapterNo: ctx.chapterNo,
+                chapterTitle: ctx.chapterTitle || ('Chương ' + ctx.chapterNo)
+            });
+        });
+    }
+
     // ---- 8b. Hành động: Thêm / Sửa Ghi Chú Cá Nhân 📝 ----
     var noteModal = document.getElementById('hl-note-modal');
     var notePreview = document.getElementById('hl-note-preview-text');
@@ -3038,6 +3766,7 @@ try {
                 + noteHtml
                 + '<div class="hl-item-actions">'
                 + '<button type="button" class="hl-item-btn btn-jump">🚀 Đi tới đoạn</button>'
+                + '<button type="button" class="hl-item-btn btn-quote-card">📸 Thẻ ảnh</button>'
                 + '<button type="button" class="hl-item-btn btn-copy">📋 Sao chép</button>'
                 + '<button type="button" class="hl-item-btn btn-del">🗑️ Xoá</button>'
                 + '</div>'
@@ -3054,8 +3783,8 @@ try {
 
             // Bấm vào card -> Nhảy tới đoạn
             card.addEventListener('click', function (e) {
-                if (e.target.closest('.btn-copy') || e.target.closest('.btn-del') || e.target.closest('.hl-btn-toggle-expand')
-                    || e.target.closest('.hl-btn-edit-note') || e.target.closest('.hl-btn-add-note')) return;
+                if (e.target.closest('.btn-copy') || e.target.closest('.btn-del') || e.target.closest('.btn-quote-card')
+                    || e.target.closest('.hl-btn-toggle-expand') || e.target.closest('.hl-btn-edit-note') || e.target.closest('.hl-btn-add-note')) return;
                 closeDrawer();
                 jumpToHighlight(chId, paraNo, hlId);
             });
@@ -3095,6 +3824,22 @@ try {
                         closeDrawer();
                         openNoteModalForHighlight(item.id, item.text, '');
                     }
+                });
+            }
+
+            // Nút Thẻ ảnh trích dẫn nghệ thuật
+            var btnQuoteCard = card.querySelector('.btn-quote-card');
+            if (btnQuoteCard) {
+                btnQuoteCard.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var item = getHighlights().find(function(h) { return h.id === hlId; });
+                    if (!item) return;
+                    closeDrawer();
+                    openQuoteCardModal({
+                        text: item.text,
+                        chapterNo: item.chapterNo,
+                        chapterTitle: item.chapterTitle || ('Chương ' + item.chapterNo)
+                    });
                 });
             }
 

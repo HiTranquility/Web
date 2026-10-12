@@ -2084,3 +2084,330 @@ body.is-zen-mode .reader-bar:hover {
     display: block !important;
     -webkit-line-clamp: unset !important;
 }
+
+/* ============================================================================
+   BẢNG ĐIỀU KHIỂN ÂM THANH MÔI TRƯỜNG (AMBIENT SOUNDSCAPES MIXER)
+   ============================================================================ */
+.reader-ambient-pop {
+    position: fixed;
+    top: 56px;
+    right: 24px;
+    z-index: 100;
+    width: 320px;
+    background: var(--rd-bar, rgba(18, 24, 38, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--rd-line, rgba(255, 255, 255, 0.15));
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    padding: 14px 16px;
+    animation: popSlideDown 0.22s var(--ease);
+}
+@keyframes popSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.ambient-pop-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.ambient-pop-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--rd-text, #ffffff);
+}
+.ambient-pop-close {
+    background: transparent;
+    border: 0;
+    font-size: 1.25rem;
+    color: var(--rd-dim, #94a3b8);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+}
+.ambient-pop-close:hover { color: var(--rd-text, #ffffff); }
+
+.ambient-sound-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.ambient-type-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--rd-line, rgba(255, 255, 255, 0.1));
+    border-radius: 9px;
+    color: var(--rd-text, #ffffff);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+.ambient-type-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--ember, #f97316);
+}
+.ambient-type-btn.is-active {
+    background: rgba(249, 115, 22, 0.18);
+    border-color: var(--ember, #f97316);
+    color: var(--ember, #f97316);
+}
+.ambient-type-btn .amb-icon { font-size: 1.15rem; }
+
+.ambient-ctrl-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rd-line, rgba(255, 255, 255, 0.1));
+}
+.btn-ambient-play {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 12px;
+    background: var(--ember, #f97316);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.84rem;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+.btn-ambient-play:hover { filter: brightness(1.1); }
+.btn-ambient-play.is-playing {
+    background: #059669;
+}
+.ambient-volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--rd-dim, #94a3b8);
+}
+.ambient-slider {
+    flex: 1;
+    height: 5px;
+    accent-color: var(--ember, #f97316);
+    cursor: pointer;
+}
+.vol-pct { font-size: 0.76rem; min-width: 34px; text-align: right; }
+
+/* ============================================================================
+   BỘ HẸN GIỜ TẮT ĐỌC TRUYỆN (SLEEP TIMER)
+   ============================================================================ */
+.sleep-timer-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--ember, #f97316);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 99px;
+    line-height: 1.2;
+}
+.sleep-timer-card {
+    max-width: 440px;
+    width: 90%;
+}
+.sleep-desc {
+    font-size: 0.84rem;
+    color: var(--rd-dim, #94a3b8);
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+.sleep-presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.sleep-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--rd-line, rgba(255, 255, 255, 0.12));
+    border-radius: 10px;
+    color: var(--rd-text, #ffffff);
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+.sleep-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--ember, #f97316);
+    transform: translateY(-2px);
+}
+.sleep-btn .sl-time {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--ember, #f97316);
+}
+.sleep-btn .sl-unit {
+    font-size: 0.74rem;
+    color: var(--rd-dim, #94a3b8);
+    margin-top: 3px;
+}
+.sleep-btn-chapter {
+    grid-column: span 3;
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px 14px;
+}
+.sleep-btn-chapter .sl-time { font-size: 1.15rem; }
+.sleep-btn-chapter .sl-unit { font-size: 0.85rem; font-weight: 700; color: var(--rd-text, #fff); margin-top: 0; }
+
+.sleep-status-box {
+    text-align: center;
+    padding: 16px;
+    background: rgba(249, 115, 22, 0.1);
+    border: 1px solid rgba(249, 115, 22, 0.35);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+.sleep-countdown-val {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: var(--ember, #f97316);
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+.sleep-status-lbl {
+    font-size: 0.78rem;
+    color: var(--rd-dim, #94a3b8);
+    margin: 4px 0 12px;
+}
+
+/* Rèm che màn đêm mờ dịu khi hết giờ */
+.screen-sleep-curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(5, 7, 12, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    animation: sleepFadeIn 1.5s ease-out;
+}
+@keyframes sleepFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.sleep-curtain-msg {
+    max-width: 400px;
+    color: #ffffff;
+}
+.sleep-moon {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 12px;
+    animation: moonFloat 3s ease-in-out infinite alternate;
+}
+@keyframes moonFloat {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+}
+.sleep-curtain-msg h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+}
+.sleep-curtain-msg p {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+}
+
+/* ============================================================================
+   TRÌNH TẠO ẢNH TRÍCH DẪN NGHỆ THUẬT (QUOTE CARD GENERATOR)
+   ============================================================================ */
+.quote-card-box {
+    max-width: 580px;
+    width: 95%;
+}
+.quote-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+.qc-preview-container {
+    width: 100%;
+    max-width: 380px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    background: #000;
+}
+.qc-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 16px;
+}
+.qc-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.qc-style-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--rd-dim, #94a3b8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.qc-themes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.qc-theme-btn {
+    padding: 8px 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--rd-line, rgba(255, 255, 255, 0.12));
+    border-radius: 8px;
+    color: var(--rd-text, #ffffff);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.16s ease;
+}
+.qc-theme-btn:hover {
+    border-color: var(--ember, #f97316);
+    background: rgba(255, 255, 255, 0.1);
+}
+.qc-theme-btn.is-active {
+    background: var(--ember, #f97316);
+    color: #ffffff;
+    border-color: var(--ember, #f97316);
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
+}
+.qc-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+

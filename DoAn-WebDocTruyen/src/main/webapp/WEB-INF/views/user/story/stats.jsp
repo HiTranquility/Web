@@ -149,6 +149,72 @@
         </table>
         </div>
 
+        <%-- BẢNG VÀNG FAN CỨNG (TOP PATRONS) --%>
+        <div class="section-head" style="margin-top:34px">
+            <h3>🏆 Bảng Vàng Fan Cứng (Top Người Hâm Mộ Ủng Hộ)</h3>
+            <span class="more">Vinh danh độc giả đồng hành cùng tác giả</span>
+        </div>
+
+        <c:choose>
+            <c:when test="${not empty topPatrons}">
+                <div class="top-patrons-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:24px;">
+                    <c:forEach var="p" items="${topPatrons}" varStatus="st">
+                        <div class="patron-card" style="background:linear-gradient(145deg, rgba(245, 158, 11, 0.08), var(--ink-850)); border:1px solid ${st.index eq 0 ? 'rgba(245, 158, 11, 0.5)' : (st.index eq 1 ? 'rgba(148, 163, 184, 0.4)' : (st.index eq 2 ? 'rgba(217, 119, 6, 0.35)' : 'var(--ink-700)'))}; border-radius:14px; padding:18px 16px; display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; box-shadow:${st.index eq 0 ? '0 8px 24px rgba(245, 158, 11, 0.15)' : 'none'};">
+                            <%-- Badge Rank Top --%>
+                            <div style="position:absolute; top:12px; left:12px; font-size:1.1rem;">
+                                <c:choose>
+                                    <c:when test="${st.index eq 0}">🥇</c:when>
+                                    <c:when test="${st.index eq 1}">🥈</c:when>
+                                    <c:when test="${st.index eq 2}">🥉</c:when>
+                                    <c:otherwise><span style="font-size:0.75rem; font-weight:800; color:var(--text-mut); background:var(--ink-750); padding:2px 6px; border-radius:6px;">#${st.index + 1}</span></c:otherwise>
+                                </c:choose>
+                            </div>
+
+                            <%-- Danh hiệu Fan Cứng --%>
+                            <div style="margin-bottom:8px; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:${st.index eq 0 ? '#f59e0b' : (st.index eq 1 ? '#94a3b8' : (st.index eq 2 ? '#d97706' : '#38bdf8'))};">
+                                <c:choose>
+                                    <c:when test="${st.index eq 0}">👑 Minh Chủ Độc Tôn</c:when>
+                                    <c:when test="${st.index eq 1}">⚡ Đại Hộ Pháp</c:when>
+                                    <c:when test="${st.index eq 2}">🔥 Trưởng Lão Kim Tiền</c:when>
+                                    <c:otherwise>✨ Tri Kỷ Thư Quán</c:otherwise>
+                                </c:choose>
+                            </div>
+
+                            <%-- Avatar --%>
+                            <div style="margin-bottom:10px;">
+                                <c:set var="avUrl" value="${p.avatarUrl}"/>
+                                <c:set var="avAlt" value="${p.name}"/>
+                                <c:set var="avInitial" value="${p.initial}"/>
+                                <c:set var="avClass" value="user-avatar-lg"/>
+                                <%@ include file="/WEB-INF/views/_partials/_avatar.jsp" %>
+                            </div>
+
+                            <%-- Tên độc giả --%>
+                            <div style="font-weight:700; font-size:0.95rem; color:var(--text); margin-bottom:2px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <c:out value="${p.name}"/>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-mut); margin-bottom:12px;">
+                                @<c:out value="${p.username}"/>
+                            </div>
+
+                            <%-- Tổng xu ủng hộ --%>
+                            <div style="background:rgba(245, 158, 11, 0.12); border:1px solid rgba(245, 158, 11, 0.25); border-radius:99px; padding:4px 14px; color:#f59e0b; font-weight:800; font-size:0.92rem; margin-bottom:6px;">
+                                🪙 <fmt:formatNumber pattern="#,##0" value="${p.totalAmount}"/> xu
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-mut);">
+                                ${p.donationCount} lượt ủng hộ / mở khoá
+                            </div>
+                        </div>
+                    </c:forEach>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div style="background:var(--ink-850); border:1px solid var(--ink-700); border-radius:10px; padding:18px 20px; color:var(--text-mut); font-size:0.88rem; margin-bottom:24px;">
+                    🏆 Chưa có độc giả nào trong Bảng Vàng Fan Cứng. Những độc giả đầu tiên tặng xu hoặc mở khoá chương sẽ được vinh danh tại đây!
+                </div>
+            </c:otherwise>
+        </c:choose>
+
         <div class="section-head" style="margin-top:34px">
             <h3>🪙 Độc giả ủng hộ &amp; Mở khoá chương gần nhất</h3>
             <span class="more">Tổng tích luỹ: <b style="color:#f59e0b;"><fmt:formatNumber pattern="#,##0" value="${totalEarnings != null ? totalEarnings : 0}"/> xu</b></span>

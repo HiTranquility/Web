@@ -10,15 +10,16 @@ import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 
+import truyen.dao.GamificationDAO;
 import truyen.dao.NotificationDAO;
 import truyen.dao.WalletDAO;
 import truyen.model.User;
 
 /**
- * Đếm số thông báo chưa đọc và số dư ví xu, đặt vào request cho thanh menu dùng.
+ * Đếm số thông báo chưa đọc, số dư ví xu và streak, đặt vào request cho thanh menu dùng.
  *
  * VÌ SAO PHẢI LÀ FILTER CHỨ KHÔNG PHẢI SERVLET
- *   Chấm đỏ và badge xu nằm ở parts/nav.jsp — mảnh dùng chung cho MỌI trang.
+ *   Chấm đỏ, badge xu và chuỗi streak nằm ở parts/nav.jsp — mảnh dùng chung cho MỌI trang.
  *   Filter chạy TRƯỚC mọi servlet nên đặt một lần là xong.
  */
 @WebFilter("/*")
@@ -26,11 +27,13 @@ public class NotificationFilter implements Filter {
 
     private NotificationDAO notificationDAO;
     private WalletDAO walletDAO;
+    private GamificationDAO gamificationDAO;
 
     @Override
     public void init(javax.servlet.FilterConfig config) {
         notificationDAO = new NotificationDAO();
         walletDAO = new WalletDAO();
+        gamificationDAO = new GamificationDAO();
     }
 
     @Override
@@ -68,6 +71,13 @@ public class NotificationFilter implements Filter {
             } catch (SQLException e) {
                 request.getServletContext().log(
                         "NotificationFilter: không lấy được số dư ví xu", e);
+            }
+            try {
+                request.setAttribute("currentStreak",
+                        gamificationDAO.getCurrentStreak(me.getId()));
+            } catch (SQLException e) {
+                request.getServletContext().log(
+                        "NotificationFilter: không lấy được chuỗi streak", e);
             }
         }
 
