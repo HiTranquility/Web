@@ -101,7 +101,13 @@ public class AuthServlet extends HttpServlet {
                 return;
             }
             request.setAttribute("message", "Hệ thống đang bận, vui lòng thử lại.");
-            url = "/WEB-INF/views/auth/login.jsp";
+            if ("register".equals(action)) {
+                url = "/WEB-INF/views/auth/register.jsp";
+            } else if ("forgot".equals(action)) {
+                url = "/WEB-INF/views/auth/forgot.jsp";
+            } else {
+                url = "/WEB-INF/views/auth/login.jsp";
+            }
         }
 
         // url là null nghĩa là method con đã redirect xong -> không forward nữa
@@ -163,6 +169,13 @@ public class AuthServlet extends HttpServlet {
         }
 
         User user = userDAO.findByUsername(username);
+
+        // Hướng dẫn nếu tài khoản đăng ký qua Google nhưng chưa đặt mật khẩu
+        if (user != null && !user.hasPassword()) {
+            request.setAttribute("message", "Tài khoản này được đăng ký qua Google. Vui lòng bấm 'Đăng nhập với Google' bên dưới, hoặc dùng 'Quên mật khẩu' để đặt mật khẩu mới.");
+            request.setAttribute("username", username);
+            return "/WEB-INF/views/auth/login.jsp";
+        }
 
         /* MỘT THÔNG BÁO CHUNG CHO CẢ HAI TRƯỜNG HỢP SAI.
            Mật khẩu dài quá trần thì không thể đúng (đăng ký không cho đặt) —

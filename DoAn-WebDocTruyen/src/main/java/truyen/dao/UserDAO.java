@@ -23,22 +23,30 @@ import truyen.util.DBConnection;
 public class UserDAO {
 
     private static volatile boolean vipColumnChecked = false;
+    private static volatile boolean hasVipColumn = true;
 
-    private static void ensureVipColumn() {
+    public static void ensureVipColumn() {
         if (vipColumnChecked || !DBConnection.isReady()) return;
         vipColumnChecked = true;
         try (Connection con = DBConnection.get(); Statement st = con.createStatement()) {
             st.executeUpdate("ALTER TABLE users ADD COLUMN vip_expire_at DATETIME NULL");
+            hasVipColumn = true;
         } catch (Exception ignored) {
             // Cột đã tồn tại hoặc không đủ quyền ALTER
         }
     }
 
-    private static final String SELECT_BASE =
-        "SELECT id, username, email, password_hash, display_name, avatar_url, "
-      + "       bio, role, status, ban_reason, created_at, vip_expire_at "
-      + "FROM users ";
-
+    private static String getSelectBase() {
+        ensureVipColumn();
+        if (!hasVipColumn) {
+            return "SELECT id, username, email, password_hash, display_name, avatar_url, "
+                 + "       bio, role, status, ban_reason, created_at "
+                 + "FROM users ";
+        }
+        return "SELECT id, username, email, password_hash, display_name, avatar_url, "
+             + "       bio, role, status, ban_reason, created_at, vip_expire_at "
+             + "FROM users ";
+    }
 
     /**
      * Tìm theo username — dùng lúc đăng nhập.
@@ -47,23 +55,41 @@ public class UserDAO {
     public User findByUsername(String username) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.userByUsername(username);
-        String sql = SELECT_BASE + "WHERE username = ?";
-        try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? mapRow(rs) : null;
+        ensureVipColumn();
+        try {
+            return queryUser(getSelectBase() + "WHERE username = ?", username);
+        } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("vip_expire_at")) {
+                hasVipColumn = false;
+                return queryUser(getSelectBase() + "WHERE username = ?", username);
             }
+            throw e;
         }
     }
 
     public User findById(int id) throws SQLException {
         // CHE DO XEM GIAO DIEN: chua co db.properties thi lay du lieu gia.
         if (!DBConnection.isReady()) return DemoData.user(id);
-        String sql = SELECT_BASE + "WHERE id = ?";
+        ensureVipColumn();
+        try {
+            return queryUser(getSelectBase() + "WHERE id = ?", id);
+        } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("vip_expire_at")) {
+                hasVipColumn = false;
+                return queryUser(getSelectBase() + "WHERE id = ?", id);
+            }
+            throw e;
+        }
+    }
+
+    private User queryUser(String sql, Object param) throws SQLException {
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, id);
+            if (param instanceof Integer) {
+                ps.setInt(1, (Integer) param);
+            } else {
+                ps.setString(1, String.valueOf(param));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? mapRow(rs) : null;
             }
@@ -91,6 +117,7 @@ public class UserDAO {
 
     /** Thêm tài khoản mới, gán luôn id vừa sinh vào object user. */
     public void insert(User user) throws SQLException {
+        ensureVipColumn();
         String sql = "INSERT INTO users "
                    + "(username, email, password_hash, display_name, avatar_url, role, status) "
                    + "VALUES (?, ?, ?, ?, ?, 'USER', 'ACTIVE')";
@@ -113,6 +140,9 @@ public class UserDAO {
                     user.setId(keys.getInt(1));
                 }
             }
+            if (user.getRole() == null) user.setRole("USER");
+            if (user.getStatus() == null) user.setStatus("ACTIVE");
+            if (user.getCreatedAt() == null) user.setCreatedAt(java.time.LocalDateTime.now());
         }
     }
 
