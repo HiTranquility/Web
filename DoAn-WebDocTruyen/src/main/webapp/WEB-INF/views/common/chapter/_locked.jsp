@@ -20,7 +20,20 @@
     <div class="vip-price-box">
         <div class="vip-info-row">
             <span class="vip-info-label">Giá mở khoá:</span>
-            <span class="vip-coin-tag"><fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu</span>
+            <c:choose>
+                <c:when test="${discountPercent > 0}">
+                    <div class="vip-price-group">
+                        <del class="vip-orig-price"><fmt:formatNumber pattern="#,##0" value="${origPrice}"/> xu</del>
+                        <span class="vip-coin-tag"><fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu</span>
+                        <span class="badge-discount-tier">
+                            <c:out value="${readerTierIcon}"/> -${discountPercent}% (<c:out value="${readerTierName}"/>)
+                        </span>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <span class="vip-coin-tag"><fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu</span>
+                </c:otherwise>
+            </c:choose>
         </div>
         <c:if test="${not empty sessionScope.currentUser}">
             <div class="vip-info-row">

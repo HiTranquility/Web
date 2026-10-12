@@ -50,6 +50,7 @@ CREATE TABLE users (
     ban_reason    VARCHAR(255),
 
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    vip_expire_at DATETIME NULL,
 
     INDEX idx_users_status (status)
 ) ENGINE=InnoDB;

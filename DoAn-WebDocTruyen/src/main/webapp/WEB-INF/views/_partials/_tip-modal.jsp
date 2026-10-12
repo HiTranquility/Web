@@ -94,6 +94,15 @@
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
+    window.triggerTipModal = function(btn) {
+        if (!btn) return;
+        var aId = btn.getAttribute('data-author-id');
+        var aName = btn.getAttribute('data-author-name');
+        var sId = btn.getAttribute('data-story-id');
+        var sTitle = btn.getAttribute('data-story-title');
+        window.openTipModal(aId, aName, sId, sTitle);
+    };
+
     window.openTipModal = function(authorId, authorName, storyId, storyTitle) {
         var modal = document.getElementById('tipModalBackdrop');
         if (!modal) return;

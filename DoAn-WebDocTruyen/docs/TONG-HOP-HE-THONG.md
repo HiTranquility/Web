@@ -240,7 +240,9 @@ Dự án đã giải quyết trọn vẹn lộ trình 28 Module Công nghệ nâ
 | **ISSUE-027** | **Ghi Nhớ Vị Trí Đọc Chi Tiết (Reading Progress)** | Tự động ghi nhớ vị trí cuộn tới từng đoạn văn (`para_no`), khôi phục chính xác vị trí khi quay lại đọc tiếp, phím tắt `B` đánh dấu đoạn yêu thích. |
 | **ISSUE-028** | **Truyện Tranh Webtoon / Comic Chuyên Nghiệp** | Phân loại `story_type = 'COMIC'`, bảo vệ ảnh qua session token (`UploadedFileServlet`), thanh điều hướng trang nổi `Trang X / Y`, thanh trượt nhảy trang tức thì, 3 chế độ bề rộng `fit`/`wide`/`full`, phím tắt `J`/`K` cuộn từng trang ảnh. |
 | **ISSUE-029** | **Tự Động Cuộn Trang & Hiệu Ứng Khánh Tiết** | Cuộn trang mượt mà 60fps bằng `requestAnimationFrame` với 3 tốc độ (1x, 2x, 3x), phím tắt `C`, tự tạm dừng khi người dùng lăn chuột/touch; Canvas Confetti rực rỡ & Mưa Xu Vàng 3D kèm âm thanh Web Audio API khi mở khoá VIP hoặc tặng xu tác giả. |
-| **NOTIF-001** | **Hệ Thống Thông Báo Đa Kênh Tác Giả** | Tự động bắn thông báo khi đăng chương mới đến cả người theo dõi tác giả và người đã lưu truyện; Hỗ trợ tùy chọn bắn thông báo khi sửa chương quan trọng; Phân loại icon rõ ràng (`📖`, `📝`, `💬`, `🔔`). |
+| **ISSUE-030** | **Tô Màu Đánh Dấu Đoạn Văn & Quản Lý Trích Dẫn (Highlighter & Quotes)** | Bôi đen văn bản chọn 4 màu dạ quang (Vàng, Xanh lá, Lam, Hồng); lưu trữ cục bộ kèm đoạn văn; Ngăn kéo (Drawer) quản lý trích dẫn đa năng: Lọc màu, Live Search, Lọc phạm vi (`Chương này` vs `Cả truyện`), đếm số lượng, sao chép hàng loạt, và Chế độ đọc sạch sẽ Ẩn/Hiện màu tô (`Alt+H`). |
+| **ISSUE-031** | **Cấp Bậc Độc Giả Gắn Bó & Thẻ Hội Viên VIP (Loyalty Tiers & VIP Pass)** | Phân 5 cấp bậc độc giả (`Tân Thủ` -> `Đồng Hành` -> `Tri Kỷ` -> `Đại Tông Sư` -> `Hội Viên VIP`); Thẻ căn cước độc giả (Reader Passport UI); Chiết khấu mở khoá chương VIP từ 5% đến 25%; Nhân hệ số điểm danh từ x1.2 đến x2.0; Gói kích hoạt VIP 30, 90, 365 ngày. |
+| **NOTIF-001** | **Hệ Thống Thông Báo Đa Kênh Tác Giả** | Tự động bắn thông báo khi đăng chương mới đến cả người theo dõi tác giả và người đã lưu truyện; Hỗ trợ tùy chọn bắn thông báo khi sửa chương quan trọng; Phân loại icon rõ ràng (`📖`, `📝`, `💬`, `🪙`, `🔔`). |
 
 ---
 
@@ -548,16 +550,17 @@ Giao diện hệ thống được xây dựng theo kiến trúc **Vanilla CSS 4 
 
 ---
 
-## 10. Hệ thống Kiểm thử Tự động (154 Tests 100% PASS)
+## 10. Hệ thống Kiểm thử Tự động (165 Tests 100% PASS)
 
 Kiểm thử tự động thực thi qua công cụ JUnit 5 Console Standalone, độc lập môi trường mạng và CSDL:
 
 ```text
-JUnit Platform Suite: 154 tests found, 154 successful, 0 failed.
-Thời gian thực thi: ~2.1 giây (100% PASS).
+JUnit Platform Suite: 165 tests found, 165 successful, 0 failed.
+Thời gian thực thi: ~1.7 giây (100% PASS).
 ```
 
 ### Các nhóm test case tiêu biểu:
+- **`SeniorityTierTest` (7 tests):** Kiểm thử phân 5 cấp bậc độc giả (`Newbie`, `Companion`, `Confidant`, `Grandmaster`, `VIP`), chiết khấu mở khoá chương VIP từ 5% đến 25%, nhân hệ số điểm danh x1.2 đến x2.0, kiểm tra VIP hết hạn trả về cấp thực tế, tính giá mở khoá sau chiết khấu.
 - **`ComicTest` (12 tests):** Kiểm thử chuẩn hóa loại truyện (`Story.TYPE_COMIC`, `Story.normalizeType`), cờ phân biệt truyện tranh, sắp xếp thứ tự trang ảnh hai lượt (`ChapterPage.arrange`), loại bỏ token trùng lặp, bảo toàn trang cũ khi form gửi thiếu.
 - **`ReadingProgressTest` (8 tests):** Kiểm thử ghi nhớ vị trí đọc đến từng đoạn/trang, tính toán phần trăm đọc, mốc thời gian đọc và phục hồi vị trí cuộn khi quay lại đọc dở.
 - **`NewFeaturesTest` (7 tests):** Kiểm thử mở khóa chương VIP (`UnlockDAO`), tìm kiếm danh sách chương đã mở khóa, mô hình đánh giá kèm cờ Spoiler (`Review`), hệ thống 3 nhiệm vụ ngày Gamification, phân biệt biểu tượng thông báo (`NEW_CHAPTER` vs `UPDATE_CHAPTER`) và kiểm thử an toàn của `NotificationDAO.notifyFollowers`.

@@ -72,7 +72,9 @@
                     </button>
                 </form>
                 <button type="button" class="btn btn-warning"
-                        onclick="openTipModal(${author.id}, '<c:out value="${author.name}"/>')"
+                        data-author-id="${author.id}"
+                        data-author-name="<c:out value='${author.name}'/>"
+                        onclick="triggerTipModal(this)"
                         title="Tặng xu khích lệ tác giả">
                     🪙 Tặng xu
                 </button>

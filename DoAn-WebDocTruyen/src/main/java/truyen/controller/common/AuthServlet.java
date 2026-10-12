@@ -209,6 +209,9 @@ public class AuthServlet extends HttpServlet {
 
         // KHÔNG mang chuỗi băm vào session — không có lý do gì để nó ở đó
         user.setPasswordHash(null);
+        try {
+            user.setReadChapters(userDAO.countReadChapters(user.getId()));
+        } catch (Exception ignored) {}
         session.setAttribute("currentUser", user);
 
         /*
@@ -600,6 +603,9 @@ public class AuthServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
 
         user.setPasswordHash(null);
+        try {
+            user.setReadChapters(userDAO.countReadChapters(user.getId()));
+        } catch (Exception ignored) {}
         session.setAttribute("currentUser", user);
 
         String redirect = request.getContextPath() + landingPage(user, target);

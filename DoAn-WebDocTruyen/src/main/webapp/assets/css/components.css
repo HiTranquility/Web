@@ -4328,6 +4328,30 @@ html[data-site-theme="light"] .vip-locked-card {
     color: #f59e0b;
     text-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
 }
+.vip-price-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.vip-orig-price {
+    color: var(--text-mut, #888);
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+.badge-discount-tier {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.25));
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+}
 .vip-balance-tag {
     font-size: 1.35rem;
     font-weight: 800;

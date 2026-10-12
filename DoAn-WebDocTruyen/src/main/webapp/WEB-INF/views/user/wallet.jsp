@@ -38,6 +38,9 @@
                     </div>
                     <div class="balance-actions">
                         <a href="#packages-section" class="btn btn-sm btn-primary">Nạp thêm ngay</a>
+                        <a href="${pageContext.request.contextPath}/user?action=me#vip-pass" class="btn btn-sm btn-ghost" title="Hội viên VIP & Ưu đãi giảm giá">
+                            ⭐ Hội viên VIP
+                        </a>
                         <a href="${pageContext.request.contextPath}/user?action=me#gamification" class="btn btn-sm btn-ghost" title="Điểm danh nhận xu miễn phí">
                             🎁 Nhận xu miễn phí
                         </a>

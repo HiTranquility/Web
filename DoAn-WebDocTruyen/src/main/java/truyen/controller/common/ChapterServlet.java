@@ -754,8 +754,25 @@ public class ChapterServlet extends HttpServlet {
      */
     private void hideLockedContent(HttpServletRequest request, User me, Chapter chapter)
             throws SQLException {
+        int origPrice = chapter.getCoinPrice();
+        int discount = 0;
+        int finalPrice = origPrice;
+        if (me != null) {
+            try {
+                me.setReadChapters(userDAO.countReadChapters(me.getId()));
+            } catch (Exception ignored) {}
+            discount = me.getDiscountPercent();
+            if (discount > 0) {
+                finalPrice = Math.max(1, (int) Math.round(origPrice * (100.0 - discount) / 100.0));
+            }
+        }
         request.setAttribute("isLocked", true);
-        request.setAttribute("unlockPrice", chapter.getCoinPrice());
+        request.setAttribute("origPrice", origPrice);
+        request.setAttribute("unlockPrice", finalPrice);
+        request.setAttribute("discountPercent", discount);
+        request.setAttribute("readerTierName", me != null ? me.getTierName() : "");
+        request.setAttribute("readerTierIcon", me != null ? me.getTierIcon() : "");
+        request.setAttribute("isReaderVip", me != null && me.isVip());
         request.setAttribute("walletBalance", me != null ? walletDAO.getBalance(me.getId()) : 0);
         chapter.setContent("");
         chapter.setPages(null);

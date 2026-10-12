@@ -28,6 +28,9 @@
                 <button type="button" class="bs-filter-chip" data-filter="comment">
                     💬 Bình luận &amp; Thảo luận
                 </button>
+                <button type="button" class="bs-filter-chip" data-filter="reward">
+                    🪙 Tặng xu &amp; Thưởng
+                </button>
                 <button type="button" class="bs-filter-chip" data-filter="system">
                     🛡️ Hệ thống
                 </button>
@@ -43,10 +46,28 @@
         <div class="notif-list" id="notif-list-container">
             <c:forEach var="n" items="${notifications}">
                 <c:set var="notifType" value="system"/>
-                <c:if test="${not empty n.chapterId}"><c:set var="notifType" value="chapter"/></c:if>
-                <c:if test="${empty n.chapterId and not empty n.storyId}"><c:set var="notifType" value="comment"/></c:if>
+                <c:if test="${n.type eq 'TIP' or fn:contains(n.message, 'tặng bạn') or fn:contains(n.message, 'điểm danh')}"><c:set var="notifType" value="reward"/></c:if>
+                <c:if test="${notifType ne 'reward' and not empty n.chapterId}"><c:set var="notifType" value="chapter"/></c:if>
+                <c:if test="${notifType ne 'reward' and empty n.chapterId and not empty n.storyId}"><c:set var="notifType" value="comment"/></c:if>
 
                 <c:choose>
+                    <c:when test="${notifType eq 'reward'}">
+                        <a class="notif notif-item ${n.read ? '' : 'notif-new'}"
+                           data-type="reward"
+                           href="${pageContext.request.contextPath}/wallet?action=history">
+                            <span class="notif-icon">${not empty n.icon ? n.icon : '🪙'}</span>
+                            <span class="notif-body">
+                                <span class="notif-text"><c:out value="${n.message}"/></span>
+                                <span class="notif-time">
+                                    <c:if test="${not empty n.createdAt}">
+                                        ${n.createdAt.dayOfMonth}/${n.createdAt.monthValue}
+                                        lúc ${n.createdAt.hour}:${n.createdAt.minute lt 10 ? '0' : ''}${n.createdAt.minute}
+                                    </c:if>
+                                </span>
+                            </span>
+                            <c:if test="${not n.read}"><span class="notif-dot"></span></c:if>
+                        </a>
+                    </c:when>
                     <c:when test="${not empty n.chapterId}">
                         <a class="notif notif-item ${n.read ? '' : 'notif-new'}"
                            data-type="${notifType}"

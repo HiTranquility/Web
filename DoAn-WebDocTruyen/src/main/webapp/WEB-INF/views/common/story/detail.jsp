@@ -68,7 +68,11 @@
                         </button>
                     </form>
                     <button type="button" class="btn btn-warning btn-sm" style="margin-left:8px;"
-                            onclick="openTipModal(${story.authorId}, '<c:out value="${story.authorName}"/>', ${story.id}, '<c:out value="${story.title}"/>')"
+                            data-author-id="${story.authorId}"
+                            data-author-name="<c:out value='${story.authorName}'/>"
+                            data-story-id="${story.id}"
+                            data-story-title="<c:out value='${story.title}'/>"
+                            onclick="triggerTipModal(this)"
                             title="Tặng xu khích lệ tác giả">🪙 Tặng xu</button>
                 </c:when>
                 <c:when test="${empty currentUser}">
@@ -179,7 +183,11 @@
             <c:choose>
                 <c:when test="${not empty currentUser and currentUser.id ne story.authorId}">
                     <button type="button" class="btn btn-warning"
-                            onclick="openTipModal(${story.authorId}, '<c:out value="${story.authorName}"/>', ${story.id}, '<c:out value="${story.title}"/>')"
+                            data-author-id="${story.authorId}"
+                            data-author-name="<c:out value='${story.authorName}'/>"
+                            data-story-id="${story.id}"
+                            data-story-title="<c:out value='${story.title}'/>"
+                            onclick="triggerTipModal(this)"
                             title="Tặng xu khích lệ tác giả sáng tác">
                         🪙 Tặng xu
                     </button>
