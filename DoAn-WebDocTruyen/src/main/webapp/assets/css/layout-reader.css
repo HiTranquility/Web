@@ -1183,6 +1183,152 @@ kbd {
     width: 100%; height: auto;
     -webkit-user-drag: none; user-select: none;
     transition: opacity 0.3s ease;
+    cursor: zoom-in;
+}
+
+/* ==========================================================================
+   COMIC LIGHTBOX & ZOOM (PREMIUM VIEWER)
+   ========================================================================== */
+.comic-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: none;
+    animation: fadeIn .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.comic-lightbox[hidden] {
+    display: none !important;
+}
+.lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 10, 16, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 1;
+}
+.lightbox-toolbar {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+    pointer-events: none;
+}
+.lightbox-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+}
+.lightbox-badge {
+    padding: 6px 14px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: .85rem;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.lightbox-zoom-val {
+    padding: 6px 10px;
+    border-radius: var(--r-sm);
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--ember);
+    font-size: .82rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.lightbox-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+}
+.lb-btn {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-size: .95rem;
+    cursor: pointer;
+    transition: all .16s ease;
+    backdrop-filter: blur(8px);
+}
+.lb-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.06);
+}
+.lb-btn-close {
+    font-size: 1.5rem;
+    line-height: 1;
+    background: rgba(229, 87, 111, 0.35);
+    border-color: rgba(229, 87, 111, 0.5);
+}
+.lb-btn-close:hover {
+    background: rgba(229, 87, 111, 0.7);
+}
+.lightbox-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all .18s ease;
+    backdrop-filter: blur(8px);
+}
+.lightbox-arrow:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-50%) scale(1.08);
+}
+.lb-prev { left: 24px; }
+.lb-next { right: 24px; }
+.lightbox-canvas-wrap {
+    position: relative;
+    z-index: 5;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    overflow: hidden;
+}
+.lightbox-canvas-wrap.is-dragging {
+    cursor: grabbing;
+}
+.lightbox-img {
+    max-width: 92vw;
+    max-height: 90vh;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: transform 0.1s ease-out;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
 }
 
 /* Floating Comic Page Indicator */

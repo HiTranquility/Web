@@ -516,6 +516,29 @@
             <button type="button" class="btn btn-primary btn-sm" id="comicJumpConfirm">Tới trang này</button>
         </div>
     </div>
+
+    <%-- MODAL PHÓNG TO ẢNH TRUYỆN TRANH (COMIC LIGHTBOX & ZOOM) --%>
+    <div class="comic-lightbox" id="comic-lightbox" hidden role="dialog" aria-modal="true" aria-label="Xem ảnh phóng to">
+        <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+        <div class="lightbox-toolbar">
+            <div class="lightbox-info">
+                <span class="lightbox-badge" id="lightbox-page-indicator">Trang 1 / 1</span>
+                <span class="lightbox-zoom-val" id="lightbox-zoom-val">100%</span>
+            </div>
+            <div class="lightbox-actions">
+                <button type="button" class="lb-btn" id="lb-btn-zoom-in" title="Phóng to (+)">➕</button>
+                <button type="button" class="lb-btn" id="lb-btn-zoom-out" title="Thu nhỏ (-)">➖</button>
+                <button type="button" class="lb-btn" id="lb-btn-zoom-reset" title="Tỷ lệ 100% (0)">↺</button>
+                <button type="button" class="lb-btn" id="lb-btn-fit" title="Vừa màn hình (F)">⛶</button>
+                <button type="button" class="lb-btn lb-btn-close" id="lb-btn-close" title="Đóng (Esc)">&times;</button>
+            </div>
+        </div>
+        <button type="button" class="lightbox-arrow lb-prev" id="lb-arrow-prev" title="Trang trước (←)">‹</button>
+        <div class="lightbox-canvas-wrap" id="lightbox-canvas-wrap">
+            <img src="" alt="" class="lightbox-img" id="lightbox-img" draggable="false">
+        </div>
+        <button type="button" class="lightbox-arrow lb-next" id="lb-arrow-next" title="Trang sau (→)">›</button>
+    </div>
 </c:if>
 
 <%-- THANH ĐIỀU KHIỂN TỰ ĐỘNG CUỘN TRANG (AUTO-SCROLL) --%>
@@ -1298,6 +1321,175 @@ try {
         if (navNext) navNext.addEventListener('click', function () { scrollComicStep(1); });
 
         window.scrollComicStep = scrollComicStep;
+
+        /* -------------------------------------------- LIGHTBOX PHÓNG TO ẢNH TRUYỆN TRANH */
+        (function setupComicLightbox() {
+            var lightbox = document.getElementById('comic-lightbox');
+            if (!lightbox) return;
+
+            var lbImg = document.getElementById('lightbox-img');
+            var lbBackdrop = document.getElementById('lightbox-backdrop');
+            var lbClose = document.getElementById('lb-btn-close');
+            var lbZoomIn = document.getElementById('lb-btn-zoom-in');
+            var lbZoomOut = document.getElementById('lb-btn-zoom-out');
+            var lbZoomReset = document.getElementById('lb-btn-zoom-reset');
+            var lbFit = document.getElementById('lb-btn-fit');
+            var lbPrev = document.getElementById('lb-arrow-prev');
+            var lbNext = document.getElementById('lb-arrow-next');
+            var lbIndicator = document.getElementById('lightbox-page-indicator');
+            var lbZoomVal = document.getElementById('lightbox-zoom-val');
+            var lbCanvasWrap = document.getElementById('lightbox-canvas-wrap');
+
+            var currentZoom = 1.0;
+            var panX = 0, panY = 0;
+            var isDragging = false;
+            var startX = 0, startY = 0;
+            var currentImgIdx = 0;
+            var allImgs = [];
+
+            function updateTransform() {
+                if (!lbImg) return;
+                lbImg.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + currentZoom + ')';
+                if (lbZoomVal) lbZoomVal.textContent = Math.round(currentZoom * 100) + '%';
+            }
+
+            function refreshComicImages() {
+                allImgs = Array.prototype.slice.call(document.querySelectorAll('.comic-page img'));
+            }
+
+            function showImageAtIndex(idx) {
+                if (!allImgs.length) refreshComicImages();
+                if (idx < 0) idx = 0;
+                if (idx >= allImgs.length) idx = allImgs.length - 1;
+                currentImgIdx = idx;
+                var targetImg = allImgs[idx];
+                if (!targetImg) return;
+
+                lbImg.src = targetImg.src;
+                lbImg.alt = targetImg.alt || ('Trang ' + (idx + 1));
+                currentZoom = 1.0;
+                panX = 0;
+                panY = 0;
+                updateTransform();
+
+                if (lbIndicator) {
+                    lbIndicator.textContent = 'Trang ' + (idx + 1) + ' / ' + allImgs.length;
+                }
+            }
+
+            function openLightbox(imgEl) {
+                refreshComicImages();
+                currentImgIdx = allImgs.indexOf(imgEl);
+                if (currentImgIdx === -1) currentImgIdx = 0;
+                showImageAtIndex(currentImgIdx);
+                lightbox.hidden = false;
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeLightbox() {
+                lightbox.hidden = true;
+                document.body.style.overflow = '';
+                currentZoom = 1.0;
+                panX = 0;
+                panY = 0;
+                updateTransform();
+            }
+
+            function setZoom(newZoom) {
+                currentZoom = Math.min(3.5, Math.max(0.5, newZoom));
+                if (currentZoom === 1.0) {
+                    panX = 0;
+                    panY = 0;
+                }
+                updateTransform();
+            }
+
+            // Click vào bất kỳ trang truyện tranh nào trên trang (bao gồm cả khi cuộn nối chương)
+            document.addEventListener('click', function (e) {
+                var comicImg = e.target.closest('.comic-page img');
+                if (comicImg) {
+                    e.preventDefault();
+                    openLightbox(comicImg);
+                }
+            });
+
+            if (lbClose) lbClose.addEventListener('click', closeLightbox);
+            if (lbBackdrop) lbBackdrop.addEventListener('click', closeLightbox);
+
+            if (lbZoomIn) lbZoomIn.addEventListener('click', function () { setZoom(currentZoom + 0.25); });
+            if (lbZoomOut) lbZoomOut.addEventListener('click', function () { setZoom(currentZoom - 0.25); });
+            if (lbZoomReset) lbZoomReset.addEventListener('click', function () { setZoom(1.0); });
+            if (lbFit) lbFit.addEventListener('click', function () { setZoom(1.0); });
+
+            if (lbPrev) lbPrev.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (currentImgIdx > 0) showImageAtIndex(currentImgIdx - 1);
+            });
+            if (lbNext) lbNext.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (currentImgIdx < allImgs.length - 1) showImageAtIndex(currentImgIdx + 1);
+            });
+
+            // Double click: zoom 2x / reset 1x
+            if (lbImg) {
+                lbImg.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setZoom(currentZoom > 1.2 ? 1.0 : 2.0);
+                });
+            }
+
+            // Cuộn con lăn chuột để zoom mượt mà
+            if (lbCanvasWrap) {
+                lbCanvasWrap.addEventListener('wheel', function (e) {
+                    if (lightbox.hidden) return;
+                    e.preventDefault();
+                    var delta = e.deltaY < 0 ? 0.15 : -0.15;
+                    setZoom(currentZoom + delta);
+                }, { passive: false });
+
+                // Kéo rê / Pan ảnh khi đang phóng to
+                lbCanvasWrap.addEventListener('mousedown', function (e) {
+                    if (lightbox.hidden || e.target.closest('.lightbox-toolbar, .lightbox-arrow')) return;
+                    isDragging = true;
+                    startX = e.clientX - panX;
+                    startY = e.clientY - panY;
+                    lbCanvasWrap.classList.add('is-dragging');
+                });
+
+                window.addEventListener('mousemove', function (e) {
+                    if (!isDragging) return;
+                    panX = e.clientX - startX;
+                    panY = e.clientY - startY;
+                    updateTransform();
+                });
+
+                window.addEventListener('mouseup', function () {
+                    if (isDragging) {
+                        isDragging = false;
+                        lbCanvasWrap.classList.remove('is-dragging');
+                    }
+                });
+            }
+
+            // Phím tắt bàn phím
+            document.addEventListener('keydown', function (e) {
+                if (lightbox.hidden) return;
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                    if (currentImgIdx > 0) showImageAtIndex(currentImgIdx - 1);
+                } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                    if (currentImgIdx < allImgs.length - 1) showImageAtIndex(currentImgIdx + 1);
+                } else if (e.key === '+' || e.key === '=') {
+                    setZoom(currentZoom + 0.25);
+                } else if (e.key === '-' || e.key === '_') {
+                    setZoom(currentZoom - 0.25);
+                } else if (e.key === '0') {
+                    setZoom(1.0);
+                }
+            });
+        })();
     }
 })();
 

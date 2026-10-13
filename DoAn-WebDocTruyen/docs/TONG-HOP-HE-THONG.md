@@ -1,22 +1,23 @@
 # 📚 TỔNG HỢP TOÀN BỘ HỆ THỐNG WEB ĐỌC TRUYỆN
 
-> **Tài liệu tổng hợp kiến trúc, bản đồ trang, danh mục chức năng đầy đủ, sơ đồ tuần tự hệ thống (Sequence Diagrams) và 28 phân hệ nâng cao đã hoàn thiện.**  
-> Cập nhật: 2026-10-08 · **Phiên bản:** Hoàn thiện 28 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-029) · **Độ phủ test:** 154/154 tests PASS (100%).
+> **Tài liệu tổng hợp kiến trúc, bản đồ trang, danh mục chức năng đầy đủ, sơ đồ tuần tự hệ thống (Sequence Diagrams) và 30 phân hệ nâng cao đã hoàn thiện.**  
+> Cập nhật: 2026-10-13 · **Phiên bản:** Hoàn thiện 30 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-029 + Immersion & Audit Suite) · **Độ phủ test:** 175/175 tests PASS (100%).
 
 ---
 
 ## 📑 MỤC LỤC
 1. [Tổng quan Đồ án & Nền tảng Kỹ thuật](#1-tổng-quan-đồ-án--nền-tảng-kỹ-thuật)
 2. [Đối chiếu Chức năng: Đề xuất Ban đầu vs Hệ thống Hiện tại](#2-đối-chiếu-chức-năng-đề-xuất-ban-đầu-vs-hệ-thống-hiện-tại)
-3. [Bản đồ Hệ thống: 36 Trang Web & 7 Endpoints Dịch vụ](#3-bản-đồ-hệ-thống-36-trang-web--7-endpoints-dịch-vụ)
-4. [Danh mục 48 Chức năng Toàn diện (Full Feature Catalog)](#4-danh-mục-48-chức-năng-toàn-diện-full-feature-catalog)
-5. [Hệ thống 28 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-029)](#5-hệ-thống-28-module-công-nghệ-nâng-cao-issue-001--issue-029)
+3. [Bản đồ Hệ thống: 38 Trang Web & 8 Endpoints Dịch vụ](#3-bản-đồ-hệ-thống-38-trang-web--8-endpoints-dịch-vụ)
+4. [Danh mục 50 Chức năng Toàn diện (Full Feature Catalog)](#4-danh-mục-50-chức-năng-toàn-diện-full-feature-catalog)
+5. [Hệ thống 30 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-029)](#5-hệ-thống-30-module-công-nghệ-nâng-cao-issue-001--issue-029)
 6. [Sơ đồ Tuần tự Hệ thống (Sequence Diagrams) & Kiểm soát Luồng Nghiệp vụ](#6-sơ-đồ-tuần-tự-hệ-thống-sequence-diagrams--kiểm-soát-luồng-nghiệp-vụ)
-7. [Thiết kế Cơ sở Dữ liệu (20 Bảng CSDL)](#7-thiết-kế-cơ-sở-dữ-liệu-20-bảng-csdl)
+7. [Thiết kế Cơ sở Dữ liệu (21 Bảng CSDL)](#7-thiết-kế-cơ-sở-dữ-liệu-21-bảng-csdl)
 8. [Kiến trúc CSS Phân tầng & Trải nghiệm Người dùng](#8-kiến-trúc-css-phân-tầng--trải-nghiệm-người-dùng)
 9. [Bảo mật & Trợ năng (Security & Accessibility)](#9-bảo-mật--trợ-năng-security--accessibility)
-10. [Hệ thống Kiểm thử Tự động (154 Tests 100% PASS)](#10-hệ-thống-kiểm-thử-tự-động-154-tests-100-pass)
-11. [Hướng dẫn Vận hành Nhanh](#11-hướng-dẫn-vận-hành-nhanh)
+10. [Hệ thống Kiểm thử Tự động (175 Tests 100% PASS)](#10-hệ-thống-kiểm-thử-tự-động-175-tests-100-pass)
+11. [Các Nâng Cấp Nổi Bật Gần Đây](#11-các-nâng-cấp-nổi-bật-gần-đây)
+12. [Hướng dẫn Vận hành Nhanh](#12-hướng-dẫn-vận-hành-nhanh)
 
 ---
 
@@ -30,9 +31,9 @@
 | **Công nghệ lõi** | Java Servlet 3.1, JSP 2.3, JSTL 1.2, HikariCP Connection Pool |
 | **Cơ sở dữ liệu** | MySQL 8.0 (InnoDB, `utf8mb4_unicode_ci`, FULLTEXT Indexing) |
 | **Máy chủ Web/App** | Apache Tomcat 9.0 (Embedded / Standalone) |
-| **Frontend** | Vanilla CSS (Kiến trúc 4 tầng tinh gọn, Mobile 360px, Dark/Light Mode), Vanilla JS (PWA, Service Worker, FileReader) |
+| **Frontend** | Vanilla CSS (Kiến trúc 4 tầng tinh gọn, Mobile 360px, Dark/Light Mode), Vanilla JS (PWA, Web Audio API, Canvas, Lightbox Zoom, Live Autocomplete) |
 | **Tích hợp bên thứ 3** | Google OAuth / Firebase OIDC, Google reCAPTCHA v3, Google Drive API v3, JavaMail SMTP |
-| **Quy mô mã nguồn** | **84 lớp Java**, **56 file JSP (36 trang nội dung, 5 layouts, 15 partials)**, **20 bảng CSDL**, **28 file test / 154 bài Unit Test** |
+| **Quy mô mã nguồn** | **86 lớp Java**, **58 file JSP (38 trang nội dung, 5 layouts, 15 partials)**, **21 bảng CSDL**, **30 file test / 175 bài Unit Test** |
 
 ---
 
@@ -43,17 +44,17 @@ Trước đây, đồ án có các tài liệu mô tả chức năng ở từng 
 - **`MO-TA-DO-AN.md`**: Bản tóm tắt gửi giảng viên (ghi nhận 17 chức năng cốt lõi).
 - **`ke-hoach-frontend.md`**: Bản quy hoạch ban đầu dự kiến 30 trang và 4 layouts.
 
-Qua quá trình phát triển và hoàn thiện trọn vẹn **27 ISSUE công nghệ cao** (18 ISSUE đợt 1 + 9 ISSUE mở rộng: ISSUE-020 VIP Unlock, ISSUE-021 EPUB, ISSUE-022 Reviews/Spoilers, ISSUE-024 Tách JS, ISSUE-025 Báo cáo vi phạm nâng cao, ISSUE-026 Gamification/Quests, ISSUE-027 Reading Progress, ISSUE-028 Truyện Tranh Comic), hệ thống hiện tại đã mở rộng vượt bậc:
+Qua quá trình phát triển và hoàn thiện trọn vẹn **30 ISSUE & Module công nghệ cao** (18 ISSUE đợt 1 + các ISSUE mở rộng: ISSUE-020 VIP Unlock, ISSUE-021 EPUB, ISSUE-022 Reviews/Spoilers, ISSUE-023 Admin Ví Xu & Audit Logs, ISSUE-024 Tách JS, ISSUE-025 Báo cáo vi phạm nâng cao, ISSUE-026 Gamification/Quests, ISSUE-027 Reading Progress, ISSUE-028 Truyện Tranh Comic & Lightbox Zoom, ISSUE-029 Immersion Suite: Ambient Soundscapes + Sleep Timer + Quote Card), hệ thống hiện tại đã mở rộng vượt bậc:
 
 | Tiêu chí | Bản đăng ký / mô tả cũ | Hệ thống thực tế hiện tại | Tỉ lệ hoàn thành / Ghi chú |
 |---|:---:|:---:|---|
-| **Số lượng chức năng** | 17 – 28 chức năng | **48 chức năng hoàn chỉnh** | **Đạt 171%** (vượt xa toàn bộ yêu cầu cơ bản và tuỳ chọn ban đầu) |
-| **Số lượng trang web (Views)** | 30 – 31 trang | **36 trang web JSP + 7 Endpoints** | Bổ sung Thống kê tác giả, Tìm kiếm FULLTEXT, Lỗi 403, Raw view, REST API, Drive Backup, Wallet, Gamification, Comic |
+| **Số lượng chức năng** | 17 – 28 chức năng | **50 chức năng hoàn chỉnh** | **Đạt 178%** (vượt xa toàn bộ yêu cầu cơ bản và tuỳ chọn ban đầu) |
+| **Số lượng trang web (Views)** | 30 – 31 trang | **38 trang web JSP + 8 Endpoints** | Bổ sung Admin Wallet, Admin Audit, Thống kê tác giả, FULLTEXT, Lỗi 403, Raw view, REST API, Drive Backup, Gamification, Comic |
 | **Khung bố cục (Layouts)** | 4 layouts | **5 layouts** (`main`, `auth`, `reader`, `admin`, `editor`) | Bổ sung layout `editor` chuyên biệt cho sáng tác chương truyện |
-| **Số lớp mã nguồn Java** | 47 – 60 lớp | **84 lớp Java** | 20 Controllers, 18 DAOs, 16 Models, 6 Filters, 13 Utilities, 12 Services/Helpers |
-| **Số file view JSP** | 50 – 51 files | **56 file JSP** | 36 trang nội dung, 5 layout wrappers, 15 view partials tái sử dụng |
-| **Bảng dữ liệu CSDL** | 13 bảng | **20 bảng** | Bổ sung `wallets`, `transactions`, `report_evidence`, `unlocked_chapters`, `reviews`, `review_votes`, `user_quests`, `reading_progress`, `chapter_pages` |
-| **Bộ kiểm thử tự động** | 28 bài | **154 bài Unit Tests (28 classes)** | Đạt 100% PASS, kiểm thử toàn diện DAO, Filter, Token, Wallet, RateLimiter, Report, EpubWriter, VIP Unlock, Reviews, Gamification, Comic |
+| **Số lớp mã nguồn Java** | 47 – 60 lớp | **86 lớp Java** | 22 Controllers, 19 DAOs, 17 Models, 6 Filters, 13 Utilities, 12 Services/Helpers |
+| **Số file view JSP** | 50 – 51 files | **58 file JSP** | 38 trang nội dung, 5 layout wrappers, 15 view partials tái sử dụng |
+| **Bảng dữ liệu CSDL** | 13 bảng | **21 bảng** | Bổ sung `wallets`, `transactions`, `report_evidence`, `unlocked_chapters`, `reviews`, `review_votes`, `user_quests`, `reading_progress`, `chapter_pages`, `audit_logs` |
+| **Bộ kiểm thử tự động** | 28 bài | **175 bài Unit Tests (30 classes)** | Đạt 100% PASS, kiểm thử toàn diện DAO, Filter, Token, Wallet, Audit, RateLimiter, Report, EpubWriter, VIP Unlock, Reviews, Gamification, Comic |
 
 ---
 
@@ -550,16 +551,17 @@ Giao diện hệ thống được xây dựng theo kiến trúc **Vanilla CSS 4 
 
 ---
 
-## 10. Hệ thống Kiểm thử Tự động (165 Tests 100% PASS)
+## 10. Hệ thống Kiểm thử Tự động (175 Tests 100% PASS)
 
 Kiểm thử tự động thực thi qua công cụ JUnit 5 Console Standalone, độc lập môi trường mạng và CSDL:
 
 ```text
-JUnit Platform Suite: 165 tests found, 165 successful, 0 failed.
-Thời gian thực thi: ~1.7 giây (100% PASS).
+JUnit Platform Suite: 175 tests found, 175 successful, 0 failed.
+Thời gian thực thi: ~1.8 giây (100% PASS).
 ```
 
 ### Các nhóm test case tiêu biểu:
+- **`AuditDAO & AuditLogTest` (2 tests):** Kiểm thử mô hình nhật ký kiểm toán quản trị viên (`AuditLog`), ánh xạ nhãn hành động tiếng Việt chính xác và thực thi an toàn của `AuditDAO` trong mọi trạng thái CSDL.
 - **`SeniorityTierTest` (7 tests):** Kiểm thử phân 5 cấp bậc độc giả (`Newbie`, `Companion`, `Confidant`, `Grandmaster`, `VIP`), chiết khấu mở khoá chương VIP từ 5% đến 25%, nhân hệ số điểm danh x1.2 đến x2.0, kiểm tra VIP hết hạn trả về cấp thực tế, tính giá mở khoá sau chiết khấu.
 - **`ComicTest` (12 tests):** Kiểm thử chuẩn hóa loại truyện (`Story.TYPE_COMIC`, `Story.normalizeType`), cờ phân biệt truyện tranh, sắp xếp thứ tự trang ảnh hai lượt (`ChapterPage.arrange`), loại bỏ token trùng lặp, bảo toàn trang cũ khi form gửi thiếu.
 - **`ReadingProgressTest` (8 tests):** Kiểm thử ghi nhớ vị trí đọc đến từng đoạn/trang, tính toán phần trăm đọc, mốc thời gian đọc và phục hồi vị trí cuộn khi quay lại đọc dở.
@@ -586,23 +588,26 @@ Thời gian thực thi: ~1.7 giây (100% PASS).
 
 ## 11. Các Nâng Cấp Nổi Bật Gần Đây
 
-1. **Ghi Chú Cá Nhân Vào Đoạn Tô Màu (Reader Notes & Annotations):**
-   - Độc giả có thể bôi đen văn bản, chọn màu highlight (Vàng, Lục, Lam, Tím) và đính kèm ghi chú cá nhân (tối đa 500 ký tự).
-   - Thẻ `<mark>` được gắn visual dot `.has-note` cùng tooltip nội dung ghi chú.
+1. **ISSUE-023: Quản Trị Ví Xu & Nhật Ký Kiểm Toán (Admin Audit Logs & Coin Adjustments):**
+   - **Quản trị ví xu độc giả/tác giả (`/admin/wallet`):** Tra cứu nhanh số dư ví theo username/email, điều chỉnh cộng/trừ xu ảo có bắt buộc lý do và tự động đồng bộ số dư ACID.
+   - **Nhật ký kiểm toán đa tầng (`/admin/audit`):** Ghi nhận chi tiết mọi tác vụ nhạy cảm của ban quản trị (`COIN_ADJUST`, `USER_BAN`, `STORY_DELETE`, `STORY_RESTORE`, `REPORT_RESOLVE`, `COMMENT_HIDE`, v.v.) kèm IP người thao tác, User-Agent và nhãn hành động trực quan.
+   - **Tự động đảm bảo cấu trúc bảng (`AppListener`):** Khởi tạo bảng `audit_logs` ngay khi web app khởi động, không phụ thuộc thủ công.
+
+2. **Trải Nghiệm Đọc Chìm Đắm (Reader Immersion Suite):**
+   - **Âm thanh môi trường thư giãn (Ambient Soundscapes):** Sử dụng Web Audio API tổng hợp âm thanh thực tế trong trẻo (Mưa rào 🌧️, Lò sưởi ấm cúng 🔥, Sóng biển vỗ bờ 🌊, Đêm hè tiếng dế 🦗) có thanh trượt âm lượng mượt mà và phím tắt nhanh `M`.
+   - **Hẹn giờ tắt đọc truyện (Sleep Timer):** Đặt hẹn giờ 15p, 30p, 45p, 60p hoặc tự tắt khi hết chương. Tự động tạm dừng giọng đọc TTS, tắt âm thanh thư giãn và phủ rèm màn đêm dịu mắt (`.screen-sleep-curtain`) khi hết giờ (Phím tắt `Alt+T`).
+   - **Tạo ảnh trích dẫn nghệ thuật (Quote Card Generator):** Trực tiếp render trích dẫn câu văn trên Canvas độ phân giải cao 1080x1350 với 4 chủ đề thẩm mỹ cao cấp (Cổ điển ngà vàng, Dạ yến ánh kim, Hoàng hôn thơ mộng, Ngọc bích thanh tịnh), hỗ trợ sao chép vào clipboard hoặc tải ảnh PNG.
+   - **Trình đọc Comic Webtoon Lightbox & Zoom:** Xem ảnh toàn màn hình với bộ điều khiển zoom (0.5x đến 3.5x), kéo rê pan ảnh mượt mà, chuyển trang qua phím mũi tên hoặc nút bấm, double-click để phóng to 2x.
+
+3. **Gamification, Xã Hội & Thông Báo Thời Gian Thực:**
+   - **Bảng Vàng Fan Cứng (Top Patrons):** Tác giả xem top 5 độc giả ủng hộ nhiều xu nhất trong `/story?action=stats` để tri ân độc giả tâm huyết.
+   - **Chuỗi Đọc Truyện Liên Tục (Reading Streak 🔥):** Huy hiệu ngày đọc liên tục hiển thị trang trọng trên Header thanh điều hướng, kích thích độc giả duy trì thói quen đọc sách mỗi ngày.
+   - **Live Notifications Popover:** Khi bấm chuông thông báo 🔔 trên Header, hiển thị dropdown 5 thông báo mới nhất kèm icon, link điều hướng tức thì, trạng thái chưa đọc và nút "Đánh dấu tất cả đã đọc" mà không cần rời trang.
+   - **Profile Badges Showcase:** Trình diễn các huy hiệu thành tựu đã mở khóa (Cú Đêm 🦉, Mọt Sách 📚, Đại Học Giả 🎓, v.v.) trực quan ngay dưới avatar trên trang cá nhân `/user?action=me` và hồ sơ công khai `/user?action=profile`.
+
+4. **Ghi Chú Cá Nhân Vào Đoạn Tô Màu (Reader Notes & Annotations):**
+   - Độc giả có thể bôi đen văn bản, chọn màu highlight (Vàng, Lục, Lam, Tím) và đính kèm ghi chú cá nhân (tối đa 500 ký tự). Thẻ `<mark>` được gắn visual dot `.has-note` cùng tooltip nội dung ghi chú.
    - Ngăn kéo quản lý (Drawer) cho phép tìm kiếm live đồng thời trên cả trích dẫn lẫn ghi chú, hỗ trợ sửa và xoá trực tiếp.
-
-2. **Hệ Thống Tủ Huy Hiệu & Danh Hiệu Độc Giả (Badges & Achievements Showcase):**
-   - 8 danh hiệu độc đáo: `Cú Đêm` (đọc đêm 23h-5h), `Mọt Sách` (đọc 30 chương), `Đại Học Giả` (đọc 150 chương), `Mạnh Thường Quân` (tặng xu tác giả), `Nhà Phê Bình` (viết review), `Kỷ Lục Điểm Danh` (chuỗi 7 ngày), `Hội Viên Hoàng Gia` (VIP), `Nhà Sưu Tầm` (lưu >= 5 truyện).
-   - Hiển thị trực quan với thanh phần trăm tiến độ, biểu tượng mở khoá và tổng kết danh hiệu trên trang cá nhân (`me.jsp`) và hồ sơ công khai (`profile.jsp`).
-
-3. **Bảng Thống Kê Tác Giả & Thu Nhập Xu (Author Analytics & Earnings Dashboard):**
-   - Đường dẫn `/story?action=stats` được xây dựng hoàn chỉnh với thẻ tổng hợp: Lượt xem, Lượt lưu, Bình luận, Xu kiếm được.
-   - Biểu đồ lượt xem 14 ngày của truyện ăn khách nhất và mô hình phễu giữ chân độc giả qua các chương (Reader Retention).
-   - Bảng sao kê giao dịch độc giả ủng hộ và mở khoá chương gần nhất kèm thời gian và lời nhắn.
-
-4. **Bộ Lọc Tìm Kiếm Nâng Cao Đa Tiêu Chí (Multi-Tag & Chapter Length Filter):**
-   - Hỗ trợ lọc theo độ dài chương: `< 10 chương` (ngắn), `10 - 50 chương` (vừa), `> 50 chương` (dài).
-   - Giữ nguyên trạng thái tổ hợp lọc (`keepTag`, `keepProg`, `keepSort`, `keepType`, `keepChap`, `keepQ`) khi phân trang và đổi bộ lọc.
 
 ---
 

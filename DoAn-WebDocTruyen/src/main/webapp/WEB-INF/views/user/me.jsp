@@ -42,6 +42,26 @@
             </c:if>
         </div>
 
+        <%-- Dải Huy hiệu Thành tích Nổi bật (Featured Badges Showcase) --%>
+        <c:if test="${not empty achievements}">
+            <div class="profile-badges-bar">
+                <span class="badges-bar-label">Huy hiệu:</span>
+                <c:set var="hasAnyUnlocked" value="false"/>
+                <c:forEach var="b" items="${achievements}">
+                    <c:if test="${b.unlocked}">
+                        <c:set var="hasAnyUnlocked" value="true"/>
+                        <span class="profile-badge-pill" title="<c:out value='${b.title}'/>: <c:out value='${b.description}'/>">
+                            <span class="badge-pill-icon">${b.icon}</span>
+                            <span class="badge-pill-name"><c:out value="${b.title}"/></span>
+                        </span>
+                    </c:if>
+                </c:forEach>
+                <c:if test="${not hasAnyUnlocked}">
+                    <span class="profile-badge-empty" title="Đọc truyện và tương tác để mở khoá huy hiệu">🌱 Tân thủ đang tích luỹ huy hiệu</span>
+                </c:if>
+            </div>
+        </c:if>
+
         <div class="profile-actions">
             <a class="btn btn-warning btn-coin-topup"
                href="${pageContext.request.contextPath}/wallet?action=topup">

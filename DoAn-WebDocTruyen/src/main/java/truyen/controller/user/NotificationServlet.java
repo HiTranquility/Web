@@ -38,6 +38,53 @@ public class NotificationServlet extends HttpServlet {
             return;
         }
 
+        String action = request.getParameter("action");
+        if ("quick".equals(action)) {
+            try {
+                List<Notification> list = notificationDAO.findByUser(me.getId(), 5);
+                int unread = notificationDAO.countUnread(me.getId());
+                StringBuilder json = new StringBuilder();
+                json.append("{")
+                    .append("\"unread\":").append(unread).append(",")
+                    .append("\"notifications\":[");
+                for (int i = 0; i < list.size(); i++) {
+                    Notification n = list.get(i);
+                    if (i > 0) json.append(",");
+                    String timeStr = "";
+                    if (n.getCreatedAt() != null) {
+                        timeStr = n.getCreatedAt().getDayOfMonth() + "/" + n.getCreatedAt().getMonthValue() + " "
+                                + String.format("%02d:%02d", n.getCreatedAt().getHour(), n.getCreatedAt().getMinute());
+                    }
+                    json.append("{")
+                        .append("\"id\":").append(n.getId()).append(",")
+                        .append("\"icon\":").append(truyen.util.JsonUtil.jsonEscape(n.getIcon())).append(",")
+                        .append("\"message\":").append(truyen.util.JsonUtil.jsonEscape(n.getMessage())).append(",")
+                        .append("\"isRead\":").append(n.isRead()).append(",")
+                        .append("\"storyId\":").append(n.getStoryId() != null ? n.getStoryId() : 0).append(",")
+                        .append("\"chapterId\":").append(n.getChapterId() != null ? n.getChapterId() : 0).append(",")
+                        .append("\"time\":").append(truyen.util.JsonUtil.jsonEscape(timeStr))
+                        .append("}");
+                }
+                json.append("]}");
+                truyen.util.JsonUtil.sendJson(response, HttpServletResponse.SC_OK, json.toString());
+                return;
+            } catch (SQLException e) {
+                truyen.util.JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi nạp thông báo");
+                return;
+            }
+        }
+
+        if ("mark_read".equals(action)) {
+            try {
+                notificationDAO.markAllRead(me.getId());
+                truyen.util.JsonUtil.sendJson(response, HttpServletResponse.SC_OK, "{\"success\":true}");
+                return;
+            } catch (SQLException e) {
+                truyen.util.JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi CSDL");
+                return;
+            }
+        }
+
         try {
             // 1. lấy danh sách kèm trạng thái đọc/chưa đọc HIỆN TẠI
             List<Notification> list = notificationDAO.findByUser(me.getId(), LIMIT);

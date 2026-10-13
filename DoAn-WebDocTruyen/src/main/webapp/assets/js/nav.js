@@ -38,8 +38,16 @@
     }
 
     // ========================================================================
-    // 2. DROPDOWN MENUS (MENU NGƯỜI DÙNG & TỦ SÁCH)
+    // 2. DROPDOWN MENUS (MENU NGƯỜI DÙNG, TỦ SÁCH & LIVE NOTIFICATIONS)
     // ========================================================================
+    function closeAllDropdowns() {
+        document.querySelectorAll('.user-menu.is-open, .nav-dropdown.is-open, .nav-bell-wrap.is-open').forEach(function (el) {
+            el.classList.remove('is-open');
+            var toggleBtn = el.querySelector('button');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+        });
+    }
+
     function setupDropdown(btnId, wrapId) {
         var btn = document.getElementById(btnId);
         var wrap = document.getElementById(wrapId);
@@ -49,34 +57,131 @@
             e.preventDefault();
             e.stopPropagation();
             var isOpen = wrap.classList.contains('is-open');
-            document.querySelectorAll('.user-menu.is-open, .nav-dropdown.is-open').forEach(function (el) {
-                if (el !== wrap) el.classList.remove('is-open');
-            });
-            wrap.classList.toggle('is-open', !isOpen);
-            btn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+            closeAllDropdowns();
+            if (!isOpen) {
+                wrap.classList.add('is-open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
         });
     }
 
     setupDropdown('user-chip-btn', 'user-menu-wrap');
     setupDropdown('nav-bookshelf-btn', 'nav-bookshelf-dropdown');
 
-    document.addEventListener('click', function (e) {
-        document.querySelectorAll('.user-menu.is-open, .nav-dropdown.is-open').forEach(function (el) {
-            if (!el.contains(e.target)) {
-                el.classList.remove('is-open');
-                var toggleBtn = el.querySelector('button');
-                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+    // Live Notifications Popover
+    var bellBtn = document.getElementById('nav-bell-btn');
+    var bellWrap = document.getElementById('nav-bell-wrap');
+    var bellBody = document.getElementById('bell-dropdown-body');
+    var bellBadge = document.getElementById('nav-bell-badge');
+    var bellUnreadCount = document.getElementById('bell-unread-count');
+    var bellMarkAllBtn = document.getElementById('bell-mark-all-btn');
+
+    function renderNotifications(data) {
+        if (!bellBody) return;
+        var unread = data.unread || 0;
+        var list = data.notifications || [];
+
+        if (bellUnreadCount) {
+            bellUnreadCount.textContent = unread > 0 ? (unread + ' mới') : '0 mới';
+        }
+        if (bellBadge) {
+            if (unread > 0) {
+                bellBadge.textContent = unread > 9 ? '9+' : unread;
+                bellBadge.style.display = 'flex';
+            } else {
+                bellBadge.style.display = 'none';
+            }
+        }
+
+        if (list.length === 0) {
+            bellBody.innerHTML = '<div class="bell-empty">Không có thông báo mới nào</div>';
+            return;
+        }
+
+        var html = '';
+        list.forEach(function (n) {
+            var href = CTX + '/notification';
+            if (n.chapterId && n.chapterId > 0) {
+                href = CTX + '/chapter?action=read&id=' + n.chapterId;
+            } else if (n.storyId && n.storyId > 0) {
+                href = CTX + '/story?action=detail&id=' + n.storyId;
+            }
+
+            var unreadCls = !n.isRead ? ' is-unread' : '';
+            var dot = !n.isRead ? '<span class="bell-item-dot"></span>' : '';
+            var icon = n.icon || '🔔';
+
+            html += '<a href="' + href + '" class="bell-item' + unreadCls + '">'
+                  +   '<span class="bell-item-icon">' + escapeHtml(icon) + '</span>'
+                  +   '<div class="bell-item-content">'
+                  +     '<div class="bell-item-msg">' + escapeHtml(n.message) + '</div>'
+                  +     '<div class="bell-item-time">' + escapeHtml(n.time || '') + '</div>'
+                  +   '</div>'
+                  +   dot
+                  + '</a>';
+        });
+        bellBody.innerHTML = html;
+    }
+
+    function loadNotifications() {
+        if (!bellBody) return;
+        fetch(CTX + '/notification?action=quick')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                renderNotifications(data);
+            })
+            .catch(function () {
+                if (bellBody) bellBody.innerHTML = '<div class="bell-empty">Không tải được thông báo</div>';
+            });
+    }
+
+    if (bellBtn && bellWrap) {
+        bellBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var isOpen = bellWrap.classList.contains('is-open');
+            closeAllDropdowns();
+            if (!isOpen) {
+                bellWrap.classList.add('is-open');
+                bellBtn.setAttribute('aria-expanded', 'true');
+                loadNotifications();
             }
         });
+    }
+
+    if (bellMarkAllBtn) {
+        bellMarkAllBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fetch(CTX + '/notification?action=mark_read')
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res && res.success) {
+                        if (bellBadge) bellBadge.style.display = 'none';
+                        if (bellUnreadCount) bellUnreadCount.textContent = '0 mới';
+                        if (bellBody) {
+                            bellBody.querySelectorAll('.bell-item.is-unread').forEach(function (el) {
+                                el.classList.remove('is-unread');
+                            });
+                            bellBody.querySelectorAll('.bell-item-dot').forEach(function (el) {
+                                el.remove();
+                            });
+                        }
+                    }
+                })
+                .catch(function () {});
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.user-menu') && !e.target.closest('.nav-dropdown') && !e.target.closest('.nav-bell-wrap')) {
+            closeAllDropdowns();
+        }
     });
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.user-menu.is-open, .nav-dropdown.is-open').forEach(function (el) {
-                el.classList.remove('is-open');
-                var toggleBtn = el.querySelector('button');
-                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
-            });
+            closeAllDropdowns();
         }
     });
 

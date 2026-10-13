@@ -78,14 +78,33 @@
                         </c:otherwise>
                     </c:choose>
 
-                    <%-- Chuông thông báo --%>
-                    <a class="action-icon-btn bell" title="Thông báo"
-                       href="${pageContext.request.contextPath}/notification">
-                        <span class="bell-icon">🔔</span>
-                        <c:if test="${unreadCount gt 0}">
-                            <span class="bell-badge">${unreadCount gt 9 ? '9+' : unreadCount}</span>
-                        </c:if>
-                    </a>
+                    <%-- Chuông thông báo & Popover Thông báo trực tiếp --%>
+                    <div class="nav-bell-wrap" id="nav-bell-wrap">
+                        <button type="button" class="action-icon-btn bell" id="nav-bell-btn" title="Thông báo"
+                                aria-haspopup="true" aria-expanded="false">
+                            <span class="bell-icon">🔔</span>
+                            <c:if test="${unreadCount gt 0}">
+                                <span class="bell-badge" id="nav-bell-badge">${unreadCount gt 9 ? '9+' : unreadCount}</span>
+                            </c:if>
+                        </button>
+                        <div class="dropdown-panel nav-bell-dropdown" id="nav-bell-dropdown" role="menu">
+                            <div class="bell-dropdown-header">
+                                <div class="bell-dropdown-title">
+                                    <span>Thông báo</span>
+                                    <span class="bell-unread-count" id="bell-unread-count"><c:out value="${unreadCount gt 0 ? unreadCount : 0}"/> mới</span>
+                                </div>
+                                <button type="button" class="bell-mark-all-btn" id="bell-mark-all-btn" title="Đánh dấu tất cả đã đọc">
+                                    ✓ Đã đọc hết
+                                </button>
+                            </div>
+                            <div class="bell-dropdown-body" id="bell-dropdown-body">
+                                <div class="bell-loading">Đang tải thông báo…</div>
+                            </div>
+                            <div class="bell-dropdown-footer">
+                                <a href="${pageContext.request.contextPath}/notification" class="bell-view-all">Xem tất cả thông báo &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
 
                     <%-- Menu Người Dùng Thả Xuống (User Dropdown Menu) --%>
                     <div class="user-menu" id="user-menu-wrap">
