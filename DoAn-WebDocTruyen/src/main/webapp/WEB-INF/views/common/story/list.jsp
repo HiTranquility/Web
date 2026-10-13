@@ -52,6 +52,37 @@
 <c:set var="keepChap" value="${chapters eq 'short' or chapters eq 'medium' or chapters eq 'long' ? '&chapters='.concat(chapters) : ''}"/>
 
 <div class="filter-panel">
+    <%-- Gợi ý bộ lọc nhanh (Quick Filter Presets) --%>
+    <div class="filter-presets-bar">
+        <span class="preset-label">⚡ Lọc nhanh:</span>
+        <div class="preset-pills">
+            <a href="${pageContext.request.contextPath}/story?action=list&amp;sort=popular"
+               class="preset-pill ${sort eq 'popular' and empty progress and empty storyType and empty chapters and empty currentTag and empty keyword ? 'is-active' : ''}">
+               🔥 Đọc nhiều nhất
+            </a>
+            <a href="${pageContext.request.contextPath}/story?action=list&amp;sort=rating"
+               class="preset-pill ${sort eq 'rating' and empty progress and empty storyType and empty chapters and empty currentTag and empty keyword ? 'is-active' : ''}">
+               🌟 Điểm cao tuyển chọn
+            </a>
+            <a href="${pageContext.request.contextPath}/story?action=list&amp;type=comic"
+               class="preset-pill ${storyType eq 'comic' and empty progress and empty chapters and empty currentTag and empty keyword ? 'is-active' : ''}">
+               🎨 Comic &amp; Webtoon
+            </a>
+            <a href="${pageContext.request.contextPath}/story?action=list&amp;progress=completed"
+               class="preset-pill ${progress eq 'completed' and empty chapters and empty currentTag and empty keyword ? 'is-active' : ''}">
+               🏆 Truyện Full (Hoàn thành)
+            </a>
+            <a href="${pageContext.request.contextPath}/story?action=list&amp;chapters=short"
+               class="preset-pill ${chapters eq 'short' and empty progress and empty currentTag and empty keyword ? 'is-active' : ''}">
+               ⏱️ Đọc nhanh (&lt; 10 chương)
+            </a>
+            <a href="${pageContext.request.contextPath}/story?action=list"
+               class="preset-pill ${empty sort and empty progress and empty storyType and empty chapters and empty currentTag and empty keyword ? 'is-active' : ''}">
+               🌐 Tất cả
+            </a>
+        </div>
+    </div>
+
     <%-- Ô tìm kiếm. method="get" vì tìm kiếm chỉ ĐỌC — nhờ vậy URL kết quả
          chia sẻ và bookmark được, nút Back của trình duyệt cũng chạy đúng. --%>
     <form action="${pageContext.request.contextPath}/story" method="get" class="search-bar">

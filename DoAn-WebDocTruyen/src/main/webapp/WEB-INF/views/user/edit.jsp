@@ -189,14 +189,24 @@
             <div class="field">
                 <label for="newPassword">Mật khẩu mới *</label>
                 <input type="password" id="newPassword" name="newPassword"
-                       minlength="6" maxlength="128" required>
+                       minlength="6" maxlength="128" required autocomplete="new-password">
+                <div class="pwd-strength-container" id="pwd-strength-wrap" style="display:none; margin-top:8px;">
+                    <div class="pwd-strength-bar-bg" style="height:6px; background:var(--ink-700, #e2e8f0); border-radius:99px; overflow:hidden;">
+                        <div class="pwd-strength-bar-fill" id="pwd-strength-fill" style="width:0%; height:100%; transition:all 0.3s ease; border-radius:99px;"></div>
+                    </div>
+                    <div class="pwd-strength-info" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:0.78rem;">
+                        <span id="pwd-strength-text" style="font-weight:700;">Độ an toàn: Chưa nhập</span>
+                        <span id="pwd-strength-hint" class="muted">Gợi ý: Dài từ 8 ký tự, gồm số &amp; ký tự đặc biệt</span>
+                    </div>
+                </div>
                 <p class="field-hint">Từ 6 ký tự trở lên.</p>
             </div>
 
             <div class="field">
                 <label for="confirmPassword">Nhập lại mật khẩu mới *</label>
                 <input type="password" id="confirmPassword" name="confirmPassword"
-                       minlength="6" maxlength="128" required>
+                       minlength="6" maxlength="128" required autocomplete="new-password">
+                <div class="pwd-match-hint" id="pwd-match-hint" style="display:none; font-size:0.82rem; margin-top:6px; font-weight:700;"></div>
             </div>
 
             <div class="form-actions">
@@ -222,14 +232,24 @@
             <div class="field">
                 <label for="newPassword">Mật khẩu mới *</label>
                 <input type="password" id="newPassword" name="newPassword"
-                       minlength="6" maxlength="128" required>
+                       minlength="6" maxlength="128" required autocomplete="new-password">
+                <div class="pwd-strength-container" id="pwd-strength-wrap" style="display:none; margin-top:8px;">
+                    <div class="pwd-strength-bar-bg" style="height:6px; background:var(--ink-700, #e2e8f0); border-radius:99px; overflow:hidden;">
+                        <div class="pwd-strength-bar-fill" id="pwd-strength-fill" style="width:0%; height:100%; transition:all 0.3s ease; border-radius:99px;"></div>
+                    </div>
+                    <div class="pwd-strength-info" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:0.78rem;">
+                        <span id="pwd-strength-text" style="font-weight:700;">Độ an toàn: Chưa nhập</span>
+                        <span id="pwd-strength-hint" class="muted">Gợi ý: Dài từ 8 ký tự, gồm số &amp; ký tự đặc biệt</span>
+                    </div>
+                </div>
                 <p class="field-hint">Từ 6 ký tự trở lên.</p>
             </div>
 
             <div class="field">
                 <label for="confirmPassword">Nhập lại mật khẩu mới *</label>
                 <input type="password" id="confirmPassword" name="confirmPassword"
-                       minlength="6" maxlength="128" required>
+                       minlength="6" maxlength="128" required autocomplete="new-password">
+                <div class="pwd-match-hint" id="pwd-match-hint" style="display:none; font-size:0.82rem; margin-top:6px; font-weight:700;"></div>
             </div>
 
             <div class="form-actions">
@@ -295,6 +315,86 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // ---- Thước đo độ mạnh mật khẩu và kiểm tra khớp ----
+    (function initPasswordMeter() {
+        const newPwd = document.getElementById('newPassword');
+        const confPwd = document.getElementById('confirmPassword');
+        const strengthWrap = document.getElementById('pwd-strength-wrap');
+        const strengthFill = document.getElementById('pwd-strength-fill');
+        const strengthText = document.getElementById('pwd-strength-text');
+        const strengthHint = document.getElementById('pwd-strength-hint');
+        const matchHint = document.getElementById('pwd-match-hint');
+
+        if (!newPwd) return;
+
+        function evaluateStrength(pwd) {
+            if (!pwd || pwd.length === 0) {
+                return { text: 'Chưa nhập', color: '#94a3b8', width: '0%', hint: 'Gợi ý: Dài từ 8 ký tự, gồm số & ký tự đặc biệt' };
+            }
+            let score = 0;
+            if (pwd.length >= 6) score += 1;
+            if (pwd.length >= 8) score += 1;
+            if (pwd.length >= 12) score += 1;
+            if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 1;
+            if (/\d/.test(pwd)) score += 1;
+            if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
+
+            if (score <= 2) {
+                return { text: '🔴 Yếu (Dễ đoán)', color: '#ef4444', width: '25%', hint: 'Nên kết hợp chữ in hoa, số và ký hiệu' };
+            } else if (score <= 3) {
+                return { text: '🟠 Trung bình', color: '#f59e0b', width: '50%', hint: 'Tốt hơn nếu thêm ký tự đặc biệt (@, #, $...)' };
+            } else if (score <= 4) {
+                return { text: '🔵 Khá mạnh', color: '#3b82f6', width: '75%', hint: 'Độ bảo mật tốt' };
+            } else {
+                return { text: '🟢 Rất an toàn & mạnh mẽ', color: '#10b981', width: '100%', hint: 'Mật khẩu đạt chuẩn bảo mật cao cấp!' };
+            }
+        }
+
+        newPwd.addEventListener('input', function() {
+            const val = newPwd.value;
+            if (!val) {
+                if (strengthWrap) strengthWrap.style.display = 'none';
+            } else {
+                if (strengthWrap) {
+                    strengthWrap.style.display = 'block';
+                    const res = evaluateStrength(val);
+                    if (strengthFill) {
+                        strengthFill.style.width = res.width;
+                        strengthFill.style.backgroundColor = res.color;
+                    }
+                    if (strengthText) {
+                        strengthText.textContent = res.text;
+                        strengthText.style.color = res.color;
+                    }
+                    if (strengthHint) strengthHint.textContent = res.hint;
+                }
+            }
+            checkMatch();
+        });
+
+        function checkMatch() {
+            if (!confPwd || !matchHint) return;
+            const p1 = newPwd.value;
+            const p2 = confPwd.value;
+            if (!p2) {
+                matchHint.style.display = 'none';
+                return;
+            }
+            matchHint.style.display = 'block';
+            if (p1 === p2) {
+                matchHint.textContent = '✅ Mật khẩu nhập lại hoàn toàn trùng khớp!';
+                matchHint.style.color = '#10b981';
+            } else {
+                matchHint.textContent = '❌ Mật khẩu nhập lại chưa khớp!';
+                matchHint.style.color = '#ef4444';
+            }
+        }
+
+        if (confPwd) {
+            confPwd.addEventListener('input', checkMatch);
+        }
+    })();
 });
 </script>
 

@@ -31,7 +31,7 @@
 
         <div class="achievements-grid">
             <c:forEach var="ach" items="${achievements}">
-                <div class="achievement-card ${ach.unlocked ? 'is-unlocked' : 'is-locked'}" title="${ach.unlocked ? 'Đã đạt danh hiệu này' : 'Chưa mở khoá: ' + ach.progressText}">
+                <div class="achievement-card ${ach.unlocked ? 'is-unlocked' : 'is-locked'}" title="${ach.unlocked ? 'Đã đạt danh hiệu này' : 'Chưa mở khoá: '.concat(ach.progressText)}">
                     <div class="ach-icon-wrap">
                         <span class="ach-icon">${ach.icon}</span>
                         <c:if test="${ach.unlocked}">

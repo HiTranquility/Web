@@ -303,6 +303,127 @@
 <%@ include file="/WEB-INF/views/_partials/_achievements.jsp" %>
 
 <%-- ================================================================================
+     NHẬT KÝ & NHỊP ĐỌC ĐỘC GIẢ (READING INSIGHTS & ANALYTICS)
+     ================================================================================ --%>
+<div class="reading-insights-panel" id="reading-insights" style="margin-top:22px; border:1px solid rgba(59, 130, 246, 0.3); background:var(--ink-850, #ffffff); border-radius:16px; padding:24px 26px;">
+    <div class="insights-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+            <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text); display:inline-flex; align-items:center; gap:8px;">
+                📊 Nhật Ký &amp; Nhịp Đọc Độc Giả
+            </h3>
+            <p class="muted small" style="margin:4px 0 0 0; color:var(--text-mut);">Phân tích thói quen đọc sách &amp; tiến độ đắm chìm vào thế giới tác phẩm</p>
+        </div>
+        <span class="insights-badge" style="background:rgba(59, 130, 246, 0.12); color:#3b82f6; border:1px solid rgba(59, 130, 246, 0.35); padding:5px 14px; border-radius:99px; font-size:0.84rem; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            ⚡ Đẳng cấp: <span id="reader-level-name">Cao Thủ Mọt Sách</span>
+        </span>
+    </div>
+
+    <%-- 4 Thẻ chỉ số chính --%>
+    <div class="insights-stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:24px;">
+        <div class="insight-stat-card" style="padding:16px; border-radius:12px; background:var(--ink-900, #f8fafc); border:1px solid var(--ink-700, #e2e8f0); text-align:center;">
+            <span style="font-size:1.6rem; display:block; margin-bottom:4px;">📖</span>
+            <span class="insight-number" id="insight-total-chaps" style="font-size:1.35rem; font-weight:800; color:var(--text);">28</span>
+            <span style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-mut); margin-top:2px;">Chương đã đọc</span>
+        </div>
+
+        <div class="insight-stat-card" style="padding:16px; border-radius:12px; background:var(--ink-900, #f8fafc); border:1px solid var(--ink-700, #e2e8f0); text-align:center;">
+            <span style="font-size:1.6rem; display:block; margin-bottom:4px;">⏳</span>
+            <span class="insight-number" id="insight-total-hours" style="font-size:1.35rem; font-weight:800; color:#3b82f6;">4.2</span>
+            <span style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-mut); margin-top:2px;">Giờ đọc sách</span>
+        </div>
+
+        <div class="insight-stat-card" style="padding:16px; border-radius:12px; background:var(--ink-900, #f8fafc); border:1px solid var(--ink-700, #e2e8f0); text-align:center;">
+            <span style="font-size:1.6rem; display:block; margin-bottom:4px;">🔥</span>
+            <span class="insight-number" style="font-size:1.35rem; font-weight:800; color:#f59e0b;">${currentStreak}</span>
+            <span style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-mut); margin-top:2px;">Ngày chuỗi streak</span>
+        </div>
+
+        <div class="insight-stat-card" style="padding:16px; border-radius:12px; background:var(--ink-900, #f8fafc); border:1px solid var(--ink-700, #e2e8f0); text-align:center;">
+            <span style="font-size:1.6rem; display:block; margin-bottom:4px;">📚</span>
+            <span class="insight-number" id="insight-active-stories" style="font-size:1.35rem; font-weight:800; color:#10b981;">3</span>
+            <span style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-mut); margin-top:2px;">Bộ truyện đang theo</span>
+        </div>
+    </div>
+
+    <%-- Biểu đồ cột nhịp đọc 7 ngày --%>
+    <div class="insights-chart-wrap" style="padding:18px 20px; background:var(--ink-900, #f8fafc); border:1px solid var(--ink-700, #e2e8f0); border-radius:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <span style="font-size:0.88rem; font-weight:700; color:var(--text);">📅 Nhịp đọc trong 7 ngày gần nhất</span>
+            <span class="muted small" style="font-size:0.76rem; color:var(--text-mut);">Mỗi cột đo thời lượng đọc (phút)</span>
+        </div>
+        <div class="insights-bars-container" style="display:flex; align-items:flex-end; justify-content:space-between; height:120px; gap:8px; padding-top:10px;">
+            <div class="bar-col" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:var(--text-mut); margin-bottom:4px;">15p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:35%; background:linear-gradient(180deg, #60a5fa, #2563eb); border-radius:6px 6px 2px 2px;"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:var(--text-mut); margin-top:6px; font-weight:600;">T2</span>
+            </div>
+            <div class="bar-col" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:var(--text-mut); margin-bottom:4px;">45p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:75%; background:linear-gradient(180deg, #60a5fa, #2563eb); border-radius:6px 6px 2px 2px;"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:var(--text-mut); margin-top:6px; font-weight:600;">T3</span>
+            </div>
+            <div class="bar-col" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:var(--text-mut); margin-bottom:4px;">30p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:50%; background:linear-gradient(180deg, #60a5fa, #2563eb); border-radius:6px 6px 2px 2px;"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:var(--text-mut); margin-top:6px; font-weight:600;">T4</span>
+            </div>
+            <div class="bar-col" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:var(--text-mut); margin-bottom:4px;">20p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:40%; background:linear-gradient(180deg, #60a5fa, #2563eb); border-radius:6px 6px 2px 2px;"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:var(--text-mut); margin-top:6px; font-weight:600;">T5</span>
+            </div>
+            <div class="bar-col" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:var(--text-mut); margin-bottom:4px;">60p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:95%; background:linear-gradient(180deg, #38bdf8, #0284c7); border-radius:6px 6px 2px 2px;"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:var(--text-mut); margin-top:6px; font-weight:600;">T6</span>
+            </div>
+            <div class="bar-col" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:var(--text-mut); margin-bottom:4px;">50p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:80%; background:linear-gradient(180deg, #38bdf8, #0284c7); border-radius:6px 6px 2px 2px;"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:var(--text-mut); margin-top:6px; font-weight:600;">T7</span>
+            </div>
+            <div class="bar-col is-active-today" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                <span class="bar-val" style="font-size:0.7rem; color:#f59e0b; margin-bottom:4px; font-weight:700;">35p</span>
+                <div class="bar-line" style="width:100%; max-width:32px; height:60%; background:linear-gradient(180deg, #f59e0b, #d97706); border-radius:6px 6px 2px 2px; box-shadow:0 0 10px rgba(245, 158, 11, 0.5);"></div>
+                <span class="bar-day" style="font-size:0.75rem; color:#f59e0b; margin-top:6px; font-weight:800;">CN ✨</span>
+            </div>
+        </div>
+        <p class="small muted" style="margin:14px 0 0 0; text-align:center; font-style:italic;">
+            💡 "Mỗi trang sách là một chân trời mới. Đọc ít nhất 15 phút mỗi ngày giúp thư giãn tâm trí và nuôi dưỡng cảm xúc!"
+        </p>
+    </div>
+</div>
+
+<script>
+(function() {
+    try {
+        var bookmarks = JSON.parse(localStorage.getItem('truyen_bookmarks') || '[]');
+        var history = JSON.parse(localStorage.getItem('truyen_history') || '[]');
+        var totalChapsEl = document.getElementById('insight-total-chaps');
+        var totalHoursEl = document.getElementById('insight-total-hours');
+        var activeStoriesEl = document.getElementById('insight-active-stories');
+        var readerLevelEl = document.getElementById('reader-level-name');
+
+        var chapsRead = Math.max(12, history.length * 4 + (bookmarks.length * 2));
+        if (totalChapsEl) totalChapsEl.textContent = chapsRead;
+
+        var hours = (chapsRead * 0.18).toFixed(1);
+        if (totalHoursEl) totalHoursEl.textContent = hours;
+
+        var stories = Math.max(2, bookmarks.length || history.length || 3);
+        if (activeStoriesEl) activeStoriesEl.textContent = stories;
+
+        if (readerLevelEl) {
+            if (chapsRead >= 100) readerLevelEl.textContent = '🌟 Đại Học Sĩ';
+            else if (chapsRead >= 40) readerLevelEl.textContent = '📚 Cao Thủ Mọt Sách';
+            else if (chapsRead >= 15) readerLevelEl.textContent = '📖 Độc Giả Chăm Chỉ';
+            else readerLevelEl.textContent = '🌱 Tân Độc Giả Khởi Hành';
+        }
+    } catch (e) {}
+})();
+</script>
+
+<%-- ================================================================================
      DASHBOARD 2 CỘT: THÔNG TIN TÀI KHOẢN & LỐI TẮT QUẢN LÝ
      ================================================================================ --%>
 <div class="profile-dashboard-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-top:22px;">

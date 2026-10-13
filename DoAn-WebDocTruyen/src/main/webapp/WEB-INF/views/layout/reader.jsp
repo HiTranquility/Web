@@ -148,6 +148,8 @@
                     title="Âm thanh môi trường thư giãn (M)" aria-label="Âm thanh môi trường">🎵<span id="ambient-current-icon" style="font-size:0.75rem;">🌧️</span></button>
             <button type="button" class="tool-btn" id="toggle-sleep-timer"
                     title="Hẹn giờ tắt đọc truyện (Sleep Timer - Alt+T)" aria-label="Hẹn giờ tắt" style="position:relative;">⏱️<span id="sleep-timer-badge" class="sleep-timer-badge" style="display:none"></span></button>
+            <button type="button" class="tool-btn" id="btn-offline-chapter"
+                    title="Lưu ngoại tuyến chương này để đọc không cần mạng (Offline Cache - Alt+O)" aria-label="Lưu ngoại tuyến">📥</button>
             <button type="button" class="tool-btn" id="btn-print-chapter"
                     title="In chương truyện / Xuất PDF (Ctrl+P)" aria-label="In chương">🖨️</button>
             <button type="button" class="tool-btn" id="toggle-zen"
@@ -292,6 +294,10 @@
             <div class="shortcut-row">
                 <span class="key-combo"><kbd>H</kbd></span>
                 <span>Bật / tắt Bảng trích dẫn & tô màu</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="key-combo"><kbd>Alt</kbd> + <kbd>O</kbd></span>
+                <span>Lưu ngoại tuyến chương này (Offline PWA)</span>
             </div>
             <div class="shortcut-row">
                 <span class="key-combo"><kbd>?</kbd></span>
@@ -1806,15 +1812,29 @@ try {
         if (key === 'ArrowLeft' || code === 'KeyA') {
             var prev = document.getElementById('nav-prev');
             if (prev && prev.getAttribute('href')) {
+                e.preventDefault();
                 window.location.href = prev.getAttribute('href');
+            } else if (key === 'ArrowLeft') {
+                if (typeof showToast === 'function') showToast('Bạn đang ở chương đầu tiên của truyện!');
+                else if (typeof window.showToast === 'function') window.showToast('Bạn đang ở chương đầu tiên của truyện!');
             }
         }
         // Mũi tên Phải hoặc phím D -> Chương sau
         else if (key === 'ArrowRight' || code === 'KeyD') {
             var next = document.getElementById('nav-next');
             if (next && next.getAttribute('href')) {
+                e.preventDefault();
                 window.location.href = next.getAttribute('href');
+            } else if (key === 'ArrowRight') {
+                if (typeof showToast === 'function') showToast('Bạn đã ở chương mới nhất của truyện!');
+                else if (typeof window.showToast === 'function') window.showToast('Bạn đã ở chương mới nhất của truyện!');
             }
+        }
+        // Alt + O -> Lưu ngoại tuyến
+        else if (e.altKey && (code === 'KeyO' || key === 'o' || key === 'O')) {
+            e.preventDefault();
+            var offBtn = document.getElementById('btn-offline-chapter');
+            if (offBtn) offBtn.click();
         }
         // Phím T -> Mở/đóng Mục lục
         else if (code === 'KeyT') {
@@ -3117,6 +3137,7 @@ try {
             setTimeout(function() { t.remove(); }, 2400);
         }
     }
+    window.showToast = showToast;
 
     // ---- 4. Vị trí và Hiện / Ẩn Floating Toolbar ----
     function showToolbarAt(rect) {
@@ -4259,6 +4280,95 @@ try {
         }
     });
 
+})();
+
+/* ===========================================================================
+   CHẾ ĐỘ ĐỌC NGOẠI TUYẾN THÔNG MINH (SMART OFFLINE CACHING - CACHE STORAGE API)
+   =========================================================================== */
+(function() {
+    var CACHE_NAME = 'doctruyen-reader-cache-v1';
+    var offlineBtn = document.getElementById('btn-offline-chapter');
+    if (!offlineBtn) return;
+
+    function notify(msg) {
+        if (typeof window.showToast === 'function') window.showToast(msg);
+        else if (typeof window.toast === 'function') window.toast(msg);
+    }
+
+    var currentUrl = window.location.href;
+
+    // Kiểm tra xem chương hiện tại đã được lưu ngoại tuyến hay chưa
+    if ('caches' in window) {
+        caches.open(CACHE_NAME).then(function(cache) {
+            cache.match(currentUrl).then(function(response) {
+                if (response) {
+                    offlineBtn.classList.add('is-on');
+                    offlineBtn.textContent = '💾';
+                    offlineBtn.title = 'Đã lưu ngoại tuyến chương này (Bấm để tải lại bản mới)';
+                }
+            });
+        }).catch(function() {});
+    }
+
+    offlineBtn.addEventListener('click', function() {
+        if (!('caches' in window)) {
+            notify('⚠️ Trình duyệt của bạn không hỗ trợ Cache Storage API!');
+            return;
+        }
+
+        offlineBtn.classList.add('is-loading');
+        offlineBtn.textContent = '⏳';
+        notify('⏳ Đang lưu trữ dữ liệu chương này vào bộ nhớ ngoại tuyến...');
+
+        var urlsToCache = [
+            currentUrl,
+            window.location.pathname + window.location.search
+        ];
+
+        // Lấy liên kết chương tiếp theo nếu có để cache sẵn
+        var nextBtn = document.getElementById('nav-next');
+        if (nextBtn && nextBtn.getAttribute('href')) {
+            urlsToCache.push(nextBtn.href);
+        }
+
+        // Cache các stylesheet và script cần thiết
+        var ctx = document.body.getAttribute('data-ctx') || '';
+        urlsToCache.push(ctx + '/assets/css/base.css');
+        urlsToCache.push(ctx + '/assets/css/components.css');
+        urlsToCache.push(ctx + '/assets/css/layout-reader.css');
+        urlsToCache.push(ctx + '/assets/js/nav.js');
+
+        caches.open(CACHE_NAME).then(function(cache) {
+            var fetchPromises = urlsToCache.map(function(url) {
+                return fetch(url, { credentials: 'same-origin' })
+                    .then(function(res) {
+                        if (res.ok) {
+                            return cache.put(url, res);
+                        }
+                    })
+                    .catch(function() {});
+            });
+            return Promise.all(fetchPromises);
+        }).then(function() {
+            offlineBtn.classList.remove('is-loading');
+            offlineBtn.classList.add('is-on');
+            offlineBtn.textContent = '💾';
+            offlineBtn.title = 'Đã lưu ngoại tuyến chương này (Bấm để làm mới bộ nhớ đệm)';
+            notify('📥 Đã lưu ngoại tuyến chương này thành công! Sẵn sàng đọc ngay cả khi mất mạng.');
+        }).catch(function(err) {
+            offlineBtn.classList.remove('is-loading');
+            offlineBtn.textContent = '📥';
+            notify('❌ Không thể lưu ngoại tuyến: ' + (err.message || 'Lỗi kết nối'));
+        });
+    });
+
+    // Bắt sự kiện mạng online/offline
+    window.addEventListener('offline', function() {
+        notify('📡 Mất kết nối mạng — Trang đang chạy từ bộ nhớ đệm ngoại tuyến.');
+    });
+    window.addEventListener('online', function() {
+        notify('🌐 Đã khôi phục kết nối mạng!');
+    });
 })();
 </script>
 

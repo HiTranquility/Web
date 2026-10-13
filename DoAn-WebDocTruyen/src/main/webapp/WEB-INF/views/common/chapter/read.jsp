@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--
 ================================================================================
   chapter/read.jsp — MẢNH nội dung, dùng khung layout/reader.jsp   TRANG 23
@@ -99,46 +100,68 @@
     <span class="spinner" aria-hidden="true"></span> Đang tải chương tiếp…
 </div>
 
-<%-- ---- Điều hướng chương ---- --%>
-<div class="reader-nav" id="reader-nav">
-    <c:choose>
-        <c:when test="${not empty prev}">
-            <a class="btn btn-ghost" id="nav-prev"
-               href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${prev.id}">
-                &larr; Chương ${prev.chapterNo}</a>
-        </c:when>
-        <c:otherwise><span class="spacer" id="nav-prev"></span></c:otherwise>
-    </c:choose>
-
-    <details class="toc-box" id="toc-box" data-story-id="${story.id}"
-             data-current-id="${chapter.id}">
-        <summary class="btn btn-ghost">&#9776; Mục lục</summary>
-
-        <div class="toc-panel" id="toc-panel">
-            <div class="toc-head">
-                <b><c:out value="${story.title}"/></b>
-                <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">
-                    Trang truyện →</a>
-            </div>
-
-            <div class="toc-body" id="toc-body">
-                <p class="muted" style="padding:14px">
-                    Đang tải mục lục…
-                    <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}#muc-luc">
-                        Xem mục lục đầy đủ →</a>
-                </p>
-            </div>
+<%-- ================================================================================
+     TRẠM KẾT THÚC CHƯƠNG THÔNG MINH (End-of-Chapter Smart Hub)
+     ================================================================================ --%>
+<div class="smart-chapter-hub" id="smart-chapter-hub">
+    <div class="hub-progress-track">
+        <c:set var="totChaps" value="${story.chapterCount gt 0 ? story.chapterCount : 1}"/>
+        <c:set var="pctStory" value="${(chapter.chapterNo * 100.0) / totChaps}"/>
+        <c:if test="${pctStory gt 100}"><c:set var="pctStory" value="100"/></c:if>
+        <div class="hub-meta-info">
+            <span class="hub-prog-text">
+                📚 Tiến độ truyện: <strong>Chương ${chapter.chapterNo} / ${story.chapterCount}</strong>
+                (<fmt:formatNumber value="${pctStory}" maxFractionDigits="0"/>%)
+            </span>
+            <span class="hub-key-hint">Phím tắt: &larr; / &rarr; để chuyển chương</span>
         </div>
-    </details>
+        <div class="hub-prog-bar" role="progressbar" aria-valuenow="${pctStory}" aria-valuemin="0" aria-valuemax="100">
+            <div class="hub-prog-fill" style="width: ${pctStory}%;"></div>
+        </div>
+    </div>
 
-    <c:choose>
-        <c:when test="${not empty next}">
-            <a class="btn btn-primary" id="nav-next"
-               href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${next.id}">
-                Chương ${next.chapterNo} &rarr;</a>
-        </c:when>
-        <c:otherwise><span class="spacer" id="nav-next"></span></c:otherwise>
-    </c:choose>
+    <div class="reader-nav" id="reader-nav">
+        <c:choose>
+            <c:when test="${not empty prev}">
+                <a class="btn btn-ghost hub-nav-btn" id="nav-prev"
+                   href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${prev.id}"
+                   title="Chương trước (Phím tắt: Mũi tên trái &larr;)">
+                    &larr; Chương ${prev.chapterNo}</a>
+            </c:when>
+            <c:otherwise><span class="spacer" id="nav-prev"></span></c:otherwise>
+        </c:choose>
+
+        <details class="toc-box" id="toc-box" data-story-id="${story.id}"
+                 data-current-id="${chapter.id}">
+            <summary class="btn btn-ghost hub-toc-summary">&#9776; Mục lục (Phím T)</summary>
+
+            <div class="toc-panel" id="toc-panel">
+                <div class="toc-head">
+                    <b><c:out value="${story.title}"/></b>
+                    <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">
+                        Trang truyện →</a>
+                </div>
+
+                <div class="toc-body" id="toc-body">
+                    <p class="muted" style="padding:14px">
+                        Đang tải mục lục…
+                        <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}#muc-luc">
+                            Xem mục lục đầy đủ →</a>
+                    </p>
+                </div>
+            </div>
+        </details>
+
+        <c:choose>
+            <c:when test="${not empty next}">
+                <a class="btn btn-primary hub-nav-btn hub-btn-next" id="nav-next"
+                   href="${pageContext.request.contextPath}/chapter?action=read&amp;id=${next.id}"
+                   title="Chương sau (Phím tắt: Mũi tên phải &rarr;)">
+                    Chương ${next.chapterNo} &rarr;</a>
+            </c:when>
+            <c:otherwise><span class="hub-done-badge" id="nav-next">🎉 Đã đến chương mới nhất</span></c:otherwise>
+        </c:choose>
+    </div>
 </div>
 
 <%-- ================================================================================

@@ -2072,6 +2072,62 @@ html[data-site-theme="light"] .user-menu.is-open .user-chip {
 .field-hint { margin-top: 6px; font-size: .82rem; color: var(--text-mut); line-height: 1.55; }
 .form-actions { display: flex; gap: 10px; margin-top: 24px; }
 
+/* ---- Gợi ý lọc nhanh (Filter Presets Pills) ---- */
+.filter-presets-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(230, 92, 0, 0.08) 0%, rgba(255, 179, 71, 0.04) 100%);
+    border: 1px solid rgba(230, 92, 0, 0.18);
+    border-radius: 12px;
+    flex-wrap: wrap;
+}
+.preset-label {
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--ember);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.preset-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.preset-pill {
+    padding: 5px 13px;
+    border-radius: 99px;
+    background: var(--ink-850);
+    border: 1px solid var(--ink-700);
+    color: var(--text-dim);
+    font-size: .82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all .2s var(--ease);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.preset-pill:hover {
+    background: var(--ink-700);
+    border-color: var(--ember);
+    color: var(--text);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+.preset-pill.is-active {
+    background: linear-gradient(135deg, var(--ember) 0%, var(--ember-bright) 100%);
+    border-color: var(--ember-bright);
+    color: #1a0f06;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(230, 92, 0, 0.35);
+}
+
 /* ---- Hàng lọc (tình trạng / sắp xếp) ---- */
 .filter-bar {
     display: flex; flex-wrap: wrap; gap: 22px;

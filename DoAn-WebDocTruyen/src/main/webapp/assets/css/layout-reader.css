@@ -175,14 +175,85 @@ body.reader-body {
 .reader-body[data-font="sans"]  .chapter-content { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
 
 
-/* ---- Điều hướng chương ---- */
+/* ---- Trạm kết thúc chương thông minh (Smart Chapter Hub) ---- */
+.smart-chapter-hub {
+    margin-top: 56px;
+    padding: 22px 24px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--rd-line);
+    backdrop-filter: blur(12px);
+    transition: border-color .2s ease;
+}
+.smart-chapter-hub:hover {
+    border-color: rgba(255, 122, 26, 0.35);
+}
+.hub-progress-track {
+    margin-bottom: 20px;
+}
+.hub-meta-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .88rem;
+    color: var(--rd-text);
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.hub-prog-text strong {
+    color: var(--ember);
+}
+.hub-key-hint {
+    font-size: .78rem;
+    opacity: .75;
+    background: rgba(128, 128, 128, 0.12);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+.hub-prog-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(128, 128, 128, 0.16);
+    border-radius: 99px;
+    overflow: hidden;
+}
+.hub-prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ember), #fb923c);
+    border-radius: 99px;
+    transition: width .4s cubic-bezier(.4, 0, .2, 1);
+}
+.smart-chapter-hub .reader-nav {
+    display: flex; justify-content: space-between; gap: 12px;
+    margin-top: 0; padding-top: 0;
+    border-top: none;
+}
 .reader-nav {
     display: flex; justify-content: space-between; gap: 12px;
     margin-top: 56px; padding-top: 24px;
     border-top: 1px solid var(--rd-line);
 }
-.reader-nav .btn { flex: 1; justify-content: center; }
+.reader-nav .btn { flex: 1; justify-content: center; border-radius: 10px; }
 .reader-nav .spacer { flex: 1; }
+.hub-btn-next {
+    background: var(--ember) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);
+}
+.hub-done-badge {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .88rem;
+    color: #22c55e;
+    font-weight: 600;
+    padding: 8px 14px;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 10px;
+}
 
 /* Nút trên nền sáng/giấy phải đổi màu viền theo, nếu không sẽ tàng hình */
 .reader-body[data-theme="light"] .btn-ghost,
