@@ -14,6 +14,7 @@ import truyen.dao.StoryDAO;
 import truyen.model.Review;
 import truyen.model.Story;
 import truyen.model.User;
+import truyen.util.JsonUtil;
 import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.currentUser;
 import static truyen.util.ServletHelper.trimOrEmpty;
@@ -165,8 +166,7 @@ public class RatingServlet extends HttpServlet {
                 boolean voted = reviewDAO.toggleVote(reviewId, me.getId());
                 // Nếu là AJAX
                 if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
-                    response.setContentType("application/json; charset=UTF-8");
-                    response.getWriter().write("{\"success\":true,\"voted\":" + voted + "}");
+                    JsonUtil.sendJson(response, HttpServletResponse.SC_OK, "{\"success\":true,\"voted\":" + voted + "}");
                     return;
                 }
             } catch (SQLException e) {

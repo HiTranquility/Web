@@ -40,6 +40,10 @@
                class="${adminSection eq 'comment' ? 'is-active' : ''}">💬 Bình luận</a>
             <a href="${pageContext.request.contextPath}/admin/report"
                class="${adminSection eq 'report' ? 'is-active' : ''}">🛡️ Báo cáo</a>
+            <a href="${pageContext.request.contextPath}/admin/wallet"
+               class="${adminSection eq 'wallet' ? 'is-active' : ''}">💰 Ví xu</a>
+            <a href="${pageContext.request.contextPath}/admin/audit"
+               class="${adminSection eq 'audit' ? 'is-active' : ''}">📜 Nhật ký</a>
         </nav>
         <p class="admin-hint">
             Gỡ truyện và khoá tài khoản đều là <b>xoá mềm</b> — bấm nhầm vẫn

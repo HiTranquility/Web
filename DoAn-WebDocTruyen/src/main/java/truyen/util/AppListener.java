@@ -52,6 +52,7 @@ public class AppListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent e) {
         truyen.dao.UserDAO.ensureVipColumn();
+        truyen.dao.AuditDAO.ensureTable();
         refresh(e.getServletContext());
         loadReportCategories(e.getServletContext());
         e.getServletContext().log("AppListener: đã nạp danh sách thể loại");

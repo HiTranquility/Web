@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
 import truyen.util.DBConnection;
+import truyen.util.JsonUtil;
 import truyen.util.UploadUtil;
 import truyen.dao.FollowDAO;
 import truyen.dao.GamificationDAO;
@@ -293,8 +294,8 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
-            response.setContentType("application/json; charset=UTF-8");
-            response.getWriter().write("{\"success\":true,\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+            JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
+                    "{\"success\":true,\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
@@ -364,8 +365,8 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
-            response.setContentType("application/json; charset=UTF-8");
-            response.getWriter().write("{\"success\":" + ok + ",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+            JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
+                    "{\"success\":" + ok + ",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
@@ -749,14 +750,8 @@ public class UserServlet extends HttpServlet {
 
     private void sendJsonResponse(HttpServletResponse response, int statusCode, boolean success, String message)
             throws IOException {
-        response.setStatus(statusCode);
-        response.setContentType("application/json;charset=UTF-8");
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        sb.append("\"success\":").append(success).append(",");
-        sb.append("\"message\":\"").append(escapeJson(message)).append("\"");
-        sb.append("}");
-        response.getWriter().write(sb.toString());
+        String json = "{\"success\":" + success + ",\"message\":" + JsonUtil.jsonEscape(message) + "}";
+        JsonUtil.sendJson(response, statusCode, json);
     }
 
     private String escapeJson(String s) {

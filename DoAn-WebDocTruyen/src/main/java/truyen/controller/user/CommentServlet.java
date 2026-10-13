@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.util.DBConnection;
+import truyen.util.JsonUtil;
 import truyen.util.ServletHelper;
 
 import static truyen.util.ServletHelper.parseIntOr;
@@ -52,16 +53,17 @@ public class CommentServlet extends HttpServlet {
 
         if ("like".equals(action)) {
             User me = ServletHelper.currentUser(request);
-            response.setContentType("application/json;charset=UTF-8");
             if (me == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"success\":false,\"needLogin\":true,\"message\":\"Vui lòng đăng nhập để thích bình luận.\"}");
+                JsonUtil.sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "{\"success\":false,\"needLogin\":true,\"message\":\"Vui lòng đăng nhập để thích bình luận.\"}");
                 return;
             }
             int commentId = parseIntOr(request.getParameter("id"), 0);
             int count = commentDAO.toggleLike(commentId, me.getId());
             boolean liked = commentDAO.isLiked(commentId, me.getId());
-            response.getWriter().write("{\"success\":true,\"liked\":" + liked + ",\"count\":" + count + ",\"message\":\"" + (liked ? "Đã thích bình luận!" : "Đã bỏ thích.") + "\"}");
+            JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
+                    "{\"success\":true,\"liked\":" + liked + ",\"count\":" + count + ",\"message\":"
+                    + JsonUtil.jsonEscape(liked ? "Đã thích bình luận!" : "Đã bỏ thích.") + "}");
             return;
         }
 

@@ -41,43 +41,52 @@ Dự án áp dụng mô hình chuẩn **MVC Model 2 (Model - View - Controller)*
 ```text
 DoAn-WebDocTruyen/
 ├── src/main/java/truyen/
-│   ├── model/                  (15 Models — JavaBeans / DTOs khớp CSDL)
+│   ├── model/                  (26 Models — JavaBeans / DTOs khớp CSDL)
 │   │   ├── User.java           Story.java          Chapter.java        Tag.java
 │   │   ├── Comment.java        Bookmark.java       Rating.java         Follow.java
 │   │   ├── Report.java         Notification.java   ReadHistory.java    Wallet.java
-│   │   ├── Transaction.java    Review.java         DailyQuest.java
+│   │   ├── Transaction.java    Review.java         DailyQuest.java     DailyCheckin.java
+│   │   ├── ChapterUnlock.java  ChapterPage.java    ChapterBookmark.java ReadingProgress.java
+│   │   ├── UserIdentity.java   AuthorPatron.java   Achievement.java    RecommendationSet.java
+│   │   ├── ReportEvidence.java AuditLog.java
 │   │
-│   ├── dao/                    (17 DAOs — Truy vấn CSDL nguyên tử)
+│   ├── dao/                    (22 DAOs — Truy vấn CSDL nguyên tử)
 │   │   ├── UserDAO.java        StoryDAO.java       ChapterDAO.java     TagDAO.java
 │   │   ├── CommentDAO.java     BookmarkDAO.java    RatingDAO.java      FollowDAO.java
 │   │   ├── ReportDAO.java      NotificationDAO.java ViewLogDAO.java    PasswordResetDAO.java
 │   │   ├── WalletDAO.java      UnlockDAO.java      ReviewDAO.java      GamificationDAO.java
+│   │   ├── ReadingProgressDAO.java ChapterPageDAO.java ChapterBookmarkDAO.java
+│   │   ├── IdentityDAO.java    AchievementDAO.java AuditDAO.java
 │   │
-│   ├── controller/             (19 Servlets — Điều hướng & Xử lý nghiệp vụ)
+│   ├── controller/             (29 Servlets — Điều hướng & Xử lý nghiệp vụ)
 │   │   ├── common/             (Nhóm Công cộng & Đọc truyện)
 │   │   │   ├── HomeServlet.java            Trang chủ (/)
+│   │   │   ├── AuthServlet.java            Đăng nhập, Đăng ký, Quên MK, Google OIDC (/auth)
 │   │   │   ├── StoryServlet.java           Kho truyện, Chi tiết, Tìm kiếm, Đánh giá (/story)
-│   │   │   ├── ChapterServlet.java         Đọc chương, Thêm/Sửa chương (/chapter)
+│   │   │   ├── ChapterServlet.java         Đọc chương chữ/tranh, Thêm/Sửa chương (/chapter)
 │   │   │   ├── RankServlet.java            Bảng xếp hạng truyện & tác giả (/rank)
 │   │   │   ├── PageServlet.java            Hướng dẫn, Nội quy (/page)
 │   │   │   ├── DownloadServlet.java        Xuất tải truyện .txt (/download)
+│   │   │   ├── UploadedFileServlet.java    Phân phối file/ảnh upload & kiểm quyền VIP (/uploads/*)
 │   │   │   ├── SitemapServlet.java         SEO sitemap.xml (/sitemap.xml)
-│   │   │   ├── ApiServlet.java             RESTful JSON API (/api/*)
 │   │   │   └── ErrorServlet.java           Bắt lỗi tập trung 403, 404, 500 (/error)
 │   │   │
 │   │   ├── user/               (Nhóm Thành viên & Tác giả)
-│   │   │   ├── AuthServlet.java            Đăng nhập, Đăng ký, Quên MK, Google OIDC (/auth)
 │   │   │   ├── UserServlet.java            Hồ sơ, Đổi MK, Gamification Quests (/user)
 │   │   │   ├── BookmarkServlet.java        Lưu truyện & Tiến độ đọc (/bookmark)
 │   │   │   ├── HistoryServlet.java         Lịch sử đọc truyện (/history)
 │   │   │   ├── FollowServlet.java          Theo dõi tác giả (/follow)
 │   │   │   ├── NotificationServlet.java    Hộp thông báo cá nhân (/notification)
 │   │   │   ├── CommentServlet.java         Bình luận đa cấp & Thả tim (/comment)
+│   │   │   ├── RatingServlet.java          Đánh giá & Review truyện (/rating)
 │   │   │   ├── ReportServlet.java          Báo cáo vi phạm nội dung (/report)
 │   │   │   └── WalletServlet.java          Ví xu ảo & Mở khóa chương VIP (/wallet)
 │   │   │
 │   │   ├── story/              (Nhóm Tác vụ Đám mây)
-│   │   │   └── DriveBackupServlet.java     Sao lưu Google Drive API v3 (/backup/drive)
+│   │   │   └── DriveBackupServlet.java     Tác giả sao lưu Google Drive API v3 (/drive)
+│   │   │
+│   │   ├── api/                (Nhóm Dịch vụ RESTful JSON API)
+│   │   │   └── ApiServlet.java             RESTful JSON API cho di động & bên thứ 3 (/api/*)
 │   │   │
 │   │   └── admin/              (Nhóm Quản trị viên)
 │   │       ├── AdminDashboardServlet.java  Thống kê tổng quan (/admin/dashboard)
@@ -85,7 +94,9 @@ DoAn-WebDocTruyen/
 │   │       ├── AdminUserServlet.java       Quản lý tài khoản, khóa vi phạm (/admin/user)
 │   │       ├── AdminTagServlet.java        Quản lý thể loại truyện (/admin/tag)
 │   │       ├── AdminCommentServlet.java    Kiểm duyệt bình luận (/admin/comment)
-│   │       └── AdminReportServlet.java     Xử lý báo cáo & xem bằng chứng (/admin/report)
+│   │       ├── AdminReportServlet.java     Xử lý báo cáo & xem bằng chứng (/admin/report)
+│   │       ├── AdminWalletServlet.java     Quản lý dòng tiền & ví xu toàn sàn (/admin/wallet)
+│   │       └── AdminAuditServlet.java      Nhật ký kiểm duyệt thao tác bất biến (/admin/audit)
 │   │
 │   ├── filter/                 (6 Filters — Vòng tròn bảo mật đa lớp)
 │   │   ├── EncodingFilter.java         Ép bảng mã UTF-8 toàn hệ thống
@@ -95,7 +106,7 @@ DoAn-WebDocTruyen/
 │   │   ├── AdminFilter.java            Bảo vệ khu vực quản trị viên `/admin/*`
 │   │   └── NotificationFilter.java     Tự động nạp số lượng thông báo chưa đọc vào thanh menu
 │   │
-│   └── util/                   (15 Utilities — Thư viện tiện ích)
+│   └── util/                   (19 Utilities — Thư viện tiện ích)
 │       ├── DBConnection.java           HikariCP Connection Pool kết nối MySQL
 │       ├── PasswordUtil.java           Băm mật khẩu PBKDF2WithHmacSHA256 kèm muối ngẫu nhiên
 │       ├── SlugUtil.java               Chuẩn hóa tiêu đề thành URL slug không dấu
@@ -110,7 +121,11 @@ DoAn-WebDocTruyen/
 │       ├── DriveClient.java            Giao tiếp Google Drive REST API v3
 │       ├── ChapterToTxt.java           Chuyển đổi nội dung chương sang văn bản thuần
 │       ├── ServletHelper.java          Đọc tham số an toàn, redirect, session helper
-│       └── DemoData.java               Dữ liệu mẫu dự phòng khi chưa bật CSDL
+│       ├── DemoData.java               Dữ liệu mẫu dự phòng khi chưa bật CSDL
+│       ├── ChapterAccess.java          Tập trung kiểm soát quyền đọc chương & ảnh VIP
+│       ├── ImageInfo.java              Trích xuất metadata kích thước ảnh bìa & tranh
+│       ├── AppListener.java            Lắng nghe vòng đời ServletContext ứng dụng
+│       └── JsonUtil.java               Chuẩn hoá định dạng & phản hồi JSON an toàn RFC 8259
 │
 ├── src/main/webapp/
 │   ├── WEB-INF/views/

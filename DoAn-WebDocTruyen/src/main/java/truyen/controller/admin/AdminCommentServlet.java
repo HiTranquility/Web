@@ -50,12 +50,18 @@ public class AdminCommentServlet extends HttpServlet {
 
         try {
             if ("hide".equals(action)) {
-                commentDAO.hide(parseIntOr(request.getParameter("id"), 0));
+                int cId = parseIntOr(request.getParameter("id"), 0);
+                commentDAO.hide(cId);
+                truyen.model.User me = truyen.util.ServletHelper.currentUser(request);
+                new truyen.dao.AuditDAO().log(me != null ? me.getId() : 0, "HIDE_COMMENT", "COMMENT", cId, "Bình luận #" + cId, "Ẩn bình luận vi phạm");
                 response.sendRedirect(request.getContextPath() + "/admin/comment"
                         + (filter != null && !filter.isEmpty() ? "?filter=" + filter : ""));
                 return;
             } else if ("unhide".equals(action)) {
-                commentDAO.unhide(parseIntOr(request.getParameter("id"), 0));
+                int cId = parseIntOr(request.getParameter("id"), 0);
+                commentDAO.unhide(cId);
+                truyen.model.User me = truyen.util.ServletHelper.currentUser(request);
+                new truyen.dao.AuditDAO().log(me != null ? me.getId() : 0, "SHOW_COMMENT", "COMMENT", cId, "Bình luận #" + cId, "Khôi phục hiển thị bình luận");
                 response.sendRedirect(request.getContextPath() + "/admin/comment"
                         + (filter != null && !filter.isEmpty() ? "?filter=" + filter : ""));
                 return;

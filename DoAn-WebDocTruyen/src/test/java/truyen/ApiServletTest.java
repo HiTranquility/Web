@@ -25,4 +25,11 @@ class ApiServletTest {
     void testJsonEscapeBackslash() {
         assertEquals("\"Đường dẫn: C:\\\\Users\\\\Admin\"", ApiServlet.jsonEscape("Đường dẫn: C:\\Users\\Admin"));
     }
+
+    @Test
+    @DisplayName("Ca 3: jsonEscape mã hóa an toàn ký tự Unicode tiếng Việt cho Tags và Authors API")
+    void testJsonEscapeVietnamese() {
+        assertEquals("\"Tiên Hiệp\"", ApiServlet.jsonEscape("Tiên Hiệp"));
+        assertEquals("\"Đô Thị & Huyền Huyễn\"", ApiServlet.jsonEscape("Đô Thị & Huyền Huyễn"));
+    }
 }

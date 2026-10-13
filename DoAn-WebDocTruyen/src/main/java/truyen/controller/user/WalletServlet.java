@@ -11,6 +11,7 @@ import javax.servlet.http.HttpSession;
 
 import truyen.dao.WalletDAO;
 import truyen.model.User;
+import truyen.util.JsonUtil;
 
 /**
  * Xử lý các nghiệp vụ ví xu ảo và tặng thưởng tác giả (ISSUE-008).
@@ -54,31 +55,27 @@ public class WalletServlet extends HttpServlet {
     }
 
     private void handleBalance(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json; charset=UTF-8");
         HttpSession session = req.getSession(false);
         User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
         if (currentUser == null) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            resp.getWriter().write("{\"error\":\"Chưa đăng nhập\"}");
+            JsonUtil.sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Chưa đăng nhập");
             return;
         }
 
         try {
             int balance = walletDAO.getBalance(currentUser.getId());
-            resp.getWriter().write("{\"balance\":" + balance + "}");
+            JsonUtil.sendJson(resp, HttpServletResponse.SC_OK, "{\"balance\":" + balance + "}");
         } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\":\"Lỗi CSDL\"}");
+            JsonUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi CSDL");
         }
     }
 
     private void handleTip(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json; charset=UTF-8");
         HttpSession session = req.getSession(false);
         User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
         if (currentUser == null) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Vui lòng đăng nhập để tặng xu\"}");
+            JsonUtil.sendJson(resp, HttpServletResponse.SC_UNAUTHORIZED,
+                    "{\"success\":false,\"message\":\"Vui lòng đăng nhập để tặng xu\"}");
             return;
         }
 
@@ -88,12 +85,14 @@ public class WalletServlet extends HttpServlet {
         String message = req.getParameter("message");
 
         if (toUserId <= 0 || toUserId == currentUser.getId()) {
-            resp.getWriter().write("{\"success\":false,\"message\":\"Không thể tự tặng xu cho chính mình\"}");
+            JsonUtil.sendJson(resp, HttpServletResponse.SC_OK,
+                    "{\"success\":false,\"message\":\"Không thể tự tặng xu cho chính mình\"}");
             return;
         }
 
         if (amount <= 0 || amount > 1000) {
-            resp.getWriter().write("{\"success\":false,\"message\":\"Số xu tặng không hợp lệ (tối đa 1.000 xu)\"}");
+            JsonUtil.sendJson(resp, HttpServletResponse.SC_OK,
+                    "{\"success\":false,\"message\":\"Số xu tặng không hợp lệ (tối đa 1.000 xu)\"}");
             return;
         }
 
@@ -110,14 +109,15 @@ public class WalletServlet extends HttpServlet {
                 } catch (Exception ignore) {
                     // Không ngắt luồng nếu lỗi ghi thông báo
                 }
-                resp.getWriter().write("{\"success\":true,\"newBalance\":" + newBalance
+                JsonUtil.sendJson(resp, HttpServletResponse.SC_OK, "{\"success\":true,\"newBalance\":" + newBalance
                         + ",\"message\":\"✨ Tặng " + amount + " xu cho tác giả thành công!\"}");
             } else {
-                resp.getWriter().write("{\"success\":false,\"message\":\"Số dư xu không đủ để thực hiện giao dịch\"}");
+                JsonUtil.sendJson(resp, HttpServletResponse.SC_OK,
+                        "{\"success\":false,\"message\":\"Số dư xu không đủ để thực hiện giao dịch\"}");
             }
         } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Sự cố hệ thống máy chủ\"}");
+            log("WalletServlet: lỗi tặng xu", e);
+            JsonUtil.sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Sự cố hệ thống máy chủ");
         }
     }
 
@@ -290,9 +290,8 @@ public class WalletServlet extends HttpServlet {
     private void replyBuy(HttpServletRequest req, HttpServletResponse resp, boolean success, String message)
             throws IOException {
         if (isAjax(req)) {
-            resp.setContentType("application/json; charset=UTF-8");
-            // message chỉ gồm chuỗi cố định + số nguyên — không có gì cần escape JSON
-            resp.getWriter().write("{\"success\":" + success + ",\"message\":\"" + message + "\"}");
+            JsonUtil.sendJson(resp, HttpServletResponse.SC_OK,
+                    "{\"success\":" + success + ",\"message\":" + JsonUtil.jsonEscape(message) + "}");
         } else {
             req.getSession().setAttribute(success ? "flash" : "flashError", message);
             resp.sendRedirect(req.getContextPath() + "/wallet?action=topup");

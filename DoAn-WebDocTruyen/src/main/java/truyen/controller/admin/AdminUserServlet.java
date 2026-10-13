@@ -68,12 +68,20 @@ public class AdminUserServlet extends HttpServlet {
                     request.getSession().setAttribute("flashWarn", "Bạn không thể tự khoá tài khoản của mình.");
                 } else if ("ban".equals(action)) {
                     String reason = trimOrEmpty(request.getParameter("reason"));
-                    userDAO.updateStatus(id, "BANNED",
-                            reason.isEmpty() ? "Vi phạm nội quy cộng đồng" : reason);
+                    String finalReason = reason.isEmpty() ? "Vi phạm nội quy cộng đồng" : reason;
+                    userDAO.updateStatus(id, "BANNED", finalReason);
                     request.getSession().setAttribute("flash", "Đã khoá tài khoản.");
+
+                    User targetUser = userDAO.findById(id);
+                    String targetLabel = targetUser != null ? targetUser.getUsername() : ("User #" + id);
+                    new truyen.dao.AuditDAO().log(me != null ? me.getId() : 0, "BAN_USER", "USER", id, targetLabel, finalReason);
                 } else {
                     userDAO.updateStatus(id, "ACTIVE", null);
                     request.getSession().setAttribute("flash", "Đã mở khoá tài khoản.");
+
+                    User targetUser = userDAO.findById(id);
+                    String targetLabel = targetUser != null ? targetUser.getUsername() : ("User #" + id);
+                    new truyen.dao.AuditDAO().log(me != null ? me.getId() : 0, "UNBAN_USER", "USER", id, targetLabel, "Quản trị viên mở khoá tài khoản");
                 }
             } else if ("role".equals(action)) {
                 int id = parseIntOr(request.getParameter("id"), 0);

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.util.ChapterAccess;
 import truyen.util.DBConnection;
+import truyen.util.JsonUtil;
 import truyen.util.ServletHelper;
 
 import static truyen.util.ServletHelper.parseIntOr;
@@ -253,9 +254,8 @@ public class BookmarkServlet extends HttpServlet {
                            boolean isAjax, boolean success, boolean marked, String message)
             throws IOException {
         if (isAjax) {
-            // message chỉ là chuỗi cố định + số nguyên — không có gì cần escape JSON.
-            writeJson(response, "{\"success\":" + success + ",\"marked\":" + marked
-                    + ",\"message\":\"" + message + "\"}");
+            JsonUtil.sendJson(response, HttpServletResponse.SC_OK, "{\"success\":" + success + ",\"marked\":" + marked
+                    + ",\"message\":" + JsonUtil.jsonEscape(message) + "}");
             return;
         }
         request.getSession().setAttribute(success ? "flash" : "flashError", message);
@@ -302,8 +302,7 @@ public class BookmarkServlet extends HttpServlet {
     // ---- tiện ích ----------------------------------------------------------
 
     private void writeJson(HttpServletResponse response, String json) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(json);
+        JsonUtil.sendJson(response, HttpServletResponse.SC_OK, json);
     }
 
     private void backToStory(HttpServletRequest request, HttpServletResponse response,

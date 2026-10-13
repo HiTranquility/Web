@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import truyen.dao.FollowDAO;
 import truyen.model.Follow;
 import truyen.model.User;
+import truyen.util.JsonUtil;
 import truyen.util.ServletHelper;
 import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.currentUser;
@@ -65,9 +66,8 @@ public class FollowServlet extends HttpServlet {
 
         if (me == null) {
             if (isAjax) {
-                response.setContentType("application/json;charset=UTF-8");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"success\":false,\"message\":\"Vui lòng đăng nhập để thực hiện.\"}");
+                JsonUtil.sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "{\"success\":false,\"message\":\"Vui lòng đăng nhập để thực hiện.\"}");
                 return;
             }
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
@@ -77,8 +77,8 @@ public class FollowServlet extends HttpServlet {
         int authorId = parseIntOr(request.getParameter("authorId"), 0);
         if (authorId <= 0 || authorId == me.getId()) {
             if (isAjax) {
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"success\":false,\"message\":\"Không thể tự theo dõi chính mình.\"}");
+                JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
+                        "{\"success\":false,\"message\":\"Không thể tự theo dõi chính mình.\"}");
                 return;
             }
             response.sendRedirect(request.getContextPath() + "/user?action=profile&id=" + authorId);
@@ -96,16 +96,16 @@ public class FollowServlet extends HttpServlet {
         } catch (SQLException e) {
             log("FollowServlet: không đổi được trạng thái theo dõi", e);
             if (isAjax) {
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"success\":false,\"message\":\"Lỗi hệ thống khi cập nhật theo dõi.\"}");
+                JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Lỗi hệ thống khi cập nhật theo dõi.");
                 return;
             }
         }
 
         if (isAjax) {
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"success\":true,\"following\":" + (!unfollow)
-                    + ",\"message\":\"" + (!unfollow ? "Đã theo dõi tác giả!" : "Đã bỏ theo dõi tác giả.") + "\"}");
+            JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
+                    "{\"success\":true,\"following\":" + (!unfollow)
+                    + ",\"message\":" + JsonUtil.jsonEscape(!unfollow ? "Đã theo dõi tác giả!" : "Đã bỏ theo dõi tác giả.") + "}");
             return;
         }
 

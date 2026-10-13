@@ -11,8 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.ChapterDAO;
 import truyen.dao.StoryDAO;
+import truyen.dao.TagDAO;
+import truyen.dao.UserDAO;
 import truyen.model.Chapter;
 import truyen.model.Story;
+import truyen.model.Tag;
+import truyen.model.User;
+import truyen.util.JsonUtil;
 
 /**
  * RESTful JSON API cho các ứng dụng bên ngoài và di động (ISSUE-009).
@@ -20,12 +25,16 @@ import truyen.model.Story;
  * - GET /api/stories
  * - GET /api/story/{id}
  * - GET /api/chapter/{id}
+ * - GET /api/tags
+ * - GET /api/rank?by=views|week|month|authors
  */
 @WebServlet(name = "ApiServlet", urlPatterns = {"/api/*"})
 public class ApiServlet extends HttpServlet {
 
     private final StoryDAO storyDAO = new StoryDAO();
     private final ChapterDAO chapterDAO = new ChapterDAO();
+    private final TagDAO tagDAO = new TagDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -42,6 +51,10 @@ public class ApiServlet extends HttpServlet {
             handleStory(pathInfo.substring(7), req, resp);
         } else if (pathInfo.startsWith("/chapter/")) {
             handleChapter(pathInfo.substring(9), req, resp);
+        } else if (pathInfo.equals("/tags") || pathInfo.equals("/tags/")) {
+            handleTags(req, resp);
+        } else if (pathInfo.equals("/rank") || pathInfo.equals("/ranks") || pathInfo.startsWith("/rank/") || pathInfo.startsWith("/ranks/")) {
+            handleRanks(req, resp);
         } else {
             sendError(resp, 404, "Endpoint không tồn tại");
         }
@@ -149,6 +162,79 @@ public class ApiServlet extends HttpServlet {
         }
     }
 
+    private void handleTags(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try {
+            List<Tag> tags = tagDAO.findAllWithCount();
+            StringBuilder json = new StringBuilder();
+            json.append("{")
+                .append("\"total\":").append(tags.size()).append(",")
+                .append("\"tags\":[");
+            for (int i = 0; i < tags.size(); i++) {
+                Tag t = tags.get(i);
+                if (i > 0) json.append(",");
+                json.append("{")
+                    .append("\"id\":").append(t.getId()).append(",")
+                    .append("\"name\":").append(jsonEscape(t.getName())).append(",")
+                    .append("\"slug\":").append(jsonEscape(t.getSlug())).append(",")
+                    .append("\"storyCount\":").append(t.getStoryCount())
+                    .append("}");
+            }
+            json.append("]}");
+            resp.getWriter().write(json.toString());
+        } catch (SQLException e) {
+            sendError(resp, 500, "Loi truy van CSDL");
+        }
+    }
+
+    private void handleRanks(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String by = req.getParameter("by");
+        if (by == null || by.trim().isEmpty()) {
+            by = "views";
+        }
+        int limit = parseInt(req.getParameter("limit"), 20);
+        if (limit > 50) limit = 50;
+
+        try {
+            StringBuilder json = new StringBuilder();
+            json.append("{\"by\":").append(jsonEscape(by)).append(",");
+            if ("authors".equalsIgnoreCase(by)) {
+                List<User> authors = userDAO.findTopAuthors(limit);
+                json.append("\"authors\":[");
+                for (int i = 0; i < authors.size(); i++) {
+                    User u = authors.get(i);
+                    if (i > 0) json.append(",");
+                    json.append("{")
+                        .append("\"id\":").append(u.getId()).append(",")
+                        .append("\"username\":").append(jsonEscape(u.getUsername())).append(",")
+                        .append("\"name\":").append(jsonEscape(u.getName())).append(",")
+                        .append("\"avatarUrl\":").append(jsonEscape(u.getAvatarUrl() != null ? u.getAvatarUrl() : "")).append(",")
+                        .append("\"totalViews\":").append(u.getTotalViews())
+                        .append("}");
+                }
+                json.append("]}");
+            } else {
+                List<Story> stories;
+                if ("week".equalsIgnoreCase(by)) {
+                    stories = storyDAO.findTopByPeriod(7, limit);
+                } else if ("month".equalsIgnoreCase(by)) {
+                    stories = storyDAO.findTopByPeriod(30, limit);
+                } else {
+                    stories = storyDAO.findTop(by, limit);
+                }
+                json.append("\"stories\":[");
+                for (int i = 0; i < stories.size(); i++) {
+                    Story s = stories.get(i);
+                    if (i > 0) json.append(",");
+                    appendStoryJson(json, s);
+                }
+                json.append("]}");
+            }
+            resp.getWriter().write(json.toString());
+        } catch (SQLException e) {
+            sendError(resp, 500, "Loi truy van CSDL");
+        }
+    }
+
     private void appendStoryJson(StringBuilder json, Story s) {
         json.append("{")
             .append("\"id\":").append(s.getId()).append(",")
@@ -165,8 +251,7 @@ public class ApiServlet extends HttpServlet {
     }
 
     private void sendError(HttpServletResponse resp, int status, String msg) throws IOException {
-        resp.setStatus(status);
-        resp.getWriter().write("{\"error\":" + jsonEscape(msg) + ",\"status\":" + status + "}");
+        JsonUtil.sendError(resp, status, msg);
     }
 
     private int parseInt(String s, int def) {
@@ -178,29 +263,10 @@ public class ApiServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Escape chuỗi an toàn theo chuẩn JSON (ủy quyền cho JsonUtil dùng chung).
+     */
     public static String jsonEscape(String s) {
-        if (s == null) return "\"\"";
-        StringBuilder sb = new StringBuilder("\"");
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '"':  sb.append("\\\""); break;
-                case '\\': sb.append("\\\\"); break;
-                case '\b': sb.append("\\b");  break;
-                case '\f': sb.append("\\f");  break;
-                case '\n': sb.append("\\n");  break;
-                case '\r': sb.append("\\r");  break;
-                case '\t': sb.append("\\t");  break;
-                default:
-                    if (c < ' ') {
-                        String hex = "000" + Integer.toHexString(c);
-                        sb.append("\\u").append(hex.substring(hex.length() - 4));
-                    } else {
-                        sb.append(c);
-                    }
-            }
-        }
-        sb.append("\"");
-        return sb.toString();
+        return JsonUtil.jsonEscape(s);
     }
 }

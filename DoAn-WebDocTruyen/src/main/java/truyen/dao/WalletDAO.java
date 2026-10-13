@@ -5,7 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
+import truyen.model.Transaction;
+import truyen.model.Wallet;
 import truyen.util.DBConnection;
 
 /**
@@ -478,5 +482,243 @@ public class WalletDAO {
             }
         }
         return list;
+    }
+
+    // =========================================================================
+    //  PHẦN DÀNH CHO QUẢN TRỊ VIÊN (ISSUE-023)
+    // =========================================================================
+
+    /**
+     * Lấy danh sách ví của tất cả người dùng kèm thống kê đã nhận/đã tiêu (cho Admin).
+     */
+    public List<Wallet> findAllWallets(String q, int offset, int limit) throws SQLException {
+        List<Wallet> list = new ArrayList<>();
+        if (!DBConnection.isReady()) return list;
+
+        boolean hasQ = q != null && !q.trim().isEmpty();
+        String pattern = hasQ ? "%" + q.trim() + "%" : "%";
+
+        String sql = "SELECT u.id AS user_id, u.username, u.display_name, u.email, u.avatar_url, "
+                   + "       COALESCE(w.balance, 100) AS balance, w.updated_at, "
+                   + "       (SELECT COALESCE(SUM(t.amount), 0) FROM transactions t WHERE t.to_user_id = u.id AND t.from_user_id IS NOT NULL AND t.from_user_id <> u.id) AS total_received, "
+                   + "       (SELECT COALESCE(SUM(t.amount), 0) FROM transactions t WHERE t.from_user_id = u.id) AS total_spent "
+                   + "FROM users u "
+                   + "LEFT JOIN wallets w ON w.user_id = u.id "
+                   + "WHERE (u.username LIKE ? OR u.display_name LIKE ? OR u.email LIKE ?) "
+                   + "ORDER BY balance DESC, u.id ASC "
+                   + "LIMIT ? OFFSET ?";
+
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            ps.setInt(4, limit > 0 ? limit : 20);
+            ps.setInt(5, Math.max(0, offset));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Wallet w = new Wallet();
+                    w.setUserId(rs.getInt("user_id"));
+                    w.setUsername(rs.getString("username"));
+                    w.setDisplayName(rs.getString("display_name"));
+                    w.setEmail(rs.getString("email"));
+                    w.setAvatarUrl(rs.getString("avatar_url"));
+                    w.setBalance(rs.getInt("balance"));
+                    if (rs.getTimestamp("updated_at") != null) {
+                        w.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                    }
+                    w.setTotalReceived(rs.getInt("total_received"));
+                    w.setTotalSpent(rs.getInt("total_spent"));
+                    list.add(w);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Đếm tổng số ví thoả điều kiện tìm kiếm.
+     */
+    public int countWallets(String q) throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+        boolean hasQ = q != null && !q.trim().isEmpty();
+        String pattern = hasQ ? "%" + q.trim() + "%" : "%";
+
+        String sql = "SELECT COUNT(*) FROM users u "
+                   + "WHERE (u.username LIKE ? OR u.display_name LIKE ? OR u.email LIKE ?)";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
+     * Tổng số xu đang lưu hành trên toàn bộ hệ thống.
+     */
+    public long getTotalCirculatingCoins() throws SQLException {
+        if (!DBConnection.isReady()) return 10000;
+        String sql = "SELECT COALESCE(SUM(balance), 0) FROM wallets";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : 0;
+        }
+    }
+
+    /**
+     * Tổng số lượt giao dịch toàn hệ thống.
+     */
+    public long getTotalTransactions() throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+        String sql = "SELECT COUNT(*) FROM transactions";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : 0;
+        }
+    }
+
+    /**
+     * Tổng số xu đã được giao dịch qua lại.
+     */
+    public long getTotalCoinsTipped() throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE from_user_id IS NOT NULL";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : 0;
+        }
+    }
+
+    /**
+     * Danh sách giao dịch toàn hệ thống gần nhất (cho Admin).
+     */
+    public List<Transaction> findRecentTransactions(int limit) throws SQLException {
+        List<Transaction> list = new ArrayList<>();
+        if (!DBConnection.isReady()) return list;
+
+        String sql = "SELECT t.id, t.from_user_id, t.to_user_id, t.story_id, t.amount, t.message, t.created_at, "
+                   + "       u1.username AS from_username, u1.display_name AS from_name, "
+                   + "       u2.username AS to_username, u2.display_name AS to_name, "
+                   + "       s.title AS story_title "
+                   + "FROM transactions t "
+                   + "LEFT JOIN users u1 ON u1.id = t.from_user_id "
+                   + "JOIN users u2 ON u2.id = t.to_user_id "
+                   + "LEFT JOIN stories s ON s.id = t.story_id "
+                   + "ORDER BY t.created_at DESC, t.id DESC "
+                   + "LIMIT ?";
+
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, limit > 0 ? limit : 20);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Transaction tx = new Transaction();
+                    tx.setId(rs.getInt("id"));
+                    int fId = rs.getInt("from_user_id");
+                    tx.setFromUserId(rs.wasNull() ? null : fId);
+                    tx.setToUserId(rs.getInt("to_user_id"));
+                    int sId = rs.getInt("story_id");
+                    tx.setStoryId(rs.wasNull() ? null : sId);
+                    tx.setAmount(rs.getInt("amount"));
+                    tx.setMessage(rs.getString("message"));
+                    if (rs.getTimestamp("created_at") != null) {
+                        tx.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                    }
+                    String fName = rs.getString("from_name");
+                    tx.setFromUsername(fName != null && !fName.isEmpty() ? fName : rs.getString("from_username"));
+                    String tName = rs.getString("to_name");
+                    tx.setToUsername(tName != null && !tName.isEmpty() ? tName : rs.getString("to_username"));
+                    tx.setStoryTitle(rs.getString("story_title"));
+                    list.add(tx);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Admin cấp xu hoặc thu hồi xu của người dùng.
+     * Bắt buộc thực hiện trong 1 Transaction và ghi nhận đồng thời vào audit_logs.
+     */
+    public boolean adminAdjust(int adminId, int targetUserId, int amount, String reason) throws SQLException {
+        if (!DBConnection.isReady() || targetUserId <= 0 || amount == 0) return true;
+
+        String selectSql = "SELECT balance FROM wallets WHERE user_id = ? FOR UPDATE";
+        String updateSql = "UPDATE wallets SET balance = balance + ? WHERE user_id = ?";
+        String insertTxSql = "INSERT INTO transactions (from_user_id, to_user_id, amount, message, created_at) VALUES (?, ?, ?, ?, NOW())";
+
+        try (Connection con = DBConnection.get()) {
+            con.setAutoCommit(false);
+            try {
+                int currentBalance = 100;
+                boolean walletExists = false;
+                try (PreparedStatement ps = con.prepareStatement(selectSql)) {
+                    ps.setInt(1, targetUserId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            currentBalance = rs.getInt("balance");
+                            walletExists = true;
+                        }
+                    }
+                }
+
+                if (!walletExists) {
+                    try (PreparedStatement ps = con.prepareStatement("INSERT INTO wallets (user_id, balance) VALUES (?, 100)")) {
+                        ps.setInt(1, targetUserId);
+                        ps.executeUpdate();
+                    }
+                    currentBalance = 100;
+                }
+
+                // Nếu thu hồi xu, không cho số dư âm
+                if (amount < 0 && (currentBalance + amount < 0)) {
+                    con.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(updateSql)) {
+                    ps.setInt(1, amount);
+                    ps.setInt(2, targetUserId);
+                    ps.executeUpdate();
+                }
+
+                // Ghi transaction
+                try (PreparedStatement ps = con.prepareStatement(insertTxSql)) {
+                    if (amount > 0) {
+                        if (adminId > 0) ps.setInt(1, adminId);
+                        else ps.setNull(1, java.sql.Types.INTEGER);
+                        ps.setInt(2, targetUserId);
+                    } else {
+                        ps.setInt(1, targetUserId);
+                        if (adminId > 0) ps.setInt(2, adminId);
+                        else ps.setNull(2, java.sql.Types.INTEGER);
+                    }
+                    ps.setInt(3, Math.abs(amount));
+                    ps.setString(4, (amount > 0 ? "Admin cấp xu: " : "Admin thu hồi xu: ") + (reason != null ? reason : ""));
+                    ps.executeUpdate();
+                }
+
+                // Ghi nhật ký audit
+                AuditDAO auditDAO = new AuditDAO();
+                auditDAO.log(adminId, amount > 0 ? "GRANT_COIN" : "REVOKE_COIN", "WALLET", targetUserId,
+                        "Ví User #" + targetUserId + " (" + (amount > 0 ? "+" : "") + amount + " xu)", reason);
+
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
     }
 }

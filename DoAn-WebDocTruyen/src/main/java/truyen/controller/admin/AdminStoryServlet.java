@@ -59,6 +59,18 @@ public class AdminStoryServlet extends HttpServlet {
                 }
                 storyDAO.updateStatus(id, targetStatus);
 
+                // Ghi nhật ký thao tác (ISSUE-023)
+                truyen.model.User me = truyen.util.ServletHelper.currentUser(request);
+                int adminId = me != null ? me.getId() : 0;
+                truyen.model.Story story = storyDAO.findById(id);
+                String storyTitle = story != null ? story.getTitle() : ("Truyện #" + id);
+                String auditAction = "DELETED".equals(targetStatus) ? "DELETE_STORY" : "RESTORE_STORY";
+                String auditReason = request.getParameter("reason");
+                if (auditReason == null || auditReason.trim().isEmpty()) {
+                    auditReason = "DELETED".equals(targetStatus) ? "Quản trị viên gỡ truyện khỏi hệ thống" : "Quản trị viên khôi phục truyện";
+                }
+                new truyen.dao.AuditDAO().log(adminId, auditAction, "STORY", id, storyTitle, auditReason);
+
                 // Post/Redirect/Get — giữ nguyên bộ lọc status nếu có
                 String qs = (status != null && !status.isEmpty()) ? "?status=" + status : "";
                 response.sendRedirect(request.getContextPath() + "/admin/story" + qs);
