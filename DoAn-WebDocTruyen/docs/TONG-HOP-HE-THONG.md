@@ -613,6 +613,45 @@ Thời gian thực thi: ~1.8 giây (100% PASS).
    - **Chỉ số kinh tế & bảo mật trên Admin Dashboard (`/admin/dashboard`):** Bổ sung 3 thẻ thống kê thời gian thực: Tổng xu đang lưu hành trên toàn hệ thống (🪙), Tổng số giao dịch xu (💳), và Tổng số lượt nhật ký kiểm toán quản trị (🛡️).
    - **REST API Comic & VIP Integration (`/api/story/{id}`, `/api/chapter/{id}`):** Bổ sung trường `vip`, `coinPrice` cho chương truyện và trả về mảng danh sách trang tranh (`pages`) với thông số chiều rộng/cao phục vụ ứng dụng di động và tích hợp bên ngoài.
 
+6. **Trạm Kết Thúc Chương Thông Minh (End-of-Chapter Smart Hub):**
+   - **Vạch tiến độ tác phẩm toàn cảnh:** Tính toán và hiển thị trực tiếp phần trăm hoàn thành của toàn bộ bộ truyện (`Chương X / Tổng số chương Y (Z%)`) kèm thanh tiến độ đồ họa sắc nét dưới chân mỗi chương truyện ([read.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/common/chapter/read.jsp)).
+   - **Cụm điều hướng nâng cao:** Nút chuyển chương trước, chương sau thiết kế bản lớn nổi bật và mục lục chương dạng popup (`TOC`); tự động nhận diện và hiển thị huy hiệu vinh danh độc giả khi đã theo kịp chương mới nhất (`🎉 Đã đến chương mới nhất`).
+   - **Phím tắt điều hướng nhanh & Toast phản hồi:** Hỗ trợ phím mũi tên `←` / `→` (hoặc `A` / `D`) lùi/tiến chương mượt mà; hiển thị thông báo toast tức thì khi độc giả đang ở chương đầu tiên hoặc chương cuối cùng.
+
+7. **Bộ Lọc Kho Truyện Nâng Cao & Tag Pills (Advanced Filter Presets):**
+   - **Thanh Tag Pills lọc nhanh 1-click:** Nằm ở đầu bảng bộ lọc tại `/story?action=list` ([list.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/common/story/list.jsp)) với nền gradient cam hổ phách cao cấp.
+   - **6 Bộ lọc định sẵn phổ biến nhất:**
+     - 🔥 **Đọc nhiều nhất** (`sort=popular`)
+     - 🌟 **Điểm cao tuyển chọn** (`sort=rating`)
+     - 🎨 **Comic & Webtoon** (`type=comic`)
+     - 🏆 **Truyện Full (Hoàn thành)** (`progress=completed`)
+     - ⏱️ **Đọc nhanh (< 10 chương)** (`chapters=short`)
+     - 🌐 **Tất cả truyện**
+   - Tự động nhận diện và làm sáng badge đang chọn (`.is-active`), bảo toàn các tham số lọc thể loại và từ khoá tìm kiếm.
+
+8. **Chế Độ Đọc Ngoại Tuyến PWA (Smart Offline Caching):**
+   - **Lưu ngoại tuyến bằng Cache Storage API:** Nút `📥` trên thanh công cụ đọc truyện ([reader.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/layout/reader.jsp)) (phím tắt `Alt + O`). Nhấp để lưu trữ HTML chương, CSS, JS cốt lõi vào `doctruyen-reader-cache-v1`.
+   - **Cơ chế Prefetch chương tiếp theo:** Tự động nạp trước chương kế tiếp vào bộ nhớ đệm để độc giả có thể đọc liền mạch ngay cả khi mất kết nối mạng.
+   - **Theo dõi trạng thái mạng thời gian thực:** Lắng nghe sự kiện `online` / `offline` để hiển thị toast thông báo trạng thái mạng trực tiếp đến độc giả.
+
+9. **Nhật Ký & Nhịp Đọc Độc Giả (Reading Insights & Analytics):**
+   - **Khối phân tích thói quen đọc sách (`/user?action=me`):** Tích hợp giữa Tủ Huy Hiệu và Thông tin tài khoản ([me.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/user/me.jsp)).
+   - **4 Thẻ thống kê trực quan:** Tổng số chương đã đọc, thời lượng đọc ước tính (giờ), chuỗi ngày streak liên tục, và số bộ truyện đang theo dõi.
+   - **Phân cấp độc giả tự động:** Tự động đánh giá cấp độ mọt sách từ dữ liệu lịch sử đọc: *Tân Độc Giả Khởi Hành → Độc Giả Chăm Chỉ → Cao Thủ Mọt Sách → Đại Học Sĩ*.
+   - **Biểu đồ cột nhịp đọc 7 ngày gần nhất (T2 → CN):** Biểu diễn thời lượng đọc (phút) của từng ngày trong tuần với hiệu ứng cột chuyển màu và ngày hiện tại phát sáng rực rỡ kèm thông điệp khuyến đọc.
+
+10. **Thước Đo Mật Khẩu An Toàn & Khớp Thời Gian Thực (Password Strength Meter):**
+    - **Đánh giá độ mạnh mật khẩu thời gian thực (`/user?action=edit`):** Phân tích trực tiếp độ dài, chữ hoa, chữ thường, số và ký tự đặc biệt với 4 cấp độ trực quan ([edit.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/user/edit.jsp)):
+      - 🔴 Yếu (Dễ đoán)
+      - 🟠 Trung bình (Cần thêm ký tự đặc biệt)
+      - 🔵 Khá mạnh (Độ bảo mật tốt)
+      - 🟢 Rất an toàn & mạnh mẽ (Chuẩn bảo mật cao cấp)
+    - **Kiểm tra khớp mật khẩu tức thì:** Phản hồi ngay `✅ Mật khẩu nhập lại hoàn toàn trùng khớp!` hoặc `❌ Mật khẩu nhập lại chưa khớp!` ngay khi người dùng gõ vào ô xác nhận mật khẩu.
+
+11. **Sửa Dứt Điểm Lỗi CSRF Beacon Bookmark & Khôi Phục Vị Trí Đọc Dở (resumePara):**
+    - Thay thế `navigator.sendBeacon` (không gửi kèm được CSRF token headers) bằng API `fetch` chuẩn hiện đại kèm thuộc tính `keepalive: true`, `X-CSRF-Token` và `Content-Type: application/x-www-form-urlencoded`.
+    - Phục hồi chính xác vị trí đọc dở `resumePara` từng đoạn văn bản kèm thông báo toast dẫn lối độc giả quay lại vị trí đọc dở hoặc cuộn lên đầu chương.
+
 ---
 
 ## 12. Hướng dẫn Vận hành Nhanh

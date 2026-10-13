@@ -26,16 +26,15 @@ Làm tuần tự, mỗi case chạy được rồi mới sang case sau.
 | **10** | Quản trị — gỡ truyện, khoá tài khoản | `admin/*`, `AdminFilter`, `layout/admin.jsp` | ✅ |
 | **11** | Hướng dẫn sử dụng + Nội quy | `PageServlet` + checkbox đồng ý | ✅ |
 
-✅ **Dự án đã hoàn thiện trọn vẹn cả 11 CASE và kiểm thử đầy đủ:**
+✅ **Dự án đã hoàn thiện trọn vẹn cả 11 CASE và mở rộng toàn diện:**
 - Biên dịch sạch toàn bộ mã nguồn Java.
 - Cơ sở dữ liệu `webdoctruyen`: 25 bảng (`schema.sql` + các `migration-*.sql`), có dữ liệu mẫu.
   Cài mới bằng `setup-db.ps1` đã được thử trên một MySQL trống.
-- Vượt qua toàn bộ 154 bài kiểm thử tự động (JUnit 5) — `scripts\test.ps1`.
+- Vượt qua toàn bộ **175 bài kiểm thử tự động** (JUnit 5) — `scripts\test.ps1`.
 - Các bộ lọc bảo mật (`EncodingFilter`, `CsrfFilter`, `AuthFilter`, `AdminFilter`) hoạt động chính xác, chặn các lỗ hổng phổ biến như SQLi, XSS, CSRF, Account Takeover và Path Traversal.
 
-**Mở rộng sau 11 CASE:** ví xu & chương VIP, đánh giá, điểm danh, **truyện tranh**
-(chương là dãy ảnh, ảnh chương VIP được kiểm quyền), **đánh dấu đoạn / trang** và
-**đọc tiếp đúng đoạn**, khối gợi ý truyện thống nhất.
+**Mở rộng sau 11 CASE:** ví xu & chương VIP, đánh giá 5 sao, điểm danh nhận quà, **truyện tranh**
+(chương là dãy ảnh, ảnh chương VIP được kiểm quyền), **đánh dấu đoạn / trang** và **đọc tiếp đúng đoạn (`resumePara`)**, khối gợi ý truyện thống nhất, **Trạm kết thúc chương thông minh (Smart Chapter Hub)**, **Tag Pills lọc nhanh 6 chế độ**, **Nhật ký & nhịp đọc 7 ngày (Reading Insights)**, **Thước đo mật khẩu an toàn**, **PWA Offline Reading & đồng bộ `fetch keepalive`**, **Đọc bằng giọng nói (Text-to-Speech)** và **Âm thanh mưa rơi thư giãn (Web Audio API)**.
 
 ---
 

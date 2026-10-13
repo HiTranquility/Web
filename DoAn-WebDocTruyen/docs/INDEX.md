@@ -5,8 +5,8 @@ Bản đồ tài liệu của đồ án. Mở file này khi không nhớ nên tr
 ```text
 docs/
 ├── INDEX.md                          ← bạn đang ở đây (mục lục trung tâm)
-├── TONG-HOP-HE-THONG.md              ⭐ TỔNG HỢP TOÀN BỘ HỆ THỐNG (36 trang, 38 chức năng, 18 modules, 114 tests)
-├── GIAO-DIEN.md                      🎨 TỔNG HỢP TOÀN BỘ GIAO DIỆN (36 trang JSP, 5 layouts, 14 partials, UI/UX)
+├── TONG-HOP-HE-THONG.md              ⭐ TỔNG HỢP TOÀN BỘ HỆ THỐNG (38 trang, 50 chức năng, 18 modules, 175 tests)
+├── GIAO-DIEN.md                      🎨 TỔNG HỢP TOÀN BỘ GIAO DIỆN (38 trang JSP, 5 layouts, 15 partials, 28 modules UI/UX)
 ├── reindex.ps1                       ← quét docs/ → mã số kế tiếp + trạng thái (PowerShell)
 ├── reindex.sh                        ← quét docs/ → mã số kế tiếp + trạng thái (Bash)
 │
@@ -56,8 +56,8 @@ docs/
 
 | Câu hỏi trong đầu | Mở file |
 |-------------------|---------|
-| ⭐ **"Xem tổng hợp toàn bộ hệ thống (36 trang, 38 chức năng, 18 modules, CSDL)"** | **[TONG-HOP-HE-THONG.md](TONG-HOP-HE-THONG.md)** |
-| 🎨 **"Xem tổng hợp toàn bộ giao diện (36 trang JSP, 5 layouts, UI/UX)"** | **[GIAO-DIEN.md](GIAO-DIEN.md)** |
+| ⭐ **"Xem tổng hợp toàn bộ hệ thống (38 trang, 50 chức năng, 18 modules, 175 tests, CSDL)"** | **[TONG-HOP-HE-THONG.md](TONG-HOP-HE-THONG.md)** |
+| 🎨 **"Xem tổng hợp toàn bộ giao diện (38 trang JSP, 5 layouts, 28 cải tiến UI/UX)"** | **[GIAO-DIEN.md](GIAO-DIEN.md)** |
 | 🧭 **"Sơ đồ trực quan từ UI/Mảng Frontend ➔ Backend ➔ Database (ký hiệu, các bước)"** | **[guides/visual-flow-code-tinh-nang-moi.md](guides/visual-flow-code-tinh-nang-moi.md)** |
 | ⚡ **"Mẹo nhớ thần tốc: Thẻ tag Frontend, @p, Scopes Context, Lớp DAO JDBC"** | **[guides/MEO-NHO-CHEAT-SHEET.md](guides/MEO-NHO-CHEAT-SHEET.md)** |
 | **"Tự tay code một tính năng từ DAO tới JSP"** | **[guides/huong-dan-code.md](guides/huong-dan-code.md)** |

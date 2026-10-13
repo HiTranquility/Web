@@ -176,7 +176,7 @@ Hệ thống sử dụng các mảnh giao diện nhỏ trong thư mục `WEB-INF
 
 ## 6. Các Điểm sáng & Cải tiến Giao diện Nâng cao Đã Thêm
 
-So với bản thiết kế sơ khai, đồ án đã được tích hợp thêm **9 module giao diện cao cấp**:
+So với bản thiết kế sơ khai, đồ án đã được tích hợp thêm **28 module & điểm sáng giao diện cao cấp**:
 
 1. **Live Preview Ảnh Bìa 3:4 Tức thì (ISSUE-017):**
    - Khi tác giả chọn file ảnh bìa từ máy tính, FileReader API JavaScript lập tức nạp và render khung xem trước tỉ lệ 3:4 chuẩn bìa sách ngay trên màn hình trước khi nhấn nút Lưu.
@@ -253,11 +253,42 @@ So với bản thiết kế sơ khai, đồ án đã được tích hợp thêm 
    - Khi độc giả quay lại Trang chủ, một thẻ nổi bật sẽ xuất hiện ngay đầu trang hiển thị tên truyện, chương đang dở cùng nút **"Đọc tiếp →"** 1-click không cần lục lại lịch sử.
 23. **Bộ Lọc Tìm Kiếm Tức Thời Trong Quản Trị Báo Cáo (Admin Reports Quick Filter):**
    - Thêm ô tìm kiếm trực tiếp `🔍 Lọc nhanh theo nội dung, lý do hoặc người báo cáo...` trong trang [admin/reports.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/admin/reports.jsp), lọc kết quả tức thì không cần tải lại trang.
-
-
-
-
----
+24. **Trạm Kết Thúc Chương Thông Minh (Smart Chapter Hub & Story Progress Bar):**
+   - Khối trạm cuối chương thiết kế Glassmorphism hiện đại thay thế thanh điều hướng đơn điệu cũ.
+   - **Thanh tiến độ % toàn tác phẩm:** Đo lường chính xác `Chương X / Y (Z%)`, vạch tiến độ phát sáng với hiệu ứng chuyển động mượt mà.
+   - **Bộ điều hướng trung tâm 3 phím:** Nút `← Chương trước`, Nút `📑 Mục lục` (bật danh sách chương tức thì), Nút `Chương sau →` với gradient thương hiệu bắt mắt.
+   - **Hành động độc giả 1-chạm:** Nút `⭐ Yêu thích truyện` (kết nối trực tiếp hệ thống Bookmark), Nút `↑ Lên đầu trang`, Nút `💬 Bình luận ngay`.
+   - **Hộp gợi ý phím tắt trực quan:** Badge phím tắt `←` và `→` nhắc độc giả lật trang siêu tốc mà không cần chạm chuột.
+25. **Thanh Tag Pills Gợi Ý Lọc Nhanh (Filter Presets Bar):**
+   - Đặt nổi bật ngay đầu trang Kho truyện ([common/story/list.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/common/story/list.jsp)).
+   - Cung cấp 6 chế độ lọc nhanh 1-chạm dạng viên thuốc (Pills):
+     - `Tất cả` (Mặc định kho truyện)
+     - `🔥 Nổi bật nhất` (Top lượt xem cao)
+     - `⚡ Mới cập nhật` (Truyện vừa ra chương mới nhất)
+     - `🏆 Hoàn thành` (Truyện đã kết thúc trọn vẹn)
+     - `❤️ Được yêu thích` (Nhiều bookmark và đánh giá sao cao nhất)
+     - `👁️ Đọc nhiều nhất` (Thịnh hành toàn sàn)
+   - Trạng thái kích hoạt (Active state) với viền dạ quang và nền gradient nổi bật, kết hợp ăn khớp với bộ lọc danh mục và thể loại truyền thống.
+26. **Thẻ Nhật Ký & Nhịp Đọc Độc Giả (Reading Insights & 7-Day Rhythm Chart):**
+   - Tích hợp trực tiếp tại Hồ sơ cá nhân ([user/me.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/user/me.jsp)).
+   - **3 ô chỉ số đọc chuyên sâu:**
+     - `📖 Đã đọc`: Tổng số chương truyện độc giả đã hoàn thành.
+     - `🔥 Chuỗi ngày đọc`: Số ngày đọc sách liên tiếp không ngắt quãng (Reading Streak).
+     - `🏆 Cấp bậc Mọt Sách`: Phân cấp tự động từ *Mọt Sách Sơ Cấp*, *Độc Giả Chăm Chỉ*, *Độc Giả Tinh Anh* đến *Đại Tông Sư Đọc Truyện*.
+   - **Biểu đồ cột nhịp đọc 7 ngày gần nhất (7-Day Rhythm Chart):** Dựng 100% bằng CSS Flexbox thuần, hiển thị số chương đọc theo từng ngày trong tuần kèm hiệu ứng cột gradient nhảy múa khi tải trang.
+27. **Thước Đo Độ Mạnh Mật Khẩu Trực Quan (Real-time Password Strength Meter & Match Checker):**
+   - Tích hợp tại form Đổi mật khẩu ([user/edit.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/user/edit.jsp)) và trang Đặt lại mật khẩu ([auth/reset.jsp](file:///c:/Users/Admin/Downloads/Web/DoAn-WebDocTruyen/src/main/webapp/WEB-INF/views/auth/reset.jsp)).
+   - **Thanh đo 4 cấp độ sống động:** Yếu (`Đỏ`), Trung bình (`Vàng cam`), Khá (`Xanh dương`), Rất mạnh (`Xanh ngọc`).
+   - **Bộ tiêu chí kiểm tra thời gian thực (Real-time Checklist):**
+     - Tối thiểu 8 ký tự.
+     - Chứa chữ hoa và chữ thường.
+     - Chứa ít nhất một chữ số hoặc ký tự đặc biệt.
+     - Tự động chuyển đổi icon `○` sang `✓` xanh ngọc ngay khi người dùng gõ phím.
+   - **Huy hiệu so khớp mật khẩu xác nhận:** Hiển thị tức thì `✓ Mật khẩu khớp hoàn toàn` (xanh) hoặc `✗ Mật khẩu chưa trùng khớp` (đỏ) nhằm ngăn chặn tối đa sai sót khi gõ.
+28. **Chế Độ Đọc Ngoại Tuyến PWA & Đồng Bộ Tiến Độ Bền Vững (Smart Offline Caching & Keepalive Sync):**
+   - **Nút lưu đọc ngoại tuyến 📥 (Save for Offline):** Tích hợp trực tiếp trên thanh điều khiển đọc Reader. Khi bấm, toàn bộ tài nguyên chương truyện (HTML, font chữ, CSS, thông tin tác phẩm) được lưu trực tiếp vào Cache Storage của trình duyệt.
+   - **Khôi phục vị trí đọc dở chuẩn xác (`resumePara`):** Tự động cuộn mượt đến đúng số thứ tự đoạn văn mà độc giả đang đọc dở khi quay lại chương hoặc chuyển đổi thiết bị.
+   - **Đồng bộ tiến độ bền bỉ qua `fetch keepalive`:** Thay thế cơ chế `sendBeacon` bằng `fetch` kèm cờ `keepalive: true` và `X-CSRF-Token`, đảm bảo tiến độ đọc được máy chủ ghi nhận an toàn ngay cả khi độc giả tắt tab hoặc chuyển ứng dụng đột ngột.
 
 ## 7. Chuẩn Trợ năng (A11y) & Tương thích Di động 360px
 
