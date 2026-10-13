@@ -164,4 +164,11 @@ public class AuditDAO {
             }
         }
     }
+
+    /**
+     * Đếm tổng số nhật ký không phân biệt action.
+     */
+    public int countTotal() throws SQLException {
+        return count(null);
+    }
 }

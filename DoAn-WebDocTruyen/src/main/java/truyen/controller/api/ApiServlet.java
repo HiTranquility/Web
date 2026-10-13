@@ -10,10 +10,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import truyen.dao.ChapterDAO;
+import truyen.dao.ChapterPageDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.TagDAO;
 import truyen.dao.UserDAO;
 import truyen.model.Chapter;
+import truyen.model.ChapterPage;
 import truyen.model.Story;
 import truyen.model.Tag;
 import truyen.model.User;
@@ -33,6 +35,7 @@ public class ApiServlet extends HttpServlet {
 
     private final StoryDAO storyDAO = new StoryDAO();
     private final ChapterDAO chapterDAO = new ChapterDAO();
+    private final ChapterPageDAO chapterPageDAO = new ChapterPageDAO();
     private final TagDAO tagDAO = new TagDAO();
     private final UserDAO userDAO = new UserDAO();
 
@@ -121,7 +124,9 @@ public class ApiServlet extends HttpServlet {
                     .append("\"id\":").append(c.getId()).append(",")
                     .append("\"chapterNo\":").append(c.getChapterNo()).append(",")
                     .append("\"title\":").append(jsonEscape(c.getTitle())).append(",")
-                    .append("\"readMinutes\":").append(c.getReadMinutes())
+                    .append("\"readMinutes\":").append(c.getReadMinutes()).append(",")
+                    .append("\"vip\":").append(c.isVip()).append(",")
+                    .append("\"coinPrice\":").append(c.getCoinPrice())
                     .append("}");
             }
             json.append("]}");
@@ -146,6 +151,8 @@ public class ApiServlet extends HttpServlet {
                 return;
             }
 
+            List<ChapterPage> pages = chapterPageDAO.findByChapter(c.getId());
+
             StringBuilder json = new StringBuilder();
             json.append("{")
                 .append("\"id\":").append(c.getId()).append(",")
@@ -153,8 +160,22 @@ public class ApiServlet extends HttpServlet {
                 .append("\"chapterNo\":").append(c.getChapterNo()).append(",")
                 .append("\"title\":").append(jsonEscape(c.getTitle())).append(",")
                 .append("\"content\":").append(jsonEscape(c.getContent())).append(",")
-                .append("\"readMinutes\":").append(c.getReadMinutes())
-                .append("}");
+                .append("\"readMinutes\":").append(c.getReadMinutes()).append(",")
+                .append("\"vip\":").append(c.isVip()).append(",")
+                .append("\"coinPrice\":").append(c.getCoinPrice()).append(",")
+                .append("\"pages\":[");
+            for (int i = 0; i < pages.size(); i++) {
+                ChapterPage p = pages.get(i);
+                if (i > 0) json.append(",");
+                json.append("{")
+                    .append("\"id\":").append(p.getId()).append(",")
+                    .append("\"pageNo\":").append(p.getPageNo()).append(",")
+                    .append("\"url\":").append(jsonEscape(p.getUrl())).append(",")
+                    .append("\"width\":").append(p.getWidth()).append(",")
+                    .append("\"height\":").append(p.getHeight())
+                    .append("}");
+            }
+            json.append("]}");
 
             resp.getWriter().write(json.toString());
         } catch (SQLException e) {

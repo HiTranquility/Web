@@ -49,6 +49,21 @@
     <c:set var="stLabel" value="Truyện đã gỡ"/>
     <c:set var="stNote" value="xoá mềm, khôi phục được"/>
     <%@ include file="/WEB-INF/views/_partials/_stat-tile.jsp" %>
+
+    <c:set var="stIcon" value="🪙"/><c:set var="stValue" value="${cCoins}"/>
+    <c:set var="stLabel" value="Xu lưu hành"/>
+    <c:set var="stNote" value="ví độc giả & tác giả"/>
+    <%@ include file="/WEB-INF/views/_partials/_stat-tile.jsp" %>
+
+    <c:set var="stIcon" value="💳"/><c:set var="stValue" value="${cTransactions}"/>
+    <c:set var="stLabel" value="Giao dịch xu"/>
+    <c:set var="stNote" value="tặng xu & mở khoá VIP"/>
+    <%@ include file="/WEB-INF/views/_partials/_stat-tile.jsp" %>
+
+    <c:set var="stIcon" value="🛡️"/><c:set var="stValue" value="${cAudits}"/>
+    <c:set var="stLabel" value="Nhật ký kiểm toán"/>
+    <c:set var="stNote" value="thao tác ban quản trị"/>
+    <%@ include file="/WEB-INF/views/_partials/_stat-tile.jsp" %>
 </div>
 
 <%--

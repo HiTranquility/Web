@@ -609,6 +609,10 @@ Thời gian thực thi: ~1.8 giây (100% PASS).
    - Độc giả có thể bôi đen văn bản, chọn màu highlight (Vàng, Lục, Lam, Tím) và đính kèm ghi chú cá nhân (tối đa 500 ký tự). Thẻ `<mark>` được gắn visual dot `.has-note` cùng tooltip nội dung ghi chú.
    - Ngăn kéo quản lý (Drawer) cho phép tìm kiếm live đồng thời trên cả trích dẫn lẫn ghi chú, hỗ trợ sửa và xoá trực tiếp.
 
+5. **Bảng Điều Khiển Quản Trị Toàn Cảnh & Nâng Cấp REST API:**
+   - **Chỉ số kinh tế & bảo mật trên Admin Dashboard (`/admin/dashboard`):** Bổ sung 3 thẻ thống kê thời gian thực: Tổng xu đang lưu hành trên toàn hệ thống (🪙), Tổng số giao dịch xu (💳), và Tổng số lượt nhật ký kiểm toán quản trị (🛡️).
+   - **REST API Comic & VIP Integration (`/api/story/{id}`, `/api/chapter/{id}`):** Bổ sung trường `vip`, `coinPrice` cho chương truyện và trả về mảng danh sách trang tranh (`pages`) với thông số chiều rộng/cao phục vụ ứng dụng di động và tích hợp bên ngoài.
+
 ---
 
 ## 12. Hướng dẫn Vận hành Nhanh

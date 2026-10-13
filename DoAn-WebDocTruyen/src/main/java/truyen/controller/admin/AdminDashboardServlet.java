@@ -20,12 +20,16 @@ public class AdminDashboardServlet extends HttpServlet {
     private StoryDAO storyDAO;
     private ReportDAO reportDAO;
     private TagDAO tagDAO;
+    private truyen.dao.WalletDAO walletDAO;
+    private truyen.dao.AuditDAO auditDAO;
 
     @Override
     public void init() throws ServletException {
         storyDAO = new StoryDAO();
         reportDAO = new ReportDAO();
         tagDAO = new TagDAO();
+        walletDAO = new truyen.dao.WalletDAO();
+        auditDAO = new truyen.dao.AuditDAO();
     }
 
     @Override
@@ -44,6 +48,11 @@ public class AdminDashboardServlet extends HttpServlet {
             request.setAttribute("cViews",    o[3]);
             request.setAttribute("cComments", o[4]);
             request.setAttribute("cDeleted",  o[5]);
+
+            // Thống kê ví xu & kiểm toán hệ thống
+            request.setAttribute("cCoins",        walletDAO.totalCirculatingCoins());
+            request.setAttribute("cTransactions", walletDAO.countTotalTransactions());
+            request.setAttribute("cAudits",       auditDAO.countTotal());
 
             /*
              * Ba bieu do 14 ngay gan nhat.

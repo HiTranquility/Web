@@ -721,4 +721,30 @@ public class WalletDAO {
             }
         }
     }
+
+    /**
+     * Tổng số xu đang lưu hành trong toàn bộ hệ thống.
+     */
+    public int totalCirculatingCoins() throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+        String sql = "SELECT COALESCE(SUM(balance), 0) FROM wallets";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    /**
+     * Tổng số lượt giao dịch xu trong hệ thống.
+     */
+    public int countTotalTransactions() throws SQLException {
+        if (!DBConnection.isReady()) return 0;
+        String sql = "SELECT COUNT(*) FROM transactions";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
 }
