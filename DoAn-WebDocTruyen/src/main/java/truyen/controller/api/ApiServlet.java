@@ -32,12 +32,22 @@ import truyen.util.JsonUtil;
  */
 @WebServlet(name = "ApiServlet", urlPatterns = {"/api/*"})
 public class ApiServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
 
-    private final StoryDAO storyDAO = new StoryDAO();
-    private final ChapterDAO chapterDAO = new ChapterDAO();
-    private final ChapterPageDAO chapterPageDAO = new ChapterPageDAO();
-    private final TagDAO tagDAO = new TagDAO();
-    private final UserDAO userDAO = new UserDAO();
+    private StoryDAO storyDAO;
+    private ChapterDAO chapterDAO;
+    private ChapterPageDAO chapterPageDAO;
+    private TagDAO tagDAO;
+    private UserDAO userDAO;
+
+    @Override
+    public void init() throws ServletException {
+        storyDAO = new StoryDAO();
+        chapterDAO = new ChapterDAO();
+        chapterPageDAO = new ChapterPageDAO();
+        tagDAO = new TagDAO();
+        userDAO = new UserDAO();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
