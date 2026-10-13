@@ -1066,8 +1066,12 @@ try {
         return fetch(CTX + '/bookmark', {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: form(data)
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-CSRF-Token': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: form(data).toString()
         }).then(function (r) { return r.json(); });
     }
 
@@ -1150,11 +1154,24 @@ try {
         lastSent = key;
 
         var body = form({ action: 'progress', chapterId: pos.chapterId, paraNo: pos.paraNo });
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(CTX + '/bookmark', body);
-        } else {
-            fetch(CTX + '/bookmark', { method: 'POST', body: body,
-                                       credentials: 'same-origin', keepalive: true });
+        var payload = body.toString();
+
+        /* Dùng fetch keepalive với headers chuẩn để đảm bảo Tomcat nhận tham số và CsrfFilter xác thực 100% */
+        if (window.fetch) {
+            fetch(CTX + '/bookmark', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-CSRF-Token': CSRF,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: payload,
+                credentials: 'same-origin',
+                keepalive: true
+            }).catch(function () {});
+        } else if (navigator.sendBeacon) {
+            var blob = new Blob([payload], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+            navigator.sendBeacon(CTX + '/bookmark', blob);
         }
     }
 
@@ -1174,11 +1191,17 @@ try {
         var target = m ? parseInt(m[1], 10)
                        : parseInt(document.body.getAttribute('data-resume-para') || '0', 10);
         if (m) {
-            if (target >= 1) scrollToPara(first, target);
-        } else if (target > 1 && scrollToPara(first, target)) {
-            toast('Đã đưa bạn về ' + UNIT + ' ' + target + ', chỗ đang đọc dở.', 'Về đầu chương', function () {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
+            if (target >= 1) {
+                setTimeout(function () { scrollToPara(first, target); }, 150);
+            }
+        } else if (target > 1) {
+            setTimeout(function () {
+                if (scrollToPara(first, target)) {
+                    toast('📍 Đã tự động cuộn tới ' + UNIT + ' ' + target + ' (vị trí bạn đọc dở).', 'Về đầu chương ⬆️', function () {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+            }, 150);
         }
     }
 
