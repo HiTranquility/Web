@@ -20,6 +20,9 @@ public final class RedirectUtil {
             for (int i = 0; i < target.length(); i++) {
                 if (Character.isISOControl(target.charAt(i))) return null;
             }
+            for (String segment : path.split("/")) {
+                if (".".equals(segment) || "..".equals(segment)) return null;
+            }
             String result = uri.getRawPath();
             if (contextPath != null && !contextPath.isEmpty()) {
                 if (result.equals(contextPath)) result = "/";
