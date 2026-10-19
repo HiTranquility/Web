@@ -71,6 +71,23 @@ public class AdminStoryServlet extends HttpServlet {
                 }
                 new truyen.dao.AuditDAO().log(adminId, auditAction, "STORY", id, storyTitle, auditReason);
 
+                // Thông báo kiểm duyệt tới tác giả nếu Admin can thiệp vào truyện của người khác
+                if (story != null && story.getAuthorId() > 0 && story.getAuthorId() != adminId) {
+                    String notifMsg;
+                    if ("DELETED".equals(targetStatus)) {
+                        notifMsg = "Truyện \"" + storyTitle + "\" của bạn đã bị Quản trị viên gỡ bỏ (" + auditReason + "). Bạn có quyền gửi thư khiếu nại nếu có thắc mắc.";
+                    } else {
+                        notifMsg = "Truyện \"" + storyTitle + "\" của bạn đã được Quản trị viên phục hồi trạng thái xuất bản.";
+                    }
+                    new truyen.dao.NotificationDAO().sendNotification(
+                        story.getAuthorId(),
+                        id,
+                        null,
+                        "MODERATION",
+                        notifMsg
+                    );
+                }
+
                 // Post/Redirect/Get — giữ nguyên bộ lọc status nếu có
                 String qs = (status != null && !status.isEmpty()) ? "?status=" + status : "";
                 response.sendRedirect(request.getContextPath() + "/admin/story" + qs);

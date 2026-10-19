@@ -712,6 +712,16 @@ public class StoryServlet extends HttpServlet {
         } else {
             storyDAO.update(story);
             request.getSession().setAttribute("flash", "✍️ Đã lưu thay đổi truyện thành công!");
+            // Thông báo kiểm duyệt nếu Admin/Editor can thiệp sửa truyện của tác giả khác
+            if (me != null && me.getId() != story.getAuthorId() && story.getAuthorId() > 0) {
+                new truyen.dao.NotificationDAO().sendNotification(
+                    story.getAuthorId(),
+                    story.getId(),
+                    null,
+                    "MODERATION",
+                    "Truyện \"" + story.getTitle() + "\" của bạn vừa được Quản trị viên điều chỉnh nội dung/thông tin kiểm duyệt. Bạn có quyền gửi thư khiếu nại nếu có thắc mắc."
+                );
+            }
         }
         tagDAO.setTagsForStory(story.getId(), tagIds);
 
@@ -774,6 +784,16 @@ public class StoryServlet extends HttpServlet {
             return null;
         }
         storyDAO.softDelete(story.getId());   // xoá MỀM
+        User me = ServletHelper.currentUser(request);
+        if (me != null && me.getId() != story.getAuthorId() && story.getAuthorId() > 0) {
+            new truyen.dao.NotificationDAO().sendNotification(
+                story.getAuthorId(),
+                story.getId(),
+                null,
+                "MODERATION",
+                "Truyện \"" + story.getTitle() + "\" của bạn đã bị Quản trị viên gỡ bỏ. Bạn có quyền gửi thư khiếu nại nếu có thắc mắc."
+            );
+        }
         request.getSession().setAttribute("flash", "🗑️ Đã gỡ truyện thành công!");
         response.sendRedirect(request.getContextPath() + "/story?action=mine");
         return null;

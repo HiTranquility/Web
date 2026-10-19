@@ -57,6 +57,7 @@ public class NotificationServlet extends HttpServlet {
                     }
                     json.append("{")
                         .append("\"id\":").append(n.getId()).append(",")
+                        .append("\"type\":").append(truyen.util.JsonUtil.jsonEscape(n.getType() != null ? n.getType() : "SYSTEM")).append(",")
                         .append("\"icon\":").append(truyen.util.JsonUtil.jsonEscape(n.getIcon())).append(",")
                         .append("\"message\":").append(truyen.util.JsonUtil.jsonEscape(n.getMessage())).append(",")
                         .append("\"isRead\":").append(n.isRead()).append(",")
