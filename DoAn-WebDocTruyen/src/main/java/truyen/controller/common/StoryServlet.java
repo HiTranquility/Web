@@ -714,6 +714,8 @@ public class StoryServlet extends HttpServlet {
             request.getSession().setAttribute("flash", "✍️ Đã lưu thay đổi truyện thành công!");
         }
         tagDAO.setTagsForStory(story.getId(), tagIds);
+        try { new truyen.dao.AchievementDAO().getAchievements(story.getAuthorId(), null); }
+        catch (SQLException ex) { log("Chưa cập nhật được thành tích sáng tác."); }
 
         // Post/Redirect/Get — F5 sau khi lưu không gửi lại form
         response.sendRedirect(request.getContextPath()

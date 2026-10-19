@@ -9,7 +9,7 @@
   (chapter.content = "" từ máy chủ).
 ================================================================================
 --%>
-<div class="vip-locked-card" id="vip-lock-container">
+<div class="vip-locked-card" id="vip-lock-container-${chapter.id}">
     <div class="vip-badge-icon" aria-hidden="true">🔒</div>
     <h2 class="vip-title">Chương VIP — Cần mở khoá</h2>
     <p class="vip-desc">
@@ -54,12 +54,15 @@
         </c:when>
 
         <c:when test="${walletBalance >= unlockPrice}">
-            <form id="vipUnlockForm" action="${pageContext.request.contextPath}/chapter" method="post" class="vip-actions"
+            <form id="vipUnlockForm-${chapter.id}" action="${pageContext.request.contextPath}/chapter" method="post" class="vip-actions"
                   onsubmit="if(this.dataset.submitting) return false; this.dataset.submitting='1'; var b=this.querySelector('.vip-btn-unlock'); if(b){b.innerText='Đang mở khoá...';}">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="action" value="unlock">
                 <input type="hidden" name="id" value="${chapter.id}">
-                <button type="button" class="btn btn-primary btn-lg vip-btn-unlock" onclick="openVipUnlockModal();">
+                <button type="submit" class="btn btn-primary btn-lg vip-btn-unlock"
+                        data-confirm="Mở khóa chương ${chapter.chapterNo} với ${unlockPrice} xu? Số dư hiện tại: ${walletBalance} xu."
+                        data-confirm-title="Xác nhận mở khóa chương"
+                        data-confirm-ok="Mở khóa với ${unlockPrice} xu">
                     🔓 Mở khoá chương ngay (<fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu)
                 </button>
             </form>

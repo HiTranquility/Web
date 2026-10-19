@@ -1123,6 +1123,8 @@ try {
         var block = currentBlock();
         if (!block) return null;
         var el = currentPara(block);
+        var units = parasOf(block);
+        if (!el && units.length) el = units[units.length - 1];
         return {
             block: block,
             chapterId: block.getAttribute('data-chapter-id'),
@@ -1152,11 +1154,11 @@ try {
     var lastSent = first ? first.getAttribute('data-chapter-id') + ':'
             + (document.body.getAttribute('data-resume-para') || '0') : '';
 
-    function report() {
+    function report(force) {
         var pos = position();
         if (!pos || !pos.chapterId) return;
         var key = pos.chapterId + ':' + pos.paraNo;
-        if (key === lastSent) return;          // chưa đi đâu thì khỏi gửi
+        if (key === lastSent && force !== true) return;          // chưa đi đâu thì khỏi gửi
         lastSent = key;
 
         var body = form({ action: 'progress', chapterId: pos.chapterId, paraNo: pos.paraNo });
@@ -1181,13 +1183,17 @@ try {
         }
     }
 
+    // Xác nhận tiến độ sau đủ thời gian đọc, kể cả khi người đọc dừng ở cuối chương.
+    setInterval(function () {
+        if (document.visibilityState === 'visible') report(true);
+    }, 30000);
     var idle = null;
     window.addEventListener('scroll', function () {
         clearTimeout(idle);
         idle = setTimeout(report, 1500);
     }, { passive: true });
     document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') report();
+        if (document.visibilityState === 'hidden') report(true);
     });
     window.addEventListener('pagehide', report);
 

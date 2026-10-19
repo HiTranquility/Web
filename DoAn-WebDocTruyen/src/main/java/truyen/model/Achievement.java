@@ -19,6 +19,20 @@ public class Achievement implements Serializable {
     private int targetProgress;
     private String progressText;
     private int progressPercent;
+    private int bonusPercent;
+    private int recommendationWeight;
+    private int rewardCoins;
+    private boolean claimed;
+
+    public int getBonusPercent() { return bonusPercent; }
+    public void setBonusPercent(int value) { bonusPercent = value; }
+    public int getRecommendationWeight() { return recommendationWeight; }
+    public void setRecommendationWeight(int value) { recommendationWeight = value; }
+    public int getRewardCoins() { return rewardCoins; }
+    public void setRewardCoins(int value) { rewardCoins = value; }
+    public boolean isClaimed() { return claimed; }
+    public void setClaimed(boolean value) { claimed = value; }
+    public boolean isClaimable() { return unlocked && !claimed && rewardCoins > 0; }
 
     public Achievement() {}
 

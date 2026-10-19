@@ -568,7 +568,7 @@ public class StoryDAO {
 
         String sql = SELECT_BASE
                    + "JOIN story_tags st ON st.story_id = s.id "
-                   + "WHERE s.status = 'PUBLISHED' "
+                   + "WHERE s.status = 'PUBLISHED' AND u.status = 'ACTIVE' "
                    + "  AND s.id <> ? "
                    + "  AND st.tag_id IN (SELECT tag_id FROM story_tags WHERE story_id = ?) "
                    + "GROUP BY s.id "
@@ -614,7 +614,7 @@ public class StoryDAO {
                    + "    ) pairs "
                    + "    GROUP BY other_story_id "
                    + ") co ON co.other_story_id = s.id "
-                   + "WHERE s.status = 'PUBLISHED' "
+                   + "WHERE s.status = 'PUBLISHED' AND u.status = 'ACTIVE' "
                    + "ORDER BY co.co_count DESC, s.view_count DESC "
                    + "LIMIT ?";
 
@@ -634,46 +634,61 @@ public class StoryDAO {
     }
 
     /**
-     * GỢI Ý TRUYỆN — một khối duy nhất, một quy tắc duy nhất.
-     *
-     * Trước đây trang chi tiết có HAI khối riêng ("cùng thể loại" và "độc giả
-     * cũng đọc"), mỗi khối 0–4 truyện, tự biến mất khi rỗng và có thể trùng
-     * nhau. Trang thì hai khối, trang một, trang không có gì.
-     *
-     * Giờ gộp theo thứ tự ưu tiên, bỏ trùng, cố cho đủ limit:
-     *   1. Độc giả đọc truyện này cũng đọc   — hành vi thật, tín hiệu mạnh nhất
-     *   2. Cùng thể loại                      — truyện mới ít người đọc vẫn có gợi ý
-     *   3. Đang được đọc nhiều (30 ngày)      — lưới an toàn, gần như luôn có
-     *
-     * Mỗi nguồn lấy dư (limit + 1) vì chính truyện đang xem có thể lọt vào.
+     * Gợi ý theo độ phù hợp, cộng uy tín tác giả tối đa 10%, giới hạn hai truyện/tác giả.
+     * Khối từ bốn truyện có một vị trí khám phá tác giả mới cùng thể loại.
+     * Thay thứ tự gộp cố định bằng quy tắc ADR-2026-10-19-achievements.
      */
     public truyen.model.RecommendationSet findRecommendations(int storyId, int limit)
             throws SQLException {
         if (storyId <= 0 || limit <= 0) return new truyen.model.RecommendationSet();
 
+        int poolSize = Math.min(80, Math.max(12, limit * 4));
         List<List<Story>> sources = new ArrayList<>();
         List<String> reasons = new ArrayList<>();
-
-        sources.add(findAlsoRead(storyId, limit));
+        sources.add(findAlsoRead(storyId, poolSize));
         reasons.add(truyen.model.RecommendationSet.REASON_ALSO_READ);
-        sources.add(findSimilar(storyId, limit));
+        sources.add(findSimilar(storyId, poolSize));
         reasons.add(truyen.model.RecommendationSet.REASON_SAME_TAG);
-
-        truyen.model.RecommendationSet partial =
-                truyen.model.RecommendationSet.merge(storyId, limit, sources, reasons);
-        if (partial.size() < limit) {
-            // Chỉ hỏi bảng xếp hạng khi hai nguồn trên chưa đủ — đỡ một câu SQL
-            // cho phần lớn các truyện đã có độc giả.
-            List<Story> trending = findTopByPeriod(30, limit + 1);
-            if (trending.size() < limit + 1) {
-                trending = new ArrayList<>(trending);
-                trending.addAll(findPopular(limit + 1));   // web mới, ít lượt xem gần đây
+        List<Story> trending = new ArrayList<>(findTopByPeriod(30, poolSize));
+        trending.addAll(findPopular(poolSize));
+        sources.add(trending);
+        reasons.add(truyen.model.RecommendationSet.REASON_TRENDING);
+        java.util.Set<Integer> authorIds = new java.util.LinkedHashSet<>();
+        for (List<Story> source : sources) for (Story story : source) authorIds.add(story.getAuthorId());
+        java.util.Map<Integer, Integer> boosts;
+        try {
+            boosts = new AchievementDAO().recommendationBoosts(authorIds);
+            if (DBConnection.isReady()) {
+                java.util.Set<Integer> activeAuthors = boosts.keySet();
+                for (int i = 0; i < sources.size(); i++) {
+                    List<Story> active = new ArrayList<>(sources.get(i));
+                    active.removeIf(story -> !activeAuthors.contains(story.getAuthorId()));
+                    sources.set(i, active);
+                }
             }
-            sources.add(trending);
-            reasons.add(truyen.model.RecommendationSet.REASON_TRENDING);
-            partial = truyen.model.RecommendationSet.merge(storyId, limit, sources, reasons);
+        } catch (SQLException ex) {
+            // Dữ liệu đặc quyền lỗi: vẫn đề xuất theo độ phù hợp, không cấp điểm thưởng giả.
+            boosts = java.util.Collections.emptyMap();
+            if (DBConnection.isReady()) sources.set(2, java.util.Collections.emptyList());
         }
-        return partial;
+        return truyen.model.RecommendationSet.ranked(storyId, limit, sources, reasons, boosts,
+                findNewAuthorStories(storyId, poolSize));
+    }
+
+    private List<Story> findNewAuthorStories(int storyId, int limit) throws SQLException {
+        if (!DBConnection.isReady()) return java.util.Collections.emptyList();
+        String sql = SELECT_BASE
+                + "WHERE s.status = 'PUBLISHED' AND u.status = 'ACTIVE' AND s.id <> ? "
+                + "AND s.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND EXISTS (SELECT 1 FROM chapters c WHERE c.story_id = s.id) "
+                + "AND (SELECT COUNT(*) FROM stories owned WHERE owned.author_id = s.author_id AND owned.status = 'PUBLISHED') = 1 "
+                + "AND EXISTS (SELECT 1 FROM story_tags a JOIN story_tags b ON b.tag_id = a.tag_id WHERE a.story_id = s.id AND b.story_id = ?) "
+                + "ORDER BY s.created_at DESC, s.id DESC LIMIT ?";
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, storyId); ps.setInt(2, storyId); ps.setInt(3, limit);
+            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) list.add(mapRow(rs)); }
+        }
+        return list;
     }
 
     /** Bang xep hang THEO KHOANG THOI GIAN — trang 5. */

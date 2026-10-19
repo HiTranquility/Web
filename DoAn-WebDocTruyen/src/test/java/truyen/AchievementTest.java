@@ -33,13 +33,13 @@ public class AchievementTest {
     }
 
     @Test
-    @DisplayName("Ca 2: Danh sách Huy hiệu mặc định trả về đủ 8 danh hiệu")
-    void testDefaultMockAchievements() {
+    @DisplayName("Ca 2: Danh sách Huy hiệu mặc định trả về đủ 11 danh hiệu")
+    void testDefaultMockAchievements() throws Exception {
         AchievementDAO dao = new AchievementDAO();
         List<Achievement> list = dao.getAchievements(0, null);
 
         assertNotNull(list);
-        assertEquals(8, list.size());
+        assertEquals(11, list.size());
 
         assertTrue(list.stream().anyMatch(a -> "night_owl".equals(a.getId())));
         assertTrue(list.stream().anyMatch(a -> "bookworm".equals(a.getId())));
@@ -53,7 +53,7 @@ public class AchievementTest {
 
     @Test
     @DisplayName("Ca 3: Trạng thái Huy hiệu VIP thay đổi theo trạng thái người dùng")
-    void testVipAchievementStatus() {
+    void testVipAchievementStatus() throws Exception {
         AchievementDAO dao = new AchievementDAO();
 
         // User thường không có VIP

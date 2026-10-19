@@ -202,6 +202,7 @@ class ComicTest {
             Chapter c = new Chapter();
             c.setId(5);
             c.setVip(true);
+            c.setCoinPrice(10);
             return c;
         }
         private final ChapterAccess.UnlockCheck none = (u, c) -> false;

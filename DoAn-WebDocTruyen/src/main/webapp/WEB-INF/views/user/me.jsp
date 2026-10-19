@@ -42,25 +42,7 @@
             </c:if>
         </div>
 
-        <%-- Dải Huy hiệu Thành tích Nổi bật (Featured Badges Showcase) --%>
-        <c:if test="${not empty achievements}">
-            <div class="profile-badges-bar">
-                <span class="badges-bar-label">Huy hiệu:</span>
-                <c:set var="hasAnyUnlocked" value="false"/>
-                <c:forEach var="b" items="${achievements}">
-                    <c:if test="${b.unlocked}">
-                        <c:set var="hasAnyUnlocked" value="true"/>
-                        <span class="profile-badge-pill" title="<c:out value='${b.title}'/>: <c:out value='${b.description}'/>">
-                            <span class="badge-pill-icon">${b.icon}</span>
-                            <span class="badge-pill-name"><c:out value="${b.title}"/></span>
-                        </span>
-                    </c:if>
-                </c:forEach>
-                <c:if test="${not hasAnyUnlocked}">
-                    <span class="profile-badge-empty" title="Đọc truyện và tương tác để mở khoá huy hiệu">🌱 Tân thủ đang tích luỹ huy hiệu</span>
-                </c:if>
-            </div>
-        </c:if>
+        <p><a href="${pageContext.request.contextPath}/user?action=achievements">🏅 Thành tích &amp; Đặc quyền · +${badgeBonus}% thưởng hằng ngày</a></p>
 
         <div class="profile-actions">
             <a class="btn btn-warning btn-coin-topup"
@@ -222,7 +204,7 @@
         <c:forEach var="day" begin="1" end="7">
             <c:set var="isPassed" value="${day lt currentStreak or (day eq currentStreak and not empty todayCheckin)}" />
             <c:set var="isTodayTarget" value="${(empty todayCheckin and day eq (currentStreak % 7 + 1)) or (not empty todayCheckin and day eq currentStreak)}" />
-            <c:set var="coinReward" value="${day eq 1 ? 5 : (day eq 2 ? 10 : (day eq 3 ? 15 : (day eq 4 ? 20 : (day eq 5 ? 25 : (day eq 6 ? 30 : 50)))))}" />
+            <c:set var="coinReward" value="${not empty todayCheckin and day eq todayCheckin.streakDays ? todayCheckin.rewardCoins : checkinRewards[day - 1]}" />
 
             <div class="streak-card ${isPassed ? 'is-claimed' : (isTodayTarget ? 'is-today' : '')} ${day eq 7 ? 'is-jackpot' : ''}"
                  style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 6px; border-radius:10px; text-align:center; border:1px solid ${isPassed ? '#10b981' : (isTodayTarget ? '#f59e0b' : 'var(--ink-700, #e2e8f0)')}; background:${isPassed ? 'rgba(16, 185, 129, 0.08)' : (isTodayTarget ? 'rgba(245, 158, 11, 0.14)' : 'var(--ink-900, #ffffff)')};">
@@ -303,7 +285,11 @@
 <%-- ================================================================================
      TỦ HUY HIỆU & THÀNH TÍCH ĐỘC GIẢ
      ================================================================================ --%>
-<%@ include file="/WEB-INF/views/_partials/_achievements.jsp" %>
+<div class="panel">
+    <h3>🏅 Thành tích &amp; Đặc quyền</h3>
+    <p>Huy hiệu đang cộng thêm <strong>${badgeBonus}%</strong> trên thưởng gốc của điểm danh và nhiệm vụ hằng ngày, tối đa 20%.</p>
+    <a class="btn btn-primary" href="${pageContext.request.contextPath}/user?action=achievements">Xem huy hiệu &amp; nhận xu thành tựu →</a>
+</div>
 
 <%-- ================================================================================
      NHẬT KÝ & NHỊP ĐỌC ĐỘC GIẢ (READING INSIGHTS & ANALYTICS)

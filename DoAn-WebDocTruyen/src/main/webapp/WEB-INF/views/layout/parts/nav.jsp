@@ -175,6 +175,10 @@
                                 <span class="dropdown-item-icon">👤</span>
                                 <span>Hồ sơ cá nhân</span>
                             </a>
+                            <a href="${pageContext.request.contextPath}/user?action=achievements" class="dropdown-item ${activeNav eq 'achievements' ? 'is-active' : ''}">
+                                <span class="dropdown-item-icon">🏅</span>
+                                <span>Thành tích &amp; Đặc quyền</span>
+                            </a>
                             <a href="${pageContext.request.contextPath}/user?action=edit" class="dropdown-item">
                                 <span class="dropdown-item-icon">⚙️</span>
                                 <span>Cài đặt &amp; Sửa hồ sơ</span>

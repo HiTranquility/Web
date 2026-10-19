@@ -118,6 +118,8 @@ public class BookmarkServlet extends HttpServlet {
             switch (action) {
                 case "add":
                     bookmarkDAO.add(me.getId(), storyId);
+                    try { new truyen.dao.AchievementDAO().getAchievements(me.getId(), me); }
+                    catch (SQLException ex) { log("Chưa cập nhật được huy hiệu tủ sách."); }
                     if (isAjax) {
                         writeJson(response, "{\"success\":true,\"bookmarked\":true,\"message\":\"Đã lưu truyện vào tủ sách!\"}");
                         return;
@@ -286,6 +288,12 @@ public class BookmarkServlet extends HttpServlet {
             int paraNo = ReadingProgress.clampPara(
                     parseIntOr(request.getParameter("paraNo"), 0), unitCount(story, chapter));
             progressDAO.save(me.getId(), story.getId(), chapter.getId(), paraNo);
+            long now = System.currentTimeMillis();
+            truyen.util.ReadingEvidence.opened(request.getSession(), chapter.getId(), now);
+            if (truyen.util.ReadingEvidence.qualifies(request.getSession(), chapter.getId(), paraNo, unitCount(story, chapter), now)) {
+                new truyen.dao.ReadingActivityDAO().record(me.getId(), chapter.getId());
+                new truyen.dao.AchievementDAO().getAchievements(me.getId(), me);
+            }
         }
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }

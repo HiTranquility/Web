@@ -53,6 +53,8 @@ public class AppListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent e) {
         truyen.dao.UserDAO.ensureVipColumn();
         truyen.dao.AuditDAO.ensureTable();
+        try { truyen.dao.ReadingActivityDAO.ensureTable(); truyen.dao.AchievementDAO.ensureTables(); }
+        catch (SQLException ex) { e.getServletContext().log("Chưa khởi tạo được bảng thành tích."); }
         refresh(e.getServletContext());
         loadReportCategories(e.getServletContext());
         e.getServletContext().log("AppListener: đã nạp danh sách thể loại");

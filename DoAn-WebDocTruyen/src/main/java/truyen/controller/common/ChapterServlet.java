@@ -232,6 +232,7 @@ public class ChapterServlet extends HttpServlet {
             hideLockedContent(request, me, chapter);
         } else {
             openChapter(request, story, chapter);
+            truyen.util.ReadingEvidence.opened(request.getSession(), chapter.getId(), System.currentTimeMillis());
             /*
              * Tự động ghi lại vị trí đọc (chỉ khi được đọc).
              *
@@ -279,6 +280,9 @@ public class ChapterServlet extends HttpServlet {
 
     private String unlock(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED); return null;
+        }
         User me = ServletHelper.currentUser(request);
         int chapterId = parseIntOr(request.getParameter("id"), 0);
         if (chapterId <= 0) {
@@ -302,8 +306,11 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
+        if (!ChapterAccess.canSeeStory(me, story)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND); return null;
+        }
         // Tác giả hoặc admin hoặc chương không VIP hoặc có quyền READ_VIP_FREE thì không cần mở khoá
-        if (!chapter.isVip() || canEdit(me, story) || me.isAdmin() || me.hasPermission("READ_VIP_FREE")) {
+        if (!chapter.isVip() || chapter.getCoinPrice() <= 0 || canEdit(me, story) || me.isAdmin() || me.hasPermission("READ_VIP_FREE")) {
             response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
             return null;
         }
@@ -324,6 +331,12 @@ public class ChapterServlet extends HttpServlet {
         int finalPrice = origPrice;
         if (discount > 0) {
             finalPrice = Math.max(1, (int) Math.round(origPrice * (100.0 - discount) / 100.0));
+        }
+
+        if (!walletDAO.canPersistUnlocks()) {
+            request.getSession().setAttribute("flashError", "Tạm thời chưa thể lưu quyền mở khóa. Chưa có xu nào bị trừ.");
+            response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
+            return null;
         }
 
         boolean success = walletDAO.unlockChapter(me.getId(), chapter.getId(), story.getAuthorId(), story.getId(), finalPrice);
@@ -522,7 +535,7 @@ public class ChapterServlet extends HttpServlet {
 
         boolean isVip = "1".equals(request.getParameter("isVip")) || "true".equalsIgnoreCase(request.getParameter("isVip")) || "on".equalsIgnoreCase(request.getParameter("isVip"));
         int coinPrice = parseIntOr(request.getParameter("coinPrice"), 0);
-        if (!isVip || coinPrice < 0) {
+        if (!isVip || coinPrice <= 0) {
             coinPrice = 0;
             isVip = false;
         } else if (coinPrice > 10000) {
@@ -579,6 +592,9 @@ public class ChapterServlet extends HttpServlet {
                 notifyFollowers(story, chapter, true);
             }
         }
+
+        try { new truyen.dao.AchievementDAO().getAchievements(story.getAuthorId(), null); }
+        catch (SQLException ex) { log("Chưa cập nhật được thành tích sáng tác."); }
 
         if (isCreate) {
             request.getSession().setAttribute("flash", "🎉 Đã xuất bản chương mới thành công!");

@@ -38,3 +38,6 @@ Thumbs.db
 Final/
 Week 1/
 
+
+__pycache__/
+*.pyc

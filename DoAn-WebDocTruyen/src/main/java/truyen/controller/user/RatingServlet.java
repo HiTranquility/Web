@@ -146,6 +146,8 @@ public class RatingServlet extends HttpServlet {
 
             boolean ok = reviewDAO.upsert(review);
             if (ok) {
+                try { new truyen.dao.AchievementDAO().getAchievements(me.getId(), me); }
+                catch (SQLException ex) { log("Chưa cập nhật được huy hiệu đánh giá."); }
                 request.getSession().setAttribute("flash", "🌟 Cảm ơn bạn đã gửi bài đánh giá!");
             }
         } catch (SQLException e) {

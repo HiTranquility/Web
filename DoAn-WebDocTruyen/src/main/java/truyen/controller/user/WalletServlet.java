@@ -99,6 +99,8 @@ public class WalletServlet extends HttpServlet {
         try {
             boolean ok = walletDAO.transfer(currentUser.getId(), toUserId, storyId, amount, message);
             if (ok) {
+                try { new truyen.dao.AchievementDAO().getAchievements(currentUser.getId(), currentUser); }
+                catch (SQLException ex) { log("Chưa cập nhật được huy hiệu tặng xu."); }
                 int newBalance = walletDAO.getBalance(currentUser.getId());
                 try {
                     String senderName = currentUser.getName() != null && !currentUser.getName().isEmpty()

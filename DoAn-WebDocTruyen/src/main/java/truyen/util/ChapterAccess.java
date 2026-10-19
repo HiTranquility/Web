@@ -49,7 +49,7 @@ public final class ChapterAccess {
     /** Chương VIP này có đang KHOÁ với người này không. */
     public static boolean isLocked(User me, Story story, Chapter chapter, UnlockCheck unlocks)
             throws SQLException {
-        if (chapter == null || !chapter.isVip()) return false;
+        if (chapter == null || !chapter.isVip() || chapter.getCoinPrice() <= 0) return false;
         if (me == null) return true;
         if (canEdit(me, story) || me.hasPermission("READ_VIP_FREE")) return false;
         return !unlocks.hasUnlocked(me.getId(), chapter.getId());

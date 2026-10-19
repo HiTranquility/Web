@@ -436,26 +436,12 @@ public class UserDAO {
      */
     public int countReadChapters(int userId) throws SQLException {
         if (userId <= 0 || !DBConnection.isReady()) return 0;
-        String sql = "SELECT COUNT(DISTINCT chapter_id) FROM view_logs WHERE user_id = ? AND chapter_id IS NOT NULL";
-        try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        ReadingActivityDAO.ensureTable();
+        // Dữ liệu vị trí cũ chỉ được chuyển đổi một lần khi tạo bảng, không tính tiến độ chưa đủ điều kiện mới.
+        String sql = "SELECT COUNT(*) FROM user_chapter_reads WHERE user_id = ?";
+        try (Connection con = DBConnection.get(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int c = rs.getInt(1);
-                    if (c > 0) return c;
-                }
-            }
-        } catch (SQLException ignored) {}
-
-        // Fallback đếm từ reading_progress
-        String sqlRp = "SELECT COUNT(*) FROM reading_progress WHERE user_id = ?";
-        try (Connection con = DBConnection.get();
-             PreparedStatement ps = con.prepareStatement(sqlRp)) {
-            ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
+            try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getInt(1) : 0; }
         }
     }
 }
