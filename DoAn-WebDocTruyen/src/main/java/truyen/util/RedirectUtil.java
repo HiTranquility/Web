@@ -14,8 +14,8 @@ public final class RedirectUtil {
             URI uri = new URI(target);
             String path = uri.getPath();
             if (uri.isAbsolute() || uri.getRawAuthority() != null || path == null
-                    || path.startsWith("//") || path.contains("\\") || path.contains(";")
-                    || !uri.normalize().getPath().equals(path)
+                    || path.contains("//") || path.contains("\\") || path.contains(";")
+                    || !new URI(null, null, path, null).normalize().getPath().equals(path)
                     || target.matches("(?is).*%(?:2f|5c|25|0[0-9a-f]|1[0-9a-f]|7f).*")) return null;
             for (int i = 0; i < target.length(); i++) {
                 if (Character.isISOControl(target.charAt(i))) return null;

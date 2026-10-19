@@ -64,10 +64,15 @@ class NewFeaturesTest {
     }
 
     @Test
-    @DisplayName("Ca 5: GamificationDAO.getDailyQuests trả về đủ 3 nhiệm vụ ngày")
+    @DisplayName("Ca 5: Nhiệm vụ theo đúng chế độ có hoặc không có CSDL")
     void testGamificationQuests() throws SQLException {
         List<DailyQuest> quests = gamificationDAO.getDailyQuests(1);
         assertNotNull(quests);
+        // Không có CSDL thì DAO trả rỗng, không giả lập tiến độ/nhiệm vụ đã nhận.
+        if (!truyen.util.DBConnection.isReady()) {
+            assertTrue(quests.isEmpty());
+            return;
+        }
         assertEquals(3, quests.size());
         assertTrue(quests.stream().anyMatch(q -> "DAILY_CHECKIN".equals(q.getKey())));
         assertTrue(quests.stream().anyMatch(q -> "READ_CHAPTER".equals(q.getKey())));
