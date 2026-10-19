@@ -68,7 +68,10 @@
                             <input type="hidden" name="id" value="${cm.id}">
                             <input type="hidden" name="filter" value="${filter}">
                             <button type="submit"
-                                    class="btn btn-sm ${cm.status eq 'HIDDEN' ? 'btn-ghost' : 'btn-danger'}">
+                                    class="btn btn-sm ${cm.status eq 'HIDDEN' ? 'btn-ghost' : 'btn-danger'}"
+                                    data-confirm="${cm.status eq 'HIDDEN' ? 'Bạn có muốn bỏ ẩn bình luận này để hiển thị lại?' : 'Bạn có chắc chắn muốn ẩn bình luận này không?'}"
+                                    data-confirm-title="${cm.status eq 'HIDDEN' ? 'Xác nhận bỏ ẩn' : 'Xác nhận ẩn bình luận'}"
+                                    data-confirm-ok="${cm.status eq 'HIDDEN' ? 'Đồng ý bỏ ẩn' : 'Đồng ý ẩn'}">
                                 ${cm.status eq 'HIDDEN' ? 'Bỏ ẩn' : 'Ẩn'}
                             </button>
                         </form>

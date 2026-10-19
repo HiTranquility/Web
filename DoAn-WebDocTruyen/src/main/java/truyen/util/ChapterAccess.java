@@ -37,7 +37,7 @@ public final class ChapterAccess {
 
     public static boolean canEdit(User me, Story story) {
         return me != null && story != null
-                && (me.getId() == story.getAuthorId() || me.isAdmin());
+                && (me.getId() == story.getAuthorId() || me.isAdmin() || me.hasPermission("MANAGE_STORIES"));
     }
 
     /** Truyện còn hiện với người này không (bỏ qua luật VIP của từng chương). */
@@ -51,7 +51,7 @@ public final class ChapterAccess {
             throws SQLException {
         if (chapter == null || !chapter.isVip()) return false;
         if (me == null) return true;
-        if (canEdit(me, story)) return false;
+        if (canEdit(me, story) || me.hasPermission("READ_VIP_FREE")) return false;
         return !unlocks.hasUnlocked(me.getId(), chapter.getId());
     }
 

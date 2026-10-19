@@ -70,7 +70,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # ---- Chay ------------------------------------------------------------------
 Write-Host ''
-& java '-Dfile.encoding=UTF-8' -jar $junitJar execute `
+& java -Xms64m -Xmx256m '-Dfile.encoding=UTF-8' -jar $junitJar execute `
     --class-path "$cp;$classes;$testOut" `
     --scan-class-path $testOut `
     --details=tree `

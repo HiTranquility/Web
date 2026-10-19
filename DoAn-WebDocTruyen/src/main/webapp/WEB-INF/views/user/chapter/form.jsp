@@ -214,7 +214,9 @@
         <c:if test="${not empty chapter.id and chapter.id ne 0}">
             <%-- Chương xoá THẬT (khác truyện) nên phải cảnh báo rõ. Dùng POST + token CSRF để bảo mật. --%>
             <button type="submit" form="deleteChapterForm" class="btn btn-danger" style="margin-left:auto"
-                    onclick="return confirm('Xoá hẳn chương này? Toàn bộ nội dung chương sẽ bị xoá vĩnh viễn và không thể khôi phục.')">
+                    data-confirm="Xoá hẳn chương này? Toàn bộ nội dung chương sẽ bị xoá vĩnh viễn và không thể khôi phục."
+                    data-confirm-title="Xác nhận xoá vĩnh viễn"
+                    data-confirm-ok="Đồng ý xoá">
                 Xoá chương</button>
         </c:if>
     </div>
@@ -854,7 +856,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 10. CLIENT-SIDE FORM VALIDATION
+    // Helper toast
+    var toastFn = window.showToast || function (msg) {
+        var old = document.getElementById('global-toast');
+        if (old) old.remove();
+        var toast = document.createElement('div');
+        toast.id = 'global-toast';
+        toast.className = 'toast-bubble';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('is-show'); }, 20);
+        setTimeout(function () {
+            toast.classList.remove('is-show');
+            setTimeout(function () { toast.remove(); }, 280);
+        }, 2800);
+    };
+
+    // 10. CLIENT-SIDE FORM VALIDATION & SUBMIT DEBOUNCE
     function validateForm() {
         if (!titleInput || !contentArea) return true;
         var t = titleInput.value.trim();
@@ -862,25 +880,25 @@ document.addEventListener('DOMContentLoaded', function () {
         var no = chapterNoInput ? parseInt(chapterNoInput.value, 10) : 1;
 
         if (!no || no <= 0) {
-            alert('⚠️ Số thứ tự chương phải là số nguyên dương lớn hơn 0.');
+            toastFn('⚠️ Số thứ tự chương phải là số nguyên dương lớn hơn 0.');
             if (chapterNoInput) chapterNoInput.focus();
             return false;
         }
 
         if (t.length === 0) {
-            alert('⚠️ Vui lòng nhập tiêu đề chương (không được để trống hoặc chỉ chứa khoảng trắng).');
+            toastFn('⚠️ Vui lòng nhập tiêu đề chương (không để trống).');
             titleInput.focus();
             return false;
         }
 
         if (t.length > 200) {
-            alert('⚠️ Tiêu đề chương không được vượt quá 200 ký tự.');
+            toastFn('⚠️ Tiêu đề chương không được vượt quá 200 ký tự.');
             titleInput.focus();
             return false;
         }
 
         if (c.length === 0) {
-            alert('⚠️ Vui lòng nhập nội dung chương (không được để trống).');
+            toastFn('⚠️ Vui lòng nhập nội dung chương (không để trống).');
             if (tabWrite && !tabWrite.classList.contains('active')) {
                 tabWrite.click();
             }
@@ -897,6 +915,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
             } else {
                 clearDraft();
+                var submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    if (submitBtn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+                    submitBtn.disabled = true;
+                    submitBtn.dataset.originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '⏳ Đang lưu chương...';
+                    setTimeout(function () {
+                        submitBtn.disabled = false;
+                        if (submitBtn.dataset.originalText) {
+                            submitBtn.innerHTML = submitBtn.dataset.originalText;
+                        }
+                    }, 8000);
+                }
             }
         });
     }

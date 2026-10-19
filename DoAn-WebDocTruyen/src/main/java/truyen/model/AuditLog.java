@@ -132,6 +132,7 @@ public class AuditLog implements Serializable {
             case "SHOW_COMMENT":  return "Hiện bình luận";
             case "GRANT_COIN":    return "Cấp xu";
             case "REVOKE_COIN":   return "Thu hồi xu";
+            case "CHANGE_ROLE":   return "Đổi vai trò";
             default:              return action;
         }
     }
@@ -149,6 +150,8 @@ public class AuditLog implements Serializable {
             case "SHOW_COMMENT":
             case "GRANT_COIN":
                 return "badge-success";
+            case "CHANGE_ROLE":
+                return "badge-primary";
             default:
                 return "badge-primary";
         }

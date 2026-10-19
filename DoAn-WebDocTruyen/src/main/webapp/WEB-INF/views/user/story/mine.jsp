@@ -136,7 +136,9 @@
 
                         <form method="post" style="display:inline"
                               action="${pageContext.request.contextPath}/story"
-                              onsubmit="return confirm('Gỡ truyện này khỏi kho truyện?')">
+                              data-confirm="Gỡ truyện này khỏi kho truyện?"
+                              data-confirm-title="Xác nhận gỡ truyện"
+                              data-confirm-ok="Đồng ý gỡ">
                             <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="${story.id}">

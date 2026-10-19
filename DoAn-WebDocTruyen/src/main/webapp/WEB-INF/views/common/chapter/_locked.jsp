@@ -54,12 +54,12 @@
         </c:when>
 
         <c:when test="${walletBalance >= unlockPrice}">
-            <form action="${pageContext.request.contextPath}/chapter" method="post" class="vip-actions"
+            <form id="vipUnlockForm" action="${pageContext.request.contextPath}/chapter" method="post" class="vip-actions"
                   onsubmit="if(this.dataset.submitting) return false; this.dataset.submitting='1'; var b=this.querySelector('.vip-btn-unlock'); if(b){b.innerText='Đang mở khoá...';}">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="action" value="unlock">
                 <input type="hidden" name="id" value="${chapter.id}">
-                <button type="submit" class="btn btn-primary btn-lg vip-btn-unlock">
+                <button type="button" class="btn btn-primary btn-lg vip-btn-unlock" onclick="openVipUnlockModal();">
                     🔓 Mở khoá chương ngay (<fmt:formatNumber pattern="#,##0" value="${unlockPrice}"/> xu)
                 </button>
             </form>
@@ -70,7 +70,9 @@
                 <button type="button" class="btn btn-secondary btn-lg" disabled style="opacity:0.85; cursor:not-allowed;">
                     ⚠️ Số dư không đủ (Thiếu <fmt:formatNumber pattern="#,##0" value="${unlockPrice - walletBalance}"/> xu)
                 </button>
-                <a href="${pageContext.request.contextPath}/wallet?action=topup" class="btn btn-warning btn-lg" style="font-weight:700; width:100%; max-width:320px; text-align:center;">
+                <a href="${pageContext.request.contextPath}/wallet?action=topup"
+                   onclick="if(window.openQuickTopupModal){ window.openQuickTopupModal(${unlockPrice - walletBalance}, function(){ location.reload(); }); return false; }"
+                   class="btn btn-warning btn-lg" style="font-weight:700; width:100%; max-width:320px; text-align:center;">
                     🪙 Nạp thêm xu vào ví ngay &rarr;
                 </a>
             </div>
@@ -83,3 +85,7 @@
         </c:otherwise>
     </c:choose>
 </div>
+
+<%-- Hộp thoại xác nhận mở khoá chương VIP --%>
+<%@ include file="/WEB-INF/views/_partials/_vip-unlock-modal.jsp" %>
+

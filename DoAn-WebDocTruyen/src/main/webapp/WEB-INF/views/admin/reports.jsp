@@ -150,7 +150,9 @@
                                         <input type="hidden" name="targetId" value="${r.targetId}">
                                         <input type="hidden" name="status" value="${status}">
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                                onclick="return confirm('Bạn chắc chắn muốn gỡ truyện này và đóng báo cáo?')">
+                                                data-confirm="Bạn chắc chắn muốn gỡ truyện này và đóng báo cáo?"
+                                                data-confirm-title="Xác nhận gỡ truyện vi phạm"
+                                                data-confirm-ok="Đồng ý gỡ">
                                             🚫 Gỡ truyện & Đóng báo cáo</button>
                                     </form>
                                 </c:when>
@@ -163,7 +165,9 @@
                                         <input type="hidden" name="targetId" value="${r.targetId}">
                                         <input type="hidden" name="status" value="${status}">
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                                onclick="return confirm('Bạn chắc chắn muốn ẩn bình luận này và đóng báo cáo?')">
+                                                data-confirm="Bạn chắc chắn muốn ẩn bình luận này và đóng báo cáo?"
+                                                data-confirm-title="Xác nhận ẩn bình luận vi phạm"
+                                                data-confirm-ok="Đồng ý ẩn">
                                             🚫 Ẩn bình luận & Đóng báo cáo</button>
                                     </form>
                                 </c:otherwise>

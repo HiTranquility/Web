@@ -46,6 +46,11 @@ public class RatingServlet extends HttpServlet {
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
 
         if (me == null) {
+            if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+                JsonUtil.sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "{\"success\":false,\"needLogin\":true,\"message\":\"Vui lòng đăng nhập để thực hiện thao tác này.\"}");
+                return;
+            }
             if (storyId > 0) {
                 request.getSession(true).setAttribute("redirectAfterLogin",
                         request.getContextPath() + "/story?action=detail&id=" + storyId + "#reviews");
@@ -164,13 +169,20 @@ public class RatingServlet extends HttpServlet {
         if (reviewId > 0) {
             try {
                 boolean voted = reviewDAO.toggleVote(reviewId, me.getId());
-                // Nếu là AJAX
+                int count = reviewDAO.getHelpfulCount(reviewId);
+                // Nếu là AJAX (ISSUE-031)
                 if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
-                    JsonUtil.sendJson(response, HttpServletResponse.SC_OK, "{\"success\":true,\"voted\":" + voted + "}");
+                    JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
+                            "{\"success\":true,\"voted\":" + voted + ",\"count\":" + count + "}");
                     return;
                 }
             } catch (SQLException e) {
                 log("RatingServlet: không vote được reviewId=" + reviewId, e);
+                if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+                    JsonUtil.sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            "{\"success\":false,\"message\":\"Có lỗi xảy ra khi bình chọn.\"}");
+                    return;
+                }
             }
         }
 

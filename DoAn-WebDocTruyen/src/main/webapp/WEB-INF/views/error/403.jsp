@@ -33,7 +33,11 @@
                 </a>
             </c:when>
             <c:otherwise>
-                <a class="btn btn-ghost" href="${pageContext.request.contextPath}/auth?action=logout">
+                <form id="logout403Form" action="${pageContext.request.contextPath}/auth" method="post" style="display:none;">
+                    <input type="hidden" name="action" value="logout">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
+                </form>
+                <a class="btn btn-ghost" href="#" onclick="event.preventDefault(); document.getElementById('logout403Form').submit();">
                     🔄 Đổi tài khoản
                 </a>
             </c:otherwise>

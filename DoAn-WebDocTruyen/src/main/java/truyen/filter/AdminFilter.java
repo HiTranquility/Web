@@ -14,7 +14,7 @@ import javax.servlet.http.HttpSession;
 import truyen.model.User;
 
 /** CASE 10 — Chặn mọi người không phải admin ở khu quản trị. */
-@WebFilter("/admin/*")
+@WebFilter(urlPatterns = {"/admin", "/admin/*"})
 public class AdminFilter implements Filter {
 
     @Override
@@ -46,14 +46,61 @@ public class AdminFilter implements Filter {
             return;
         }
 
+        String uri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String path = uri.substring(contextPath.length());
+
+        // Phân quyền chi tiết RBAC:
         if (!me.isAdmin()) {
-            /*
-             * sendError chứ KHÔNG phải setStatus.
-             * Chỉ sendError mới kích hoạt <error-page> trong web.xml để hiện
-             * trang lỗi tự làm. setStatus chỉ đặt mã, trang vẫn trắng.
-             */
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
+            boolean isStaff = me.isModerator() || me.isEditor()
+                    || (me.getPermissions() != null && !me.getPermissions().isEmpty());
+
+            if (!isStaff) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            if (path.startsWith("/admin/wallet")) {
+                if (!me.hasPermission("MANAGE_WALLET")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.startsWith("/admin/user")) {
+                if (!me.hasPermission("MANAGE_USERS")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.startsWith("/admin/audit")) {
+                if (!me.hasPermission("MANAGE_SYSTEM") && !me.hasPermission("MANAGE_WALLET")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.startsWith("/admin/tag")) {
+                if (!me.hasPermission("MANAGE_STORIES")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.startsWith("/admin/story")) {
+                if (!me.hasPermission("MANAGE_STORIES")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.startsWith("/admin/comment")) {
+                if (!me.hasPermission("MODERATE_COMMENTS")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.startsWith("/admin/report")) {
+                if (!me.hasPermission("HANDLE_REPORTS")) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } else if (path.equals("/admin") || path.equals("/admin/") || path.startsWith("/admin/dashboard")) {
+                // Cho phép staff vào bảng điều khiển chung
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
         }
 
         chain.doFilter(req, res);

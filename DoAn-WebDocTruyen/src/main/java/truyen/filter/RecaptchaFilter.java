@@ -130,10 +130,13 @@ public class RecaptchaFilter implements Filter {
                 if ("/auth".equals(path)) {
                     request.setAttribute("message", "Không xác minh được bạn là người thật. Vui lòng tải lại trang và thử lại.");
                     request.setAttribute("username", request.getParameter("username"));
+                    request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
                     if ("register".equalsIgnoreCase(action)) {
+                        request.setAttribute("pageTitle", "Đăng ký");
                         request.setAttribute("email", request.getParameter("email"));
                         request.setAttribute("contentPage", "/WEB-INF/views/auth/register.jsp");
                     } else {
+                        request.setAttribute("pageTitle", "Đăng nhập");
                         request.setAttribute("contentPage", "/WEB-INF/views/auth/login.jsp");
                     }
                     request.getRequestDispatcher("/WEB-INF/views/layout/auth.jsp").forward(request, response);

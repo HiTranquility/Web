@@ -82,7 +82,9 @@
                             <input type="hidden" name="id" value="${s.id}">
                             <input type="hidden" name="status" value="${status}">
                             <button type="submit" class="btn btn-ghost btn-sm"
-                                    onclick="return confirm('Khôi phục truyện này lại trạng thái Công khai?')">Khôi phục</button>
+                                    data-confirm="Khôi phục truyện này lại trạng thái Công khai?"
+                                    data-confirm-title="Xác nhận khôi phục"
+                                    data-confirm-ok="Khôi phục">Khôi phục</button>
                         </form>
                     </c:when>
                     <c:when test="${s.status eq 'DRAFT'}">
@@ -93,6 +95,9 @@
                             <input type="hidden" name="id" value="${s.id}">
                             <input type="hidden" name="status" value="${status}">
                             <button type="submit" class="btn btn-primary btn-sm"
+                                    data-confirm="Bạn có chắc chắn muốn duyệt đăng truyện &quot;<c:out value='${s.title}'/>&quot; lên kho truyện công khai?"
+                                    data-confirm-title="Xác nhận duyệt đăng"
+                                    data-confirm-ok="Đồng ý duyệt"
                                     title="Duyệt đăng truyện này lên kho truyện công khai">
                                 ✓ Duyệt đăng</button>
                         </form>
@@ -103,7 +108,9 @@
                             <input type="hidden" name="id" value="${s.id}">
                             <input type="hidden" name="status" value="${status}">
                             <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Gỡ bản nháp này?')">Gỡ</button>
+                                    data-confirm="Gỡ bản nháp này?"
+                                    data-confirm-title="Xác nhận gỡ bản nháp"
+                                    data-confirm-ok="Đồng ý gỡ">Gỡ</button>
                         </form>
                     </c:when>
                     <c:otherwise>
@@ -114,7 +121,9 @@
                             <input type="hidden" name="id" value="${s.id}">
                             <input type="hidden" name="status" value="${status}">
                             <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Gỡ truyện này khỏi kho truyện?')">Gỡ</button>
+                                    data-confirm="Gỡ truyện này khỏi kho truyện?"
+                                    data-confirm-title="Xác nhận gỡ truyện"
+                                    data-confirm-ok="Đồng ý gỡ">Gỡ</button>
                         </form>
                     </c:otherwise>
                 </c:choose>

@@ -80,7 +80,9 @@
                     <c:otherwise>
                         <form method="post" style="display:inline"
                               action="${pageContext.request.contextPath}/admin/tag"
-                              onsubmit="return confirm('Xoá thể loại này?')">
+                              data-confirm="Xoá thể loại này?"
+                              data-confirm-title="Xác nhận xoá thể loại"
+                              data-confirm-ok="Đồng ý xoá">
                             <input type="hidden" name="_csrf" value="${csrfToken}">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="${t.id}">

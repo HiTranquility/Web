@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import truyen.dao.AuditDAO;
+import truyen.dao.RbacDAO;
 import truyen.dao.UserDAO;
 import truyen.model.User;
 import static truyen.util.ServletHelper.parseIntOr;
@@ -99,6 +101,19 @@ public class AdminUserServlet extends HttpServlet {
                     String role = "ADMIN".equals(request.getParameter("role"))
                                 ? "ADMIN" : "USER";
                     userDAO.updateRole(id, role);
+
+                    RbacDAO rbacDAO = new RbacDAO();
+                    if ("ADMIN".equals(role)) {
+                        rbacDAO.assignRole(id, "ADMIN");
+                    } else {
+                        rbacDAO.removeRole(id, "ADMIN");
+                    }
+
+                    User targetUser = userDAO.findById(id);
+                    String targetLabel = targetUser != null ? targetUser.getUsername() : ("User #" + id);
+                    new AuditDAO().log(me != null ? me.getId() : 0, "CHANGE_ROLE", "USER", id, targetLabel,
+                            "ADMIN".equals(role) ? "Thăng cấp lên Quản trị viên (ADMIN)" : "Hạ quyền xuống Thành viên thường (USER)");
+
                     request.getSession().setAttribute("flash", "Đã đổi vai trò tài khoản.");
                 }
             }

@@ -70,6 +70,7 @@ public class CommentServlet extends HttpServlet {
         try {
             if ("delete".equals(action)) {
                 delete(request, response);
+                return;
             } else {
                 add(request, storyId, chapterId);
             }
@@ -228,11 +229,21 @@ public class CommentServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        if (me == null || (me.getId() != c.getUserId() && !me.isAdmin())) {
+        if (me == null || (me.getId() != c.getUserId() && !me.isAdmin() && !me.hasPermission("MODERATE_COMMENTS"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         commentDAO.hide(c.getId());   // XOÁ MỀM — giữ lại làm bằng chứng
+
+        int targetChapterId = c.getChapterId() != null ? c.getChapterId() : 0;
+        int targetStoryId = c.getStoryId();
+        if (targetChapterId > 0) {
+            response.sendRedirect(request.getContextPath()
+                    + "/chapter?action=read&id=" + targetChapterId + "#comments");
+        } else {
+            response.sendRedirect(request.getContextPath()
+                    + "/story?action=detail&id=" + targetStoryId + "#comments");
+        }
     }
 
 }

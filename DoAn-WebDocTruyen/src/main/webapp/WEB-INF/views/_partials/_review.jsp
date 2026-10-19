@@ -63,8 +63,9 @@
             <input type="hidden" name="reviewId" value="${r.id}">
             <input type="hidden" name="storyId" value="${r.storyId}">
             <button type="submit" class="btn btn-sm ${r.votedByMe ? 'btn-primary' : 'btn-ghost'} btn-helpful-vote"
+                    data-voted="${r.votedByMe ? 'true' : 'false'}"
                     title="${r.votedByMe ? 'Bỏ bấm hữu ích' : 'Bấm nếu bạn thấy đánh giá này có ích'}">
-                👍 Có ích (<c:out value="${r.helpfulCount}"/>)
+                👍 Có ích (<span class="helpful-count"><c:out value="${r.helpfulCount}"/></span>)
             </button>
         </form>
     </div>

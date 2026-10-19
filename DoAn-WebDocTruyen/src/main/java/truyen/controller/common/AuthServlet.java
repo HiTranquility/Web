@@ -224,6 +224,7 @@ public class AuthServlet extends HttpServlet {
         user.setPasswordHash(null);
         try {
             user.setReadChapters(userDAO.countReadChapters(user.getId()));
+            new truyen.dao.RbacDAO().populateRbac(user);
         } catch (Exception ignored) {}
         session.setAttribute("currentUser", user);
 
@@ -368,6 +369,17 @@ public class AuthServlet extends HttpServlet {
 
     private void logout(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        /*
+         * CHỐNG LOGOUT CSRF (bug-009):
+         * Chỉ chấp nhận POST mang CSRF token hợp lệ (đã được CsrfFilter kiểm soát).
+         * Nếu gọi bằng GET (ví dụ qua thẻ <img src="/auth?action=logout"> trên trang khác),
+         * từ chối huỷ phiên và chuyển hướng an toàn về trang chủ mà không làm gián đoạn phiên làm việc.
+         */
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.sendRedirect(request.getContextPath() + "/");
+            return;
+        }
+
         HttpSession session = request.getSession(false);
         if (session != null) {
             /*
@@ -618,6 +630,7 @@ public class AuthServlet extends HttpServlet {
         user.setPasswordHash(null);
         try {
             user.setReadChapters(userDAO.countReadChapters(user.getId()));
+            new truyen.dao.RbacDAO().populateRbac(user);
         } catch (Exception ignored) {}
         session.setAttribute("currentUser", user);
 

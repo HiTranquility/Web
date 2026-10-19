@@ -85,7 +85,7 @@
 
     <%-- ================================================= TRANG ẢNH --%>
     <div class="comic-editor">
-        <div class="comic-editor-head">
+        <div class="comic-editor-head" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
             <div>
                 <label for="pageFiles" style="margin-bottom:2px">Trang ảnh *</label>
                 <p class="field-hint" style="margin:0">
@@ -93,7 +93,15 @@
                     Kéo thả để sắp xếp. Tên file kiểu <code>01.jpg, 02.jpg…</code> sẽ tự xếp đúng thứ tự.
                 </p>
             </div>
-            <span class="comic-count" id="pageCount">${chapter.pageCount} trang</span>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-ghost" id="btnReversePages" title="Đảo ngược toàn bộ thứ tự trang (từ dưới lên trên)">
+                    🔄 Đảo ngược thứ tự
+                </button>
+                <button type="button" class="btn btn-sm btn-ghost" id="btnClearNewPages" style="display:none; color:var(--danger, #ef4444);" title="Xóa tất cả các trang ảnh mới vừa thêm">
+                    🗑️ Xóa ảnh mới
+                </button>
+                <span class="comic-count" id="pageCount">${chapter.pageCount} trang</span>
+            </div>
         </div>
 
         <label class="comic-drop" id="dropZone" for="pageFiles">
@@ -127,7 +135,9 @@
         <a class="btn btn-ghost" href="${pageContext.request.contextPath}/story?action=detail&amp;id=${story.id}">Huỷ</a>
         <c:if test="${not isNew}">
             <button type="submit" form="deleteChapterForm" class="btn btn-danger" style="margin-left:auto"
-                    onclick="return confirm('Xoá hẳn chương này cùng toàn bộ ảnh trang? Không khôi phục được.')">
+                    data-confirm="Xoá hẳn chương này cùng toàn bộ ảnh trang? Không khôi phục được."
+                    data-confirm-title="Xác nhận xoá vĩnh viễn"
+                    data-confirm-ok="Đồng ý xoá">
                 Xoá chương</button>
         </c:if>
     </div>
@@ -155,7 +165,24 @@
     var drop   = document.getElementById('dropZone');
     var countEl = document.getElementById('pageCount');
     var warn   = document.getElementById('sizeWarn');
+    var btnReverse = document.getElementById('btnReversePages');
+    var btnClearNew = document.getElementById('btnClearNewPages');
     if (!form || !grid || !input) return;
+
+    var toastFn = window.showToast || function (msg) {
+        var old = document.getElementById('global-toast');
+        if (old) old.remove();
+        var toast = document.createElement('div');
+        toast.id = 'global-toast';
+        toast.className = 'toast-bubble';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('is-show'); }, 20);
+        setTimeout(function () {
+            toast.classList.remove('is-show');
+            setTimeout(function () { toast.remove(); }, 280);
+        }, 2800);
+    };
 
     var MAX_PAGES = parseInt(form.getAttribute('data-max-pages'), 10) || 200;
     var MAX_BYTES = (parseInt(form.getAttribute('data-max-mb'), 10) || 5) * 1024 * 1024;
@@ -165,6 +192,12 @@
     var removed = [];                            // id trang cũ bị bỏ
     var canRebuild = typeof DataTransfer !== 'undefined';
 
+    function updateClearNewButton() {
+        if (!btnClearNew) return;
+        var hasNew = grid.querySelector('.comic-thumb.is-new') !== null;
+        btnClearNew.style.display = hasNew ? 'inline-block' : 'none';
+    }
+
     function renumber() {
         var items = grid.children;
         for (var i = 0; i < items.length; i++) {
@@ -172,6 +205,31 @@
         }
         countEl.textContent = items.length + ' trang';
         countEl.classList.toggle('is-over', items.length > MAX_PAGES);
+        updateClearNewButton();
+    }
+
+    if (btnReverse) {
+        btnReverse.addEventListener('click', function () {
+            var items = Array.prototype.slice.call(grid.children);
+            if (items.length <= 1) return;
+            items.reverse().forEach(function (el) {
+                grid.appendChild(el);
+            });
+            renumber();
+            toastFn('🔄 Đã đảo ngược thứ tự các trang ảnh!');
+        });
+    }
+
+    if (btnClearNew) {
+        btnClearNew.addEventListener('click', function () {
+            var newItems = grid.querySelectorAll('.comic-thumb.is-new');
+            if (newItems.length === 0) return;
+            newItems.forEach(function (el) { el.remove(); });
+            fresh = [];
+            renumber();
+            checkSizes();
+            toastFn('🗑️ Đã xóa toàn bộ trang ảnh mới vừa thêm.');
+        });
     }
 
     /* Sắp theo tên file kiểu "tự nhiên": 2.jpg trước 10.jpg (so số, không so chữ). */
@@ -292,12 +350,12 @@
         var items = grid.children;
         if (items.length === 0 && !input.files.length) {
             e.preventDefault();
-            alert('Chương truyện tranh cần ít nhất một trang ảnh.');
+            toastFn('⚠️ Chương truyện tranh cần ít nhất một trang ảnh.');
             return;
         }
         if (items.length > MAX_PAGES) {
             e.preventDefault();
-            alert('Một chương tối đa ' + MAX_PAGES + ' trang.');
+            toastFn('⚠️ Một chương tối đa ' + MAX_PAGES + ' trang.');
             return;
         }
 
@@ -323,7 +381,15 @@
         document.getElementById('removePages').value = removed.join(',');
 
         var save = document.getElementById('btnSaveComic');
-        if (save) { save.disabled = true; save.textContent = '⏳ Đang tải ảnh lên…'; }
+        if (save) {
+            save.disabled = true;
+            save.dataset.originalText = save.innerHTML;
+            save.innerHTML = '⏳ Đang tải ảnh lên…';
+            setTimeout(function () {
+                save.disabled = false;
+                if (save.dataset.originalText) save.innerHTML = save.dataset.originalText;
+            }, 15000);
+        }
     });
 
     renumber();

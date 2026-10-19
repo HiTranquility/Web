@@ -13,13 +13,16 @@ import truyen.dao.ChapterDAO;
 import truyen.dao.ChapterPageDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.TagDAO;
+import truyen.dao.UnlockDAO;
 import truyen.dao.UserDAO;
 import truyen.model.Chapter;
 import truyen.model.ChapterPage;
 import truyen.model.Story;
 import truyen.model.Tag;
 import truyen.model.User;
+import truyen.util.ChapterAccess;
 import truyen.util.JsonUtil;
+import truyen.util.ServletHelper;
 
 /**
  * RESTful JSON API cho các ứng dụng bên ngoài và di động (ISSUE-009).
@@ -39,6 +42,7 @@ public class ApiServlet extends HttpServlet {
     private ChapterPageDAO chapterPageDAO;
     private TagDAO tagDAO;
     private UserDAO userDAO;
+    private UnlockDAO unlockDAO;
 
     @Override
     public void init() throws ServletException {
@@ -47,6 +51,7 @@ public class ApiServlet extends HttpServlet {
         chapterPageDAO = new ChapterPageDAO();
         tagDAO = new TagDAO();
         userDAO = new UserDAO();
+        unlockDAO = new UnlockDAO();
     }
 
     @Override
@@ -78,7 +83,9 @@ public class ApiServlet extends HttpServlet {
         String tag = req.getParameter("tag");
         String sort = req.getParameter("sort");
         int page = parseInt(req.getParameter("page"), 1);
+        if (page < 1) page = 1;
         int limit = parseInt(req.getParameter("limit"), 20);
+        if (limit < 1) limit = 20;
         if (limit > 50) limit = 50;
         int offset = (page - 1) * limit;
 
@@ -116,6 +123,18 @@ public class ApiServlet extends HttpServlet {
         try {
             Story s = storyDAO.findById(id);
             if (s == null) {
+                sendError(resp, 404, "Khong tim thay truyen");
+                return;
+            }
+
+            User me = ServletHelper.currentUser(req);
+            boolean isAdmin = me != null && me.isAdmin();
+            boolean isAuthor = me != null && me.getId() == s.getAuthorId();
+            if ("DELETED".equals(s.getStatus()) && !isAdmin) {
+                sendError(resp, 404, "Khong tim thay truyen");
+                return;
+            }
+            if ("DRAFT".equals(s.getStatus()) && !isAuthor && !isAdmin) {
                 sendError(resp, 404, "Khong tim thay truyen");
                 return;
             }
@@ -161,7 +180,26 @@ public class ApiServlet extends HttpServlet {
                 return;
             }
 
-            List<ChapterPage> pages = chapterPageDAO.findByChapter(c.getId());
+            Story s = storyDAO.findById(c.getStoryId());
+            User me = ServletHelper.currentUser(req);
+            boolean isAdmin = me != null && me.isAdmin();
+            boolean isAuthor = me != null && s != null && me.getId() == s.getAuthorId();
+            if (s == null || ("DELETED".equals(s.getStatus()) && !isAdmin) || ("DRAFT".equals(s.getStatus()) && !isAuthor && !isAdmin)) {
+                sendError(resp, 404, "Khong tim thay chuong");
+                return;
+            }
+
+            boolean isLocked = false;
+            try {
+                isLocked = ChapterAccess.isLocked(me, s, c, unlockDAO::hasUnlocked);
+            } catch (SQLException ex) {
+                isLocked = c.isVip();
+            }
+
+            List<ChapterPage> pages = isLocked ? java.util.Collections.emptyList() : chapterPageDAO.findByChapter(c.getId());
+            String displayContent = isLocked
+                    ? "[Chương VIP — mở khoá " + c.getCoinPrice() + " xu trên web để đọc nội dung chương này.]"
+                    : c.getContent();
 
             StringBuilder json = new StringBuilder();
             json.append("{")
@@ -169,9 +207,10 @@ public class ApiServlet extends HttpServlet {
                 .append("\"storyId\":").append(c.getStoryId()).append(",")
                 .append("\"chapterNo\":").append(c.getChapterNo()).append(",")
                 .append("\"title\":").append(jsonEscape(c.getTitle())).append(",")
-                .append("\"content\":").append(jsonEscape(c.getContent())).append(",")
+                .append("\"content\":").append(jsonEscape(displayContent)).append(",")
                 .append("\"readMinutes\":").append(c.getReadMinutes()).append(",")
                 .append("\"vip\":").append(c.isVip()).append(",")
+                .append("\"isLocked\":").append(isLocked).append(",")
                 .append("\"coinPrice\":").append(c.getCoinPrice()).append(",")
                 .append("\"pages\":[");
             for (int i = 0; i < pages.size(); i++) {

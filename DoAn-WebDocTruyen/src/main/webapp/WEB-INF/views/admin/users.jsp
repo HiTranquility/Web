@@ -81,7 +81,10 @@
                         <input type="hidden" name="status" value="<c:out value='${statusFilter}'/>">
                         <input type="hidden" name="role"
                                value="${u.admin ? 'USER' : 'ADMIN'}">
-                        <button type="submit" class="btn btn-ghost btn-sm">
+                        <button type="submit" class="btn btn-ghost btn-sm"
+                                data-confirm="Bạn có chắc chắn muốn ${u.admin ? 'hạ quyền quản trị của' : 'nâng lên Quản trị viên cho'} tài khoản &quot;<c:out value='${u.name}'/>&quot;?"
+                                data-confirm-title="Xác nhận thay đổi vai trò"
+                                data-confirm-ok="Đồng ý ${u.admin ? 'hạ quyền' : 'nâng quyền'}">
                             ${u.admin ? '↓ Hạ' : '↑ Nâng'}</button>
                     </form>
                 </c:if>
@@ -111,7 +114,10 @@
                             <input type="hidden" name="id" value="${u.id}">
                             <input type="hidden" name="q" value="<c:out value='${q}'/>">
                             <input type="hidden" name="status" value="<c:out value='${statusFilter}'/>">
-                            <button type="submit" class="btn btn-ghost btn-sm">Bỏ khoá</button>
+                            <button type="submit" class="btn btn-ghost btn-sm"
+                                    data-confirm="Bạn có chắc chắn muốn mở khoá cho tài khoản &quot;<c:out value='${u.name}'/>&quot;?"
+                                    data-confirm-title="Xác nhận mở khoá tài khoản"
+                                    data-confirm-ok="Mở khoá">Bỏ khoá</button>
                         </form>
                     </c:when>
                     <c:otherwise>
@@ -124,7 +130,10 @@
                             <input type="hidden" name="status" value="<c:out value='${statusFilter}'/>">
                             <input type="text" name="reason" placeholder="Lý do…"
                                    class="inline-input">
-                            <button type="submit" class="btn btn-danger btn-sm">Khoá</button>
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    data-confirm="Bạn có chắc chắn muốn khoá tài khoản &quot;<c:out value='${u.name}'/>&quot;?"
+                                    data-confirm-title="Xác nhận khoá tài khoản"
+                                    data-confirm-ok="Khoá tài khoản">Khoá</button>
                         </form>
                     </c:otherwise>
                 </c:choose>

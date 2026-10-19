@@ -70,7 +70,9 @@
                                  có cột status như truyện và bình luận. --%>
                             <form method="post" style="display:inline"
                                   action="${pageContext.request.contextPath}/chapter"
-                                  onsubmit="return confirm('Xoá chương này? Không khôi phục được.')">
+                                  data-confirm="Xoá chương này? Không khôi phục được."
+                                  data-confirm-title="Xác nhận xoá chương"
+                                  data-confirm-ok="Đồng ý xoá">
                                 <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="${ch.id}">

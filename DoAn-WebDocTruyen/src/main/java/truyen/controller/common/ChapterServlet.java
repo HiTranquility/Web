@@ -302,8 +302,8 @@ public class ChapterServlet extends HttpServlet {
             return null;
         }
 
-        // Tác giả hoặc admin hoặc chương không VIP thì không cần mở khoá
-        if (!chapter.isVip() || canEdit(me, story) || "ADMIN".equals(me.getRole())) {
+        // Tác giả hoặc admin hoặc chương không VIP hoặc có quyền READ_VIP_FREE thì không cần mở khoá
+        if (!chapter.isVip() || canEdit(me, story) || me.isAdmin() || me.hasPermission("READ_VIP_FREE")) {
             response.sendRedirect(request.getContextPath() + "/chapter?action=read&id=" + chapterId);
             return null;
         }
@@ -580,6 +580,12 @@ public class ChapterServlet extends HttpServlet {
             }
         }
 
+        if (isCreate) {
+            request.getSession().setAttribute("flash", "🎉 Đã xuất bản chương mới thành công!");
+        } else {
+            request.getSession().setAttribute("flash", "✍️ Đã cập nhật chương thành công!");
+        }
+
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + story.getId());
         return null;
@@ -721,6 +727,7 @@ public class ChapterServlet extends HttpServlet {
         chapterDAO.delete(chapter.getId());
         for (String path : imagePaths) UploadUtil.deletePage(path, getServletContext());
 
+        request.getSession().setAttribute("flash", "🗑️ Đã xoá chương thành công!");
         response.sendRedirect(request.getContextPath()
                 + "/story?action=detail&id=" + story.getId());
         return null;

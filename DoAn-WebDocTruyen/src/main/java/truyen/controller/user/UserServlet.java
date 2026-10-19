@@ -18,6 +18,7 @@ import truyen.dao.FollowDAO;
 import truyen.dao.GamificationDAO;
 import truyen.dao.StoryDAO;
 import truyen.dao.IdentityDAO;
+import truyen.dao.RbacDAO;
 import truyen.dao.UserDAO;
 import truyen.dao.WalletDAO;
 import truyen.model.DailyCheckin;
@@ -254,6 +255,7 @@ public class UserServlet extends HttpServlet {
         fresh.setStoryCount(storyDAO.countPublishedByAuthor(fresh.getId()));
         fresh.setFollowerCount(followDAO.countFollowers(fresh.getId()));
         fresh.setReadChapters(userDAO.countReadChapters(fresh.getId()));
+        new RbacDAO().populateRbac(fresh);
 
         // Cập nhật lại session để mọi trang khác (như đọc truyện, comment) luôn có cấp bậc mới nhất
         request.getSession().setAttribute("currentUser", fresh);
@@ -294,8 +296,13 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+            boolean success = checkin != null;
+            int reward = checkin != null ? checkin.getRewardCoins() : 0;
+            String msg = checkin != null
+                    ? ("Điểm danh thành công! Bạn nhận được +" + reward + " xu.")
+                    : "Bạn đã điểm danh hôm nay rồi!";
             JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
-                    "{\"success\":true,\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+                    "{\"success\":" + success + ",\"reward\":" + reward + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
@@ -343,6 +350,7 @@ public class UserServlet extends HttpServlet {
         if (fresh != null) {
             fresh.setPasswordHash(null);
             fresh.setReadChapters(userDAO.countReadChapters(fresh.getId()));
+            new RbacDAO().populateRbac(fresh);
             request.getSession().setAttribute("currentUser", fresh);
         }
 
@@ -365,8 +373,9 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+            String msg = ok ? "🎁 Nhận thưởng nhiệm vụ thành công!" : "Không thể nhận thưởng hoặc bạn đã nhận trước đó.";
             JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
-                    "{\"success\":" + ok + ",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+                    "{\"success\":" + ok + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
@@ -752,14 +761,6 @@ public class UserServlet extends HttpServlet {
             throws IOException {
         String json = "{\"success\":" + success + ",\"message\":" + JsonUtil.jsonEscape(message) + "}";
         JsonUtil.sendJson(response, statusCode, json);
-    }
-
-    private String escapeJson(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r");
     }
 }
 

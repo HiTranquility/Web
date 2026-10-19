@@ -3,17 +3,25 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%--
 ================================================================================
-  _tip-modal.jsp — HỘP THOẠI TẶNG XU CHO TÁC GIẢ (ISSUE-008 & ISSUE-020)
+  _tip-modal.jsp — HỘP THOẠI TẶNG XU CHO TÁC GIẢ (ISSUE-008 & ISSUE-030)
 ================================================================================
   Cho phép độc giả ủng hộ (tip) xu ảo cho tác giả kèm lời nhắn khích lệ.
   Tích hợp giao dịch phân tán tức thời qua WalletServlet (action=tip).
+  Đồng bộ Design System .app-modal-backdrop, .is-open, phím Escape và bảo vệ
+  xác nhận trước khi trừ xu (chống bấm nhầm mất xu).
 ================================================================================
 --%>
-<div class="tip-modal-backdrop" id="tipModalBackdrop" style="display:none;" onclick="if(event.target===this) closeTipModal();">
-    <div class="tip-modal-card" role="dialog" aria-modal="true" aria-labelledby="tipModalTitle">
-        <div class="tip-modal-head">
-            <h3 id="tipModalTitle">🪙 Tặng Xu Tác Giả</h3>
-            <button type="button" class="tip-modal-close" onclick="closeTipModal()" aria-label="Đóng">&times;</button>
+<div class="app-modal-backdrop tip-modal-backdrop" id="tipModalBackdrop" onclick="if(event.target===this) closeTipModal();">
+    <div class="app-modal-card tip-modal-card" role="dialog" aria-modal="true" aria-labelledby="tipModalTitle">
+        <div class="app-modal-head tip-modal-head">
+            <div class="modal-title-wrap">
+                <span class="modal-title-icon">🪙</span>
+                <div>
+                    <h3 id="tipModalTitle">Tặng Xu Tác Giả</h3>
+                    <p class="modal-subtitle">Gửi tặng xu khích lệ tác giả tiếp tục sáng tác truyện hay</p>
+                </div>
+            </div>
+            <button type="button" class="app-modal-close tip-modal-close" onclick="closeTipModal()" aria-label="Đóng">&times;</button>
         </div>
 
         <form id="tipForm" onsubmit="submitTip(event)">
@@ -22,7 +30,7 @@
             <input type="hidden" name="toUserId" id="tipToUserId" value="">
             <input type="hidden" name="storyId" id="tipStoryId" value="">
 
-            <div class="tip-modal-body">
+            <div class="app-modal-body tip-modal-body">
                 <%-- Tác giả nhận --%>
                 <div class="tip-recipient-box">
                     <div class="tip-recipient-icon">✍️</div>
@@ -40,7 +48,9 @@
                     <span>Số dư ví của bạn:</span>
                     <span class="tip-current-balance">
                         <b id="tipModalBalance"><fmt:formatNumber pattern="#,##0" value="${walletBalance != null ? walletBalance : 0}"/></b> xu
-                        <a href="${pageContext.request.contextPath}/wallet?action=topup" class="tip-topup-btn" target="_blank" title="Nạp thêm xu vào ví">+ Nạp xu</a>
+                        <a href="${pageContext.request.contextPath}/wallet?action=topup"
+                           onclick="if(window.openQuickTopupModal){ var diff = (parseInt(document.getElementById('tipAmountInput').value, 10)||50) - userBalance; window.openQuickTopupModal(diff > 0 ? diff : 0, function(nb){ userBalance = nb; checkBalanceSufficiency(parseInt(document.getElementById('tipAmountInput').value, 10)); }); return false; }"
+                           class="tip-topup-btn" title="Nạp thêm xu vào ví">+ Nạp nhanh</a>
                     </span>
                 </div>
 
@@ -76,7 +86,7 @@
                 <div id="tipStatusAlert" class="tip-status-alert" style="display:none;"></div>
             </div>
 
-            <div class="tip-modal-foot">
+            <div class="app-modal-foot tip-modal-foot">
                 <button type="button" class="btn btn-ghost" onclick="closeTipModal()">Huỷ</button>
                 <button type="submit" class="btn btn-warning tip-submit-btn" id="tipSubmitBtn">
                     🎁 Gửi Tặng <span id="tipBtnAmount">50</span> Xu
@@ -93,6 +103,16 @@
     function formatNumber(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
+
+    // Đóng bằng phím Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            var modal = document.getElementById('tipModalBackdrop');
+            if (modal && modal.classList.contains('is-open')) {
+                closeTipModal();
+            }
+        }
+    });
 
     window.triggerTipModal = function(btn) {
         if (!btn) return;
@@ -134,13 +154,13 @@
             submitBtn.innerHTML = '🎁 Gửi Tặng <span id="tipBtnAmount">50</span> Xu';
         }
 
-        modal.style.display = 'flex';
+        modal.classList.add('is-open');
         document.body.style.overflow = 'hidden';
     };
 
     window.closeTipModal = function() {
         var modal = document.getElementById('tipModalBackdrop');
-        if (modal) modal.style.display = 'none';
+        if (modal) modal.classList.remove('is-open');
         document.body.style.overflow = '';
     };
 
@@ -182,7 +202,8 @@
         var alertEl = document.getElementById('tipStatusAlert');
         var submitBtn = document.getElementById('tipSubmitBtn');
         if (amt > userBalance) {
-            showTipStatus('⚠️ Số dư ví của bạn không đủ (' + formatNumber(userBalance) + ' xu). Vui lòng nạp thêm xu nhé!', 'warn');
+            var diff = amt - userBalance;
+            showTipStatus('⚠️ Số dư ví không đủ (' + formatNumber(userBalance) + ' xu, thiếu ' + formatNumber(diff) + ' xu). <a href="#" onclick="openQuickTopupModal(' + diff + ', function(nb){ userBalance = nb; checkBalanceSufficiency(amt); }); return false;" style="color:#f59e0b;font-weight:700;text-decoration:underline;margin-left:4px;">Nạp ngay &rarr;</a>', 'warn');
             if (submitBtn) submitBtn.disabled = true;
         } else {
             hideTipStatus();
@@ -210,6 +231,8 @@
         var amount = parseInt(document.getElementById('tipAmountInput').value, 10);
         var message = document.getElementById('tipMessageInput').value;
         var csrf = document.getElementById('tipCsrf').value;
+        var authorNameEl = document.getElementById('tipAuthorName');
+        var authorName = authorNameEl ? authorNameEl.textContent.trim() : 'tác giả';
         var submitBtn = document.getElementById('tipSubmitBtn');
 
         if (!toUserId || !amount || amount <= 0) {
@@ -222,65 +245,80 @@
             return;
         }
 
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Đang chuyển xu...';
-        }
+        var doExecuteTip = function() {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Đang chuyển xu...';
+            }
 
-        var params = new URLSearchParams();
-        params.append('_csrf', csrf);
-        params.append('action', 'tip');
-        params.append('toUserId', toUserId);
-        if (storyId) params.append('storyId', storyId);
-        params.append('amount', amount);
-        params.append('message', message);
+            var params = new URLSearchParams();
+            params.append('_csrf', csrf);
+            params.append('action', 'tip');
+            params.append('toUserId', toUserId);
+            if (storyId) params.append('storyId', storyId);
+            params.append('amount', amount);
+            params.append('message', message);
 
-        fetch('${pageContext.request.contextPath}/wallet', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: params.toString()
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.success) {
-                userBalance = data.newBalance;
-                var balEl = document.getElementById('tipModalBalance');
-                if (balEl) balEl.textContent = formatNumber(userBalance);
+            fetch('${pageContext.request.contextPath}/wallet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: params.toString()
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    userBalance = data.newBalance;
+                    var balEl = document.getElementById('tipModalBalance');
+                    if (balEl) balEl.textContent = formatNumber(userBalance);
 
-                // Cập nhật huy hiệu xu trên header nếu có
-                var headerCoinVal = document.querySelector('.coin-badge-val');
-                if (headerCoinVal) headerCoinVal.textContent = formatNumber(userBalance);
-                var dropdownCoinTag = document.querySelector('.dropdown-coin-tag');
-                if (dropdownCoinTag) dropdownCoinTag.textContent = formatNumber(userBalance) + ' xu';
+                    // Cập nhật huy hiệu xu trên header nếu có
+                    var headerCoinVal = document.querySelector('.coin-badge-val');
+                    if (headerCoinVal) headerCoinVal.textContent = formatNumber(userBalance);
+                    var dropdownCoinTag = document.querySelector('.dropdown-coin-tag');
+                    if (dropdownCoinTag) dropdownCoinTag.textContent = formatNumber(userBalance) + ' xu';
 
-                showTipStatus('🎉 ' + data.message, 'success');
-                if (window.launchCelebration) {
-                    window.launchCelebration('coins');
+                    showTipStatus('🎉 ' + data.message, 'success');
+                    if (window.launchCelebration) {
+                        window.launchCelebration('coins');
+                    }
+                    if (submitBtn) {
+                        submitBtn.textContent = '✓ Đã Gửi Thành Công!';
+                    }
+                    setTimeout(function() {
+                        closeTipModal();
+                    }, 1800);
+                } else {
+                    showTipStatus('❌ ' + (data.message || 'Giao dịch không thành công.'), 'error');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '🎁 Gửi Tặng <span id="tipBtnAmount">' + amount + '</span> Xu';
+                    }
                 }
-                if (submitBtn) {
-                    submitBtn.textContent = '✓ Đã Gửi Thành Công!';
-                }
-                setTimeout(function() {
-                    closeTipModal();
-                }, 1800);
-            } else {
-                showTipStatus('❌ ' + (data.message || 'Giao dịch không thành công.'), 'error');
+            })
+            .catch(function(err) {
+                showTipStatus('❌ Lỗi kết nối mạng, vui lòng thử lại sau.', 'error');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '🎁 Gửi Tặng <span id="tipBtnAmount">' + amount + '</span> Xu';
                 }
-            }
-        })
-        .catch(function(err) {
-            showTipStatus('❌ Lỗi kết nối mạng, vui lòng thử lại sau.', 'error');
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '🎁 Gửi Tặng <span id="tipBtnAmount">' + amount + '</span> Xu';
-            }
-        });
+            });
+        };
+
+        var confirmPrompt = 'Bạn có chắc chắn muốn gửi tặng ' + formatNumber(amount) + ' xu cho tác giả "' + authorName + '" không?';
+        if (window.showConfirmModal) {
+            window.showConfirmModal(confirmPrompt, {
+                title: 'Xác nhận tặng xu',
+                confirmText: 'Tặng ' + formatNumber(amount) + ' xu',
+                cancelText: 'Huỷ bỏ',
+                isDanger: false,
+                onConfirm: doExecuteTip
+            });
+        } else if (confirm(confirmPrompt)) {
+            doExecuteTip();
+        }
     };
 })();
 </script>

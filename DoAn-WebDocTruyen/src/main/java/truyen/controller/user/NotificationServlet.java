@@ -75,14 +75,8 @@ public class NotificationServlet extends HttpServlet {
         }
 
         if ("mark_read".equals(action)) {
-            try {
-                notificationDAO.markAllRead(me.getId());
-                truyen.util.JsonUtil.sendJson(response, HttpServletResponse.SC_OK, "{\"success\":true}");
-                return;
-            } catch (SQLException e) {
-                truyen.util.JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi CSDL");
-                return;
-            }
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Thao tác yêu cầu phương thức POST");
+            return;
         }
 
         try {
@@ -105,5 +99,34 @@ public class NotificationServlet extends HttpServlet {
         getServletContext()
                 .getRequestDispatcher("/WEB-INF/views/layout/main.jsp")
                 .forward(request, response);
+    }
+
+    /**
+     * Đánh dấu đã đọc — bắt buộc POST + CsrfFilter để chống CSRF.
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
+        User me = (User) request.getSession().getAttribute("currentUser");
+        if (me == null) {
+            truyen.util.JsonUtil.sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Chưa đăng nhập");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        if ("mark_read".equals(action)) {
+            try {
+                notificationDAO.markAllRead(me.getId());
+                truyen.util.JsonUtil.sendJson(response, HttpServletResponse.SC_OK, "{\"success\":true}");
+                return;
+            } catch (SQLException e) {
+                truyen.util.JsonUtil.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi CSDL");
+                return;
+            }
+        }
+
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thao tác không hợp lệ");
     }
 }

@@ -174,40 +174,54 @@
 </div>
 
 <%-- Modal điều chỉnh xu của Admin --%>
-<div id="adjustModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:var(--surface); border:1px solid var(--ink-700); border-radius:var(--r-md); padding:24px; max-width:440px; width:90%;">
-        <h3 style="margin-top:0; margin-bottom:12px;">⚙️ Điều chỉnh Ví xu</h3>
-        <p style="color:var(--text-mut); font-size:.88rem; margin-bottom:16px;">
-            Tài khoản: <b id="modalUsername" style="color:var(--text);"></b> (Số dư hiện tại: <b id="modalBalance"></b> xu)
-        </p>
+<div class="app-modal-backdrop" id="adjustModal" onclick="if(event.target===this) closeAdjustModal();">
+    <div class="app-modal-card" style="max-width:440px;" role="dialog" aria-modal="true" aria-labelledby="adjustModalTitle">
+        <div class="app-modal-head">
+            <div class="modal-title-wrap">
+                <span class="modal-title-icon">⚙️</span>
+                <div>
+                    <h3 id="adjustModalTitle">Điều chỉnh Ví xu</h3>
+                    <p class="modal-subtitle">
+                        Tài khoản: <b id="modalUsername" style="color:var(--text);"></b> (Số dư hiện tại: <b id="modalBalance"></b> xu)
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="app-modal-close" onclick="closeAdjustModal()" aria-label="Đóng">&times;</button>
+        </div>
 
         <form action="${pageContext.request.contextPath}/admin/wallet" method="post">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
             <input type="hidden" name="action" value="adjust">
             <input type="hidden" name="userId" id="modalUserId">
 
-            <div style="margin-bottom:12px;">
-                <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text-mut);">Hành động:</label>
-                <select name="type" style="width:100%; padding:8px 12px; border-radius:var(--r-sm); border:1px solid var(--ink-700); background:var(--ink-900); color:var(--text);">
-                    <option value="grant">➕ Cấp thêm xu (Cộng)</option>
-                    <option value="revoke">➖ Thu hồi xu (Trừ)</option>
-                </select>
+            <div class="app-modal-body" style="padding:16px 20px;">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text-mut);">Hành động:</label>
+                    <select name="type" style="width:100%; padding:8px 12px; border-radius:var(--r-sm); border:1px solid var(--ink-700); background:var(--ink-900); color:var(--text);">
+                        <option value="grant">➕ Cấp thêm xu (Cộng)</option>
+                        <option value="revoke">➖ Thu hồi xu (Trừ)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text-mut);">Số xu:</label>
+                    <input type="number" name="amount" min="1" max="100000" required placeholder="Nhập số xu (VD: 500)"
+                           style="width:100%; padding:8px 12px; border-radius:var(--r-sm); border:1px solid var(--ink-700); background:var(--ink-900); color:var(--text);">
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text-mut);">Lý do điều chỉnh (Bắt buộc):</label>
+                    <textarea name="reason" rows="3" required placeholder="Ghi rõ lý do (VD: Tặng thưởng sự kiện / Xử lý khiếu nại tặng nhầm...)"
+                              style="width:100%; padding:8px 12px; border-radius:var(--r-sm); border:1px solid var(--ink-700); background:var(--ink-900); color:var(--text); font-size:.9rem;"></textarea>
+                </div>
             </div>
 
-            <div style="margin-bottom:12px;">
-                <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text-mut);">Số xu:</label>
-                <input type="number" name="amount" min="1" max="100000" required placeholder="Nhập số xu (VD: 500)"
-                       style="width:100%; padding:8px 12px; border-radius:var(--r-sm); border:1px solid var(--ink-700); background:var(--ink-900); color:var(--text);">
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <label style="display:block; margin-bottom:6px; font-size:.85rem; color:var(--text-mut);">Lý do điều chỉnh (Bắt buộc):</label>
-                <textarea name="reason" rows="3" required placeholder="Ghi rõ lý do (VD: Tặng thưởng sự kiện / Xử lý khiếu nại tặng nhầm...)"
-                          style="width:100%; padding:8px 12px; border-radius:var(--r-sm); border:1px solid var(--ink-700); background:var(--ink-900); color:var(--text); font-size:.9rem;"></textarea>
-            </div>
-
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <div class="app-modal-foot" style="display:flex; justify-content:flex-end; gap:8px;">
                 <button type="button" class="btn btn-sm btn-ghost" onclick="closeAdjustModal()">Huỷ</button>
-                <button type="submit" class="btn btn-sm btn-primary">Xác nhận thực hiện</button>
+                <button type="submit" class="btn btn-sm btn-primary"
+                        data-confirm="Bạn có chắc chắn muốn thực hiện điều chỉnh số dư ví của thành viên này không?"
+                        data-confirm-title="Xác nhận điều chỉnh ví"
+                        data-confirm-ok="Đồng ý thực hiện">Xác nhận thực hiện</button>
             </div>
         </form>
     </div>
@@ -219,11 +233,26 @@ function openAdjustModal(userId, username, balance) {
     document.getElementById('modalUsername').innerText = '@' + username;
     document.getElementById('modalBalance').innerText = Number(balance).toLocaleString();
     var modal = document.getElementById('adjustModal');
-    modal.style.display = 'flex';
+    if (modal) {
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function closeAdjustModal() {
     var modal = document.getElementById('adjustModal');
-    modal.style.display = 'none';
+    if (modal) {
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
 }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+        var modal = document.getElementById('adjustModal');
+        if (modal && modal.classList.contains('is-open')) {
+            closeAdjustModal();
+        }
+    }
+});
 </script>

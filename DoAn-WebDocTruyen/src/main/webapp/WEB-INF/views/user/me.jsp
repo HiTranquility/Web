@@ -192,7 +192,10 @@
             </div>
 
             <div class="vip-submit-wrap">
-                <button type="submit" class="btn-vip-upgrade">
+                <button type="submit" class="btn-vip-upgrade"
+                        data-confirm="Bạn có chắc chắn muốn dùng xu trong ví để kích hoạt/gia hạn gói Hội viên VIP này không?"
+                        data-confirm-title="Xác nhận nâng cấp VIP"
+                        data-confirm-ok="Đồng ý kích hoạt">
                     ⭐ Kích Hoạt / Gia Hạn VIP Ngay
                 </button>
                 <span class="vip-balance-hint">Số dư ví của bạn: 🪙 <b><fmt:formatNumber pattern="#,##0" value="${walletBalance}"/></b> xu</span>
@@ -278,7 +281,7 @@
                             <span class="badge badge-success" style="background:rgba(16, 185, 129, 0.15); color:#10b981; border:1px solid rgba(16, 185, 129, 0.35); padding:6px 14px; border-radius:99px; font-weight:700;">✓ Đã nhận</span>
                         </c:when>
                         <c:when test="${q.completed}">
-                            <form action="${pageContext.request.contextPath}/user" method="post" style="display:inline; margin:0;">
+                            <form action="${pageContext.request.contextPath}/user" method="post" style="display:inline; margin:0;" class="form-claim-quest">
                                 <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="claim-quest">
                                 <input type="hidden" name="key" value="${q.key}">
@@ -522,3 +525,118 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function updateBalanceUI(newBalance) {
+        if (newBalance === undefined || newBalance === null) return;
+        var headerCoinVal = document.querySelector('.coin-badge-val');
+        if (headerCoinVal) headerCoinVal.textContent = formatNumber(newBalance);
+        var dropdownCoinTag = document.querySelector('.dropdown-coin-tag');
+        if (dropdownCoinTag) dropdownCoinTag.textContent = formatNumber(newBalance) + ' xu';
+        var vipHint = document.querySelector('.vip-balance-hint b');
+        if (vipHint) vipHint.textContent = formatNumber(newBalance);
+    }
+
+    // 1. Điểm danh hàng ngày qua AJAX & Debounce (ISSUE-030)
+    var checkinForm = document.getElementById('form-daily-checkin');
+    var checkinBtn = document.getElementById('btn-daily-checkin');
+    if (checkinForm && checkinBtn) {
+        checkinForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (checkinBtn.disabled) return;
+            checkinBtn.disabled = true;
+            var originalText = checkinBtn.innerHTML;
+            checkinBtn.innerHTML = '⏳ Đang điểm danh...';
+
+            var formData = new URLSearchParams(new FormData(checkinForm));
+            fetch(checkinForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData.toString()
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    updateBalanceUI(data.newBalance);
+                    if (window.launchCelebration) {
+                        window.launchCelebration('coins');
+                    }
+                    var wrap = document.querySelector('.checkin-action-wrap');
+                    if (wrap) {
+                        wrap.innerHTML = '<div class="checkin-done-pill" id="checkin-completed-badge" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:99px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.35); color:#10b981; font-weight:700; font-size:0.92rem;">'
+                            + '✅ ' + (data.message || 'Bạn đã hoàn thành điểm danh hôm nay!')
+                            + '</div><p class="muted small" style="margin-top:8px; color:var(--text-mut);">Quay lại vào ngày mai để tiếp tục duy trì chuỗi nhận quà nhé!</p>';
+                    }
+                    if (window.showToast) {
+                        window.showToast('🎉 ' + (data.message || 'Điểm danh thành công!'));
+                    }
+                } else {
+                    checkinBtn.disabled = false;
+                    checkinBtn.innerHTML = originalText;
+                    if (window.showToast) {
+                        window.showToast('ℹ️ ' + (data.message || 'Bạn đã điểm danh hôm nay rồi!'));
+                    }
+                }
+            })
+            .catch(function(err) {
+                checkinForm.submit();
+            });
+        });
+    }
+
+    // 2. Nhận thưởng nhiệm vụ hàng ngày qua AJAX & Debounce (ISSUE-030)
+    var questForms = document.querySelectorAll('.form-claim-quest');
+    questForms.forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = form.querySelector('button[type="submit"]');
+            if (!btn || btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Đang nhận...';
+
+            var formData = new URLSearchParams(new FormData(form));
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData.toString()
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    updateBalanceUI(data.newBalance);
+                    if (window.launchCelebration) {
+                        window.launchCelebration('coins');
+                    }
+                    var parent = form.parentElement;
+                    if (parent) {
+                        parent.innerHTML = '<span class="badge badge-success" style="background:rgba(16, 185, 129, 0.15); color:#10b981; border:1px solid rgba(16, 185, 129, 0.35); padding:6px 14px; border-radius:99px; font-weight:700;">✓ Đã nhận</span>';
+                    }
+                    if (window.showToast) {
+                        window.showToast('🎁 ' + (data.message || 'Nhận thưởng nhiệm vụ thành công!'));
+                    }
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '🎁 Nhận thưởng';
+                    if (window.showToast) {
+                        window.showToast('⚠️ ' + (data.message || 'Không thể nhận thưởng.'));
+                    }
+                }
+            })
+            .catch(function(err) {
+                form.submit();
+            });
+        });
+    });
+})();
+</script>

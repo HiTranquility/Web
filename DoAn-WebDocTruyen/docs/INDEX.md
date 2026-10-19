@@ -56,7 +56,8 @@ docs/
 
 | Câu hỏi trong đầu | Mở file |
 |-------------------|---------|
-| ⭐ **"Xem tổng hợp toàn bộ hệ thống (38 trang, 50 chức năng, 18 modules, 175 tests, CSDL)"** | **[TONG-HOP-HE-THONG.md](TONG-HOP-HE-THONG.md)** |
+| ⭐ **"Xem tổng hợp toàn bộ hệ thống (38 trang, 52 chức năng, 32 modules, 175 tests, CSDL)"** | **[TONG-HOP-HE-THONG.md](TONG-HOP-HE-THONG.md)** |
+| 📑 **"Xem báo cáo phân tích toàn diện dự án & ma trận phân quyền RBAC"** | **[BAO_CAO_TONG_HOP_DU_AN_VA_PHAN_QUYEN.md](BAO_CAO_TONG_HOP_DU_AN_VA_PHAN_QUYEN.md)** |
 | 🎨 **"Xem tổng hợp toàn bộ giao diện (38 trang JSP, 5 layouts, 28 cải tiến UI/UX)"** | **[GIAO-DIEN.md](GIAO-DIEN.md)** |
 | 🧭 **"Sơ đồ trực quan từ UI/Mảng Frontend ➔ Backend ➔ Database (ký hiệu, các bước)"** | **[guides/visual-flow-code-tinh-nang-moi.md](guides/visual-flow-code-tinh-nang-moi.md)** |
 | ⚡ **"Mẹo nhớ thần tốc: Thẻ tag Frontend, @p, Scopes Context, Lớp DAO JDBC"** | **[guides/MEO-NHO-CHEAT-SHEET.md](guides/MEO-NHO-CHEAT-SHEET.md)** |

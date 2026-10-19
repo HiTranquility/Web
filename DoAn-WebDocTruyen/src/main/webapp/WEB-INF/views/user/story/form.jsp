@@ -49,7 +49,7 @@
 
             <div class="cover-edit-box">
                 <div class="cover-preview-wrap">
-                    <div id="cover-preview-box" class="story-cover-preview">
+                    <div id="cover-preview-box" class="story-cover-preview" title="Bấm hoặc kéo thả ảnh vào đây để đổi ảnh bìa" style="cursor:pointer; position:relative; overflow:hidden;">
                         <c:choose>
                             <c:when test="${not empty story.coverUrl}">
                                 <c:set var="cvUrl"     value="${story.coverUrl}"/>
@@ -61,20 +61,26 @@
                                 <span id="cover-empty-placeholder" style="font-size:2.4rem; color:var(--text-mut);">📖</span>
                             </c:otherwise>
                         </c:choose>
+                        <div id="cover-drop-overlay" style="display:none; position:absolute; inset:0; background:rgba(245,158,11,0.22); border:2px dashed #f59e0b; border-radius:inherit; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:0.88rem; backdrop-filter:blur(2px); z-index:2;">
+                            📥 Thả ảnh vào đây
+                        </div>
                     </div>
                 </div>
 
                 <div class="cover-controls">
-                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
                         <label for="coverFile" class="file-upload-btn">
                             <span>📁 Chọn ảnh bìa từ máy</span>
                         </label>
                         <input type="file" id="coverFile" name="coverFile"
                                accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">
+                        <button type="button" id="btnRemoveCoverFile" class="btn btn-sm btn-ghost" style="display:none; color:var(--danger, #ef4444); padding:4px 10px;" title="Hủy file ảnh vừa chọn">
+                            ✕ Hủy chọn file
+                        </button>
                         <span id="coverFileName" class="cover-file-status">Chưa chọn tệp mới</span>
                     </div>
                     <p class="field-hint" style="margin:6px 0 12px 0;">
-                        PNG, JPG, GIF hoặc WebP (tối đa 2 MB). Tỷ lệ chuẩn 3:4.
+                        PNG, JPG, GIF hoặc WebP (tối đa 2 MB). Tỷ lệ chuẩn 3:4. Có thể <strong>kéo thả trực tiếp</strong> ảnh vào ô xem trước.
                     </p>
 
                     <label for="coverUrl" class="field-label-sub">…hoặc dán đường dẫn ảnh:</label>
@@ -177,7 +183,9 @@
             <%-- Gỡ truyện là XOÁ MỀM nên khôi phục được — nói rõ trong lời hỏi
                  để người dùng không hoảng. Dùng POST + token CSRF để bảo mật. --%>
             <button type="submit" form="deleteStoryForm" class="btn btn-danger" style="margin-left:auto"
-                    onclick="return confirm('Gỡ truyện này khỏi trang? Admin có thể khôi phục lại.')">
+                    data-confirm="Gỡ truyện này khỏi trang? Admin có thể khôi phục lại."
+                    data-confirm-title="Xác nhận gỡ truyện"
+                    data-confirm-ok="Đồng ý gỡ">
                 Gỡ truyện</button>
         </c:if>
     </div>
@@ -284,26 +292,108 @@ document.addEventListener('DOMContentLoaded', function () {
         updateTagCount();
     }
 
-    // 5. XỬ LÝ CHỌN VÀ XEM TRƯỚC ẢNH BÌA
-    if (coverFileInput && previewBox) {
+    // Helper toast
+    var toastFn = window.showToast || function (msg) {
+        var old = document.getElementById('global-toast');
+        if (old) old.remove();
+        var toast = document.createElement('div');
+        toast.id = 'global-toast';
+        toast.className = 'toast-bubble';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('is-show'); }, 20);
+        setTimeout(function () {
+            toast.classList.remove('is-show');
+            setTimeout(function () { toast.remove(); }, 280);
+        }, 2800);
+    };
+
+    var btnRemoveCover = document.getElementById('btnRemoveCoverFile');
+    var coverDropOverlay = document.getElementById('cover-drop-overlay');
+    var originalPreviewHtml = previewBox ? previewBox.innerHTML : '';
+
+    function handleFile(file) {
+        if (!file) return;
+        if (!file.type || !file.type.match(/^image\/(png|jpeg|jpg|gif|webp)$/i)) {
+            toastFn('⚠️ Vui lòng chỉ chọn tệp hình ảnh (PNG, JPG, GIF, WebP).');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            toastFn('⚠️ Ảnh bìa vượt quá dung lượng tối đa 2 MB. Vui lòng chọn ảnh nhỏ hơn.');
+            coverFileInput.value = '';
+            if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
+            if (btnRemoveCover) btnRemoveCover.style.display = 'none';
+            return;
+        }
+        if (coverFileName) coverFileName.textContent = file.name;
+        if (btnRemoveCover) btnRemoveCover.style.display = 'inline-block';
+        var reader = new FileReader();
+        reader.onload = function (evt) {
+            if (previewBox) {
+                previewBox.style.borderStyle = 'solid';
+                previewBox.innerHTML = '<img src="' + evt.target.result + '" alt="Xem trước bìa" style="width:100%;height:100%;object-fit:cover;display:block;">';
+                if (coverDropOverlay) previewBox.appendChild(coverDropOverlay);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 5. XỬ LÝ CHỌN, KÉO THẢ VÀ XEM TRƯỚC ẢNH BÌA
+    if (coverFileInput) {
         coverFileInput.addEventListener('change', function (e) {
             var file = e.target.files && e.target.files[0];
             if (file) {
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('⚠️ Ảnh bìa vượt quá dung lượng tối đa 2 MB. Vui lòng chọn ảnh nhỏ hơn.');
-                    coverFileInput.value = '';
-                    if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
-                    return;
-                }
-                if (coverFileName) coverFileName.textContent = file.name;
-                var reader = new FileReader();
-                reader.onload = function (evt) {
-                    previewBox.style.borderStyle = 'solid';
-                    previewBox.innerHTML = '<img src="' + evt.target.result + '" alt="Xem trước bìa" style="width:100%;height:100%;object-fit:cover;display:block;">';
-                };
-                reader.readAsDataURL(file);
+                handleFile(file);
             } else {
                 if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
+                if (btnRemoveCover) btnRemoveCover.style.display = 'none';
+            }
+        });
+    }
+
+    if (btnRemoveCover) {
+        btnRemoveCover.addEventListener('click', function () {
+            if (coverFileInput) coverFileInput.value = '';
+            if (coverFileName) coverFileName.textContent = 'Chưa chọn tệp mới';
+            btnRemoveCover.style.display = 'none';
+            if (coverUrlInput && coverUrlInput.value.trim()) {
+                var src = coverUrlInput.value.trim();
+                src = src.startsWith('/') ? ('${pageContext.request.contextPath}' + src) : src;
+                previewBox.innerHTML = '<img src="' + src + '" alt="Xem trước bìa" style="width:100%;height:100%;object-fit:cover;display:block;">';
+            } else if (previewBox) {
+                previewBox.innerHTML = originalPreviewHtml;
+            }
+            if (coverDropOverlay && previewBox) previewBox.appendChild(coverDropOverlay);
+            toastFn('Đã hủy tệp ảnh vừa chọn.');
+        });
+    }
+
+    // Kéo thả trực tiếp vào ô xem trước ảnh bìa
+    if (previewBox) {
+        ['dragenter', 'dragover'].forEach(function (ev) {
+            previewBox.addEventListener(ev, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (coverDropOverlay) coverDropOverlay.style.display = 'flex';
+            });
+        });
+        ['dragleave', 'drop'].forEach(function (ev) {
+            previewBox.addEventListener(ev, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (coverDropOverlay) coverDropOverlay.style.display = 'none';
+            });
+        });
+        previewBox.addEventListener('drop', function (e) {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                var file = e.dataTransfer.files[0];
+                if (typeof DataTransfer !== 'undefined') {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    if (coverFileInput) coverFileInput.files = dt.files;
+                }
+                handleFile(file);
+                toastFn('📸 Đã nạp ảnh bìa!');
             }
         });
     }
@@ -315,11 +405,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 var src = val.startsWith('/') ? ('${pageContext.request.contextPath}' + val) : val;
                 previewBox.style.borderStyle = 'solid';
                 previewBox.innerHTML = '<img src="' + src + '" alt="Xem trước bìa" onerror="this.onerror=null;this.parentElement.innerHTML=\'<span style=\\\'font-size:2rem;color:#ef4444;\\\'>⚠️</span>\';" style="width:100%;height:100%;object-fit:cover;display:block;">';
+                if (coverDropOverlay) previewBox.appendChild(coverDropOverlay);
             }
         });
     }
 
-    // 6. CLIENT-SIDE VALIDATION TRƯỚC KHI SUBMIT
+    // 6. CLIENT-SIDE VALIDATION TRƯỚC KHI SUBMIT & SUBMIT DEBOUNCE
     if (form) {
         form.addEventListener('submit', function (e) {
             var title = titleInput ? titleInput.value.trim() : '';
@@ -327,23 +418,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (title.length === 0) {
                 e.preventDefault();
-                alert('⚠️ Vui lòng nhập tiêu đề truyện (không được để trống hoặc chỉ chứa khoảng trắng).');
+                toastFn('⚠️ Vui lòng nhập tiêu đề truyện (không để trống).');
                 if (titleInput) titleInput.focus();
                 return;
             }
 
             if (title.length > 200) {
                 e.preventDefault();
-                alert('⚠️ Tiêu đề truyện không được vượt quá 200 ký tự.');
+                toastFn('⚠️ Tiêu đề truyện không được vượt quá 200 ký tự.');
                 if (titleInput) titleInput.focus();
                 return;
             }
 
             if (desc.length > 5000) {
                 e.preventDefault();
-                alert('⚠️ Giới thiệu truyện không được vượt quá 5.000 ký tự.');
+                toastFn('⚠️ Giới thiệu truyện không được vượt quá 5.000 ký tự.');
                 if (descInput) descInput.focus();
                 return;
+            }
+
+            var submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                if (submitBtn.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+                submitBtn.disabled = true;
+                submitBtn.dataset.originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '⏳ Đang lưu truyện...';
+                setTimeout(function () {
+                    submitBtn.disabled = false;
+                    if (submitBtn.dataset.originalText) {
+                        submitBtn.innerHTML = submitBtn.dataset.originalText;
+                    }
+                }, 10000);
             }
         });
     }

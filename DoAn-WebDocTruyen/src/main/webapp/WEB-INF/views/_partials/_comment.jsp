@@ -48,9 +48,9 @@
                 </span>
             </c:if>
 
-            <%-- Chủ bình luận hoặc admin mới thấy nút gỡ --%>
+            <%-- Chủ bình luận, admin hoặc moderator có quyền MODERATE_COMMENTS mới thấy nút gỡ --%>
             <c:if test="${not empty currentUser
-                          and (currentUser.id eq cm.userId or currentUser.admin)}">
+                          and (currentUser.id eq cm.userId or currentUser.admin or currentUser.hasPermission('MODERATE_COMMENTS'))}">
                 <form action="${pageContext.request.contextPath}/comment" method="post"
                       style="display:inline">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
@@ -60,7 +60,10 @@
                     <c:if test="${not empty cmChapterId or not empty cm.chapterId}">
                         <input type="hidden" name="chapterId" value="${not empty cmChapterId ? cmChapterId : cm.chapterId}">
                     </c:if>
-                    <button type="submit" class="link-danger">gỡ</button>
+                    <button type="submit" class="link-danger"
+                            data-confirm="Bạn có chắc chắn muốn gỡ bình luận này không?"
+                            data-confirm-title="Xác nhận gỡ bình luận"
+                            data-confirm-ok="Đồng ý gỡ">gỡ</button>
                 </form>
             </c:if>
         </div>
@@ -173,7 +176,7 @@
                                 </c:if>
 
                                 <c:if test="${not empty currentUser
-                                              and (currentUser.id eq rp.userId or currentUser.admin)}">
+                                              and (currentUser.id eq rp.userId or currentUser.admin or currentUser.hasPermission('MODERATE_COMMENTS'))}">
                                     <form action="${pageContext.request.contextPath}/comment"
                                           method="post" style="display:inline">
                                         <input type="hidden" name="_csrf" value="${csrfToken}">
@@ -183,7 +186,10 @@
                                         <c:if test="${not empty cmChapterId or not empty cm.chapterId}">
                                             <input type="hidden" name="chapterId" value="${not empty cmChapterId ? cmChapterId : cm.chapterId}">
                                         </c:if>
-                                        <button type="submit" class="link-danger">gỡ</button>
+                                        <button type="submit" class="link-danger"
+                                                data-confirm="Bạn có chắc chắn muốn gỡ câu trả lời này không?"
+                                                data-confirm-title="Xác nhận gỡ câu trả lời"
+                                                data-confirm-ok="Đồng ý gỡ">gỡ</button>
                                     </form>
                                 </c:if>
                             </div>
@@ -255,6 +261,32 @@ if (!window.__commentLikeSetup) {
             btn.disabled = false;
             console.error(err);
         });
+    });
+}
+
+/* Debounce chống gửi lặp cho bình luận và trả lời (ISSUE-032) */
+if (!window.__commentSubmitDebounceSetup) {
+    window.__commentSubmitDebounceSetup = true;
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (form && (form.classList.contains('comment-form') || form.classList.contains('reply-form'))) {
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                if (btn.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+                btn.disabled = true;
+                btn.dataset.originalText = btn.innerHTML;
+                btn.innerHTML = '⏳ Đang gửi...';
+                setTimeout(function () {
+                    btn.disabled = false;
+                    if (btn.dataset.originalText) {
+                        btn.innerHTML = btn.dataset.originalText;
+                    }
+                }, 5000);
+            }
+        }
     });
 }
 </script>

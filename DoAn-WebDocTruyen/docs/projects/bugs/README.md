@@ -34,6 +34,9 @@ Luật chung + cách phân biệt ISSUE với bug: [`../README.md`](../README.md
 |---|---|:---:|---|---|
 | **[bug-001](bug-001-dang-nhap-google-gia-mao-bat-ky-tai-khoan/bug.md)** | Bấm "Đăng nhập với Google", gõ email người khác là vào thẳng tài khoản họ | 🔴 Chặn | Dev A — Auth & Security | ✅ Đã sửa |
 | **[bug-002](bug-002-web-xml-khai-trung-error-page/bug.md)** | `web.xml` khai hai lần cùng `<error-page>` 404 và `Throwable` — hai hệ trang lỗi cùng tồn tại, hiện chạy đúng **do may** | 🟡 Nhẹ | N1 — Nền tảng & Quản trị | ✅ Đã sửa |
+| **[bug-003](bug-003-admin-filter-lo-hong-phan-quyen-editor/bug.md)** | `AdminFilter` kiểm tra sai điều kiện, để `EDITOR` lọt vào xem và sửa `/admin/wallet`, `/admin/user` | 🔴 Chặn | Phát | ✅ Đã sửa |
+| **[bug-004](bug-004-mat-quyen-rbac-khi-cap-nhat-ho-so-hoac-vip/bug.md)** | Cập nhật hồ sơ hoặc gia hạn VIP làm mất sạch vai trò và quyền RBAC trong phiên cho đến khi relogin | 🔴 Chặn | Phát | ✅ Đã sửa |
+| **[bug-005](bug-005-moderator-bi-chan-403-khi-an-binh-luan-trang-doc/bug.md)** | `CommentServlet` văng lỗi 403 Forbidden khi `MODERATOR` bấm ẩn bình luận vi phạm trực tiếp trên trang đọc | 🟠 Nặng | Phát | ✅ Đã sửa |
 
 ### Mức độ
 

@@ -30,20 +30,34 @@
         <nav>
             <a href="${pageContext.request.contextPath}/admin/dashboard"
                class="${adminSection eq 'dashboard' ? 'is-active' : ''}">📊 Tổng quan</a>
-            <a href="${pageContext.request.contextPath}/admin/story"
-               class="${adminSection eq 'story' ? 'is-active' : ''}">📚 Truyện</a>
-            <a href="${pageContext.request.contextPath}/admin/user"
-               class="${adminSection eq 'user' ? 'is-active' : ''}">👤 Tài khoản</a>
-            <a href="${pageContext.request.contextPath}/admin/tag"
-               class="${adminSection eq 'tag' ? 'is-active' : ''}">🏷️ Thể loại</a>
-            <a href="${pageContext.request.contextPath}/admin/comment"
-               class="${adminSection eq 'comment' ? 'is-active' : ''}">💬 Bình luận</a>
-            <a href="${pageContext.request.contextPath}/admin/report"
-               class="${adminSection eq 'report' ? 'is-active' : ''}">🛡️ Báo cáo</a>
-            <a href="${pageContext.request.contextPath}/admin/wallet"
-               class="${adminSection eq 'wallet' ? 'is-active' : ''}">💰 Ví xu</a>
-            <a href="${pageContext.request.contextPath}/admin/audit"
-               class="${adminSection eq 'audit' ? 'is-active' : ''}">📜 Nhật ký</a>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('MANAGE_STORIES')}">
+                <a href="${pageContext.request.contextPath}/admin/story"
+                   class="${adminSection eq 'story' ? 'is-active' : ''}">📚 Truyện</a>
+            </c:if>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('MANAGE_USERS')}">
+                <a href="${pageContext.request.contextPath}/admin/user"
+                   class="${adminSection eq 'user' ? 'is-active' : ''}">👤 Tài khoản</a>
+            </c:if>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('MANAGE_STORIES')}">
+                <a href="${pageContext.request.contextPath}/admin/tag"
+                   class="${adminSection eq 'tag' ? 'is-active' : ''}">🏷️ Thể loại</a>
+            </c:if>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('MODERATE_COMMENTS')}">
+                <a href="${pageContext.request.contextPath}/admin/comment"
+                   class="${adminSection eq 'comment' ? 'is-active' : ''}">💬 Bình luận</a>
+            </c:if>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('HANDLE_REPORTS')}">
+                <a href="${pageContext.request.contextPath}/admin/report"
+                   class="${adminSection eq 'report' ? 'is-active' : ''}">🛡️ Báo cáo</a>
+            </c:if>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('MANAGE_WALLET')}">
+                <a href="${pageContext.request.contextPath}/admin/wallet"
+                   class="${adminSection eq 'wallet' ? 'is-active' : ''}">💰 Ví xu</a>
+            </c:if>
+            <c:if test="${currentUser.admin or currentUser.hasPermission('MANAGE_SYSTEM') or currentUser.hasPermission('MANAGE_WALLET')}">
+                <a href="${pageContext.request.contextPath}/admin/audit"
+                   class="${adminSection eq 'audit' ? 'is-active' : ''}">📜 Nhật ký</a>
+            </c:if>
         </nav>
         <p class="admin-hint">
             Gỡ truyện và khoá tài khoản đều là <b>xoá mềm</b> — bấm nhầm vẫn
@@ -70,6 +84,10 @@
 </div>
 
 <%@ include file="parts/footer.jsp" %>
+
+<%-- Hệ thống Modal Toàn Cục: Nạp Xu Nhanh & Hộp Thoại Xác Nhận --%>
+<%@ include file="/WEB-INF/views/_partials/_quick-topup-modal.jsp" %>
+<%@ include file="/WEB-INF/views/_partials/_confirm-modal.jsp" %>
 
 </body>
 </html>

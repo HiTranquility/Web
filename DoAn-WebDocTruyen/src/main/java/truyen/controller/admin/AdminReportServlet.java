@@ -8,7 +8,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import truyen.dao.AuditDAO;
+import truyen.dao.CommentDAO;
 import truyen.dao.ReportDAO;
+import truyen.dao.StoryDAO;
+import truyen.model.Story;
+import truyen.model.User;
+import static truyen.util.ServletHelper.currentUser;
 import static truyen.util.ServletHelper.parseIntOr;
 
 /** TRANG 30 — Xử lý báo cáo vi phạm. */
@@ -60,10 +66,23 @@ public class AdminReportServlet extends HttpServlet {
                 reportDAO.updateStatus(reportId, "DISMISSED");
             } else if ("resolve_hide".equals(action)) {
                 reportDAO.updateStatus(reportId, "RESOLVED");
-                if (targetId > 0) new truyen.dao.CommentDAO().hide(targetId);
+                if (targetId > 0) {
+                    new CommentDAO().hide(targetId);
+                    User me = currentUser(request);
+                    new AuditDAO().log(me != null ? me.getId() : 0, "HIDE_COMMENT", "COMMENT", targetId,
+                            "Bình luận #" + targetId, "Ẩn bình luận theo xử lý báo cáo vi phạm #" + reportId);
+                }
             } else if ("resolve_delete".equals(action)) {
                 reportDAO.updateStatus(reportId, "RESOLVED");
-                if (targetId > 0) new truyen.dao.StoryDAO().updateStatus(targetId, "DELETED");
+                if (targetId > 0) {
+                    StoryDAO stDAO = new StoryDAO();
+                    Story story = stDAO.findById(targetId);
+                    String storyTitle = story != null ? story.getTitle() : ("Truyện #" + targetId);
+                    stDAO.updateStatus(targetId, "DELETED");
+                    User me = currentUser(request);
+                    new AuditDAO().log(me != null ? me.getId() : 0, "DELETE_STORY", "STORY", targetId,
+                            storyTitle, "Gỡ truyện theo xử lý báo cáo vi phạm #" + reportId);
+                }
             }
 
             // Post-Redirect-Get — F5 không gửi lại thao tác.

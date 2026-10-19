@@ -153,7 +153,16 @@
         bellMarkAllBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            fetch(CTX + '/notification?action=mark_read')
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrf = csrfMeta ? csrfMeta.getAttribute('content') : (window.CSRF_TOKEN || '');
+            fetch(CTX + '/notification?action=mark_read', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrf,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: '_csrf=' + encodeURIComponent(csrf)
+            })
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                     if (res && res.success) {

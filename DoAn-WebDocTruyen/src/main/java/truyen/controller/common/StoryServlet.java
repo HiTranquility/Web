@@ -33,6 +33,7 @@ import truyen.util.GoogleConfig;
 import truyen.util.ServletHelper;
 import truyen.util.SlugUtil;
 import truyen.util.UploadUtil;
+import truyen.util.ChapterAccess;
 
 import static truyen.util.ServletHelper.parseIntOr;
 import static truyen.util.ServletHelper.trimOrEmpty;
@@ -707,8 +708,10 @@ public class StoryServlet extends HttpServlet {
 
         if (isCreate) {
             storyDAO.insert(story);
+            request.getSession().setAttribute("flash", "🎉 Đã đăng truyện mới thành công!");
         } else {
             storyDAO.update(story);
+            request.getSession().setAttribute("flash", "✍️ Đã lưu thay đổi truyện thành công!");
         }
         tagDAO.setTagsForStory(story.getId(), tagIds);
 
@@ -771,6 +774,7 @@ public class StoryServlet extends HttpServlet {
             return null;
         }
         storyDAO.softDelete(story.getId());   // xoá MỀM
+        request.getSession().setAttribute("flash", "🗑️ Đã gỡ truyện thành công!");
         response.sendRedirect(request.getContextPath() + "/story?action=mine");
         return null;
     }
@@ -801,10 +805,9 @@ public class StoryServlet extends HttpServlet {
         return base + "-" + System.currentTimeMillis();
     }
 
-    /** Chủ truyện hoặc admin thì được sửa. */
+    /** Chủ truyện, admin hoặc người có quyền MANAGE_STORIES (Editor) thì được sửa. */
     private boolean canEdit(User user, Story story) {
-        return user != null
-                && (user.getId() == story.getAuthorId() || user.isAdmin());
+        return ChapterAccess.canEdit(user, story);
     }
 
 }

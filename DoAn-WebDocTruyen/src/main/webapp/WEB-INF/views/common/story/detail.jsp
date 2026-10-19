@@ -381,12 +381,14 @@
             </span>
         </c:if>
 
-        <%-- Ô lọc nhanh chương theo số hoặc tiêu đề --%>
-        <div class="chapter-search-box" style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+        <%-- Ô lọc nhanh chương theo số hoặc tiêu đề (ISSUE-032) --%>
+        <div class="chapter-search-box" style="margin-left: auto; display: flex; align-items: center; gap: 6px; position: relative;">
             <input type="search" id="chapter-filter-input" class="input input-sm"
                    placeholder="🔍 Tìm nhanh chương..."
-                   style="max-width: 200px; padding: 4px 12px; font-size: 0.85rem; border-radius: 20px;"
-                   title="Gõ số chương hoặc từ khóa tiêu đề để lọc nhanh" />
+                   style="max-width: 220px; padding: 4px 26px 4px 12px; font-size: 0.85rem; border-radius: 20px;"
+                   title="Gõ số chương hoặc từ khóa tiêu đề để lọc nhanh (nhấn Enter để cuộn đến)" />
+            <button type="button" id="chapter-filter-clear" title="Xóa tìm kiếm"
+                    style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.15rem; line-height:1; padding:0 4px;">&times;</button>
         </div>
     </div>
 </c:if>
@@ -405,6 +407,9 @@
 <c:set var="clStoryId"  value="${story.id}"/>
 <c:set var="clCanEdit"  value="${canEdit}"/>
 <%@ include file="/WEB-INF/views/_partials/_chapter-list.jsp" %>
+<div id="chapter-filter-empty" style="display:none; text-align:center; padding:28px 16px; color:var(--text-dim); font-size:0.92rem; background:rgba(255,255,255,0.02); border:1px dashed var(--border); border-radius:8px; margin:12px 0;">
+    🔍 Không tìm thấy chương nào khớp với từ khóa tìm kiếm.
+</div>
 
 <%--
   MẢNH: phân trang mục lục.
@@ -443,20 +448,31 @@
             <h3 style="margin-top:0; font-size:1.15rem; color:var(--text);">
                 ${empty myReview ? '✍️ Viết cảm nhận cho tác phẩm' : '✏️ Chỉnh sửa bài đánh giá của bạn'}
             </h3>
-            <form action="${pageContext.request.contextPath}/rating" method="post">
+            <form action="${pageContext.request.contextPath}/rating" method="post" id="story-review-form">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
                 <input type="hidden" name="action" value="review">
                 <input type="hidden" name="storyId" value="${story.id}">
 
-                <div style="margin-bottom:14px; display:flex; align-items:center; gap:12px;">
+                <c:set var="currentScore" value="${not empty myReview and myReview.score gt 0 ? myReview.score : (not empty myRating and myRating gt 0 ? myRating : 5)}"/>
+                <div style="margin-bottom:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                     <label style="margin:0; font-weight:600">Đánh giá sao:</label>
-                    <select name="score" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:600;">
-                        <option value="5" ${myRating eq 5 or (empty myRating and empty myReview) ? 'selected' : ''}>★★★★★ (5/5 sao - Tuyệt tác)</option>
-                        <option value="4" ${myRating eq 4 ? 'selected' : ''}>★★★★☆ (4/5 sao - Rất hay)</option>
-                        <option value="3" ${myRating eq 3 ? 'selected' : ''}>★★★☆☆ (3/5 sao - Khá ổn)</option>
-                        <option value="2" ${myRating eq 2 ? 'selected' : ''}>★★☆☆☆ (2/5 sao - Tạm được)</option>
-                        <option value="1" ${myRating eq 1 ? 'selected' : ''}>★☆☆☆☆ (1/5 sao - Cần cải thiện)</option>
-                    </select>
+                    <input type="hidden" name="score" id="review-score-input" value="${currentScore}">
+                    <div class="interactive-star-picker" id="interactive-star-picker" title="Chọn số sao đánh giá (1 - 5 sao)">
+                        <span class="star-item ${currentScore ge 1 ? 'is-active' : ''}" data-val="1">★</span>
+                        <span class="star-item ${currentScore ge 2 ? 'is-active' : ''}" data-val="2">★</span>
+                        <span class="star-item ${currentScore ge 3 ? 'is-active' : ''}" data-val="3">★</span>
+                        <span class="star-item ${currentScore ge 4 ? 'is-active' : ''}" data-val="4">★</span>
+                        <span class="star-item ${currentScore ge 5 ? 'is-active' : ''}" data-val="5">★</span>
+                    </div>
+                    <span id="star-label-text" style="font-weight:600; font-size:0.92rem; color:var(--text-dim);">
+                        <c:choose>
+                            <c:when test="${currentScore eq 5}">(5/5 sao - Tuyệt tác)</c:when>
+                            <c:when test="${currentScore eq 4}">(4/5 sao - Rất hay)</c:when>
+                            <c:when test="${currentScore eq 3}">(3/5 sao - Khá ổn)</c:when>
+                            <c:when test="${currentScore eq 2}">(2/5 sao - Tạm được)</c:when>
+                            <c:otherwise>(1/5 sao - Cần cải thiện)</c:otherwise>
+                        </c:choose>
+                    </span>
                 </div>
 
                 <div style="margin-bottom:14px;">
@@ -823,16 +839,184 @@
         });
     }
 
-    /* Lọc nhanh danh sách chương theo số hoặc tiêu đề */
+    /* =========================================================================
+       ISSUE-031: Interactive Star Rating Picker & Review Debounce
+       ========================================================================= */
+    var starPicker = document.getElementById('interactive-star-picker');
+    var scoreInput = document.getElementById('review-score-input');
+    var starLabel = document.getElementById('star-label-text');
+    var starLabels = {
+        1: '(1/5 sao - Cần cải thiện)',
+        2: '(2/5 sao - Tạm được)',
+        3: '(3/5 sao - Khá ổn)',
+        4: '(4/5 sao - Rất hay)',
+        5: '(5/5 sao - Tuyệt tác)'
+    };
+
+    if (starPicker && scoreInput) {
+        var stars = starPicker.querySelectorAll('.star-item');
+
+        function setHighlight(val, isHover) {
+            stars.forEach(function (s) {
+                var v = parseInt(s.getAttribute('data-val'), 10);
+                if (isHover) {
+                    s.classList.toggle('is-hover', v <= val);
+                } else {
+                    s.classList.toggle('is-active', v <= val);
+                    s.classList.remove('is-hover');
+                }
+            });
+            if (starLabel && starLabels[val]) {
+                starLabel.textContent = starLabels[val];
+            }
+        }
+
+        stars.forEach(function (star) {
+            star.addEventListener('mouseenter', function () {
+                var val = parseInt(this.getAttribute('data-val'), 10);
+                setHighlight(val, true);
+            });
+            star.addEventListener('click', function () {
+                var val = parseInt(this.getAttribute('data-val'), 10);
+                scoreInput.value = val;
+                setHighlight(val, false);
+            });
+        });
+
+        starPicker.addEventListener('mouseleave', function () {
+            var currentVal = parseInt(scoreInput.value, 10) || 5;
+            setHighlight(currentVal, false);
+        });
+    }
+
+    var revForm = document.getElementById('story-review-form');
+    if (revForm) {
+        revForm.addEventListener('submit', function (e) {
+            var submitBtn = revForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                if (submitBtn.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+                submitBtn.disabled = true;
+                submitBtn.dataset.originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '⏳ Đang lưu đánh giá...';
+                setTimeout(function () {
+                    submitBtn.disabled = false;
+                    if (submitBtn.dataset.originalText) {
+                        submitBtn.innerHTML = submitBtn.dataset.originalText;
+                    }
+                }, 5000);
+            }
+        });
+    }
+
+    /* =========================================================================
+       ISSUE-031: AJAX Review Helpful Voting
+       ========================================================================= */
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || !form.classList.contains('review-vote-form')) return;
+
+        e.preventDefault();
+        var btn = form.querySelector('.btn-helpful-vote');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+
+        var formData = new FormData(form);
+        var params = new URLSearchParams();
+        formData.forEach(function (value, key) {
+            params.append(key, value);
+        });
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: params.toString()
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            btn.disabled = false;
+            if (data.needLogin) {
+                toastFn(data.message || '🔒 Vui lòng đăng nhập để bình chọn.');
+                return;
+            }
+            if (data.success) {
+                btn.classList.toggle('btn-primary', data.voted);
+                btn.classList.toggle('btn-ghost', !data.voted);
+                btn.setAttribute('data-voted', data.voted ? 'true' : 'false');
+                btn.setAttribute('title', data.voted ? 'Bỏ bấm hữu ích' : 'Bấm nếu bạn thấy đánh giá này có ích');
+                var countSpan = btn.querySelector('.helpful-count');
+                if (countSpan && typeof data.count !== 'undefined') {
+                    countSpan.textContent = data.count;
+                }
+                toastFn(data.voted ? '👍 Đã ghi nhận bình chọn hữu ích!' : 'Đã hủy bình chọn hữu ích.');
+            } else if (data.message) {
+                toastFn(data.message);
+            }
+        })
+        .catch(function (err) {
+            btn.disabled = false;
+            console.error('Lỗi khi bình chọn đánh giá:', err);
+            toastFn('Có lỗi kết nối khi bình chọn.');
+        });
+    });
+
+    /* =========================================================================
+       ISSUE-032: Chapter Quick Filter, Clear & Enter Key Jumper
+       ========================================================================= */
     var chFilter = document.getElementById('chapter-filter-input');
+    var chClear = document.getElementById('chapter-filter-clear');
+    var chEmpty = document.getElementById('chapter-filter-empty');
+
     if (chFilter) {
-        chFilter.addEventListener('input', function () {
-            var q = this.value.trim().toLowerCase();
+        function filterChapters() {
+            var q = chFilter.value.trim().toLowerCase();
+            if (chClear) {
+                chClear.style.display = q ? 'block' : 'none';
+            }
             var items = document.querySelectorAll('.chapter-item');
+            var visibleCount = 0;
             items.forEach(function (item) {
                 var txt = item.textContent.toLowerCase();
-                item.style.display = txt.indexOf(q) !== -1 ? '' : 'none';
+                var matched = (q === '' || txt.indexOf(q) !== -1);
+                item.style.display = matched ? '' : 'none';
+                if (matched) visibleCount++;
             });
+
+            if (chEmpty) {
+                chEmpty.style.display = (visibleCount === 0 && q.length > 0) ? 'block' : 'none';
+            }
+        }
+
+        chFilter.addEventListener('input', filterChapters);
+
+        if (chClear) {
+            chClear.addEventListener('click', function () {
+                chFilter.value = '';
+                filterChapters();
+                chFilter.focus();
+            });
+        }
+
+        chFilter.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var firstVisible = document.querySelector('.chapter-item:not([style*="display: none"])');
+                if (firstVisible) {
+                    firstVisible.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstVisible.classList.add('chapter-pulse');
+                    setTimeout(function () {
+                        firstVisible.classList.remove('chapter-pulse');
+                    }, 1600);
+                    var noEl = firstVisible.querySelector('.chapter-no');
+                    var noText = noEl ? noEl.textContent.trim() : 'chương';
+                    toastFn('📍 Đã chuyển đến ' + noText);
+                }
+            }
         });
     }
 })();

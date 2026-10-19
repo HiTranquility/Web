@@ -2,6 +2,10 @@ package truyen.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Tài khoản. JavaBean thuần — chỉ dữ liệu, không SQL.
@@ -106,9 +110,44 @@ public class User implements Serializable {
         return (displayName == null || displayName.isEmpty()) ? username : displayName;
     }
 
+    private List<String> roles = new ArrayList<>();
+    private Set<String> permissions = new HashSet<>();
+
+    public List<String> getRoles() { return roles; }
+    public void setRoles(List<String> roles) { this.roles = roles != null ? roles : new ArrayList<>(); }
+
+    public Set<String> getPermissions() { return permissions; }
+    public void setPermissions(Set<String> permissions) { this.permissions = permissions != null ? permissions : new HashSet<>(); }
+
+    public boolean hasRole(String roleCode) {
+        if (roleCode == null) return false;
+        if (roleCode.equalsIgnoreCase(this.role)) return true;
+        for (String r : roles) {
+            if (roleCode.equalsIgnoreCase(r)) return true;
+        }
+        return false;
+    }
+
+    public boolean hasPermission(String permCode) {
+        if (isAdmin() || hasRole("SUPER_ADMIN")) return true;
+        return permissions.contains(permCode);
+    }
+
+    public boolean isModerator() {
+        return hasRole("MODERATOR") || isAdmin();
+    }
+
+    public boolean isEditor() {
+        return hasRole("EDITOR") || isAdmin();
+    }
+
     /** Cho JSP: ${currentUser.admin} — EL thử isAdmin() cho kiểu boolean. */
     public boolean isAdmin() {
-        return "ADMIN".equals(role);
+        return "ADMIN".equals(role) || "SUPER_ADMIN".equals(role) || hasRole("ADMIN") || hasRole("SUPER_ADMIN");
+    }
+
+    public boolean isSuperAdmin() {
+        return "SUPER_ADMIN".equalsIgnoreCase(role) || hasRole("SUPER_ADMIN");
     }
 
     /** Bị ban thì chặn đăng nhập, nhưng truyện vẫn giữ nguyên. */
@@ -116,7 +155,6 @@ public class User implements Serializable {
         return "BANNED".equals(status);
     }
 
-    /** Chữ cái đầu, dùng làm avatar thay thế khi chưa có ảnh. */
     /** Thời hạn Hội viên VIP Premium (null hoặc quá khứ = không có VIP). */
     private LocalDateTime vipExpireAt;
 

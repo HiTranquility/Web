@@ -126,7 +126,10 @@
                       action="${pageContext.request.contextPath}/history">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="clear">
-                    <button type="submit" class="btn btn-danger btn-sm">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            data-confirm="Bạn có chắc chắn muốn xoá toàn bộ lịch sử đọc không? Hành động này không thể hoàn tác!"
+                            data-confirm-title="Xác nhận xoá lịch sử"
+                            data-confirm-ok="Đồng ý xoá">
                         Xoá toàn bộ lịch sử</button>
                 </form>
             </div>

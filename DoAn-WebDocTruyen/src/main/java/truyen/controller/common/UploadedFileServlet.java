@@ -61,35 +61,30 @@ public class UploadedFileServlet extends HttpServlet {
         Path root = folder.toPath().toAbsolutePath().normalize();
         Path file = root.resolve(rest.substring(1)).toAbsolutePath().normalize();
 
-        if (!file.startsWith(root) || !Files.isRegularFile(file)) {
+        if (!file.startsWith(root)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         /*
-         * ẢNH BẰNG CHỨNG CHỈ ADMIN ĐƯỢC XEM  (ISSUE-025).
+         * ẢNH BẰNG CHỨNG CHỈ ADMIN HOẶC MOD XỬ LÝ BÁO CÁO ĐƯỢC XEM (ISSUE-025 / bug-006).
          *
-         * Mọi ảnh khác trong thư mục này là ảnh BÌA TRUYỆN — vốn để khoe, ai
-         * xem cũng được. Ảnh tố cáo thì ngược hẳn: nó có thể là ảnh chụp tin
-         * nhắn riêng, thông tin cá nhân của người bị tố, hoặc chính nội dung
-         * phản cảm đang bị báo cáo. Để công khai là ai đoán được tên file cũng
-         * xem được hết.
-         *
-         * [NEVER] dựa vào "tên file ngẫu nhiên nên không ai đoán được". Đó là
-         * bảo mật bằng cách giấu, và nó hỏng ngay khi một admin dán link vào
-         * chat nhóm. Hàng rào phải là một câu if ở máy chủ.
-         *
-         * ĐẶT SAU PHẦN NORMALIZE Ở TRÊN, KHÔNG PHẢI TRƯỚC. So tiền tố trên
-         * chuỗi thô thì "/uploads/x/../evidence/a.jpg" lách qua được; so trên
-         * đường dẫn đã rút gọn thì không.
+         * So sánh ngay sau khi normalize, TRƯỚC KHI kiểm tra file tồn tại trên đĩa:
+         * Chống lộ thông tin (File Enumeration Oracle) — người không có quyền
+         * bị chặn 403 ngay lập tức, không được phép dò xem file có tồn tại hay không.
          */
         String rel = root.relativize(file).toString().replace('\\', '/');
         if (rel.startsWith(truyen.util.UploadUtil.EVIDENCE_PREFIX)) {
             truyen.model.User me = truyen.util.ServletHelper.currentUser(request);
-            if (me == null || !me.isAdmin()) {
+            if (me == null || (!me.isAdmin() && !me.hasPermission("HANDLE_REPORTS"))) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
+        }
+
+        if (!Files.isRegularFile(file)) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
 
         /*

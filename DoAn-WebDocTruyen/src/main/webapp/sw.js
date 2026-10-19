@@ -1,7 +1,7 @@
-const CACHE_NAME = 'doctruyen-pwa-v1';
+const CACHE_NAME = 'doctruyen-pwa-v3';
 const STATIC_ASSETS = [
-    './assets/css/base.css?v=2.5',
-    './assets/css/components.css?v=2.5',
+    './assets/css/base.css?v=3.4',
+    './assets/css/components.css?v=3.9',
     './assets/images/app-icon.svg',
     './manifest.json'
 ];

@@ -199,5 +199,9 @@
 })();
 </script>
 
+<%-- Hệ thống Modal Toàn Cục: Nạp Xu Nhanh & Hộp Thoại Xác Nhận --%>
+<%@ include file="/WEB-INF/views/_partials/_quick-topup-modal.jsp" %>
+<%@ include file="/WEB-INF/views/_partials/_confirm-modal.jsp" %>
+
 </body>
 </html>

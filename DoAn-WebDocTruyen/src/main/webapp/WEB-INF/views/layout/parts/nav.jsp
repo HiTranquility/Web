@@ -52,11 +52,12 @@
                 <c:when test="${not empty currentUser}">
                     <%-- Huy hiệu Ví Xu trên Header --%>
                     <a class="header-coin-badge" href="${pageContext.request.contextPath}/wallet?action=topup"
-                       title="Ví xu: ${walletBalance != null ? walletBalance : 0} xu. Bấm để nạp thêm">
+                       onclick="if(window.openQuickTopupModal){ window.openQuickTopupModal(); return false; }"
+                       title="Ví xu: ${walletBalance != null ? walletBalance : 0} xu. Bấm để nạp nhanh tại chỗ">
                         <span class="coin-badge-icon">🪙</span>
                         <span class="coin-badge-val"><fmt:formatNumber pattern="#,##0" value="${walletBalance != null ? walletBalance : 0}"/></span>
                         <span class="coin-badge-unit">xu</span>
-                        <span class="coin-badge-plus" title="Nạp xu">+</span>
+                        <span class="coin-badge-plus" title="Nạp nhanh">+</span>
                     </a>
 
                     <%-- Huy hiệu Chuỗi Điểm Danh / Đọc Liên Tục (Reading Streak 🔥) --%>
@@ -179,7 +180,7 @@
                                 <span>Cài đặt &amp; Sửa hồ sơ</span>
                             </a>
 
-                            <c:if test="${currentUser.admin}">
+                            <c:if test="${currentUser.admin or currentUser.moderator or currentUser.editor}">
                                 <div class="dropdown-sep"></div>
                                 <div class="dropdown-section-title">Hệ thống</div>
                                 <a href="${pageContext.request.contextPath}/admin/dashboard" class="dropdown-item admin-item">
@@ -189,7 +190,16 @@
                             </c:if>
 
                             <div class="dropdown-sep"></div>
-                            <a href="${pageContext.request.contextPath}/auth?action=logout" class="dropdown-item logout-item">
+                            <form id="navLogoutForm" action="${pageContext.request.contextPath}/auth" method="post" style="display:none;">
+                                <input type="hidden" name="action" value="logout">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
+                            </form>
+                            <a href="${pageContext.request.contextPath}/auth?action=logout"
+                               class="dropdown-item logout-item"
+                               data-confirm="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?"
+                               data-confirm-title="Xác nhận đăng xuất"
+                               data-confirm-ok="Đăng xuất"
+                               onclick="event.preventDefault(); var form=document.getElementById('navLogoutForm'); if(window.showConfirmModal){ window.showConfirmModal('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?', { title: 'Xác nhận đăng xuất', confirmText: 'Đăng xuất', cancelText: 'Ở lại', isDanger: true, onConfirm: function(){ form.submit(); } }); } else if(confirm('Bạn có chắc chắn muốn đăng xuất?')) { form.submit(); }">
                                 <span class="dropdown-item-icon">🚪</span>
                                 <span>Đăng xuất</span>
                             </a>

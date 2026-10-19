@@ -188,6 +188,22 @@ public class ReviewDAO {
         }
     }
 
+    /**
+     * Lấy số lượng bình chọn có ích hiện tại của một bài đánh giá.
+     */
+    public int getHelpfulCount(int reviewId) throws SQLException {
+        if (reviewId <= 0 || !DBConnection.isReady()) return 0;
+
+        String sql = "SELECT helpful_count FROM reviews WHERE id = ?";
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, reviewId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt("helpful_count") : 0;
+            }
+        }
+    }
+
     private Review mapRow(ResultSet rs) throws SQLException {
         Review r = new Review();
         r.setId(rs.getInt("id"));

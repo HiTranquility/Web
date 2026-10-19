@@ -130,7 +130,9 @@
                         <b><c:out value="${googleIdentity.email}"/></b>
                     </div>
                     <form method="post" action="${pageContext.request.contextPath}/user" style="margin:0;"
-                          onsubmit="return confirm('Bạn có chắc chắn muốn hủy liên kết tài khoản Google?');">
+                          data-confirm="Bạn có chắc chắn muốn hủy liên kết tài khoản Google?"
+                          data-confirm-title="Xác nhận hủy liên kết"
+                          data-confirm-ok="Đồng ý hủy">
                         <input type="hidden" name="_csrf" value="${csrfToken}">
                         <input type="hidden" name="action" value="unlink-google">
                         <button type="submit" class="btn btn-ghost" style="color:#dc2626; border-color:#fca5a5;"

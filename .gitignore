@@ -30,3 +30,11 @@ Thumbs.db
 
 # ── Private docs (không push lên git) ─────────────────────
 **/docs/_private/
+
+# Local AI assistant & scratch folders
+.claude/
+.claudeignore
+.cursorignore
+Final/
+Week 1/
+

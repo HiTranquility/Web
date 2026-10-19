@@ -7,6 +7,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="context-path" content="${pageContext.request.contextPath}">
+<meta name="csrf-token" content="${csrfToken}">
 <title><c:out value="${empty pageTitle ? 'ĐọcTruyện — Nền tảng đọc truyện trực tuyến' : pageTitle}"/></title>
 
 <%-- SEO & OpenGraph Meta Tags (ISSUE-012) --%>
@@ -53,7 +54,7 @@
 
 <%-- contextPath: đổi tên lúc deploy vẫn chạy, không cần sửa link --%>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css?v=3.4">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=3.6">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/components.css?v=3.9">
 
 
 <c:if test="${not empty layoutCss}">

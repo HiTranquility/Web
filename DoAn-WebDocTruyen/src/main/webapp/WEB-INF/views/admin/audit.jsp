@@ -38,6 +38,8 @@
        href="${pageContext.request.contextPath}/admin/audit?action=GRANT_COIN">🪙 Cấp xu</a>
     <a class="tag ${actionFilter eq 'REVOKE_COIN' ? 'is-on' : ''}"
        href="${pageContext.request.contextPath}/admin/audit?action=REVOKE_COIN">💸 Thu hồi xu</a>
+    <a class="tag ${actionFilter eq 'CHANGE_ROLE' ? 'is-on' : ''}"
+       href="${pageContext.request.contextPath}/admin/audit?action=CHANGE_ROLE">👤 Đổi vai trò</a>
 </div>
 
 <c:choose>

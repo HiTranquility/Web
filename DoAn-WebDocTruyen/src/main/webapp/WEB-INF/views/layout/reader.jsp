@@ -4208,28 +4208,39 @@ try {
                 return;
             }
 
-            if (!confirm('Bạn có chắc chắn muốn xoá tất cả ' + chapCount + ' đoạn tô màu trong Chương ' + CURRENT_CHAPTER_NO + ' không?')) {
-                return;
+            var doClear = function() {
+                // Gỡ toàn bộ thẻ mark trong DOM
+                var block = document.querySelector('.chapter-block[data-chapter-id="' + CURRENT_CHAPTER_ID + '"]') || document;
+                block.querySelectorAll('.hl-mark').forEach(function(el) {
+                    var parent = el.parentNode;
+                    while (el.firstChild) {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                    el.remove();
+                });
+
+                // Lọc bỏ khỏi storage
+                var remaining = list.filter(function(h) {
+                    return String(h.chapterId) !== String(CURRENT_CHAPTER_ID) && String(h.chapterNo) !== String(CURRENT_CHAPTER_NO);
+                });
+                saveHighlights(remaining);
+
+                renderDrawerList();
+                showToast('Đã dọn dẹp sạch sẽ toàn bộ ' + chapCount + ' điểm nhấn của chương này!');
+            };
+
+            if (window.showConfirmModal) {
+                window.showConfirmModal({
+                    title: 'Xoá điểm nhấn chương',
+                    message: 'Bạn có chắc chắn muốn xoá tất cả ' + chapCount + ' đoạn tô màu trong Chương ' + CURRENT_CHAPTER_NO + ' không?',
+                    confirmText: 'Đồng ý xoá',
+                    type: 'danger'
+                }).then(function(ok) {
+                    if (ok) doClear();
+                });
+            } else if (confirm('Bạn có chắc chắn muốn xoá tất cả ' + chapCount + ' đoạn tô màu trong Chương ' + CURRENT_CHAPTER_NO + ' không?')) {
+                doClear();
             }
-
-            // Gỡ toàn bộ thẻ mark trong DOM
-            var block = document.querySelector('.chapter-block[data-chapter-id="' + CURRENT_CHAPTER_ID + '"]') || document;
-            block.querySelectorAll('.hl-mark').forEach(function(el) {
-                var parent = el.parentNode;
-                while (el.firstChild) {
-                    parent.insertBefore(el.firstChild, el);
-                }
-                el.remove();
-            });
-
-            // Lọc bỏ khỏi storage
-            var remaining = list.filter(function(h) {
-                return String(h.chapterId) !== String(CURRENT_CHAPTER_ID) && String(h.chapterNo) !== String(CURRENT_CHAPTER_NO);
-            });
-            saveHighlights(remaining);
-
-            renderDrawerList();
-            showToast('Đã dọn dẹp sạch sẽ toàn bộ ' + chapCount + ' điểm nhấn của chương này!');
         });
     }
 
@@ -4371,6 +4382,10 @@ try {
     });
 })();
 </script>
+
+<%-- Hệ thống Modal Toàn Cục: Nạp Xu Nhanh & Hộp Thoại Xác Nhận trong Reader --%>
+<%@ include file="/WEB-INF/views/_partials/_quick-topup-modal.jsp" %>
+<%@ include file="/WEB-INF/views/_partials/_confirm-modal.jsp" %>
 
 </body>
 </html>

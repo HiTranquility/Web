@@ -61,7 +61,7 @@ mysql -u root -p < database/setup_user.sql        # nhớ đổi mật khẩu �
 mysql -u root -p webdoctruyen < database/sample_data.sql
 ```
 
-Rồi chạy **từng** file `database/migration-*.sql` theo thứ tự số (001 → 028):
+Rồi chạy **từng** file `database/migration-*.sql` theo thứ tự số (001 → 029):
 
 ```bash
 mysql -u root -p webdoctruyen < database/migration-001-google.sql

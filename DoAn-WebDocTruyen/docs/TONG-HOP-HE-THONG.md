@@ -1,7 +1,7 @@
 # 📚 TỔNG HỢP TOÀN BỘ HỆ THỐNG WEB ĐỌC TRUYỆN
 
-> **Tài liệu tổng hợp kiến trúc, bản đồ trang, danh mục chức năng đầy đủ, sơ đồ tuần tự hệ thống (Sequence Diagrams) và 30 phân hệ nâng cao đã hoàn thiện.**  
-> Cập nhật: 2026-10-13 · **Phiên bản:** Hoàn thiện 30 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-029 + Immersion & Audit Suite) · **Độ phủ test:** 175/175 tests PASS (100%).
+> **Tài liệu tổng hợp kiến trúc, bản đồ trang, danh mục chức năng đầy đủ, sơ đồ tuần tự hệ thống (Sequence Diagrams), ma trận phân quyền RBAC và 32 phân hệ nâng cao đã hoàn thiện.**  
+> Cập nhật: 2026-10-14 · **Phiên bản:** Hoàn thiện 32 Module Công nghệ Nâng cao (ISSUE-001 → ISSUE-033: RBAC Đa Tầng, In-Page Quick Top-Up, VIP Unlock Modal, Modern Confirm Dialog) · **Độ phủ test:** 175/175 tests PASS (100%).
 
 ---
 
@@ -33,7 +33,7 @@
 | **Máy chủ Web/App** | Apache Tomcat 9.0 (Embedded / Standalone) |
 | **Frontend** | Vanilla CSS (Kiến trúc 4 tầng tinh gọn, Mobile 360px, Dark/Light Mode), Vanilla JS (PWA, Web Audio API, Canvas, Lightbox Zoom, Live Autocomplete) |
 | **Tích hợp bên thứ 3** | Google OAuth / Firebase OIDC, Google reCAPTCHA v3, Google Drive API v3, JavaMail SMTP |
-| **Quy mô mã nguồn** | **86 lớp Java**, **58 file JSP (38 trang nội dung, 5 layouts, 15 partials)**, **21 bảng CSDL**, **30 file test / 175 bài Unit Test** |
+| **Quy mô mã nguồn** | **88 lớp Java**, **61 file JSP (38 trang nội dung, 5 layouts, 18 partials)**, **25 bảng CSDL**, **30 file test / 175 bài Unit Test** |
 
 ---
 
@@ -48,12 +48,12 @@ Qua quá trình phát triển và hoàn thiện trọn vẹn **30 ISSUE & Module
 
 | Tiêu chí | Bản đăng ký / mô tả cũ | Hệ thống thực tế hiện tại | Tỉ lệ hoàn thành / Ghi chú |
 |---|:---:|:---:|---|
-| **Số lượng chức năng** | 17 – 28 chức năng | **50 chức năng hoàn chỉnh** | **Đạt 178%** (vượt xa toàn bộ yêu cầu cơ bản và tuỳ chọn ban đầu) |
+| **Số lượng chức năng** | 17 – 28 chức năng | **52 chức năng hoàn chỉnh** | **Đạt 185%** (vượt xa toàn bộ yêu cầu cơ bản và tuỳ chọn ban đầu) |
 | **Số lượng trang web (Views)** | 30 – 31 trang | **38 trang web JSP + 8 Endpoints** | Bổ sung Admin Wallet, Admin Audit, Thống kê tác giả, FULLTEXT, Lỗi 403, Raw view, REST API, Drive Backup, Gamification, Comic |
 | **Khung bố cục (Layouts)** | 4 layouts | **5 layouts** (`main`, `auth`, `reader`, `admin`, `editor`) | Bổ sung layout `editor` chuyên biệt cho sáng tác chương truyện |
-| **Số lớp mã nguồn Java** | 47 – 60 lớp | **86 lớp Java** | 22 Controllers, 19 DAOs, 17 Models, 6 Filters, 13 Utilities, 12 Services/Helpers |
-| **Số file view JSP** | 50 – 51 files | **58 file JSP** | 38 trang nội dung, 5 layout wrappers, 15 view partials tái sử dụng |
-| **Bảng dữ liệu CSDL** | 13 bảng | **21 bảng** | Bổ sung `wallets`, `transactions`, `report_evidence`, `unlocked_chapters`, `reviews`, `review_votes`, `user_quests`, `reading_progress`, `chapter_pages`, `audit_logs` |
+| **Số lớp mã nguồn Java** | 47 – 60 lớp | **88 lớp Java** | 22 Controllers, 20 DAOs (thêm RbacDAO), 17 Models, 6 Filters, 13 Utilities, 12 Services/Helpers |
+| **Số file view JSP** | 50 – 51 files | **61 file JSP** | 38 trang nội dung, 5 layout wrappers, 18 view partials tái sử dụng (thêm Quick Top-up, VIP Unlock, Confirm Modal) |
+| **Bảng dữ liệu CSDL** | 13 bảng | **25 bảng** | Bổ sung `wallets`, `transactions`, `report_evidence`, `unlocked_chapters`, `reviews`, `review_votes`, `user_quests`, `reading_progress`, `chapter_pages`, `audit_logs`, `roles`, `permissions`, `role_permissions`, `user_roles` |
 | **Bộ kiểm thử tự động** | 28 bài | **175 bài Unit Tests (30 classes)** | Đạt 100% PASS, kiểm thử toàn diện DAO, Filter, Token, Wallet, Audit, RateLimiter, Report, EpubWriter, VIP Unlock, Reviews, Gamification, Comic |
 
 ---
@@ -243,6 +243,8 @@ Dự án đã giải quyết trọn vẹn lộ trình 28 Module Công nghệ nâ
 | **ISSUE-029** | **Tự Động Cuộn Trang & Hiệu Ứng Khánh Tiết** | Cuộn trang mượt mà 60fps bằng `requestAnimationFrame` với 3 tốc độ (1x, 2x, 3x), phím tắt `C`, tự tạm dừng khi người dùng lăn chuột/touch; Canvas Confetti rực rỡ & Mưa Xu Vàng 3D kèm âm thanh Web Audio API khi mở khoá VIP hoặc tặng xu tác giả. |
 | **ISSUE-030** | **Tô Màu Đánh Dấu Đoạn Văn & Quản Lý Trích Dẫn (Highlighter & Quotes)** | Bôi đen văn bản chọn 4 màu dạ quang (Vàng, Xanh lá, Lam, Hồng); lưu trữ cục bộ kèm đoạn văn; Ngăn kéo (Drawer) quản lý trích dẫn đa năng: Lọc màu, Live Search, Lọc phạm vi (`Chương này` vs `Cả truyện`), đếm số lượng, sao chép hàng loạt, và Chế độ đọc sạch sẽ Ẩn/Hiện màu tô (`Alt+H`). |
 | **ISSUE-031** | **Cấp Bậc Độc Giả Gắn Bó & Thẻ Hội Viên VIP (Loyalty Tiers & VIP Pass)** | Phân 5 cấp bậc độc giả (`Tân Thủ` -> `Đồng Hành` -> `Tri Kỷ` -> `Đại Tông Sư` -> `Hội Viên VIP`); Thẻ căn cước độc giả (Reader Passport UI); Chiết khấu mở khoá chương VIP từ 5% đến 25%; Nhân hệ số điểm danh từ x1.2 đến x2.0; Gói kích hoạt VIP 30, 90, 365 ngày. |
+| **ISSUE-032** | **Hệ Thống Phân Quyền Động Đa Tầng (Dynamic RBAC) & Ranh Giới An Toàn** | Cấu trúc 7 vai trò trong CSDL (`SUPER_ADMIN`, `ADMIN`, `MODERATOR`, `EDITOR`, `VERIFIED_AUTHOR`, `VIP_MEMBER`, `USER`) + `GUEST`; 4 bảng CSDL liên kết (`roles`, `permissions`, `role_permissions`, `user_roles`); Lớp quản trị `RbacDAO.java`; Bộ lọc `AdminFilter.java` bảo vệ nghiêm ngặt: `MODERATOR` chỉ kiểm duyệt báo cáo/bình luận, bị chặn tức thì với mã lỗi **403 Forbidden** tại các mục tài chính/kiểm toán nhạy cảm (`/admin/wallet`, `/admin/audit`, `/admin/user`). |
+| **ISSUE-033** | **Bộ Ba Modal Tương Tác Trực Quan & Portal Pattern (Modal Ecosystem Suite)** | Khắc phục toàn bộ thiếu sót về trải nghiệm xác nhận và nạp xu: (1) Modal Nạp Xu Nhanh Tại Chỗ (`_quick-topup-modal.jsp`) với 4 gói xu, 1-touch simulated AJAX, tự động cập nhật số dư toàn trang và bắn pháo hoa mừng; (2) Modal Xác Nhận Mở Khoá VIP (`_vip-unlock-modal.jsp`) chi tiết giá gốc, chiết khấu hạng, số dư trước/sau, tự động chuyển nút nạp xu nếu thiếu; (3) Hộp thoại Xác Nhận Thao Tác Hiện Đại Glassmorphism (`_confirm-modal.jsp`) xóa bỏ hoàn toàn `window.confirm()` trình duyệt; (4) Kỹ thuật Portal Teleportation đưa modal ra `document.body` chống lỗi clipping; Nâng cấp Service Worker cache `v2` và cache buster `components.css?v=3.9`. |
 | **NOTIF-001** | **Hệ Thống Thông Báo Đa Kênh Tác Giả** | Tự động bắn thông báo khi đăng chương mới đến cả người theo dõi tác giả và người đã lưu truyện; Hỗ trợ tùy chọn bắn thông báo khi sửa chương quan trọng; Phân loại icon rõ ràng (`📖`, `📝`, `💬`, `🪙`, `🔔`). |
 
 ---
@@ -651,6 +653,19 @@ Thời gian thực thi: ~1.8 giây (100% PASS).
 11. **Sửa Dứt Điểm Lỗi CSRF Beacon Bookmark & Khôi Phục Vị Trí Đọc Dở (resumePara):**
     - Thay thế `navigator.sendBeacon` (không gửi kèm được CSRF token headers) bằng API `fetch` chuẩn hiện đại kèm thuộc tính `keepalive: true`, `X-CSRF-Token` và `Content-Type: application/x-www-form-urlencoded`.
     - Phục hồi chính xác vị trí đọc dở `resumePara` từng đoạn văn bản kèm thông báo toast dẫn lối độc giả quay lại vị trí đọc dở hoặc cuộn lên đầu chương.
+
+---
+
+12. **Hệ Thống Phân Quyền Động Đa Tầng (Dynamic RBAC Architecture):**
+    - **7 Vai trò chuẩn hoá:** `SUPER_ADMIN`, `ADMIN`, `MODERATOR`, `EDITOR`, `VERIFIED_AUTHOR`, `VIP_MEMBER`, `USER` cùng vai trò Khách vãng lai `GUEST`.
+    - **Cơ chế tải quyền hạn tự động:** Lớp `RbacDAO.java` nạp vai trò và quyền hạn trực tiếp vào đối tượng `User` trong phiên làm việc.
+    - **Ranh giới an toàn nghiêm ngặt (`AdminFilter`):** Phân chia rõ ràng phân khu quản trị. `MODERATOR` được phép kiểm duyệt nội dung, xử lý báo cáo, bình luận nhưng **bị chặn tuyệt đối với mã lỗi 403 Forbidden** khi cố tình truy cập vào các phân hệ tài chính nhạy cảm (`/admin/wallet`, `/admin/audit`, `/admin/user`). Chỉ `SUPER_ADMIN` mới có quyền can thiệp dòng tiền xu và xem nhật ký an ninh.
+
+13. **Bộ Ba Modal Tương Tác Trực Quan & Portal Pattern (Modal Ecosystem Suite):**
+    - **Modal Nạp Xu Nhanh Tại Chỗ (`_quick-topup-modal.jsp`):** Người đọc nạp xu trực tiếp từ header hoặc ngay khi bị thiếu xu đọc VIP/tặng hoa mà không phải rời trang; 4 gói nạp linh hoạt (20k/55 xu, 50k/135 xu, 100k/300 xu, 200k/650 xu); nạp 1 chạm qua AJAX, tự động cập nhật số dư toàn bộ trang và bắn pháo hoa mừng; có banner cảnh báo tính toán số xu còn thiếu.
+    - **Modal Xác Nhận Mở Khoá VIP (`_vip-unlock-modal.jsp`):** Hiển thị chi tiết bảng giá: Giá gốc, chiết khấu hạng thành viên, giá thực tế, số dư trước và sau khi mua; nút chuyển đổi thông minh sang *"🪙 Nạp Thêm Xu Ngay"* nếu không đủ tiền.
+    - **Hộp Thoại Xác Nhận Thao Tác Hiện Đại Glassmorphism (`_confirm-modal.jsp`):** Xóa bỏ hoàn toàn hộp thoại `window.confirm()` mặc định thô cứng của trình duyệt; giao diện Glassmorphism với 3 preset (danger, warning, info); tự động bắt sự kiện qua thuộc tính `data-confirm` trên toàn bộ nút xoá chương, xoá truyện, gỡ tag, ban user, giải quyết báo cáo; cung cấp API `window.showConfirmModal()`.
+    - **Kỹ thuật Portal Teleportation & Cache Invalidation:** Tự động đưa modal ra ngoài `document.body` khi kích hoạt để không bị ảnh hưởng bởi CSS layout Reader; nâng cấp PWA Cache `doctruyen-pwa-v2` và gắn cache-buster `components.css?v=3.9`.
 
 ---
 
