@@ -99,10 +99,10 @@
         }
 
         var html = '';
+        list.forEach(function (n) {
             var href = CTX + '/notification';
-            if (n.type === 'MODERATION' || (n.icon && n.icon.indexOf('🛡') !== -1) || (n.message && (n.message.indexOf('gỡ bỏ') !== -1 || n.message.indexOf('khiếu nại') !== -1))) {
-                // Thông báo kiểm duyệt: truyện có thể đã bị gỡ nên không nhảy vào /story detail (tránh 404),
-                // mà nhảy thẳng vào trang khiếu nại /appeal kèm storyId để tác giả khiếu nại ngay.
+            if (n.type === 'MODERATION') {
+                // Thông báo kiểm duyệt: truyện có thể đã bị gỡ, nhảy về /appeal thay vì /story (tránh 404).
                 href = CTX + '/appeal' + (n.storyId && n.storyId > 0 ? ('?storyId=' + n.storyId) : '');
             } else if (n.chapterId && n.chapterId > 0) {
                 href = CTX + '/chapter?action=read&id=' + n.chapterId;

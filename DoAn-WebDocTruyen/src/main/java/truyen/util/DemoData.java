@@ -373,6 +373,15 @@ public final class DemoData {
     }
 
     /**
+     * Truyện của một tác giả, bao gồm cả truyện đã bị gỡ (DELETED) — dùng riêng cho trang khiếu nại.
+     * Trong chế độ Demo, dữ liệu giả chỉ có PUBLISHED nên kết quả giống storiesByAuthor().
+     */
+    public static List<Story> storiesByAuthorIncludeDeleted(int authorId) {
+        // Demo mode: tất cả truyện giả đều PUBLISHED, trả về y như storiesByAuthor()
+        return storiesByAuthor(authorId);
+    }
+
+    /**
      * Lọc theo thể loại + từ khoá + tình trạng.
      *
      * Giữ ĐÚNG cùng điều kiện với mệnh đề WHERE của StoryDAO.findPage(). Lệch

@@ -47,12 +47,61 @@
                         <select id="storyIdSelect" name="storyId" required
                                 style="width: 100%; padding: 10px 14px; border-radius: var(--r-sm, 6px); border: 1px solid var(--ink-700, #3f3f46); background: var(--ink-800, #202024); color: var(--text, #fff); font-size: 0.95rem;">
                             <option value="">-- Chọn tác phẩm cần khiếu nại --</option>
+
+                            <%-- Nhóm 1: Truyện đã bị gỡ (cần khiếu nại nhất) --%>
+                            <c:set var="hasDeleted" value="false"/>
                             <c:forEach var="s" items="${myStories}">
-                                <option value="${s.id}" ${s.id eq storyId ? 'selected="selected"' : ''}>
-                                    ${s.title} (${s.status eq 'DELETED' ? '🚫 Đã bị gỡ' : (s.status eq 'DRAFT' ? '📝 Bản nháp' : '🌐 Công khai')}) — ${s.chapterCount} chương
-                                </option>
+                                <c:if test="${s.status eq 'DELETED'}"><c:set var="hasDeleted" value="true"/></c:if>
                             </c:forEach>
+                            <c:if test="${hasDeleted}">
+                                <optgroup label="🚫 Truyện đã bị gỡ bỏ">
+                                    <c:forEach var="s" items="${myStories}">
+                                        <c:if test="${s.status eq 'DELETED'}">
+                                            <option value="${s.id}" ${s.id eq storyId ? 'selected="selected"' : ''}>
+                                                🚫 <c:out value="${s.title}"/> — ${s.chapterCount} chương
+                                            </option>
+                                        </c:if>
+                                    </c:forEach>
+                                </optgroup>
+                            </c:if>
+
+                            <%-- Nhóm 2: Truyện đang công khai / bản nháp --%>
+                            <optgroup label="📚 Truyện đang hoạt động">
+                                <c:forEach var="s" items="${myStories}">
+                                    <c:if test="${s.status ne 'DELETED'}">
+                                        <option value="${s.id}" ${s.id eq storyId ? 'selected="selected"' : ''}>
+                                            ${s.status eq 'DRAFT' ? '📝' : '🌐'} <c:out value="${s.title}"/> — ${s.chapterCount} chương
+                                        </option>
+                                    </c:if>
+                                </c:forEach>
+                            </optgroup>
                         </select>
+
+                        <%-- Thẻ thông tin truyện được chọn --%>
+                        <c:if test="${not empty selectedStory}">
+                            <div id="storyInfoCard" style="margin-top: 12px; background: var(--ink-800, #202024); border: 1px solid ${selectedStory.status eq 'DELETED' ? 'rgba(239,68,68,0.4)' : 'var(--ink-700,#3f3f46)'}; border-radius: var(--r-sm, 6px); padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 1.5rem;">${selectedStory.status eq 'DELETED' ? '🚫' : (selectedStory.status eq 'DRAFT' ? '📝' : '📚')}</span>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text);">
+                                        <c:out value="${selectedStory.title}"/>
+                                    </div>
+                                    <div style="font-size: 0.84rem; color: var(--text-mut); margin-top: 3px;">
+                                        ${selectedStory.chapterCount} chương ·
+                                        <c:choose>
+                                            <c:when test="${selectedStory.status eq 'DELETED'}">
+                                                <span style="color: #ef4444; font-weight: 600;">Đã bị gỡ bỏ</span> — Đây là tác phẩm cần khiếu nại
+                                            </c:when>
+                                            <c:when test="${selectedStory.status eq 'DRAFT'}">
+                                                <span style="color: #a1a1aa;">Bản nháp (chưa công khai)</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span style="color: #4ade80;">Đang công khai</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:if>
                     </c:when>
                     <c:otherwise>
                         <p style="color: var(--text-mut); font-size: 0.9rem;">

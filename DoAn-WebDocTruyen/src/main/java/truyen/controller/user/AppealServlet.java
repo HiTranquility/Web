@@ -61,7 +61,9 @@ public class AppealServlet extends HttpServlet {
         int storyId = parseIntOr(request.getParameter("storyId"), 0);
 
         try {
-            List<Story> myStories = storyDAO.findByAuthor(me.getId());
+            // Dùng findByAuthorIncludeDeleted để bao gồm cả truyện đã bị gỡ —
+            // tác giả cần chọn đúng tác phẩm bị can thiệp khi điền đơn khiếu nại.
+            List<Story> myStories = storyDAO.findByAuthorIncludeDeleted(me.getId());
             Story selectedStory = null;
             if (storyId > 0) {
                 selectedStory = storyDAO.findById(storyId);
@@ -105,7 +107,7 @@ public class AppealServlet extends HttpServlet {
         String appealReason = trimOrEmpty(request.getParameter("appealReason"));
 
         try {
-            List<Story> myStories = storyDAO.findByAuthor(me.getId());
+            List<Story> myStories = storyDAO.findByAuthorIncludeDeleted(me.getId());
             request.setAttribute("myStories", myStories);
 
             if (storyId <= 0) {
