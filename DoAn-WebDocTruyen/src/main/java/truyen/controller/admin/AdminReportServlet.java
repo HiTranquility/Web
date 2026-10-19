@@ -82,6 +82,17 @@ public class AdminReportServlet extends HttpServlet {
                     User me = currentUser(request);
                     new AuditDAO().log(me != null ? me.getId() : 0, "DELETE_STORY", "STORY", targetId,
                             storyTitle, "Gỡ truyện theo xử lý báo cáo vi phạm #" + reportId);
+
+                    // Thông báo kiểm duyệt tới tác giả
+                    if (story != null && story.getAuthorId() > 0) {
+                        new truyen.dao.NotificationDAO().sendNotification(
+                            story.getAuthorId(),
+                            targetId,
+                            null,
+                            "MODERATION",
+                            "Truyện \"" + storyTitle + "\" của bạn đã bị Quản trị viên gỡ bỏ do vi phạm tiêu chuẩn (Báo cáo #" + reportId + "). Bạn có quyền gửi thư khiếu nại nếu cho rằng đây là sự nhầm lẫn."
+                        );
+                    }
                 }
             }
 

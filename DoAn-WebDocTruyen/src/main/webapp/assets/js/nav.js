@@ -101,7 +101,10 @@
         var html = '';
         list.forEach(function (n) {
             var href = CTX + '/notification';
-            if (n.chapterId && n.chapterId > 0) {
+            if (n.type === 'MODERATION') {
+                // Thông báo kiểm duyệt: truyện có thể đã bị gỡ, nhảy về /appeal thay vì /story (tránh 404).
+                href = CTX + '/appeal' + (n.storyId && n.storyId > 0 ? ('?storyId=' + n.storyId) : '');
+            } else if (n.chapterId && n.chapterId > 0) {
                 href = CTX + '/chapter?action=read&id=' + n.chapterId;
             } else if (n.storyId && n.storyId > 0) {
                 href = CTX + '/story?action=detail&id=' + n.storyId;

@@ -337,6 +337,31 @@ public class StoryDAO {
         return list;
     }
 
+    /**
+     * Truyện của một tác giả — BẮT BUỘC bao gồm cả truyện đã bị gỡ (DELETED).
+     *
+     * Dùng riêng cho trang khiếu nại kiểm duyệt /appeal: tác giả cần thấy
+     * được truyện của mình ngay cả sau khi nó bị Admin gỡ để có thể điền vào
+     * đơn khiếu nại. Dùng findByAuthor() ở mọi nơi khác.
+     */
+    public List<Story> findByAuthorIncludeDeleted(int authorId) throws SQLException {
+        if (!DBConnection.isReady()) return DemoData.storiesByAuthorIncludeDeleted(authorId);
+        String sql = SELECT_BASE
+                   + "WHERE s.author_id = ? "
+                   + "ORDER BY s.status = 'DELETED' ASC, s.updated_at DESC";
+        List<Story> list = new ArrayList<>();
+        try (Connection con = DBConnection.get();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, authorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     /** Slug nay da co truyen nao dung chua (bo qua chinh truyen dang sua). */
     public boolean slugExists(String slug, int exceptId) throws SQLException {
         String sql = "SELECT 1 FROM stories WHERE slug = ? AND id != ? LIMIT 1";

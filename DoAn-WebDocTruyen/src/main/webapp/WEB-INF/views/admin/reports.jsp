@@ -77,6 +77,11 @@
                         <c:if test="${r.hasEvidence}">
                             <span class="pill pill-muted">📎 ${fn:length(r.evidences)} ảnh</span>
                         </c:if>
+                        <c:if test="${fn:contains(r.reason, '[KHIẾU NẠI KIỂM DUYỆT]')}">
+                            <span class="pill" style="background: rgba(230,81,0,0.15); color: #ff9800; border: 1px solid rgba(230,81,0,0.4); font-weight: 600;">
+                                🛡️ Khiếu nại từ Tác giả
+                            </span>
+                        </c:if>
                         <span class="report-time">
                             <c:if test="${not empty r.createdAt}">
                                 ${r.createdAt.dayOfMonth}/${r.createdAt.monthValue}/${r.createdAt.year}

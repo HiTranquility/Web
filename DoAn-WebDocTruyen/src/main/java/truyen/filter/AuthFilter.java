@@ -22,6 +22,7 @@ import javax.servlet.http.HttpSession;
         "/follow",      // theo dõi tác giả
         "/notification",// thông báo
         "/report",      // báo cáo vi phạm
+        "/appeal",      // khiếu nại kiểm duyệt
         "/user",        // hồ sơ người dùng
         "/drive"        // sao lưu truyện lên Google Drive (tác giả)
 })

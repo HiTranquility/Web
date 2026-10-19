@@ -31,8 +31,11 @@
                 <button type="button" class="bs-filter-chip" data-filter="reward">
                     🪙 Tặng xu &amp; Thưởng
                 </button>
+                <button type="button" class="bs-filter-chip" data-filter="moderation">
+                    🛡️ Kiểm duyệt &amp; Khiếu nại
+                </button>
                 <button type="button" class="bs-filter-chip" data-filter="system">
-                    🛡️ Hệ thống
+                    📢 Hệ thống
                 </button>
             </div>
 
@@ -46,11 +49,40 @@
         <div class="notif-list" id="notif-list-container">
             <c:forEach var="n" items="${notifications}">
                 <c:set var="notifType" value="system"/>
-                <c:if test="${n.type eq 'TIP' or fn:contains(n.message, 'tặng bạn') or fn:contains(n.message, 'điểm danh')}"><c:set var="notifType" value="reward"/></c:if>
-                <c:if test="${notifType ne 'reward' and not empty n.chapterId}"><c:set var="notifType" value="chapter"/></c:if>
-                <c:if test="${notifType ne 'reward' and empty n.chapterId and not empty n.storyId}"><c:set var="notifType" value="comment"/></c:if>
+                <c:if test="${n.type eq 'MODERATION'}"><c:set var="notifType" value="moderation"/></c:if>
+                <c:if test="${notifType ne 'moderation' and (n.type eq 'TIP' or fn:contains(n.message, 'tặng bạn') or fn:contains(n.message, 'điểm danh'))}"><c:set var="notifType" value="reward"/></c:if>
+                <c:if test="${notifType ne 'moderation' and notifType ne 'reward' and not empty n.chapterId}"><c:set var="notifType" value="chapter"/></c:if>
+                <c:if test="${notifType ne 'moderation' and notifType ne 'reward' and empty n.chapterId and not empty n.storyId}"><c:set var="notifType" value="comment"/></c:if>
 
                 <c:choose>
+                    <c:when test="${notifType eq 'moderation'}">
+                        <div class="notif notif-item ${n.read ? '' : 'notif-new'}"
+                             data-type="moderation"
+                             style="border-left: 3px solid var(--ember, #e65100); background: rgba(230,81,0,0.03);">
+                            <span class="notif-icon">🛡️</span>
+                            <span class="notif-body">
+                                <span class="notif-text" style="font-weight: 500;">
+                                    <c:out value="${n.message}"/>
+                                </span>
+                                <span class="notif-time" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+                                    <span>
+                                        <c:if test="${not empty n.createdAt}">
+                                            ${n.createdAt.dayOfMonth}/${n.createdAt.monthValue}
+                                            lúc ${n.createdAt.hour}:${n.createdAt.minute lt 10 ? '0' : ''}${n.createdAt.minute}
+                                        </c:if>
+                                    </span>
+                                    <c:if test="${not empty n.storyId and n.storyId gt 0}">
+                                        <a href="${pageContext.request.contextPath}/appeal?storyId=${n.storyId}"
+                                           class="btn btn-outline btn-sm"
+                                           style="border-color: var(--ember, #e65100); color: var(--ember, #e65100); padding: 4px 12px; font-size: 0.82rem; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
+                                            ✉️ Gửi thư khiếu nại tới Admin
+                                        </a>
+                                    </c:if>
+                                </span>
+                            </span>
+                            <c:if test="${not n.read}"><span class="notif-dot"></span></c:if>
+                        </div>
+                    </c:when>
                     <c:when test="${notifType eq 'reward'}">
                         <a class="notif notif-item ${n.read ? '' : 'notif-new'}"
                            data-type="reward"

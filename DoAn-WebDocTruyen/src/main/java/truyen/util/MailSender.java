@@ -166,6 +166,132 @@ public class MailSender {
              + "================================================================================\n");
     }
 
+    /**
+     * Gửi email khiếu nại kiểm duyệt bất đồng bộ (đẩy vào hàng đợi ngầm).
+     */
+    public static CompletableFuture<Boolean> sendAppealEmailAsync(String authorName, String authorEmail,
+                                                                  String storyTitle, int storyId,
+                                                                  String appealTitle, String appealReason) {
+        return CompletableFuture.supplyAsync(
+                () -> sendAppealEmail(authorName, authorEmail, storyTitle, storyId, appealTitle, appealReason),
+                EXECUTOR);
+    }
+
+    /**
+     * Gửi email khiếu nại kiểm duyệt đồng bộ tới Admin.
+     */
+    public static boolean sendAppealEmail(String authorName, String authorEmail,
+                                          String storyTitle, int storyId,
+                                          String appealTitle, String appealReason) {
+        String safeAuthor = (authorName != null && !authorName.trim().isEmpty()) ? authorName.trim() : "Tác giả";
+        String safeEmail = (authorEmail != null && !authorEmail.trim().isEmpty()) ? authorEmail.trim() : "khong-ro@user.local";
+        String safeStory = (storyTitle != null && !storyTitle.trim().isEmpty()) ? storyTitle.trim() : ("Truyện #" + storyId);
+        String safeTitle = (appealTitle != null && !appealTitle.trim().isEmpty()) ? appealTitle.trim() : "Khiếu nại quyết định kiểm duyệt truyện";
+        String safeReason = appealReason != null ? appealReason.trim() : "";
+
+        String adminEmail = CONFIG.getProperty("mail.admin", CONFIG.getProperty("mail.from", "admin@webdoctruyen.com"));
+        String subject = "[KHIẾU NẠI KIỂM DUYỆT] Đơn khiếu nại từ tác giả " + safeAuthor + " - Truyện: " + safeStory;
+
+        if (!isMailEnabled()) {
+            printAppealDevSimulationLog(adminEmail, safeAuthor, safeEmail, safeStory, storyId, safeTitle, safeReason);
+            return true;
+        }
+
+        try {
+            String host = CONFIG.getProperty("mail.smtp.host", "smtp.gmail.com");
+            String port = CONFIG.getProperty("mail.smtp.port", "587");
+            String auth = CONFIG.getProperty("mail.smtp.auth", "true");
+            String starttls = CONFIG.getProperty("mail.smtp.starttls.enable", "true");
+            String username = CONFIG.getProperty("mail.smtp.username", "");
+            String password = CONFIG.getProperty("mail.smtp.password", "");
+            String fromEmail = CONFIG.getProperty("mail.from", "noreply@webdoctruyen.com");
+            String fromName = CONFIG.getProperty("mail.from.name", "Web Đọc Truyện");
+
+            Properties props = new Properties();
+            props.put("mail.smtp.host", host);
+            props.put("mail.smtp.port", port);
+            props.put("mail.smtp.auth", auth);
+            props.put("mail.smtp.starttls.enable", starttls);
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
+            Session session;
+            if ("true".equalsIgnoreCase(auth) && !username.isEmpty()) {
+                session = Session.getInstance(props, new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username, password);
+                    }
+                });
+            } else {
+                session = Session.getInstance(props);
+            }
+
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(fromEmail, fromName, StandardCharsets.UTF_8.name()));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress(adminEmail));
+            if (!safeEmail.contains("@user.local")) {
+                message.setReplyTo(new Address[]{ new InternetAddress(safeEmail, safeAuthor, StandardCharsets.UTF_8.name()) });
+            }
+            message.setSubject(subject, StandardCharsets.UTF_8.name());
+
+            String htmlBody = buildAppealEmailHtml(safeAuthor, safeEmail, safeStory, storyId, safeTitle, safeReason);
+            message.setContent(htmlBody, "text/html; charset=UTF-8");
+
+            Transport.send(message);
+            LOGGER.info("Đã gửi email khiếu nại tới Admin: " + adminEmail + " từ tác giả: " + safeEmail);
+            return true;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Gửi email khiếu nại tới Admin thất bại", e);
+            return false;
+        }
+    }
+
+    /**
+     * Dựng nội dung email khiếu nại kiểm duyệt HTML.
+     */
+    public static String buildAppealEmailHtml(String authorName, String authorEmail,
+                                              String storyTitle, int storyId,
+                                              String appealTitle, String appealReason) {
+        return "<!DOCTYPE html>"
+             + "<html>"
+             + "<head><meta charset='UTF-8'></head>"
+             + "<body style='margin:0;padding:24px;background-color:#121212;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;color:#e0e0e0;'>"
+             + "  <div style='max-width:600px;margin:0 auto;background-color:#1e1e1e;border-radius:12px;padding:32px;border:1px solid #333;'>"
+             + "    <div style='text-align:center;margin-bottom:24px;border-bottom:1px solid #333;padding-bottom:16px;'>"
+             + "      <h1 style='color:#e65100;margin:0;font-size:22px;letter-spacing:1px;'>🛡️ THƯ KHIẾU NẠI KIỂM DUYỆT</h1>"
+             + "      <p style='color:#888;margin:6px 0 0 0;font-size:13px;'>Hệ thống tiếp nhận phản ánh & giải trình từ tác giả</p>"
+             + "    </div>"
+             + "    <div style='background-color:#2a2a2a;padding:16px;border-radius:8px;margin-bottom:20px;'>"
+             + "      <p style='margin:4px 0;font-size:14px;color:#bbb;'><b>Tác giả:</b> <span style='color:#fff;'>" + escapeHtml(authorName) + "</span> (" + escapeHtml(authorEmail) + ")</p>"
+             + "      <p style='margin:4px 0;font-size:14px;color:#bbb;'><b>Truyện liên quan:</b> <span style='color:#ff9800;font-weight:600;'>" + escapeHtml(storyTitle) + "</span> (ID: #" + storyId + ")</p>"
+             + "      <p style='margin:4px 0;font-size:14px;color:#bbb;'><b>Tiêu đề khiếu nại:</b> <span style='color:#fff;'>" + escapeHtml(appealTitle) + "</span></p>"
+             + "    </div>"
+             + "    <h3 style='font-size:15px;color:#fff;margin-bottom:8px;'>Nội dung giải trình / khiếu nại từ tác giả:</h3>"
+             + "    <div style='background-color:#161616;padding:18px;border-radius:8px;border-left:4px solid #e65100;line-height:1.6;font-size:14px;color:#ddd;white-space:pre-wrap;'>"
+             + escapeHtml(appealReason)
+             + "    </div>"
+             + "    <p style='margin-top:24px;font-size:13px;color:#888;line-height:1.5;'>Admin có thể bấm <b>Reply / Trả lời</b> trực tiếp email này để trao đổi với tác giả hoặc truy cập vào trang <b>Quản trị Báo cáo</b> trên hệ thống.</p>"
+             + "  </div>"
+             + "</body>"
+             + "</html>";
+    }
+
+    private static void printAppealDevSimulationLog(String adminEmail, String authorName, String authorEmail,
+                                                   String storyTitle, int storyId,
+                                                   String appealTitle, String appealReason) {
+        System.out.println("\n"
+             + "================================================================================\n"
+             + " [MailSender - KHIẾU NẠI KIỂM DUYỆT / APPEAL DEV SIMULATION]\n"
+             + "--------------------------------------------------------------------------------\n"
+             + " Người gửi (Tác giả) : " + authorName + " <" + authorEmail + ">\n"
+             + " Truyện khiếu nại     : " + storyTitle + " (ID: #" + storyId + ")\n"
+             + " Tiêu đề khiếu nại    : " + appealTitle + "\n"
+             + " Nội dung giải trình  : " + appealReason + "\n"
+             + " Gửi tới hòm thư Admin: " + adminEmail + "\n"
+             + " Ghi chú              : Đã lưu báo cáo & mô phỏng gửi email tới Admin thành công.\n"
+             + "================================================================================\n");
+    }
+
     private static String escapeHtml(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;")
