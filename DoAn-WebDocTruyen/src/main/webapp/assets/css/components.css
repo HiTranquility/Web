@@ -1704,10 +1704,20 @@ html[data-site-theme="light"] .dropdown-sep {
 html[data-site-theme="light"] .dropdown-section-title {
     color: #94a3b8;
 }
-.dropdown-panel a.logout-item {
+.dropdown-panel button.dropdown-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.dropdown-panel a.logout-item,
+.dropdown-panel button.logout-item {
     color: var(--rose);
 }
-.dropdown-panel a.logout-item:hover {
+.dropdown-panel a.logout-item:hover,
+.dropdown-panel button.logout-item:hover {
     background: rgba(229, 87, 111, 0.12);
     color: #f43f5e;
 }
@@ -6441,8 +6451,9 @@ html[data-site-theme="light"] .vip-plan-card {
     opacity: 0.85;
 }
 .hl-note-dialog .dialog-card {
-    max-width: 480px;
-    width: 90vw;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 .hl-note-body {
     display: flex;

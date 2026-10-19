@@ -6,6 +6,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  * Xử lý lỗi tập trung (403, 404, 500) được Tomcat điều hướng qua &lt;error-page&gt;.
@@ -47,7 +48,15 @@ public class ErrorServlet extends HttpServlet {
         }
 
         req.setAttribute("errorCode", statusCode);
-        req.setAttribute("csrfToken", truyen.util.CsrfUtil.token(req.getSession(true)));
+        try {
+            HttpSession session = req.getSession(false);
+            if (session == null) {
+                session = req.getSession(true);
+            }
+            if (session != null) {
+                req.setAttribute("csrfToken", truyen.util.CsrfUtil.token(session));
+            }
+        } catch (Exception ignored) { }
         if (statusCode == 403) {
             req.setAttribute("pageTitle", "403 — Không đủ quyền truy cập");
             req.setAttribute("contentPage", "/WEB-INF/views/error/403.jsp");

@@ -103,7 +103,7 @@
         if (!target) return;
 
         // Nếu là submit button trong form hoặc trỏ tới form qua thuộc tính form="..." (HTML5)
-        var formId = target.getAttribute('form');
+        var formId = target.getAttribute('form') || target.getAttribute('data-form');
         var form = formId ? document.getElementById(formId) : target.closest('form');
         var confirmMsg = target.getAttribute('data-confirm');
 
@@ -143,9 +143,11 @@
                 type: type
             }).then(function(ok) {
                 if (ok) {
-                    if (form && target.type === 'submit') {
+                    if (form) {
                         form.dataset.confirmed = 'true';
-                        if (typeof form.requestSubmit === 'function') {
+                        if (formId) {
+                            form.submit();
+                        } else if (typeof form.requestSubmit === 'function' && target.type === 'submit') {
                             form.requestSubmit(target);
                         } else {
                             // Trình duyệt cũ: giữ name/value của nút submit.

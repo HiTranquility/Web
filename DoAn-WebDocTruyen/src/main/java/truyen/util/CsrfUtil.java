@@ -60,6 +60,9 @@ public final class CsrfUtil {
      * Cùng lý do với chỗ sinh token đặt lại mật khẩu.
      */
     public static String token(HttpSession session) {
+        if (session == null) {
+            return "";
+        }
         Object cur = session.getAttribute(SESSION_KEY);
         if (cur instanceof String && !((String) cur).isEmpty()) {
             return (String) cur;

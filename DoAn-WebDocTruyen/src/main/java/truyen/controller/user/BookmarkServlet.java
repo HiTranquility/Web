@@ -219,9 +219,14 @@ public class BookmarkServlet extends HttpServlet {
                 parseIntOr(request.getParameter("paraNo"), 0), unitCount(story, chapter));
         // Truyện tranh không có chữ để trích — trang tủ sách hiện ảnh thu nhỏ thay vào.
         String snippet = null;
-        if (paraNo > 0 && !story.isComic()) {
+        String clientSnippet = request.getParameter("snippet");
+        if (clientSnippet != null && !clientSnippet.trim().isEmpty()) {
+            snippet = ChapterBookmark.snippetOf(clientSnippet);
+        } else if (paraNo > 0 && !story.isComic()) {
             List<String> paras = chapter.getParagraphs();
-            snippet = ChapterBookmark.snippetOf(paras.get(paraNo - 1));
+            if (paraNo <= paras.size()) {
+                snippet = ChapterBookmark.snippetOf(paras.get(paraNo - 1));
+            }
         }
 
         if (markDAO.countByUser(me.getId()) >= ChapterBookmarkDAO.MAX_PER_USER) {

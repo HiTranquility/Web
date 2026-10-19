@@ -132,4 +132,18 @@ public class PasswordResetDAO {
             ps.executeUpdate();
         }
     }
+
+    /** Đổi mật khẩu và tiêu thụ vé bằng một câu lệnh nguyên tử của MySQL. */
+    public boolean resetPassword(String token, String passwordHash) throws SQLException {
+        if (token == null || token.isEmpty() || passwordHash == null || passwordHash.isEmpty()
+                || !DBConnection.isReady()) return false;
+        String sql = "UPDATE users u JOIN password_resets r ON r.user_id = u.id "
+                   + "SET u.password_hash = ?, r.used_at = NOW() "
+                   + "WHERE r.token = ? AND r.used_at IS NULL AND r.expires_at > NOW()";
+        try (Connection con = DBConnection.get(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, passwordHash);
+            ps.setString(2, fingerprint(token));
+            return ps.executeUpdate() > 0;
+        }
+    }
 }

@@ -292,43 +292,48 @@ public class WalletDAO {
         UserDAO.ensureVipColumn();
         getBalance(userId);
         try (Connection con = DBConnection.get()) {
-            con.setAutoCommit(false);
-            try {
-                try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND balance >= ?")) {
-                    ps.setInt(1, cost);
-                    ps.setInt(2, userId);
-                    ps.setInt(3, cost);
-                    if (ps.executeUpdate() != 1) {
-                        con.rollback();
-                        return false;
-                    }
+            return purchaseVip(con, userId, days, cost);
+        }
+    }
+
+    /** Tách giao dịch để kiểm chứng rollback bằng kết nối cục bộ giả lập. */
+    boolean purchaseVip(Connection con, int userId, int days, int cost) throws SQLException {
+        con.setAutoCommit(false);
+        try {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND balance >= ?")) {
+                ps.setInt(1, cost);
+                ps.setInt(2, userId);
+                ps.setInt(3, cost);
+                if (ps.executeUpdate() != 1) {
+                    con.rollback();
+                    return false;
                 }
-                try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE users SET vip_expire_at = DATE_ADD("
-                        + "CASE WHEN vip_expire_at > NOW() THEN vip_expire_at ELSE NOW() END, INTERVAL ? DAY) WHERE id = ?")) {
-                    ps.setInt(1, days);
-                    ps.setInt(2, userId);
-                    if (ps.executeUpdate() != 1) {
-                        con.rollback();
-                        return false;
-                    }
-                }
-                try (PreparedStatement ps = con.prepareStatement(
-                        "INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message) VALUES (?, NULL, NULL, ?, ?)")) {
-                    ps.setInt(1, userId);
-                    ps.setInt(2, cost);
-                    ps.setString(3, "Nâng cấp Hội viên VIP (" + days + " ngày)");
-                    ps.executeUpdate();
-                }
-                con.commit();
-                return true;
-            } catch (SQLException ex) {
-                con.rollback();
-                throw ex;
-            } finally {
-                con.setAutoCommit(true);
             }
+            try (PreparedStatement ps = con.prepareStatement(
+                    "UPDATE users SET vip_expire_at = DATE_ADD("
+                    + "CASE WHEN vip_expire_at > NOW() THEN vip_expire_at ELSE NOW() END, INTERVAL ? DAY) WHERE id = ?")) {
+                ps.setInt(1, days);
+                ps.setInt(2, userId);
+                if (ps.executeUpdate() != 1) {
+                    con.rollback();
+                    return false;
+                }
+            }
+            try (PreparedStatement ps = con.prepareStatement(
+                    "INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message) VALUES (?, NULL, NULL, ?, ?)")) {
+                ps.setInt(1, userId);
+                ps.setInt(2, cost);
+                ps.setString(3, "Nâng cấp Hội viên VIP (" + days + " ngày)");
+                ps.executeUpdate();
+            }
+            con.commit();
+            return true;
+        } catch (SQLException ex) {
+            con.rollback();
+            throw ex;
+        } finally {
+            con.setAutoCommit(true);
         }
     }
 

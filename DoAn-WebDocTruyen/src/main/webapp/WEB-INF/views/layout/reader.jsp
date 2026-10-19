@@ -1212,6 +1212,25 @@ try {
     }
 
     /* ------------------------------------------------ đánh dấu đoạn */
+    function initParagraphBookmarkButtons(block) {
+        if (!block || COMIC) return;
+        var paras = block.querySelectorAll('.chapter-content p[data-para]');
+        paras.forEach(function (p) {
+            if (!p.querySelector('.para-mark-btn')) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'para-mark-btn';
+                btn.tabIndex = -1;
+                var paraNo = p.getAttribute('data-para');
+                var isMarked = p.classList.contains('is-marked');
+                var titleText = isMarked ? ('Bỏ đánh dấu đoạn ' + paraNo) : ('Đánh dấu đoạn ' + paraNo + ' vào Tủ sách (🔖)');
+                btn.title = titleText;
+                btn.setAttribute('aria-label', titleText);
+                p.insertBefore(btn, p.firstChild);
+            }
+        });
+    }
+
     function applyMarks(block) {
         var list = (block.getAttribute('data-marked') || '').split(',');
         list.forEach(function (n) {
@@ -1219,11 +1238,11 @@ try {
             var el = block.querySelector('.chapter-content [data-para="' + n + '"]');
             if (el) el.classList.add('is-marked');
         });
+        initParagraphBookmarkButtons(block);
     }
     [].forEach.call(wrap.querySelectorAll('.chapter-block'), applyMarks);
 
-    /* Chương nối thêm khi đọc liên tục cũng phải được tô — theo dõi #chapters
-       thay vì sửa vào đoạn mã đọc liên tục: hai việc, hai chỗ. */
+    /* Chương nối thêm khi đọc liên tục cũng phải được tô và gán nút đánh dấu */
     if (window.MutationObserver) {
         new MutationObserver(function (records) {
             records.forEach(function (r) {
@@ -1233,6 +1252,50 @@ try {
             });
         }).observe(wrap, { childList: true });
     }
+
+    /* Bấm trực tiếp vào nút 🔖 ở lề đoạn văn bất kỳ để đánh dấu / bỏ đánh dấu chính xác đoạn đó */
+    wrap.addEventListener('click', function (e) {
+        var btn = e.target.closest('.para-mark-btn');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var p = btn.closest('[data-para]');
+        if (!p) return;
+        var block = p.closest('.chapter-block');
+        if (!block) return;
+
+        var chapterId = block.getAttribute('data-chapter-id');
+        var paraNo = parseInt(p.getAttribute('data-para'), 10);
+        var wasMarked = p.classList.contains('is-marked');
+        var action = wasMarked ? 'unmark' : 'mark';
+
+        btn.disabled = true;
+        postJson({
+            action: action,
+            chapterId: chapterId,
+            paraNo: paraNo,
+            snippet: (p.textContent || '').substring(0, 180).trim()
+        })
+        .then(function (res) {
+            if (res.success) {
+                var nowMarked = !!res.marked;
+                p.classList.toggle('is-marked', nowMarked);
+                var titleText = nowMarked ? ('Bỏ đánh dấu đoạn ' + paraNo) : ('Đánh dấu đoạn ' + paraNo + ' vào Tủ sách (🔖)');
+                btn.title = titleText;
+                btn.setAttribute('aria-label', titleText);
+                toast(nowMarked ? ('Đã đánh dấu Đoạn ' + paraNo + ' vào Tủ sách! 🔖') : ('Đã bỏ đánh dấu Đoạn ' + paraNo + '.'));
+            } else {
+                toast(res.message || 'Chưa lưu được đánh dấu.');
+            }
+        })
+        .catch(function () {
+            toast('Mất kết nối, chưa đánh dấu được.');
+        })
+        .then(function () {
+            btn.disabled = false;
+        });
+    });
 
     var markBtn = document.getElementById('btn-mark-para');
     var marking = false;
@@ -1246,10 +1309,24 @@ try {
         var wasMarked = pos.el.classList.contains('is-marked');
         marking = true;
         postJson({ action: wasMarked ? 'unmark' : 'mark',
-                   chapterId: pos.chapterId, paraNo: pos.paraNo })
+                   chapterId: pos.chapterId, paraNo: pos.paraNo,
+                   snippet: (pos.el.textContent || '').substring(0, 180).trim() })
             .then(function (res) {
-                if (res.success) pos.el.classList.toggle('is-marked', !!res.marked);
-                toast(res.message || (res.success ? 'Đã lưu.' : 'Chưa lưu được.'));
+                if (res.success) {
+                    var nowMarked = !!res.marked;
+                    pos.el.classList.toggle('is-marked', nowMarked);
+                    var b = pos.el.querySelector('.para-mark-btn');
+                    if (b) {
+                        var titleText = nowMarked ? ('Bỏ đánh dấu đoạn ' + pos.paraNo) : ('Đánh dấu đoạn ' + pos.paraNo + ' vào Tủ sách (🔖)');
+                        b.title = titleText;
+                        b.setAttribute('aria-label', titleText);
+                    }
+                    toast(nowMarked 
+                        ? ('Đã đánh dấu ' + UNIT + ' ' + pos.paraNo + ' (vị trí đang cuộn trên màn hình) 🔖') 
+                        : ('Đã bỏ đánh dấu ' + UNIT + ' ' + pos.paraNo + '.'));
+                } else {
+                    toast(res.message || 'Chưa lưu được.');
+                }
             })
             .catch(function () { toast('Mất kết nối, chưa đánh dấu được.'); })
             .then(function () { marking = false; });
@@ -3206,7 +3283,12 @@ try {
         }
 
         var pEl = container.closest ? container.closest('[data-para]') : null;
+        if (!pEl && range.startContainer) {
+            var sc = range.startContainer.nodeType === 3 ? range.startContainer.parentNode : range.startContainer;
+            if (sc && sc.closest) pEl = sc.closest('[data-para]');
+        }
         var block = container.closest ? container.closest('.chapter-block') : null;
+        if (!block && pEl) block = pEl.closest('.chapter-block');
 
         var paraNo = pEl ? parseInt(pEl.getAttribute('data-para'), 10) : 0;
         var chapterId = block ? block.getAttribute('data-chapter-id') : CURRENT_CHAPTER_ID;
@@ -3327,33 +3409,32 @@ try {
                 if (btnYellow) btnYellow.click();
             }
 
-            if (ctx.chapterId && ctx.paraNo > 0) {
-                var body = new URLSearchParams();
-                body.append('action', 'mark');
-                body.append('chapterId', ctx.chapterId);
-                body.append('paraNo', ctx.paraNo);
-                body.append('snippet', (ctx.text || '').substring(0, 180));
+            var chapterId = ctx.chapterId || CURRENT_CHAPTER_ID;
+            var paraNo = ctx.paraNo;
+            if (!paraNo && ctx.pEl) {
+                paraNo = parseInt(ctx.pEl.getAttribute('data-para') || '0', 10);
+            }
 
-                fetch(CTX + '/bookmark', {
-                    method: 'POST',
-                    body: body,
-                    credentials: 'same-origin',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            if (chapterId && paraNo > 0) {
+                postJson({
+                    action: 'mark',
+                    chapterId: chapterId,
+                    paraNo: paraNo,
+                    snippet: (ctx.text || '').substring(0, 180)
                 })
-                .then(function(r) { return r.json(); })
                 .then(function(res) {
-                    if (res.success) {
+                    if (res && res.success) {
                         if (ctx.pEl) ctx.pEl.classList.add('is-marked');
-                        showToast('Đã lưu đoạn văn vào Tủ sách!');
+                        showToast('🔖 ' + (res.message || 'Đã lưu đoạn văn vào Tủ sách!'));
                     } else {
-                        showToast(res.message || 'Chưa lưu được vào Tủ sách.');
+                        showToast('⚠️ ' + (res && res.message ? res.message : 'Chưa lưu được vào Tủ sách.'));
                     }
                 })
                 .catch(function() {
-                    showToast('Đã lưu vào bộ nhớ cục bộ trên máy!');
+                    showToast('⚠️ Không thể kết nối tới máy chủ để lưu đoạn.');
                 });
             } else {
-                showToast('Đã lưu đánh dấu đoạn!');
+                showToast('⚠️ Vui lòng chọn đoạn văn cụ thể để đánh dấu.');
             }
             hideToolbar();
         });
@@ -3699,11 +3780,13 @@ try {
         if (noteTextarea) noteTextarea.value = existingNote || '';
         if (btnDeleteNote) btnDeleteNote.style.display = existingNote ? 'inline-block' : 'none';
         if (noteModal) {
+            noteModal.scrollLeft = 0;
             if (typeof noteModal.showModal === 'function') {
                 noteModal.showModal();
             } else {
                 noteModal.setAttribute('open', '');
             }
+            noteModal.scrollLeft = 0;
         }
     }
 

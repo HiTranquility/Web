@@ -485,10 +485,26 @@ a.toc-link:hover .toc-no { color: var(--ember); }
     padding: 0;
     background: transparent;
     margin: auto;
-    max-width: 420px;
+    max-width: 440px;
     width: calc(100% - 32px);
     border-radius: var(--r-lg);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+}
+.reader-dialog.hl-note-dialog {
+    max-width: 480px;
+    width: min(480px, calc(100vw - 32px));
+    overflow: hidden;
+}
+.reader-dialog.quote-card-dialog {
+    max-width: 600px;
+    width: min(600px, calc(100vw - 32px));
+    overflow: hidden;
+}
+.reader-dialog.sleep-timer-dialog {
+    max-width: 460px;
+    width: min(460px, calc(100vw - 32px));
+    overflow: hidden;
 }
 .reader-dialog::backdrop {
     background: rgba(11, 12, 16, 0.72);
@@ -1169,8 +1185,10 @@ kbd {
 /* Đoạn đã đánh dấu (🔖): vạch màu bên trái + biểu tượng nhỏ ở lề.
    Dùng box-shadow inset thay cho border-left để chữ KHÔNG bị đẩy lệch —
    bấm đánh dấu mà cả đoạn nhảy sang phải vài pixel thì mất chỗ đang đọc. */
-.chapter-content .is-marked {
+.chapter-content p[data-para] {
     position: relative;
+}
+.chapter-content .is-marked {
     box-shadow: inset 3px 0 0 var(--ember);
     background: linear-gradient(90deg, rgba(255, 122, 26, .10), transparent 70%);
     border-radius: 0 6px 6px 0;
@@ -1178,14 +1196,70 @@ kbd {
     margin-left: -.75rem;
 }
 .chapter-content .is-marked::before {
-    content: '🔖';
-    position: absolute; left: -1.7rem; top: .1em;
-    font-size: .85rem; opacity: .85;
+    display: none;
 }
-/* Màn hẹp: lề chỉ ~18px, biểu tượng ở lề sẽ tràn ra ngoài và sinh thanh cuộn
-   ngang. Vạch màu bên trái là đủ nhận ra. */
+/* Nút đánh dấu nhanh trực tiếp ở lề từng đoạn văn */
+.para-mark-btn {
+    position: absolute;
+    left: -2.2rem;
+    top: 0.15em;
+    width: 1.8rem;
+    height: 1.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 0;
+    margin: 0;
+    color: var(--ember);
+    z-index: 5;
+}
+.para-mark-btn::before {
+    content: '🔖';
+    display: inline-block;
+}
+/* Khi rê chuột vào đoạn văn trên desktop: hiển thị nút mờ để người dùng biết có thể bấm */
+.chapter-content p[data-para]:hover .para-mark-btn {
+    opacity: 0.45;
+    transform: scale(1);
+}
+.chapter-content p[data-para] .para-mark-btn:hover,
+.chapter-content p[data-para] .para-mark-btn:focus-visible {
+    opacity: 1 !important;
+    transform: scale(1.2) !important;
+    background-color: rgba(255, 122, 26, 0.16);
+}
+/* Khi đoạn đã được đánh dấu: nút luôn sáng rõ và nổi bật */
+.chapter-content p[data-para].is-marked .para-mark-btn {
+    opacity: 1;
+    transform: scale(1.05);
+}
+.chapter-content p[data-para].is-marked .para-mark-btn:hover {
+    transform: scale(1.25);
+    background-color: rgba(255, 122, 26, 0.25);
+}
+/* Màn hình di động hẹp */
 @media (max-width: 700px) {
-    .chapter-content .is-marked::before { display: none; }
+    .para-mark-btn {
+        left: -1.45rem;
+        font-size: 0.8rem;
+        width: 1.4rem;
+        height: 1.4rem;
+    }
+    .chapter-content p[data-para]:active .para-mark-btn,
+    .chapter-content p[data-para].is-marked .para-mark-btn {
+        opacity: 0.95;
+    }
 }
 
 /* Lóe sáng một nhịp ở đoạn vừa được cuộn tới (đọc tiếp / mở từ tủ sách) */
@@ -2435,8 +2509,9 @@ body.is-zen-mode .reader-bar:hover {
     line-height: 1.2;
 }
 .sleep-timer-card {
-    max-width: 440px;
-    width: 90%;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 .sleep-desc {
     font-size: 0.84rem;
@@ -2558,8 +2633,9 @@ body.is-zen-mode .reader-bar:hover {
    TRÌNH TẠO ẢNH TRÍCH DẪN NGHỆ THUẬT (QUOTE CARD GENERATOR)
    ============================================================================ */
 .quote-card-box {
-    max-width: 580px;
-    width: 95%;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 .quote-card-body {
     display: flex;

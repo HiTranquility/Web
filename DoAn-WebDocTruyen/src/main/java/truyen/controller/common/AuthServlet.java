@@ -90,9 +90,12 @@ public class AuthServlet extends HttpServlet {
                 case "firebase-google":
                     firebaseGoogleLogin(request, response);
                     return;
-                default:
+                case "login":
                     url = login(request, response);
                     break;
+                default:
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    return;
             }
         } catch (SQLException e) {
             log("AuthServlet: lỗi truy vấn khi action=" + action, e);
@@ -367,11 +370,15 @@ public class AuthServlet extends HttpServlet {
             throws IOException {
         /*
          * CHỐNG LOGOUT CSRF (bug-009):
-         * Chỉ chấp nhận POST mang CSRF token hợp lệ (đã được CsrfFilter kiểm soát).
-         * Nếu gọi bằng GET (ví dụ qua thẻ <img src="/auth?action=logout"> trên trang khác),
-         * từ chối huỷ phiên và chuyển hướng an toàn về trang chủ mà không làm gián đoạn phiên làm việc.
+         * Phương thức POST bắt buộc phải mang CSRF token hợp lệ (đã được CsrfFilter kiểm soát).
+         * Với phương thức GET: chỉ chấp nhận huỷ phiên khi có đính kèm CSRF token hợp lệ của phiên
+         * (chống tấn công Logout CSRF qua thẻ <img> nhưng vẫn cho phép huỷ phiên an toàn nếu có token).
+         * Nếu GET không có token hợp lệ -> từ chối huỷ phiên và chuyển hướng an toàn về trang chủ.
          */
-        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+        boolean isPost = "POST".equalsIgnoreCase(request.getMethod());
+        boolean isGetWithCsrf = "GET".equalsIgnoreCase(request.getMethod()) && truyen.util.CsrfUtil.isValid(request);
+
+        if (!isPost && !isGetWithCsrf) {
             response.sendRedirect(request.getContextPath() + "/");
             return;
         }
@@ -468,11 +475,11 @@ public class AuthServlet extends HttpServlet {
             return "/WEB-INF/views/auth/reset.jsp";
         }
 
-        userDAO.updatePassword(userId, PasswordUtil.hash(pass));
-
-        // Đánh dấu đã dùng NGAY. Quên bước này thì vé còn sống tới lúc hết
-        // hạn và dùng lại được bao nhiêu lần cũng được.
-        resetDAO.markUsed(token);
+        // Kiểm tra lại hiệu lực ngay lúc ghi để hai POST không dùng lại cùng vé.
+        if (!resetDAO.resetPassword(token, PasswordUtil.hash(pass))) {
+            request.setAttribute("message", "Liên kết không hợp lệ hoặc đã hết hạn. Hãy xin lại liên kết mới.");
+            return "/WEB-INF/views/auth/forgot.jsp";
+        }
 
         request.getSession().setAttribute("flash",
                 "Đã đổi mật khẩu. Đăng nhập lại nhé.");

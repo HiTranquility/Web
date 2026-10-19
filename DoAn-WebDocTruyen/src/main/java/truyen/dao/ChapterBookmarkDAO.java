@@ -21,8 +21,9 @@ public class ChapterBookmarkDAO {
      * UNIQUE) — bấm hai lần không phải lỗi, chỉ là không có gì mới.
      */
     public boolean add(int userId, int chapterId, int paraNo, String snippet) throws SQLException {
-        String sql = "INSERT IGNORE INTO chapter_bookmarks (user_id, chapter_id, para_no, snippet) "
-                   + "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO chapter_bookmarks (user_id, chapter_id, para_no, snippet) "
+                   + "VALUES (?, ?, ?, ?) "
+                   + "ON DUPLICATE KEY UPDATE snippet = COALESCE(VALUES(snippet), snippet)";
         try (Connection con = DBConnection.get();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);

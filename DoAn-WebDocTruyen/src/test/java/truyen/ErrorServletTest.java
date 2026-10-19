@@ -133,6 +133,7 @@ class ErrorServletTest {
     static class TestRequest extends javax.servlet.http.HttpServletRequestWrapper {
         private final Map<String, Object> attrs;
         private final Map<String, String> params;
+        private final WebRequestFixture.Session session = new WebRequestFixture.Session();
         String forwardedPath;
 
         public TestRequest(Map<String, Object> attrs, Map<String, String> params) {
@@ -144,6 +145,8 @@ class ErrorServletTest {
         @Override public Object getAttribute(String name) { return attrs.get(name); }
         @Override public void setAttribute(String name, Object o) { attrs.put(name, o); }
         @Override public String getParameter(String name) { return params.get(name); }
+        @Override public javax.servlet.http.HttpSession getSession(boolean create) { return session.proxy; }
+        @Override public javax.servlet.http.HttpSession getSession() { return session.proxy; }
         @Override public RequestDispatcher getRequestDispatcher(String path) {
             this.forwardedPath = path;
             return new RequestDispatcher() {

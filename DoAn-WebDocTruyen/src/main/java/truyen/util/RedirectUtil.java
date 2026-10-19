@@ -36,7 +36,7 @@ public final class RedirectUtil {
     }
 
     public static String afterLogin(User user, String target, String contextPath) {
-        String fallback = user.isAdmin() ? "/admin/dashboard" : "/";
+        String fallback = (user != null && user.isAdmin()) ? "/admin/dashboard" : "/";
         String local = localPath(target, contextPath);
         if (local == null) return fallback;
         String path = URI.create(local).getPath();

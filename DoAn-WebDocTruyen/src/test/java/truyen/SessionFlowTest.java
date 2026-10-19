@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import truyen.controller.common.AuthServlet;
 import truyen.dao.UserDAO;
+import truyen.dao.PasswordResetDAO;
 import truyen.filter.AuthFilter;
 import truyen.filter.CsrfFilter;
 import truyen.filter.EncodingFilter;
@@ -129,5 +130,50 @@ class SessionFlowTest {
     @Test void dynamicResponsesDisableCaching() throws Exception {
         new EncodingFilter().doFilter(web.request, web.response, (req, res) -> {});
         assertEquals("no-store, private", web.responseHeaders.get("Cache-Control"));
+    }
+
+    @Test void unknownAuthActionCannotFallThroughToLogin() throws Exception {
+        preparePost("unknown-action");
+        web.params.put("username", "audit_user"); web.params.put("password", "audit-password");
+        dispatch(); assertEquals(404, web.status); assertNull(web.session.values.get("currentUser"));
+    }
+
+    @Test void expiredAjaxCsrfReturnsReadableJson() throws Exception {
+        preparePost("logout"); web.params.put("_csrf", "expired");
+        web.headers.put("Accept", "application/json"); dispatch();
+        assertEquals(403, web.status); assertTrue(web.output.toString().contains("\"success\":false"));
+    }
+
+    @Test void csrfHeaderCanAuthorizeLogout() throws Exception {
+        preparePost("logout"); WebRequestFixture.Session old = web.session;
+        web.headers.put("X-CSRF-Token", web.params.remove("_csrf")); dispatch();
+        assertTrue(old.invalidated);
+    }
+
+    private void resetDao(boolean accepted) throws Exception {
+        Field field = AuthServlet.class.getDeclaredField("resetDAO"); field.setAccessible(true);
+        field.set(servlet, new PasswordResetDAO() {
+            @Override public int findValidUserId(String token) { return 123; }
+            @Override public boolean resetPassword(String token, String hash) {
+                assertTrue(PasswordUtil.verify("audit-password", hash));
+                return accepted;
+            }
+        });
+    }
+
+    @Test void resetRejectedAtWriteTimeNeverReportsSuccess() throws Exception {
+        resetDao(false); preparePost("reset");
+        web.params.put("token", "local-test-ticket"); web.params.put("password", "audit-password");
+        web.params.put("confirmPassword", "audit-password"); dispatch();
+        assertNull(web.redirect); assertNotNull(web.attributes.get("message"));
+        assertEquals("/WEB-INF/views/auth/forgot.jsp", web.attributes.get("contentPage"));
+    }
+
+    @Test void resetReportsSuccessOnlyAfterAtomicWriteSucceeds() throws Exception {
+        resetDao(true); preparePost("reset");
+        web.params.put("token", "local-test-ticket"); web.params.put("password", "audit-password");
+        web.params.put("confirmPassword", "audit-password"); dispatch();
+        assertEquals("/app/auth?action=login", web.redirect);
+        assertNotNull(web.session.values.get("flash"));
     }
 }

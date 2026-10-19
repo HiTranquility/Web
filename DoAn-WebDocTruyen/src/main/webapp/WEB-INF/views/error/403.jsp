@@ -44,9 +44,9 @@
                     <input type="hidden" name="action" value="logout">
                     <input type="hidden" name="_csrf" value="${csrfToken}">
                 </form>
-                <a class="btn btn-ghost" href="#" onclick="event.preventDefault(); document.getElementById('logout403Form').submit();">
+                <button type="submit" form="logout403Form" class="btn btn-ghost">
                     🔄 Đổi tài khoản
-                </a>
+                </button>
             </c:otherwise>
         </c:choose>
     </div>
