@@ -47,6 +47,7 @@ public class ErrorServlet extends HttpServlet {
         }
 
         req.setAttribute("errorCode", statusCode);
+        req.setAttribute("csrfToken", truyen.util.CsrfUtil.token(req.getSession(true)));
         if (statusCode == 403) {
             req.setAttribute("pageTitle", "403 — Không đủ quyền truy cập");
             req.setAttribute("contentPage", "/WEB-INF/views/error/403.jsp");
