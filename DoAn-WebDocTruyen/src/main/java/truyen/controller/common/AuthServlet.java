@@ -97,7 +97,7 @@ public class AuthServlet extends HttpServlet {
         } catch (SQLException e) {
             log("AuthServlet: lỗi truy vấn khi action=" + action, e);
             if ("firebase-google".equals(action) || "1".equals(request.getParameter("ajax"))) {
-                sendJsonResponse(response, false, "Lỗi máy chủ (" + e.getMessage() + "). Vui lòng thử lại.", null);
+                sendJsonResponse(response, false, "Hệ thống đang bận, vui lòng thử lại.", null);
                 return;
             }
             request.setAttribute("message", "Hệ thống đang bận, vui lòng thử lại.");
@@ -136,8 +136,9 @@ public class AuthServlet extends HttpServlet {
         // GET = chỉ hiện form, chưa có gì để xử lý
         if (!"POST".equals(request.getMethod())) {
             String redirect = request.getParameter("redirect");
-            if (redirect != null && redirect.startsWith("/") && !redirect.startsWith("//")) {
-                request.getSession(true).setAttribute("redirectAfterLogin", redirect);
+            String safeRedirect = truyen.util.RedirectUtil.localPath(redirect, request.getContextPath());
+            if (safeRedirect != null) {
+                request.getSession(true).setAttribute("redirectAfterLogin", safeRedirect);
             }
             String reason = request.getParameter("reason");
             if ("bookmark".equals(reason)) {
@@ -222,10 +223,17 @@ public class AuthServlet extends HttpServlet {
 
         // KHÔNG mang chuỗi băm vào session — không có lý do gì để nó ở đó
         user.setPasswordHash(null);
+        // Thống kê đọc không được ngăn việc nạp quyền.
         try {
             user.setReadChapters(userDAO.countReadChapters(user.getId()));
+        } catch (SQLException ex) {
+            log("Không tải được thống kê đọc khi đăng nhập.");
+        }
+        try {
             new truyen.dao.RbacDAO().populateRbac(user);
-        } catch (Exception ignored) {}
+        } catch (SQLException ex) {
+            log("Không tải được quyền bổ sung khi đăng nhập.");
+        }
         session.setAttribute("currentUser", user);
 
         /*
@@ -264,21 +272,7 @@ public class AuthServlet extends HttpServlet {
      *   là viết tắt phần giao thức.
      */
     private String landingPage(User user, String target) {
-        if (target != null
-                && target.startsWith("/")
-                && !target.startsWith("//")) {
-
-            /* Bỏ tiền tố context ra — chỗ gọi đã tự nối lại rồi, giữ nguyên
-               là nối hai lần thành "/app/app/chapter". */
-            String ctx = getServletContext().getContextPath();
-            if (!ctx.isEmpty() && target.startsWith(ctx)) {
-                target = target.substring(ctx.length());
-            }
-            if (target.startsWith("/") && !target.startsWith("//")) {
-                return target;
-            }
-        }
-        return user.isAdmin() ? "/admin/dashboard" : "/";
+        return truyen.util.RedirectUtil.afterLogin(user, target, getServletContext().getContextPath());
     }
 
     // ---- ĐĂNG KÝ -----------------------------------------------------------
@@ -323,6 +317,8 @@ public class AuthServlet extends HttpServlet {
 
         // Đăng ký xong đăng nhập luôn — đỡ bắt người dùng gõ lại
         user.setPasswordHash(null);
+        HttpSession old = request.getSession(false);
+        if (old != null) old.invalidate();
         request.getSession(true).setAttribute("currentUser", user);
 
         response.sendRedirect(request.getContextPath() + "/");
@@ -401,7 +397,7 @@ public class AuthServlet extends HttpServlet {
         String email = trimOrEmpty(request.getParameter("email"));
         String clientIp = RateLimiter.getClientIp(request);
 
-        if (!email.isEmpty()) {
+        if ("POST".equalsIgnoreCase(request.getMethod()) && !email.isEmpty()) {
             if (RateLimiter.isForgotSpam(clientIp, email)) {
                 request.setAttribute("message", "Bạn đã yêu cầu gửi email quá nhiều lần. Vui lòng chờ 15 phút để bảo vệ tài khoản.");
                 request.setAttribute("pageTitle", "Quên mật khẩu");
@@ -628,10 +624,17 @@ public class AuthServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
 
         user.setPasswordHash(null);
+        // Thống kê đọc không được ngăn việc nạp quyền.
         try {
             user.setReadChapters(userDAO.countReadChapters(user.getId()));
+        } catch (SQLException ex) {
+            log("Không tải được thống kê đọc khi đăng nhập.");
+        }
+        try {
             new truyen.dao.RbacDAO().populateRbac(user);
-        } catch (Exception ignored) {}
+        } catch (SQLException ex) {
+            log("Không tải được quyền bổ sung khi đăng nhập.");
+        }
         session.setAttribute("currentUser", user);
 
         String redirect = request.getContextPath() + landingPage(user, target);

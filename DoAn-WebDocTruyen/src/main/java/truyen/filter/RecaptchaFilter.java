@@ -56,9 +56,8 @@ public class RecaptchaFilter implements Filter {
             }
         }
 
-        if (path.startsWith("/assets") || path.startsWith("/uploads")
-                || path.endsWith(".css") || path.endsWith(".js")
-                || path.endsWith(".ico") || path.endsWith(".png")) {
+        if ("GET".equalsIgnoreCase(request.getMethod())
+                && (path.startsWith("/assets/") || path.startsWith("/uploads/"))) {
             chain.doFilter(req, res);
             return;
         }
@@ -83,7 +82,7 @@ public class RecaptchaFilter implements Filter {
         }
 
         String action = request.getParameter("action");
-        if (action == null) action = "";
+        if (action == null) action = "/auth".equals(path) ? "login" : ("/comment".equals(path) ? "add" : "");
 
         double threshold = -1.0;
         String expectedAction = null;
@@ -131,6 +130,10 @@ public class RecaptchaFilter implements Filter {
                     request.setAttribute("message", "Không xác minh được bạn là người thật. Vui lòng tải lại trang và thử lại.");
                     request.setAttribute("username", request.getParameter("username"));
                     request.setAttribute("googleEnabled", GoogleConfig.isEnabled());
+                    request.setAttribute("googleApiKey", GoogleConfig.getApiKey());
+                    request.setAttribute("googleAuthDomain", GoogleConfig.getAuthDomain());
+                    request.setAttribute("googleProjectId", GoogleConfig.getProjectId());
+                    request.setAttribute("googleAppId", GoogleConfig.getAppId());
                     if ("register".equalsIgnoreCase(action)) {
                         request.setAttribute("pageTitle", "Đăng ký");
                         request.setAttribute("email", request.getParameter("email"));
@@ -143,8 +146,9 @@ public class RecaptchaFilter implements Filter {
                     return;
                 } else {
                     request.getSession().setAttribute("flashError", "Không xác minh được người thật khi gửi bình luận.");
-                    String referer = request.getHeader("Referer");
-                    response.sendRedirect(referer != null && !referer.isEmpty() ? referer : (request.getContextPath() + "/"));
+                    int storyId = truyen.util.ServletHelper.parseIntOr(request.getParameter("storyId"), 0);
+                    response.sendRedirect(request.getContextPath()
+                            + (storyId > 0 ? "/story?action=detail&id=" + storyId + "#comments" : "/"));
                     return;
                 }
             }

@@ -47,10 +47,9 @@ public class CsrfFilter implements Filter {
          * Không có file tĩnh nào là POST, nên bỏ qua ở đây không hở gì.
          */
         String path = request.getRequestURI();
-        if (path.startsWith(request.getContextPath() + "/assets")
-                || path.startsWith(request.getContextPath() + "/uploads")
-                || path.endsWith(".css") || path.endsWith(".js")
-                || path.endsWith(".ico") || path.endsWith(".png")) {
+        if ("GET".equalsIgnoreCase(request.getMethod())
+                && (path.startsWith(request.getContextPath() + "/assets/")
+                    || path.startsWith(request.getContextPath() + "/uploads/"))) {
             chain.doFilter(req, res);
             return;
         }
@@ -87,9 +86,15 @@ public class CsrfFilter implements Filter {
          * sendError chứ không setStatus: chỉ sendError mới kích hoạt
          * <error-page> trong web.xml để hiện trang 403 tự làm.
          */
-        request.getServletContext().log("CSRF: tu choi POST " + path
-                + " (Referer: " + request.getHeader("Referer") + ")");
+        request.getServletContext().log("CSRF: tu choi POST " + request.getServletPath());
 
+        if (truyen.util.ServletHelper.isAjax(request)) {
+            truyen.util.JsonUtil.sendJson(response, HttpServletResponse.SC_FORBIDDEN,
+                    "{\"success\":false,\"message\":\"Phiên biểu mẫu đã hết hạn. Vui lòng tải lại trang rồi thử lại.\"}");
+            return;
+        }
+
+        request.setAttribute("csrfFailure", true);
         response.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
 }

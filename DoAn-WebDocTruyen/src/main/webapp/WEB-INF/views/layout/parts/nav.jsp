@@ -190,19 +190,18 @@
                             </c:if>
 
                             <div class="dropdown-sep"></div>
-                            <form id="navLogoutForm" action="${pageContext.request.contextPath}/auth" method="post" style="display:none;">
+                            <form id="navLogoutForm" action="${pageContext.request.contextPath}/auth" method="post">
                                 <input type="hidden" name="action" value="logout">
                                 <input type="hidden" name="_csrf" value="${csrfToken}">
-                            </form>
-                            <a href="${pageContext.request.contextPath}/auth?action=logout"
+                            <button type="submit"
                                class="dropdown-item logout-item"
                                data-confirm="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?"
                                data-confirm-title="Xác nhận đăng xuất"
-                               data-confirm-ok="Đăng xuất"
-                               onclick="event.preventDefault(); var form=document.getElementById('navLogoutForm'); if(window.showConfirmModal){ window.showConfirmModal('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?', { title: 'Xác nhận đăng xuất', confirmText: 'Đăng xuất', cancelText: 'Ở lại', isDanger: true, onConfirm: function(){ form.submit(); } }); } else if(confirm('Bạn có chắc chắn muốn đăng xuất?')) { form.submit(); }">
+                               data-confirm-ok="Đăng xuất">
                                 <span class="dropdown-item-icon">🚪</span>
                                 <span>Đăng xuất</span>
-                            </a>
+                            </button>
+                            </form>
                         </div>
                     </div>
                 </c:when>

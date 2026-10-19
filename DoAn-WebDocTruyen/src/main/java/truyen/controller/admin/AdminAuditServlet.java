@@ -52,7 +52,7 @@ public class AdminAuditServlet extends HttpServlet {
             request.setAttribute("actionFilter", actionFilter);
         } catch (SQLException e) {
             log("AdminAuditServlet: lỗi truy vấn nhật ký thao tác", e);
-            request.setAttribute("error", "Không thể nạp nhật ký kiểm duyệt: " + e.getMessage());
+            request.setAttribute("error", "Không thể nạp nhật ký kiểm duyệt. Vui lòng thử lại.");
         }
 
         request.setAttribute("pageTitle", "Nhật ký Thao tác Quản trị");

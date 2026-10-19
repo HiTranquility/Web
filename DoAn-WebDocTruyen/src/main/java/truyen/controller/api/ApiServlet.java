@@ -167,6 +167,10 @@ public class ApiServlet extends HttpServlet {
     }
 
     private void handleChapter(String idStr, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (ServletHelper.currentUser(req) == null) {
+            sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Vui long dang nhap de doc truyen");
+            return;
+        }
         int id = parseInt(idStr, 0);
         if (id <= 0) {
             sendError(resp, 400, "ID chuong khong hop le");

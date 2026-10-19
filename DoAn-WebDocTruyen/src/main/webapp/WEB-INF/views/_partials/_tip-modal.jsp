@@ -309,12 +309,14 @@
 
         var confirmPrompt = 'Bạn có chắc chắn muốn gửi tặng ' + formatNumber(amount) + ' xu cho tác giả "' + authorName + '" không?';
         if (window.showConfirmModal) {
-            window.showConfirmModal(confirmPrompt, {
+            window.showConfirmModal({
+                message: confirmPrompt,
                 title: 'Xác nhận tặng xu',
                 confirmText: 'Tặng ' + formatNumber(amount) + ' xu',
                 cancelText: 'Huỷ bỏ',
-                isDanger: false,
-                onConfirm: doExecuteTip
+                type: 'info'
+            }).then(function(ok) {
+                if (ok) doExecuteTip();
             });
         } else if (confirm(confirmPrompt)) {
             doExecuteTip();

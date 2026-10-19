@@ -77,6 +77,8 @@
         modal.classList.add('is-open');
         document.body.style.overflow = 'hidden';
 
+        // Hủy yêu cầu trước nếu người dùng bấm nhiều thao tác liên tiếp.
+        if (confirmResolver) confirmResolver(false);
         return new Promise(function(resolve) {
             confirmResolver = resolve;
         });
@@ -106,11 +108,6 @@
         var confirmMsg = target.getAttribute('data-confirm');
 
         if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'INPUT') {
-            if (target.dataset.confirmed === 'true') {
-                target.dataset.confirmed = 'false';
-                return; // Cho phép thực thi bình thường
-            }
-
             // Kiểm tra tính hợp lệ của form (required, min, max, pattern) trước khi hiện modal
             if (form && (target.type === 'submit' || !target.type) && typeof form.checkValidity === 'function') {
                 if (!form.checkValidity()) {
@@ -146,22 +143,19 @@
                 type: type
             }).then(function(ok) {
                 if (ok) {
-                    if (form && (target.type === 'submit' || !target.type)) {
-                        target.dataset.confirmed = 'true';
-                        // Đặt tên nút nếu form có xử lý name/value
-                        if (target.name) {
-                            var hidden = document.createElement('input');
-                            hidden.type = 'hidden';
-                            hidden.name = target.name;
-                            hidden.value = target.value;
-                            form.appendChild(hidden);
-                        }
-                        if (formId) {
-                            form.dataset.confirmed = 'true';
-                            form.submit();
-                        } else if (typeof form.requestSubmit === 'function') {
+                    if (form && target.type === 'submit') {
+                        form.dataset.confirmed = 'true';
+                        if (typeof form.requestSubmit === 'function') {
                             form.requestSubmit(target);
                         } else {
+                            // Trình duyệt cũ: giữ name/value của nút submit.
+                            if (target.name) {
+                                var hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = target.name;
+                                hidden.value = target.value;
+                                form.appendChild(hidden);
+                            }
                             form.submit();
                         }
                     } else if (target.tagName === 'A' && target.href) {
@@ -175,12 +169,12 @@
     // Chặn submit form trực tiếp nếu form có data-confirm
     document.addEventListener('submit', function(e) {
         var form = e.target;
-        if (!form || !form.hasAttribute('data-confirm')) return;
-
+        if (!form) return;
         if (form.dataset.confirmed === 'true') {
             form.dataset.confirmed = 'false';
             return;
         }
+        if (!form.hasAttribute('data-confirm')) return;
 
         // Kiểm tra tính hợp lệ của form trước khi hiện modal xác nhận
         if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
@@ -214,7 +208,11 @@
         }).then(function(ok) {
             if (ok) {
                 form.dataset.confirmed = 'true';
-                form.submit();
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit(e.submitter || undefined);
+                } else {
+                    form.submit();
+                }
             }
         });
     }, true);

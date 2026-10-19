@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14001c"/>
+      <stop offset="45%" stop-color="#290038"/>
+      <stop offset="100%" stop-color="#450a5a"/>
+    </linearGradient>
+    <linearGradient id="gold-text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#c026d3"/>
+    </linearGradient>
+    <radialGradient id="center-glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.38"/>
+      <stop offset="60%" stop-color="#c026d3" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="600" height="800" fill="url(#bg-grad)"/>
+  <rect width="600" height="800" fill="url(#center-glow)"/>
+
+  <!-- Ornate Outer Border -->
+  <rect x="20" y="20" width="560" height="760" rx="8" fill="none" stroke="#f43f5e" stroke-width="1.2" stroke-opacity="0.35"/>
+  <rect x="26" y="26" width="548" height="748" rx="6" fill="none" stroke="#c026d3" stroke-width="0.8" stroke-opacity="0.25"/>
+
+  <!-- Top Badge -->
+  <rect x="180" y="46" width="240" height="30" rx="15" fill="#c026d3" fill-opacity="0.18" stroke="#c026d3" stroke-width="1.2"/>
+  <text x="300" y="66" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="12" font-weight="700" fill="#f43f5e" text-anchor="middle" letter-spacing="3">HUYỀN HUYỄN ĐẤU LA</text>
+
+  <!-- Thematic Vector Elements -->
+
+          <!-- Dark Fallen Angel Feathered Wings -->
+          <path d="M300 360 Q180 230 80 290 Q160 370 250 430 Z" fill="#c026d3" opacity="0.6"/>
+          <path d="M300 360 Q420 230 520 290 Q440 370 350 430 Z" fill="#c026d3" opacity="0.6"/>
+          <!-- God-Slayer Spear (Thí Thần Thương) -->
+          <polygon points="295,140 305,140 308,520 292,520" fill="#f43f5e"/>
+          <polygon points="280,180 320,180 300,120" fill="#ffffff"/>
+          <circle cx="300" cy="180" r="14" fill="#a855f7" stroke="#fff" stroke-width="2"/>
+          <!-- Soul Rings -->
+          <ellipse cx="300" cy="460" rx="140" ry="25" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="6 4"/>
+          <ellipse cx="300" cy="490" rx="170" ry="30" fill="none" stroke="#c026d3" stroke-width="2.5"/>
+          <path d="M-50 680 L200 600 L400 640 L650 590 L650 800 L-50 800 Z" fill="#09000c" opacity="0.96"/>
+        
+
+  <!-- Title & Typography -->
+  <text x="300" y="640" font-family="'Lora', 'Playfair Display', Georgia, serif" font-size="28" font-weight="700" fill="url(#gold-text)" text-anchor="middle" letter-spacing="1">ĐẤU LA: THẦN CẤP KHỞI ĐẦU</text>
+  <text x="300" y="675" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="13" font-weight="600" fill="#9aa3b5" text-anchor="middle" letter-spacing="3">VÕ HỒN SONG SINH CHẤN ĐỘNG THẦN GIỚI</text>
+
+  <!-- Accent Divider -->
+  <line x1="200" y1="702" x2="400" y2="702" stroke="#c026d3" stroke-width="2" stroke-opacity="0.6"/>
+
+  <!-- Author Signature -->
+  <text x="300" y="738" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="600" fill="#e8eaf0" text-anchor="middle" letter-spacing="2">TÁC GIẢ: MỘC MIÊN</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#03160e"/>
+      <stop offset="45%" stop-color="#082d1c"/>
+      <stop offset="100%" stop-color="#0f4c30"/>
+    </linearGradient>
+    <linearGradient id="gold-text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#ffe600"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <radialGradient id="center-glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#00f5d4" stop-opacity="0.38"/>
+      <stop offset="60%" stop-color="#10b981" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="600" height="800" fill="url(#bg-grad)"/>
+  <rect width="600" height="800" fill="url(#center-glow)"/>
+
+  <!-- Ornate Outer Border -->
+  <rect x="20" y="20" width="560" height="760" rx="8" fill="none" stroke="#ffe600" stroke-width="1.2" stroke-opacity="0.35"/>
+  <rect x="26" y="26" width="548" height="748" rx="6" fill="none" stroke="#10b981" stroke-width="0.8" stroke-opacity="0.25"/>
+
+  <!-- Top Badge -->
+  <rect x="180" y="46" width="240" height="30" rx="15" fill="#10b981" fill-opacity="0.18" stroke="#10b981" stroke-width="1.2"/>
+  <text x="300" y="66" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffe600" text-anchor="middle" letter-spacing="3">KỶ NGUYÊN NGỰ THÚ</text>
+
+  <!-- Thematic Vector Elements -->
+
+          <!-- Summoning Array / Pentagram -->
+          <circle cx="300" cy="350" r="150" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="10 6" opacity="0.6"/>
+          <circle cx="300" cy="350" r="120" fill="#00f5d4" fill-opacity="0.08" stroke="#ffe600" stroke-width="1.2"/>
+          <!-- Dragon / Phoenix Silhouette Wings -->
+          <path d="M300 370 Q210 260 120 310 Q200 360 270 410 Z" fill="#10b981" opacity="0.65"/>
+          <path d="M300 370 Q390 260 480 310 Q400 360 330 410 Z" fill="#10b981" opacity="0.65"/>
+          <!-- Core Gem / Soul Orb -->
+          <circle cx="300" cy="370" r="22" fill="#ffe600" stroke="#ffffff" stroke-width="3"/>
+          <circle cx="300" cy="370" r="10" fill="#00f5d4"/>
+          <!-- Ancient Runes -->
+          <circle cx="210" cy="270" r="4" fill="#00f5d4"/>
+          <circle cx="390" cy="270" r="4" fill="#00f5d4"/>
+          <circle cx="300" cy="210" r="5" fill="#ffe600"/>
+          <!-- Forest Floor Silhouette -->
+          <path d="M-50 670 Q150 610 320 650 T650 620 L650 800 L-50 800 Z" fill="#020d08" opacity="0.96"/>
+        
+
+  <!-- Title & Typography -->
+  <text x="300" y="640" font-family="'Lora', 'Playfair Display', Georgia, serif" font-size="28" font-weight="700" fill="url(#gold-text)" text-anchor="middle" letter-spacing="1">NGỰ THÚ TOÀN DÂN</text>
+  <text x="300" y="675" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="13" font-weight="600" fill="#9aa3b5" text-anchor="middle" letter-spacing="3">THỨC TỈNH THẦN THÚ VÔ HẠN</text>
+
+  <!-- Accent Divider -->
+  <line x1="200" y1="702" x2="400" y2="702" stroke="#10b981" stroke-width="2" stroke-opacity="0.6"/>
+
+  <!-- Author Signature -->
+  <text x="300" y="738" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="600" fill="#e8eaf0" text-anchor="middle" letter-spacing="2">TÁC GIẢ: MỘC MIÊN</text>
+</svg>

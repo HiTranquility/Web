@@ -17,7 +17,7 @@ import truyen.util.DBConnection;
  */
 public class RbacDAO {
 
-    public List<String> findRolesByUser(int userId) {
+    public List<String> findRolesByUser(int userId) throws SQLException {
         List<String> list = new ArrayList<>();
         if (!DBConnection.isReady() || userId <= 0) return list;
 
@@ -32,11 +32,11 @@ public class RbacDAO {
                     list.add(rs.getString("code"));
                 }
             }
-        } catch (SQLException ignored) { }
+        }
         return list;
     }
 
-    public Set<String> findPermissionsByUser(int userId) {
+    public Set<String> findPermissionsByUser(int userId) throws SQLException {
         Set<String> set = new HashSet<>();
         if (!DBConnection.isReady() || userId <= 0) return set;
 
@@ -52,14 +52,16 @@ public class RbacDAO {
                     set.add(rs.getString("code"));
                 }
             }
-        } catch (SQLException ignored) { }
+        }
         return set;
     }
 
-    public void populateRbac(User user) {
+    public void populateRbac(User user) throws SQLException {
         if (user == null || user.getId() <= 0) return;
-        user.setRoles(findRolesByUser(user.getId()));
-        user.setPermissions(findPermissionsByUser(user.getId()));
+        List<String> roles = findRolesByUser(user.getId());
+        Set<String> permissions = findPermissionsByUser(user.getId());
+        user.setRoles(roles);
+        user.setPermissions(permissions);
     }
 
     public boolean assignRole(int userId, String roleCode) throws SQLException {

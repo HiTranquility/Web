@@ -93,7 +93,10 @@ public final class ServletHelper {
      */
     public static boolean isAjax(HttpServletRequest request) {
         return "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
-                || "json".equalsIgnoreCase(request.getParameter("format"));
+                || "json".equalsIgnoreCase(request.getParameter("format"))
+                || "1".equals(request.getParameter("ajax"))
+                || (request.getHeader("Accept") != null
+                    && request.getHeader("Accept").contains("application/json"));
     }
 
     /**

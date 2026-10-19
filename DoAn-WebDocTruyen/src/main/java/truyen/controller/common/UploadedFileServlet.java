@@ -154,8 +154,8 @@ public class UploadedFileServlet extends HttpServlet {
         // của người đọc (lật lại chương không tải lại), nhưng CẤM proxy / CDN
         // dùng chung giữ bản sao — không thì người chưa mở khoá đi qua cùng
         // proxy sẽ nhận ảnh từ bộ đệm, bỏ qua bước kiểm quyền ở trên.
-        response.setHeader("Cache-Control", gated
-                ? "private, max-age=86400"
+        response.setHeader("Cache-Control", gated || rel.startsWith(truyen.util.UploadUtil.EVIDENCE_PREFIX)
+                ? "private, no-store"
                 : "public, max-age=31536000, immutable");
         response.setContentLengthLong(Files.size(file));
 

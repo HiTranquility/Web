@@ -59,6 +59,14 @@ public class EncodingFilter implements Filter {
 
         if (res instanceof javax.servlet.http.HttpServletResponse) {
             javax.servlet.http.HttpServletResponse httpRes = (javax.servlet.http.HttpServletResponse) res;
+            // HTML/JSON chứa tài khoản và CSRF token phải luôn lấy lại từ máy chủ.
+            javax.servlet.http.HttpServletRequest httpReq = (javax.servlet.http.HttpServletRequest) req;
+            String path = httpReq.getServletPath();
+            if (path == null || !path.startsWith("/assets/")) {
+                httpRes.setHeader("Cache-Control", "no-store, private");
+                httpRes.setHeader("Pragma", "no-cache");
+                httpRes.setDateHeader("Expires", 0);
+            }
             // Bảo vệ an toàn HTTP Headers (OWASP Security Standards)
             httpRes.setHeader("X-Content-Type-Options", "nosniff");
             httpRes.setHeader("X-Frame-Options", "SAMEORIGIN");

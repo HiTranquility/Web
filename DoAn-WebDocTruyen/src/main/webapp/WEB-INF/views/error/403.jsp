@@ -16,10 +16,17 @@
 <div class="error-hero-card">
     <div class="error-hero-badge">🛡️</div>
     <div class="error-hero-code">403</div>
-    <h2 class="error-hero-title">Khu Vực Giới Hạn Quyền</h2>
+    <h2 class="error-hero-title">${csrfFailure ? 'Biểu mẫu đã hết hạn' : 'Khu Vực Giới Hạn Quyền'}</h2>
     <p class="error-hero-desc">
+        <c:choose>
+        <c:when test="${csrfFailure}">
+        Phiên biểu mẫu không còn hợp lệ. Hãy mở lại trang cần thao tác rồi thử lại.
+        </c:when>
+        <c:otherwise>
         Trang này dành riêng cho quản trị viên hoặc tác giả sở hữu nội dung.
         Nếu bạn cho rằng đây là sự nhầm lẫn, hãy đăng nhập với tài khoản có quyền phù hợp.
+        </c:otherwise>
+        </c:choose>
     </p>
 
     <div class="error-hero-actions">

@@ -204,21 +204,21 @@ public class RbacAndDataSetup {
         if (authorId <= 0) authorId = 1;
 
         String[][] newStories = {
-            {"Vạn Cổ Đệ Nhất Thần", "text", "Thiên địa sơ khai, hồng mông hỗn độn. Thiếu niên Lý Thiên Mệnh nắm giữ thập đại Thái Cổ Hỗn Độn Cự Thú, nghịch chuyển càn khôn phá toái chư thiên.", "TIEN_HIEP", "45000", "4.9"},
-            {"Toàn Trí Độc Giả: Điểm Nhìn Thần Bí", "comic", "Một ngày nọ, cuốn tiểu thuyết dài tập mà chỉ một mình Kim Dokja kiên trì đọc đến chương cuối bỗng biến thành hiện thực tàn khốc trên toàn cầu.", "MANGA", "82000", "5.0"},
-            {"Trùng Sinh Đô Thị Tu Tiên", "text", "Độ Kiếp kỳ đại tu sĩ Trần Phàm độ kiếp thất bại, trùng sinh trở về thời niên thiếu tại thành phố Sở Châu, bắt đầu hành trình nghịch thiên cải mệnh.", "DO_THI", "39000", "4.8"},
-            {"Bí Ẩn Làng Sương Mù", "text", "Đội điều tra hình sự số 4 nhận nhiệm vụ thâm nhập vào một ngôi làng cổ nằm sâu trong dãy Hoàng Liên Sơn, nơi xảy ra những vụ mất tích kỳ dị.", "TRINH_THAM", "28000", "4.7"},
-            {"Đại Phụng Đả Canh Nhân", "text", "Hứa Thất An tốt nghiệp trường cảnh sát, xuyên không vào thế giới luyện khí, nho gia và yêu ma hoành hành, giải khai những đại án kinh thiên động địa.", "TIEN_HIEP", "96000", "4.9"},
-            {"Võ Luyện Đỉnh Phong", "text", "Võ đạo đỉnh phong là cô độc, là tịch mịch, là bước đi một mình trên con đường chông gai. Thiếu niên quét rác Dương Khai tình cờ nhặt được cuốn Hắc Thư bí ẩn.", "KIEM_HIEP", "54000", "4.6"},
-            {"Ngự Thú Phiên Bản Toàn Dân", "comic", "Thế giới bước vào kỷ nguyên ngự thú toàn dân, mỗi người đều có thể thức tỉnh linh thú bản mệnh. Diệp Viễn thức tỉnh thiên phú cấp Thần vô hạn tiến hoá.", "MANGA", "63000", "4.9"},
-            {"Thám Tử Kính Lúp: Vụ Án Đồng Hồ Cát", "text", "Một vụ án mạng trong căn phòng kín hoàn hảo tại toà tháp đồng hồ cổ kính ở thủ đô London thế kỷ 19.", "TRINH_THAM", "18000", "4.5"},
-            {"Quỷ Bí Chi Chủ", "text", "Chu Minh Thụy tỉnh lại trong thân xác của Klein Moretti tại một thế giới mang phong cách hơi nước Victoria, đầy ắp ma dược và các thế lực tà thần ẩn nấp.", "HUYEN_HUYEN", "110000", "5.0"},
-            {"Đấu La Chi Thần Cấp Khởi Đầu", "text", "Xuyên không về Đấu La Đại Lục, thức tỉnh song sinh võ hồn Thí Thần Thương và Thập Nhị Dực Đọa Lạc Thiên Sứ, chấn động Vũ Hồn Điện.", "HUYEN_HUYEN", "32000", "4.7"},
-            {"Thợ Rèn Huyền Thoại Trong Thế Giới Game", "comic", "Shin Youngwoo là một kẻ xui xẻo nợ nần ngập đầu trong tựa game thực tế ảo số 1 thế giới Satisfy, cho đến khi cậu phát hiện ra Trang Sách Pagma.", "MANGA", "71000", "4.8"},
-            {"Y Đạo Vô Song: Thần Y Hạ Sơn", "text", "Thiếu niên Lâm Phong tu luyện trên núi 10 năm, y thuật tuyệt thế, võ đạo thông thần, vâng lệnh sư phụ xuống núi giải trừ huyết hải thâm thù.", "DO_THI", "41000", "4.6"},
-            {"Phù Thủy Cuối Cùng Ở Học Viện Phép Thuật", "text", "Khi ma pháp cổ xưa dần bị lãng quên bởi kỷ nguyên công nghệ máy móc, một học sinh dị biệt đã đánh thức cấm thuật cổ đại ngàn năm.", "HUYEN_HUYEN", "24000", "4.7"},
-            {"Căn Phòng Số 404: Ám Ảnh Ký Túc Xá", "text", "Ký túc xá đại học vào nửa đêm thường xuyên phát ra những âm thanh kỳ lạ từ căn phòng vốn đã bị niêm phong suốt 15 năm qua.", "KINH_DI", "35000", "4.8"},
-            {"Trở Thành Bạo Chúa Trong Tiểu Thuyết Xuyên Không", "comic", "Nữ sinh viên bình thường bỗng xuyên không vào vai hoàng đế bạo chúa tàn nhẫn trong cuốn tiểu thuyết lãng mạn, mục tiêu duy nhất là sống sót.", "MANGA", "58000", "4.9"}
+            {"Vạn Cổ Đệ Nhất Thần", "text", "Thiên địa sơ khai, hồng mông hỗn độn. Thiếu niên Lý Thiên Mệnh nắm giữ thập đại Thái Cổ Hỗn Độn Cự Thú, nghịch chuyển càn khôn phá toái chư thiên.", "TIEN_HIEP", "45000", "4.9", "/assets/images/covers/cover-vanco.svg"},
+            {"Toàn Trí Độc Giả: Điểm Nhìn Thần Bí", "comic", "Một ngày nọ, cuốn tiểu thuyết dài tập mà chỉ một mình Kim Dokja kiên trì đọc đến chương cuối bỗng biến thành hiện thực tàn khốc trên toàn cầu.", "MANGA", "82000", "5.0", "/assets/images/covers/cover-toantri.svg"},
+            {"Trùng Sinh Đô Thị Tu Tiên", "text", "Độ Kiếp kỳ đại tu sĩ Trần Phàm độ kiếp thất bại, trùng sinh trở về thời niên thiếu tại thành phố Sở Châu, bắt đầu hành trình nghịch thiên cải mệnh.", "DO_THI", "39000", "4.8", "/assets/images/covers/cover-trungsinh-dothi.svg"},
+            {"Bí Ẩn Làng Sương Mù", "text", "Đội điều tra hình sự số 4 nhận nhiệm vụ thâm nhập vào một ngôi làng cổ nằm sâu trong dãy Hoàng Liên Sơn, nơi xảy ra những vụ mất tích kỳ dị.", "TRINH_THAM", "28000", "4.7", "/assets/images/covers/cover-langsuongmu.svg"},
+            {"Đại Phụng Đả Canh Nhân", "text", "Hứa Thất An tốt nghiệp trường cảnh sát, xuyên không vào thế giới luyện khí, nho gia và yêu ma hoành hành, giải khai những đại án kinh thiên động địa.", "TIEN_HIEP", "96000", "4.9", "/assets/images/covers/cover-daiphung.svg"},
+            {"Võ Luyện Đỉnh Phong", "text", "Võ đạo đỉnh phong là cô độc, là tịch mịch, là bước đi một mình trên con đường chông gai. Thiếu niên quét rác Dương Khai tình cờ nhặt được cuốn Hắc Thư bí ẩn.", "KIEM_HIEP", "54000", "4.6", "/assets/images/covers/cover-voluyen.svg"},
+            {"Ngự Thú Phiên Bản Toàn Dân", "comic", "Thế giới bước vào kỷ nguyên ngự thú toàn dân, mỗi người đều có thể thức tỉnh linh thú bản mệnh. Diệp Viễn thức tỉnh thiên phú cấp Thần vô hạn tiến hoá.", "MANGA", "63000", "4.9", "/assets/images/covers/cover-nguthu.svg"},
+            {"Thám Tử Kính Lúp: Vụ Án Đồng Hồ Cát", "text", "Một vụ án mạng trong căn phòng kín hoàn hảo tại toà tháp đồng hồ cổ kính ở thủ đô London thế kỷ 19.", "TRINH_THAM", "18000", "4.5", "/assets/images/covers/cover-thantu-dongho.svg"},
+            {"Quỷ Bí Chi Chủ", "text", "Chu Minh Thụy tỉnh lại trong thân xác của Klein Moretti tại một thế giới mang phong cách hơi nước Victoria, đầy ắp ma dược và các thế lực tà thần ẩn nấp.", "HUYEN_HUYEN", "110000", "5.0", "/assets/images/covers/cover-quy-bi.svg"},
+            {"Đấu La Chi Thần Cấp Khởi Đầu", "text", "Xuyên không về Đấu La Đại Lục, thức tỉnh song sinh võ hồn Thí Thần Thương và Thập Nhị Dực Đọa Lạc Thiên Sứ, chấn động Vũ Hồn Điện.", "HUYEN_HUYEN", "32000", "4.7", "/assets/images/covers/cover-daula.svg"},
+            {"Thợ Rèn Huyền Thoại Trong Thế Giới Game", "comic", "Shin Youngwoo là một kẻ xui xẻo nợ nần ngập đầu trong tựa game thực tế ảo số 1 thế giới Satisfy, cho đến khi cậu phát hiện ra Trang Sách Pagma.", "MANGA", "71000", "4.8", "/assets/images/covers/cover-thoren.svg"},
+            {"Y Đạo Vô Song: Thần Y Hạ Sơn", "text", "Thiếu niên Lâm Phong tu luyện trên núi 10 năm, y thuật tuyệt thế, võ đạo thông thần, vâng lệnh sư phụ xuống núi giải trừ huyết hải thâm thù.", "DO_THI", "41000", "4.6", "/assets/images/covers/cover-ydo.svg"},
+            {"Phù Thủy Cuối Cùng Ở Học Viện Phép Thuật", "text", "Khi ma pháp cổ xưa dần bị lãng quên bởi kỷ nguyên công nghệ máy móc, một học sinh dị biệt đã đánh thức cấm thuật cổ đại ngàn năm.", "HUYEN_HUYEN", "24000", "4.7", "/assets/images/covers/cover-phuthuy.svg"},
+            {"Căn Phòng Số 404: Ám Ảnh Ký Túc Xá", "text", "Ký túc xá đại học vào nửa đêm thường xuyên phát ra những âm thanh kỳ lạ từ căn phòng vốn đã bị niêm phong suốt 15 năm qua.", "KINH_DI", "35000", "4.8", "/assets/images/covers/cover-phong404.svg"},
+            {"Trở Thành Bạo Chúa Trong Tiểu Thuyết Xuyên Không", "comic", "Nữ sinh viên bình thường bỗng xuyên không vào vai hoàng đế bạo chúa tàn nhẫn trong cuốn tiểu thuyết lãng mạn, mục tiêu duy nhất là sống sót.", "MANGA", "58000", "4.9", "/assets/images/covers/cover-baochua.svg"}
         };
 
         for (String[] st : newStories) {
@@ -227,27 +227,36 @@ public class RbacAndDataSetup {
             String summary = st[2];
             int views = Integer.parseInt(st[4]);
             double rating = Double.parseDouble(st[5]);
+            String coverPath = st[6];
 
             // Kiểm tra xem truyện đã có chưa
             int sid = queryId(con, "SELECT id FROM stories WHERE title = ?", title);
-            if (sid <= 0) {
+            if (sid > 0) {
+                // Đã có truyện: cập nhật ảnh bìa chuyên biệt nếu chưa có hoặc cập nhật mới
+                try (PreparedStatement ps = con.prepareStatement("UPDATE stories SET cover_url = ? WHERE id = ?")) {
+                    ps.setString(1, coverPath);
+                    ps.setInt(2, sid);
+                    ps.executeUpdate();
+                }
+            } else {
                 String slug = truyen.util.SlugUtil.toSlug(title);
                 String storyType = isComic ? "COMIC" : "TEXT";
                 int rCount = 15;
                 int rSum = (int) Math.round(rating * rCount);
 
                 try (PreparedStatement ps = con.prepareStatement(
-                        "INSERT INTO stories (title, slug, author_id, description, status, progress, story_type, view_count, rating_sum, rating_count, created_at, updated_at) "
-                        + "VALUES (?, ?, ?, ?, 'PUBLISHED', 'ONGOING', ?, ?, ?, ?, NOW(), NOW())",
+                        "INSERT INTO stories (title, slug, author_id, description, status, progress, story_type, cover_url, view_count, rating_sum, rating_count, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, ?, 'PUBLISHED', 'ONGOING', ?, ?, ?, ?, ?, NOW(), NOW())",
                         Statement.RETURN_GENERATED_KEYS)) {
                     ps.setString(1, title);
                     ps.setString(2, slug);
                     ps.setInt(3, authorId);
                     ps.setString(4, summary);
                     ps.setString(5, storyType);
-                    ps.setInt(6, views);
-                    ps.setInt(7, rSum);
-                    ps.setInt(8, rCount);
+                    ps.setString(6, coverPath);
+                    ps.setInt(7, views);
+                    ps.setInt(8, rSum);
+                    ps.setInt(9, rCount);
                     ps.executeUpdate();
                     try (ResultSet rs = ps.getGeneratedKeys()) {
                         if (rs.next()) sid = rs.getInt(1);

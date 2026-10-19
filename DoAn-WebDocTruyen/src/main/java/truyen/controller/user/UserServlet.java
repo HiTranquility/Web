@@ -337,14 +337,12 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        boolean deducted = walletDAO.deductCoins(me.getId(), cost, "Nâng cấp Hội viên VIP (" + days + " ngày)");
+        boolean deducted = walletDAO.purchaseVip(me.getId(), days);
         if (!deducted) {
             request.getSession().setAttribute("flashError", "Giao dịch trừ xu không thành công, vui lòng thử lại!");
             response.sendRedirect(request.getContextPath() + "/user?action=me#vip-pass");
             return;
         }
-
-        userDAO.upgradeVip(me.getId(), days);
 
         User fresh = userDAO.findById(me.getId());
         if (fresh != null) {

@@ -33,6 +33,10 @@
 <link rel="manifest" href="${pageContext.request.contextPath}/manifest.json">
 <link rel="icon" type="image/svg+xml" href="${pageContext.request.contextPath}/assets/images/app-icon.svg">
 <script>
+    // Back/Forward có thể phục hồi DOM chứa tài khoản và token của phiên cũ.
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) window.location.reload();
+    });
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
             navigator.serviceWorker.register('${pageContext.request.contextPath}/sw.js', { scope: '${pageContext.request.contextPath}/' }).catch(function () {});

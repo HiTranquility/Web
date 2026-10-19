@@ -284,6 +284,54 @@ public class WalletDAO {
         }
     }
 
+    /** Trừ xu, gia hạn VIP và ghi giao dịch cùng thành công hoặc cùng rollback. */
+    public boolean purchaseVip(int userId, int days) throws SQLException {
+        if (userId <= 0 || (days != 30 && days != 90 && days != 365)) return false;
+        if (!DBConnection.isReady()) return false;
+        int cost = days == 365 ? 500 : (days == 90 ? 150 : 60);
+        UserDAO.ensureVipColumn();
+        getBalance(userId);
+        try (Connection con = DBConnection.get()) {
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND balance >= ?")) {
+                    ps.setInt(1, cost);
+                    ps.setInt(2, userId);
+                    ps.setInt(3, cost);
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE users SET vip_expire_at = DATE_ADD("
+                        + "CASE WHEN vip_expire_at > NOW() THEN vip_expire_at ELSE NOW() END, INTERVAL ? DAY) WHERE id = ?")) {
+                    ps.setInt(1, days);
+                    ps.setInt(2, userId);
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "INSERT INTO transactions (from_user_id, to_user_id, story_id, amount, message) VALUES (?, NULL, NULL, ?, ?)")) {
+                    ps.setInt(1, userId);
+                    ps.setInt(2, cost);
+                    ps.setString(3, "Nâng cấp Hội viên VIP (" + days + " ngày)");
+                    ps.executeUpdate();
+                }
+                con.commit();
+                return true;
+            } catch (SQLException ex) {
+                con.rollback();
+                throw ex;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
+    }
+
     /**
 
      * Số lần và tổng số xu đã NẠP (mô phỏng) trong hôm nay — để chặn trần.

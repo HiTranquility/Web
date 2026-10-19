@@ -59,7 +59,7 @@ public class AdminWalletServlet extends HttpServlet {
             request.setAttribute("recentTxs", recentTxs);
         } catch (SQLException e) {
             log("AdminWalletServlet: lỗi nạp dữ liệu ví", e);
-            request.setAttribute("error", "Lỗi nạp dữ liệu ví: " + e.getMessage());
+            request.setAttribute("error", "Không tải được dữ liệu ví. Vui lòng thử lại.");
         }
 
         request.setAttribute("pageTitle", "Quản lý Ví xu Toàn hệ thống");
@@ -74,7 +74,7 @@ public class AdminWalletServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         User me = currentUser(request);
-        if (me == null || !me.isAdmin()) {
+        if (me == null || !me.hasPermission("MANAGE_WALLET")) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -125,7 +125,7 @@ public class AdminWalletServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log("AdminWalletServlet: lỗi điều chỉnh xu", e);
-            request.getSession().setAttribute("flashError", "Lỗi CSDL khi điều chỉnh ví xu: " + e.getMessage());
+            request.getSession().setAttribute("flashError", "Không điều chỉnh được ví xu. Vui lòng thử lại.");
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/wallet");

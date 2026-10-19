@@ -40,7 +40,9 @@ public class AdminFilter implements Filter {
             if (request.getQueryString() != null) {
                 target += "?" + request.getQueryString();
             }
-            request.getSession(true).setAttribute("redirectAfterLogin", target);
+            if ("GET".equalsIgnoreCase(request.getMethod())) {
+                request.getSession(true).setAttribute("redirectAfterLogin", target);
+            }
 
             response.sendRedirect(request.getContextPath() + "/auth?action=login");
             return;
@@ -50,57 +52,9 @@ public class AdminFilter implements Filter {
         String contextPath = request.getContextPath();
         String path = uri.substring(contextPath.length());
 
-        // Phân quyền chi tiết RBAC:
-        if (!me.isAdmin()) {
-            boolean isStaff = me.isModerator() || me.isEditor()
-                    || (me.getPermissions() != null && !me.getPermissions().isEmpty());
-
-            if (!isStaff) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-
-            if (path.startsWith("/admin/wallet")) {
-                if (!me.hasPermission("MANAGE_WALLET")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.startsWith("/admin/user")) {
-                if (!me.hasPermission("MANAGE_USERS")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.startsWith("/admin/audit")) {
-                if (!me.hasPermission("MANAGE_SYSTEM") && !me.hasPermission("MANAGE_WALLET")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.startsWith("/admin/tag")) {
-                if (!me.hasPermission("MANAGE_STORIES")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.startsWith("/admin/story")) {
-                if (!me.hasPermission("MANAGE_STORIES")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.startsWith("/admin/comment")) {
-                if (!me.hasPermission("MODERATE_COMMENTS")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.startsWith("/admin/report")) {
-                if (!me.hasPermission("HANDLE_REPORTS")) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            } else if (path.equals("/admin") || path.equals("/admin/") || path.startsWith("/admin/dashboard")) {
-                // Cho phép staff vào bảng điều khiển chung
-            } else {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
+        if (!truyen.util.AdminAccess.canAccess(me, path)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
         }
 
         chain.doFilter(req, res);

@@ -87,13 +87,22 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        if (truyen.util.ServletHelper.isAjax(request)) {
+            truyen.util.JsonUtil.sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "{\"success\":false,\"needLogin\":true,\"message\":\"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\"}");
+            return;
+        }
+
         /* Chưa đăng nhập -> lưu URL đích và đá về trang đăng nhập kèm thông báo */
         String target = request.getRequestURI();
         if (request.getQueryString() != null) {
             target += "?" + request.getQueryString();
         }
         HttpSession newSession = request.getSession(true);
-        newSession.setAttribute("redirectAfterLogin", target);
+        // Không phát lại thao tác POST bằng GET sau khi đăng nhập.
+        if ("GET".equalsIgnoreCase(request.getMethod())) {
+            newSession.setAttribute("redirectAfterLogin", target);
+        }
         newSession.setAttribute("flash", "Vui lòng đăng nhập tài khoản để đọc truyện nhé!");
 
         response.sendRedirect(request.getContextPath() + "/auth?action=login");
