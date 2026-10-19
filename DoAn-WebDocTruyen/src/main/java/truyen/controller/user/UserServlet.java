@@ -273,12 +273,30 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("dailyQuests", gamificationDAO.getDailyQuests(fresh.getId()));
         java.util.List<truyen.model.Achievement> badges = achievementDAO.getAchievements(fresh.getId(), fresh);
         request.setAttribute("achievements", badges);
+        request.setAttribute("rewardSummary", gamificationDAO.getRewardSummary(fresh.getId()));
         int bonus = truyen.util.AchievementPolicy.dailyBonus(badges);
         request.setAttribute("badgeBonus", bonus);
         int[] rewards = new int[7];
         int[] bases = {5, 10, 15, 20, 25, 30, 50};
-        for (int i = 0; i < bases.length; i++) rewards[i] = truyen.util.AchievementPolicy.dailyReward(bases[i], fresh.getCheckinMultiplier(), bonus);
+        int[] bonuses = new int[7];
+        for (int i = 0; i < bases.length; i++) {
+            rewards[i] = truyen.util.AchievementPolicy.dailyReward(bases[i], fresh.getCheckinMultiplier(), bonus);
+            bonuses[i] = Math.max(0, rewards[i] - bases[i]);
+        }
+        request.setAttribute("checkinBases", bases);
         request.setAttribute("checkinRewards", rewards);
+        request.setAttribute("checkinBonuses", bonuses);
+        int targetIdx = gamificationDAO.getCurrentStreak(fresh.getId()) % 7;
+        request.setAttribute("todayBase", bases[targetIdx]);
+        request.setAttribute("todayTotal", rewards[targetIdx]);
+        request.setAttribute("todayBonus", bonuses[targetIdx]);
+        DailyCheckin todayCheckin = (DailyCheckin) request.getAttribute("todayCheckin");
+        int checkedBonus = 0;
+        if (todayCheckin != null && todayCheckin.getStreakDays() > 0) {
+            int checkedBase = bases[(todayCheckin.getStreakDays() - 1) % 7];
+            checkedBonus = Math.max(0, todayCheckin.getRewardCoins() - checkedBase);
+        }
+        request.setAttribute("checkedBonus", checkedBonus);
         request.setAttribute("pageTitle", "Hồ sơ của tôi");
         request.setAttribute("activeNav", "me");
         return "/WEB-INF/views/user/me.jsp";
@@ -297,6 +315,13 @@ public class UserServlet extends HttpServlet {
         java.util.List<truyen.model.Achievement> list = achievementDAO.getAchievements(fresh.getId(), fresh);
         request.setAttribute("me", fresh);
         request.setAttribute("achievements", list);
+        request.setAttribute("rewardSummary", gamificationDAO.getRewardSummary(fresh.getId()));
+        request.setAttribute("claimableCount", list.stream().filter(truyen.model.Achievement::isClaimable).count());
+        request.setAttribute("claimableCoins", list.stream().filter(truyen.model.Achievement::isClaimable).mapToInt(truyen.model.Achievement::getRewardCoins).sum());
+        int claimedCount = (int) list.stream().filter(truyen.model.Achievement::isClaimed).count();
+        int claimedCoins = list.stream().filter(truyen.model.Achievement::isClaimed).mapToInt(truyen.model.Achievement::getRewardCoins).sum();
+        request.setAttribute("claimedCount", claimedCount);
+        request.setAttribute("claimedCoins", claimedCoins);
         request.setAttribute("badgeBonus", truyen.util.AchievementPolicy.dailyBonus(list));
         request.setAttribute("recommendationBoost", truyen.util.AchievementPolicy.recommendationBoost(list));
         request.setAttribute("earnedCount", list.stream().filter(truyen.model.Achievement::isUnlocked).count());
@@ -310,13 +335,46 @@ public class UserServlet extends HttpServlet {
 
     private void claimAchievement(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
-        User me = requireLogin(request, response);
-        if (me == null) return;
-        boolean claimed = achievementDAO.claim(me.getId(), trimOrEmpty(request.getParameter("key")));
-        request.getSession().setAttribute(claimed ? "flash" : "flashWarn", claimed
-                ? "Đã nhận xu thành tựu vào ví. Mỗi thành tựu chỉ nhận một lần."
-                : "Chưa thể nhận thưởng: thành tựu chưa đạt, đã nhận hoặc chức năng đang tạm ngừng.");
-        response.sendRedirect(request.getContextPath() + "/user?action=achievements#milestones");
+        boolean ajax = ServletHelper.isAjax(request);
+        User me = ajax ? currentUser(request) : requireLogin(request, response);
+        if (me == null) {
+            if (ajax) JsonUtil.sendJson(response, 401, "{\"success\":false,\"needLogin\":true,\"message\":\"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\"}");
+            return;
+        }
+        String key = trimOrEmpty(request.getParameter("key"));
+        try {
+            boolean claimed = achievementDAO.claim(me.getId(), key);
+            if (ajax) {
+                java.util.List<truyen.model.Achievement> all = achievementDAO.getAchievements(me.getId(), me);
+                truyen.model.Achievement value = all.stream()
+                        .filter(a -> key.equals(a.getId())).findFirst().orElse(null);
+                boolean paid = claimed || (value != null && value.isClaimed());
+                int claimedCoins = all.stream().filter(truyen.model.Achievement::isClaimed).mapToInt(truyen.model.Achievement::getRewardCoins).sum();
+                int claimedCount = (int) all.stream().filter(truyen.model.Achievement::isClaimed).count();
+                String message = claimed ? "Đã nhận xu thành tựu vào ví." : paid ? "Thành tựu này đã nhận thưởng."
+                        : "Chưa thể nhận: thành tựu chưa đạt hoặc chức năng đang tạm ngừng.";
+                JsonUtil.sendJson(response, paid ? 200 : value == null ? 400 : 409,
+                        "{\"success\":" + claimed + ",\"claimed\":" + paid + ",\"key\":" + JsonUtil.jsonEscape(key)
+                        + ",\"balance\":" + walletDAO.getBalance(me.getId())
+                        + ",\"claimedCoins\":" + claimedCoins
+                        + ",\"claimedCount\":" + claimedCount
+                        + ",\"message\":" + JsonUtil.jsonEscape(message) + rewardSummaryJson(me.getId()) + "}");
+                return;
+            }
+            request.getSession().setAttribute(claimed ? "flash" : "flashWarn", claimed
+                    ? "Đã nhận xu thành tựu vào ví. Mỗi thành tựu chỉ nhận một lần."
+                    : "Chưa thể nhận thưởng: thành tựu chưa đạt, đã nhận hoặc chức năng đang tạm ngừng.");
+            response.sendRedirect(request.getContextPath() + "/user?action=achievements#milestones");
+        } catch (SQLException ex) {
+            if (!ajax) throw ex;
+            JsonUtil.sendJson(response, 500, "{\"success\":false,\"message\":\"Chưa xác nhận được kết quả. Bạn có thể thử lại; mỗi thành tựu chỉ được cộng xu một lần.\"}");
+        }
+    }
+
+    private String rewardSummaryJson(int userId) throws SQLException {
+        truyen.model.RewardSummary summary = gamificationDAO.getRewardSummary(userId);
+        return ",\"todayEarned\":" + summary.getTodayEarned() + ",\"totalEarned\":" + summary.getTotalEarned()
+                + ",\"rewardDate\":" + JsonUtil.jsonEscape(summary.getDate().toString());
     }
 
     private void handleCheckin(HttpServletRequest request, HttpServletResponse response)
@@ -332,10 +390,16 @@ public class UserServlet extends HttpServlet {
         }
 
         DailyCheckin checkin = gamificationDAO.doCheckin(me.getId(), multiplier);
+        int baseReward = 0;
+        int bonusReward = 0;
         if (checkin != null) {
+            int streakDays = checkin.getStreakDays();
+            int[] streakBases = {5, 10, 15, 20, 25, 30, 50};
+            baseReward = streakBases[(streakDays - 1) % 7];
+            bonusReward = Math.max(0, checkin.getRewardCoins() - baseReward);
             try { achievementDAO.getAchievements(me.getId(), fresh); }
             catch (SQLException ex) { log("Chưa cập nhật được huy hiệu điểm danh."); }
-            String bonusNote = " (đã tính đặc quyền cấp bậc/VIP và huy hiệu)";
+            String bonusNote = bonusReward > 0 ? " (gồm +" + bonusReward + " xu bonus từ Huy hiệu/Cấp bậc)" : "";
             request.getSession().setAttribute("flash", "🎉 Điểm danh thành công! Bạn nhận được +" + checkin.getRewardCoins() + " xu" + bonusNote + ".");
         } else {
             request.getSession().setAttribute("flash", "Bạn đã điểm danh hôm nay rồi!");
@@ -345,10 +409,10 @@ public class UserServlet extends HttpServlet {
             boolean success = checkin != null;
             int reward = checkin != null ? checkin.getRewardCoins() : 0;
             String msg = checkin != null
-                    ? ("Điểm danh thành công! Bạn nhận được +" + reward + " xu.")
+                    ? ("Điểm danh thành công! Bạn nhận được +" + reward + " xu" + (bonusReward > 0 ? " (gồm +" + bonusReward + " xu bonus)" : "") + ".")
                     : "Bạn đã điểm danh hôm nay rồi!";
             JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
-                    "{\"success\":" + success + ",\"reward\":" + reward + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+                    "{\"success\":" + success + ",\"reward\":" + reward + ",\"baseReward\":" + baseReward + ",\"bonusReward\":" + bonusReward + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + rewardSummaryJson(me.getId()) + "}");
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");
@@ -419,7 +483,7 @@ public class UserServlet extends HttpServlet {
         if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
             String msg = ok ? "🎁 Nhận thưởng nhiệm vụ thành công!" : "Không thể nhận thưởng hoặc bạn đã nhận trước đó.";
             JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
-                    "{\"success\":" + ok + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + "}");
+                    "{\"success\":" + ok + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + rewardSummaryJson(me.getId()) + "}");
             return;
         }
         response.sendRedirect(request.getContextPath() + "/user?action=me#gamification");

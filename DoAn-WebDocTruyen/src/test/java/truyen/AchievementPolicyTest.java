@@ -15,6 +15,16 @@ class AchievementPolicyTest {
         return list.stream().filter(a -> key.equals(a.getId())).findFirst().orElseThrow();
     }
 
+    @Test void expandedCatalogHasUniqueIdsAndCumulativeDayThresholds() {
+        List<Achievement> list = AchievementPolicy.catalog(Map.of("checkin_days", 30, "max_streak", 1), false);
+        assertEquals(30, list.size());
+        assertEquals(30, list.stream().map(Achievement::getId).distinct().count());
+        assertTrue(badge(list, "checkin_30").isUnlocked());
+        assertFalse(badge(list, "checkin_100").isUnlocked());
+        assertFalse(badge(list, "streak_master").isUnlocked());
+        assertEquals(29, list.stream().filter(a -> a.getRewardCoins() > 0).count());
+    }
+
     @Test void readingThresholdsAreDistinctAndNotBasedOnTotalPageViews() {
         Map<String, Integer> stats = new HashMap<>(); stats.put("read_count", 29);
         assertFalse(badge(AchievementPolicy.catalog(stats, false), "bookworm").isUnlocked());

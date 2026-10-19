@@ -23,6 +23,25 @@ public final class AchievementPolicy {
         add(list, stats, "first_story", "Khởi Đầu Sáng Tác", "🖋️", "Sáng tác", "Có truyện công khai với ít nhất một chương đủ nội dung.", "published_count", 1, 3, 4, 20);
         add(list, stats, "steady_author", "Ngòi Bút Bền Bỉ", "📜", "Sáng tác", "Có 10 chương đủ nội dung trong các truyện công khai.", "published_chapters", 10, 4, 6, 40);
         add(list, stats, "finished_author", "Về Đích", "🏁", "Sáng tác", "Hoàn thành một truyện công khai có ít nhất 10 chương đủ nội dung.", "completed_count", 1, 5, 8, 100);
+        add(list, stats, "first_read", "Trang Đầu Tiên", "📖", "Đọc truyện", "Đọc chương đầu tiên.", "read_count", 1, 0, 0, 2);
+        add(list, stats, "reader_10", "Bước Vào Thế Giới Truyện", "📗", "Đọc truyện", "Đọc 10 chương khác nhau.", "read_count", 10, 1, 0, 5);
+        add(list, stats, "reader_100", "Trăm Chương Phiêu Lưu", "🧭", "Đọc truyện", "Đọc 100 chương khác nhau.", "read_count", 100, 1, 1, 20);
+        add(list, stats, "reader_300", "Độc Giả Kiên Trì", "📚", "Đọc truyện", "Đọc 300 chương khác nhau.", "read_count", 300, 1, 1, 35);
+        add(list, stats, "reader_500", "Kho Tri Thức", "🏛️", "Đọc truyện", "Đọc 500 chương khác nhau.", "read_count", 500, 2, 1, 50);
+        add(list, stats, "night_reader_10", "Bạn Của Ánh Trăng", "🌙", "Đọc truyện", "Đọc 10 chương khác nhau trong khung 23:00–05:00.", "night_reads", 10, 1, 0, 5);
+        add(list, stats, "night_reader_30", "Thư Viện Dưới Sao", "🌌", "Đọc truyện", "Đọc 30 chương khác nhau trong khung 23:00–05:00.", "night_reads", 30, 1, 0, 10);
+        add(list, stats, "critic_5", "Góc Nhìn Sâu Sắc", "💬", "Cộng đồng", "Viết 5 đánh giá từ 80 ký tự cho truyện công khai của người khác.", "review_count", 5, 1, 1, 10);
+        add(list, stats, "critic_20", "Tiếng Nói Độc Giả", "📝", "Cộng đồng", "Viết 20 đánh giá từ 80 ký tự cho truyện công khai của người khác.", "review_count", 20, 1, 1, 20);
+        add(list, stats, "checkin_15", "Hẹn Với Trang Sách", "📅", "Gắn bó", "Điểm danh tổng cộng 15 ngày, không cần liên tiếp.", "checkin_days", 15, 1, 0, 10);
+        add(list, stats, "checkin_30", "Một Tháng Đồng Hành", "🗓️", "Gắn bó", "Điểm danh tổng cộng 30 ngày, không cần liên tiếp.", "checkin_days", 30, 1, 1, 20);
+        add(list, stats, "checkin_100", "Trăm Ngày Gắn Bó", "💯", "Gắn bó", "Điểm danh tổng cộng 100 ngày, không cần liên tiếp.", "checkin_days", 100, 2, 1, 40);
+        add(list, stats, "collector_15", "Kệ Sách Đầy Dần", "📚", "Tủ sách", "Lưu 15 tác phẩm khác nhau vào tủ sách.", "bookmark_count", 15, 1, 0, 5);
+        add(list, stats, "collector_30", "Thư Viện Riêng", "🏠", "Tủ sách", "Lưu 30 tác phẩm khác nhau vào tủ sách.", "bookmark_count", 30, 1, 1, 10);
+        add(list, stats, "author_25", "Hai Mươi Lăm Chương", "✒️", "Sáng tác", "Có 25 chương đủ nội dung trong các truyện công khai.", "published_chapters", 25, 1, 1, 25);
+        add(list, stats, "author_50", "Hành Trình Ngòi Bút", "🪶", "Sáng tác", "Có 50 chương đủ nội dung trong các truyện công khai.", "published_chapters", 50, 2, 2, 40);
+        add(list, stats, "author_100", "Trăm Chương Sáng Tác", "📜", "Sáng tác", "Có 100 chương đủ nội dung trong các truyện công khai.", "published_chapters", 100, 2, 3, 60);
+        add(list, stats, "completed_3", "Ba Lần Về Đích", "🏆", "Sáng tác", "Hoàn thành 3 truyện công khai, mỗi truyện ít nhất 10 chương đủ nội dung.", "completed_count", 3, 2, 3, 100);
+        add(list, stats, "author_library_3", "Thế Giới Của Tác Giả", "🌍", "Sáng tác", "Có 3 truyện công khai, mỗi truyện ít nhất một chương đủ nội dung.", "published_count", 3, 1, 2, 30);
         Achievement membership = new Achievement("vip_patron", "Hội Viên Hoàng Gia", "⭐", "Hội viên",
                 "Đặc quyền VIP theo thời hạn hiện có; không tăng uy tín đề xuất và không thưởng xu thành tựu.",
                 vip, vip ? 1 : 0, 1, vip ? "VIP đang hiệu lực" : "VIP chưa hiệu lực");

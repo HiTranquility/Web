@@ -82,13 +82,14 @@ public class AchievementDAO {
                 + "(SELECT COUNT(DISTINCT story_id) FROM bookmarks WHERE user_id = ?) AS bookmark_count, "
                 + "(SELECT COUNT(*) FROM stories s WHERE s.author_id = ? AND s.status = 'PUBLISHED' AND EXISTS (SELECT 1 FROM chapters c WHERE c.story_id = s.id AND " + QUALIFIED_CHAPTER + ")) AS published_count, "
                 + "(SELECT COUNT(*) FROM chapters c JOIN stories s ON s.id = c.story_id WHERE s.author_id = ? AND s.status = 'PUBLISHED' AND " + QUALIFIED_CHAPTER + ") AS published_chapters, "
-                + "(SELECT COUNT(*) FROM stories s WHERE s.author_id = ? AND s.status = 'PUBLISHED' AND s.progress = 'COMPLETED' AND (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id AND " + QUALIFIED_CHAPTER + ") >= 10) AS completed_count";
+                + "(SELECT COUNT(*) FROM stories s WHERE s.author_id = ? AND s.status = 'PUBLISHED' AND s.progress = 'COMPLETED' AND (SELECT COUNT(*) FROM chapters c WHERE c.story_id = s.id AND " + QUALIFIED_CHAPTER + ") >= 10) AS completed_count, "
+                + "(SELECT COUNT(*) FROM daily_checkins WHERE user_id = ?) AS checkin_days";
         try (Connection con = DBConnection.get(); PreparedStatement ps = con.prepareStatement(sql)) {
-            for (int i = 1; i <= 9; i++) ps.setInt(i, userId);
+            for (int i = 1; i <= 10; i++) ps.setInt(i, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> result = new HashMap<>();
                 if (rs.next()) for (String key : new String[] { "read_count", "night_reads", "tip_count", "review_count",
-                        "max_streak", "bookmark_count", "published_count", "published_chapters", "completed_count" }) {
+                        "max_streak", "bookmark_count", "published_count", "published_chapters", "completed_count", "checkin_days" }) {
                     result.put(key, rs.getInt(key));
                 }
                 return result;

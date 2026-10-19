@@ -22,6 +22,28 @@ public class GamificationDAO {
 
     private static final int[] STREAK_REWARDS = { 5, 10, 15, 20, 25, 30, 50 }; // Ngày 1 -> Ngày 7
 
+    public truyen.model.RewardSummary getRewardSummary(int userId) throws SQLException {
+        if (userId <= 0 || !DBConnection.isReady())
+            return new truyen.model.RewardSummary(LocalDate.now(), 0, 0);
+        try (Connection con = DBConnection.get()) { return getRewardSummary(con, userId); }
+    }
+
+    truyen.model.RewardSummary getRewardSummary(Connection con, int userId) throws SQLException {
+        String sql = "SELECT CURRENT_DATE() AS reward_date, COALESCE(SUM(reward_coins), 0) AS total_earned, "
+                + "COALESCE(SUM(CASE WHEN earned_date = CURRENT_DATE() THEN reward_coins ELSE 0 END), 0) AS today_earned "
+                + "FROM (SELECT checkin_date AS earned_date, reward_coins FROM daily_checkins WHERE user_id = ? "
+                + "UNION ALL SELECT claim_date, reward_coins FROM daily_quest_claims WHERE user_id = ? "
+                + "UNION ALL SELECT DATE(claimed_at), reward_coins FROM user_achievements WHERE user_id = ? AND claimed_at IS NOT NULL) earned";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            for (int i = 1; i <= 3; i++) ps.setInt(i, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new SQLException("Missing reward summary");
+                return new truyen.model.RewardSummary(rs.getDate("reward_date").toLocalDate(),
+                        rs.getLong("today_earned"), rs.getLong("total_earned"));
+            }
+        }
+    }
+
     /**
      * Lấy điểm danh hôm nay của user (nếu đã điểm danh).
      */

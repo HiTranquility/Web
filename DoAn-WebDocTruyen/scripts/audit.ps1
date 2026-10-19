@@ -37,7 +37,7 @@ Get-Content -LiteralPath (Join-Path $auditRoot 'http-smoke.log') | Select-String
 if ($auditHttpExit -ne 0) { throw "HTTP smoke failed. See $auditRoot\http-smoke.log" }
 $env:AUDIT_RENDERED_DIR = Join-Path $auditRoot 'rendered'
 try {
-    & node --test scripts/audit-web.test.cjs
+    & node --test scripts/audit-web.test.cjs scripts/achievements.test.cjs
     if ($LASTEXITCODE -ne 0) { throw 'JavaScript tests failed' }
 } finally { Remove-Item Env:\AUDIT_RENDERED_DIR -ErrorAction SilentlyContinue }
 & node --check src/main/webapp/assets/js/firebase-auth.js

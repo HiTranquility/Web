@@ -117,7 +117,7 @@
             <span class="stat-icon">⚡</span>
             <div class="stat-meta">
                 <span class="stat-label">Hệ số nhận xu điểm danh</span>
-                <span class="stat-val stat-highlight"><b>x${me.checkinMultiplier}</b></span>
+                <span class="stat-val stat-highlight"><b>x${me.checkinMultiplier}</b> <small style="font-size:0.8rem; font-weight:700; color:#f59e0b;">(+${badgeBonus}% Huy hiệu)</small></span>
             </div>
         </div>
     </div>
@@ -199,6 +199,7 @@
         </span>
     </div>
 
+    <%@ include file="_reward-summary.jsp" %>
     <%-- 7 NGÀY ĐIỂM DANH --%>
     <div class="streak-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:22px;">
         <c:forEach var="day" begin="1" end="7">
@@ -211,6 +212,11 @@
                 <span class="streak-day-label" style="font-size:0.78rem; font-weight:700; color:var(--text-mut);">Ngày ${day}</span>
                 <span class="streak-day-icon" style="font-size:1.4rem; margin:4px 0; line-height:1;">${day eq 7 ? '👑' : (isPassed ? '✅' : '🪙')}</span>
                 <span class="streak-day-coins" style="font-size:0.85rem; font-weight:800; color:${isPassed ? '#10b981' : '#f59e0b'};">+${coinReward} xu</span>
+                <c:set var="dayBonus" value="${checkinBonuses[day - 1]}" />
+                <c:if test="${dayBonus gt 0}">
+                    <span class="streak-day-bonus" style="font-size:0.73rem; font-weight:700; color:#d97706; margin-top:2px;">(+${dayBonus} bonus)</span>
+                </c:if>
+                <span class="streak-day-base" style="font-size:0.68rem; color:var(--text-mut); margin-top:2px;">Gốc: ${checkinBases[day - 1]} xu</span>
                 <span class="streak-day-tag ${isPassed ? 'claimed' : (isTodayTarget ? 'today' : 'waiting')}" style="font-size:0.72rem; font-weight:600; margin-top:4px; color:${isPassed ? '#10b981' : (isTodayTarget ? '#f59e0b' : 'var(--text-mut)')};">
                     <c:choose>
                         <c:when test="${isPassed}">Đã nhận</c:when>
@@ -230,13 +236,27 @@
                     <input type="hidden" name="_csrf" value="${csrfToken}">
                     <input type="hidden" name="action" value="checkin">
                     <button type="submit" id="btn-daily-checkin" class="btn-checkin-cta" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#ffffff; border:none; padding:12px 32px; font-size:1rem; font-weight:700; border-radius:99px; box-shadow:0 4px 16px rgba(245, 158, 11, 0.4); cursor:pointer;">
-                        ✨ Điểm Danh Ngay (+${(currentStreak % 7 + 1) eq 1 ? 5 : ((currentStreak % 7 + 1) eq 2 ? 10 : ((currentStreak % 7 + 1) eq 3 ? 15 : ((currentStreak % 7 + 1) eq 4 ? 20 : ((currentStreak % 7 + 1) eq 5 ? 25 : ((currentStreak % 7 + 1) eq 6 ? 30 : 50)))))} xu)
+                        ✨ Điểm Danh Ngay (+${checkinRewards[currentStreak % 7]} xu)
                     </button>
+                    <div class="checkin-breakdown-hint" style="margin-top:10px; font-size:0.88rem; color:var(--text-mut);">
+                        <span>🎁 Thưởng gốc: <b>${todayBase} xu</b></span>
+                        <c:choose>
+                            <c:when test="${todayBonus gt 0}">
+                                <span> · </span><span style="color:#d97706; font-weight:700;">Bonus thêm: <b>+${todayBonus} xu</b></span>
+                                <span class="bonus-percent-pill" style="display:inline-block; margin-left:6px; padding:2px 10px; border-radius:99px; background:rgba(245, 158, 11, 0.15); color:#d97706; font-size:0.78rem; font-weight:700;">
+                                    +${badgeBonus}% Huy hiệu<c:if test="${me.checkinMultiplier gt 1.0}"> · x${me.checkinMultiplier} Cấp bậc</c:if>
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span> · </span><span class="muted small">(Mở khóa thêm <a href="${pageContext.request.contextPath}/user?action=achievements" style="color:#f59e0b; text-decoration:underline;">Huy hiệu</a> để nhận tới +20% bonus hàng ngày)</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                 </form>
             </c:when>
             <c:otherwise>
                 <div class="checkin-done-pill" id="checkin-completed-badge" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:99px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.35); color:#10b981; font-weight:700; font-size:0.92rem;">
-                    ✅ Bạn đã hoàn thành điểm danh hôm nay (+${todayCheckin.rewardCoins} xu)
+                    ✅ Bạn đã hoàn thành điểm danh hôm nay (+${todayCheckin.rewardCoins} xu<c:if test="${checkedBonus gt 0}"> · gồm +${checkedBonus} xu bonus</c:if>)
                 </div>
                 <p class="muted small" style="margin-top:8px; color:var(--text-mut);">Quay lại vào ngày mai để tiếp tục duy trì chuỗi nhận quà nhé!</p>
             </c:otherwise>
@@ -283,12 +303,58 @@
 </div>
 
 <%-- ================================================================================
-     TỦ HUY HIỆU & THÀNH TÍCH ĐỘC GIẢ
+     TỦ HUY HIỆU & THÀNH TÍCH ĐỘC GIẢ (ACHIEVEMENTS DASHBOARD CARD)
      ================================================================================ --%>
-<div class="panel">
-    <h3>🏅 Thành tích &amp; Đặc quyền</h3>
-    <p>Huy hiệu đang cộng thêm <strong>${badgeBonus}%</strong> trên thưởng gốc của điểm danh và nhiệm vụ hằng ngày, tối đa 20%.</p>
-    <a class="btn btn-primary" href="${pageContext.request.contextPath}/user?action=achievements">Xem huy hiệu &amp; nhận xu thành tựu →</a>
+<div class="achievements-preview-panel" id="achievements-card" style="margin-top:22px; border:1px solid rgba(168, 85, 247, 0.35); background:var(--ink-850, #ffffff); border-radius:16px; padding:24px 26px;">
+    <div class="achievements-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+        <div>
+            <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text); display:inline-flex; align-items:center; gap:8px;">
+                🏅 Tủ Thành Tích &amp; Đặc Quyền Độc Giả
+            </h3>
+            <p class="muted small" style="margin:4px 0 0 0; color:var(--text-mut);">
+                Mở khóa huy hiệu để tích lũy thêm xu thưởng hằng ngày và gia tăng điểm uy tín đề xuất tác phẩm.
+            </p>
+        </div>
+        <span class="badge" style="background:rgba(168, 85, 247, 0.12); color:#a855f7; border:1px solid rgba(168, 85, 247, 0.35); padding:6px 14px; border-radius:99px; font-size:0.84rem; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            ⚡ Thưởng ngày: <b>+${badgeBonus}% / 20%</b>
+        </span>
+    </div>
+
+    <c:set var="unlockedCount" value="0" />
+    <c:forEach var="a" items="${achievements}">
+        <c:if test="${a.unlocked}"><c:set var="unlockedCount" value="${unlockedCount + 1}" /></c:if>
+    </c:forEach>
+
+    <c:if test="${not empty achievements}">
+        <div class="achievements-preview-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:10px; margin-bottom:18px;">
+            <c:forEach var="a" items="${achievements}">
+                <div class="achievement-mini-card" style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; border:1px solid ${a.unlocked ? 'rgba(16, 185, 129, 0.45)' : 'var(--ink-700, #e2e8f0)'}; background:${a.unlocked ? 'rgba(16, 185, 129, 0.08)' : 'var(--ink-900, #f8fafc)'}; transition:all 0.2s ease;"
+                     title="<c:out value="${a.title}"/>: <c:out value="${a.description}"/> (<c:out value="${a.progressText}"/>)">
+                    <span style="font-size:1.35rem; line-height:1; flex-shrink:0;">${a.icon}</span>
+                    <div style="min-width:0; flex:1;">
+                        <div style="font-size:0.88rem; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <c:out value="${a.title}"/>
+                        </div>
+                        <div style="font-size:0.75rem; color:${a.unlocked ? '#10b981' : 'var(--text-mut)'}; font-weight:600;">
+                            <c:choose>
+                                <c:when test="${a.unlocked}">✓ Đã mở khoá</c:when>
+                                <c:otherwise><c:out value="${a.progressText}"/></c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                </div>
+            </c:forEach>
+        </div>
+    </c:if>
+
+    <div class="achievements-card-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; padding-top:16px; border-top:1px dashed var(--ink-700, #e2e8f0);">
+        <div style="font-size:0.88rem; color:var(--text-dim);">
+            Đã hoàn thành <b>${unlockedCount} / ${achievements.size()}</b> danh hiệu · Thưởng hằng ngày đang cộng thêm <strong>+${badgeBonus}%</strong>.
+        </div>
+        <a class="btn btn-primary" href="${pageContext.request.contextPath}/user?action=achievements" style="display:inline-flex; align-items:center; gap:8px; padding:9px 20px; border-radius:8px; font-weight:700; text-decoration:none;">
+            Xem tất cả huy hiệu &amp; nhận xu thưởng →
+        </a>
+    </div>
 </div>
 
 <%-- ================================================================================
@@ -518,8 +584,14 @@
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
+    function updateRewardTotals(data) {
+        if (Number.isFinite(data.todayEarned)) document.querySelectorAll('[data-today-earned]').forEach(function(el) { el.textContent = formatNumber(data.todayEarned); });
+        if (Number.isFinite(data.totalEarned)) document.querySelectorAll('[data-total-earned]').forEach(function(el) { el.textContent = formatNumber(data.totalEarned); });
+        if (data.rewardDate) document.querySelectorAll('[data-reward-date]').forEach(function(el) { el.textContent = data.rewardDate; });
+    }
     function updateBalanceUI(newBalance) {
         if (newBalance === undefined || newBalance === null) return;
+        document.querySelectorAll('[data-wallet-balance]').forEach(function(el) { el.textContent = formatNumber(newBalance); });
         var headerCoinVal = document.querySelector('.coin-badge-val');
         if (headerCoinVal) headerCoinVal.textContent = formatNumber(newBalance);
         var dropdownCoinTag = document.querySelector('.dropdown-coin-tag');
@@ -552,6 +624,7 @@
             .then(function(data) {
                 if (data.success) {
                     updateBalanceUI(data.newBalance);
+                    updateRewardTotals(data);
                     if (window.launchCelebration) {
                         window.launchCelebration('coins');
                     }
@@ -601,6 +674,7 @@
             .then(function(data) {
                 if (data.success) {
                     updateBalanceUI(data.newBalance);
+                    updateRewardTotals(data);
                     if (window.launchCelebration) {
                         window.launchCelebration('coins');
                     }

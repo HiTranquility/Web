@@ -64,6 +64,9 @@ public final class LocalAuditSmoke {
     }
 
     private static HttpResponse<String> post(String path, Map<String, String> params) throws Exception {
+        return post(path, params, false);
+    }
+    private static HttpResponse<String> post(String path, Map<String, String> params, boolean ajax) throws Exception {
         StringBuilder body = new StringBuilder();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (body.length() > 0) body.append('&');
@@ -72,6 +75,7 @@ public final class LocalAuditSmoke {
         }
         return client.send(HttpRequest.newBuilder(URI.create(base + path)).timeout(Duration.ofSeconds(30))
                 .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", ajax ? "application/json" : "text/html")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString())).build(), HttpResponse.BodyHandlers.ofString());
     }
 
@@ -188,15 +192,36 @@ public final class LocalAuditSmoke {
         inject(userServlet, "walletDAO", new WalletDAO() {
             @Override public int getBalance(int user) { return balance[0]; }
         });
+        inject(userServlet, "gamificationDAO", new truyen.dao.GamificationDAO() {
+            @Override public truyen.model.RewardSummary getRewardSummary(int user) {
+                return new truyen.model.RewardSummary(java.time.LocalDate.now(), balance[0] - 100, balance[0] - 100);
+            }
+        });
         wrapper.deallocate(userServlet);
         HttpResponse<String> page = get("/user?action=achievements");
         check(page.body().contains("Nhận 15 xu"), "Earned milestone renders coin claim button");
-        check(page.body().contains("+10%"), "Earned badges render capped cumulative daily bonus");
+        check(page.body().contains("+11%"), "Earned badges render capped cumulative daily bonus");
         Map<String, String> claim = Map.of("action", "claim-achievement", "key", "bookworm", "amount", "999999", "_csrf", token(page.body()));
         check(post("/user", claim).statusCode() == 302 && balance[0] == 115, "Claim awards catalog amount, ignores client amount");
         check(post("/user", claim).statusCode() == 302 && balance[0] == 115, "Milestone cannot be claimed twice through HTTP");
+        HttpResponse<String> duplicate = post("/user", claim, true);
+        check(duplicate.statusCode() == 200 && duplicate.body().contains("\"claimed\":true") && balance[0] == 115, "AJAX duplicate reports paid without crediting twice or redirecting");
+        Map<String, String> ajaxClaim = Map.of("action", "claim-achievement", "key", "first_story", "_csrf", token(page.body()));
+        HttpResponse<String> awarded = post("/user", ajaxClaim, true);
+        check(awarded.statusCode() == 200 && awarded.body().contains("\"balance\":135") && awarded.body().contains("\"success\":true") && awarded.body().contains("\"todayEarned\":35") && awarded.body().contains("\"totalEarned\":35"), "AJAX claim returns authoritative wallet and accumulated rewards");
+        check(post("/user", Map.of("action", "claim-achievement", "key", "scholar", "_csrf", token(page.body())), true).statusCode() == 409, "AJAX locked milestone rejects claim");
+        check(post("/user", Map.of("action", "claim-achievement", "key", "unknown", "_csrf", token(page.body())), true).statusCode() == 400, "AJAX unknown milestone rejects claim");
+        check(post("/user", Map.of("action", "claim-achievement", "key", "first_read"), true).statusCode() == 403, "AJAX claim still requires CSRF");
+        check(page.body().contains("data-search") && page.body().contains("data-page-size") && page.body().contains("data-view=\"list\""), "Achievement browser controls render through JSP");
         HttpResponse<String> after = get("/user?action=achievements");
-        check(after.body().contains("✓ Đã nhận") && after.body().contains("+10%"), "Claimed milestone retains badge benefit and shows paid state");
+        check(after.body().contains("✓ Đã nhận") && after.body().contains("+11%"), "Claimed milestone retains badge benefit and shows paid state");
+        check(after.body().contains("data-claimed-coins") && after.body().contains("data-claimed-count"), "Achievements page renders cumulative claimed coin stats");
+        HttpResponse<String> profile = get("/user?action=me");
+        Matcher quote = Pattern.compile("Điểm Danh Ngay \\(\\+([0-9]+) xu\\)").matcher(profile.body());
+        Matcher dayOne = Pattern.compile("class=\"streak-day-coins\"[^>]*>\\+([0-9]+) xu").matcher(profile.body());
+        check(quote.find() && dayOne.find() && quote.group(1).equals(dayOne.group(1)), "Check-in button and first-day card show the same calculated reward");
+        check(profile.body().contains("data-today-earned>35<") && profile.body().contains("data-total-earned>35<"), "Profile shows daily and lifetime reward totals separately from wallet");
+        check(profile.body().contains("checkin-breakdown-hint") && profile.body().contains("streak-day-bonus"), "Profile renders checkin bonus breakdown and percentage");
     }
 
     public static void main(String[] args) throws Exception {

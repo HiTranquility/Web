@@ -33,13 +33,13 @@ public class AchievementTest {
     }
 
     @Test
-    @DisplayName("Ca 2: Danh sách Huy hiệu mặc định trả về đủ 11 danh hiệu")
+    @DisplayName("Ca 2: Danh sách Huy hiệu mặc định trả về đủ 30 danh hiệu")
     void testDefaultMockAchievements() throws Exception {
         AchievementDAO dao = new AchievementDAO();
         List<Achievement> list = dao.getAchievements(0, null);
 
         assertNotNull(list);
-        assertEquals(11, list.size());
+        assertEquals(30, list.size());
 
         assertTrue(list.stream().anyMatch(a -> "night_owl".equals(a.getId())));
         assertTrue(list.stream().anyMatch(a -> "bookworm".equals(a.getId())));

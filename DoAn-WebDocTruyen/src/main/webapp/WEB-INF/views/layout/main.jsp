@@ -119,6 +119,7 @@
 <script>
 (function () {
     document.addEventListener('submit', function (e) {
+        if (e.defaultPrevented) return;
         var form = e.target;
         if (!form || form.tagName !== 'FORM') return;
 

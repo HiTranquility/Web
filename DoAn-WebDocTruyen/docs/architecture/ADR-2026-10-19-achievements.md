@@ -64,3 +64,18 @@ Không thực thi DDL trên dữ liệu thật trong lượt phát triển này.
 Chạy `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit.ps1` hoàn toàn local, classpath không có cấu hình DB/Google/mail. Các ca JDBC mô phỏng kiểm tra nhận lặp, hoàn tiền khi ghi sổ lỗi, ví không đủ và mua lại chương. HTTP smoke dùng Tomcat, cookie thật và DAO giả để kiểm tra giá sau ưu đãi, form xác nhận, khóa trước khi mua và ảnh sau khi mua.
 
 Lượt kiểm chứng cuối: **231/231 JUnit, 65/65 kiểm tra HTTP và 8/8 kiểm thử JavaScript đạt**. Log và HTML giả lập ở `build/audit/run-795bbb12b931442187aaef77914e0b40/`. Chưa thực thi việc khởi tạo/chuyển đổi dữ liệu hoặc giao dịch trên MySQL thật; chưa xác minh bố cục bằng trình duyệt vì công cụ trình duyệt của phiên gặp lỗi khởi tạo.
+
+
+## Mở rộng danh mục và trình duyệt thành tựu (phương án B)
+
+Danh mục có 30 mục: 29 thành tựu thưởng xu và huy hiệu VIP theo thời hạn. Giữ ID, điều kiện, số xu và trọng số của các mốc cũ. Thêm các tầng đọc 1/10/100/300/500 chương, đọc đêm 10/30 chương, đánh giá 5/20 lần, tủ sách 15/30 truyện, sáng tác 25/50/100 chương, hoàn thành 3 truyện và công khai 3 truyện đủ nội dung. Điểm danh thêm mốc tổng 15/30/100 ngày qua COUNT daily_checkins; không dùng max_streak để suy ra chuỗi dài hơn chu kỳ 7 ngày hiện có.
+
+Trần thưởng ngày vẫn 20%, hỗ trợ điểm đề xuất vẫn 10%. Các mốc mới được ghi nhận qua cùng cơ chế đồng bộ hoạt động/trang thành tích; không chạy backfill dữ liệu thật trong lượt này. Thưởng xu chỉ được trả khi người dùng chủ động nhận. VIP không cấp uy tín hay xu thành tựu.
+
+Trang hồ sơ liên kết đến trình duyệt có hai tab Huy hiệu / Nhận xu. Tìm kiếm tên và điều kiện bỏ dấu tiếng Việt (kể cả đ/Đ), kết hợp nhóm và trạng thái; sắp xếp hành trình, gần hoàn thành, xu hoặc tên. Gần hoàn thành ưu tiên mục chưa đạt với tiến độ cao nhất. Chế độ lưới/danh sách nhớ lựa chọn ở localStorage; phân trang 12 hoặc 24 mục. Không lưu số dư hoặc dữ liệu tài khoản trong localStorage.
+
+Nhận thưởng qua POST với CSRF, Accept JSON và cookie cùng nguồn. Server trả trạng thái đã nhận và số dư ví hiện hành; yêu cầu nhận lặp trả trạng thái đã nhận mà không cộng lại. JSON dùng 400 cho khóa không tồn tại, 409 khi chưa thể nhận, 401 khi thiếu phiên, 500 khi chưa xác nhận kết quả. Client không tự gửi lại khi lỗi mạng. Các yêu cầu khác mục được xếp nối tiếp để tránh số dư cũ ghi đè số dư mới.
+
+Cập nhật nút và ví tại chỗ, giữ tab, bộ lọc, trang, chế độ hiển thị và vị trí cuộn. Giữ thẻ vừa nhận trong kết quả hiện tại cho đến lần đổi bộ lọc/trang tiếp theo, tránh thẻ biến mất và làm nhảy nội dung. Vùng nút giữ chiều cao; chuyển focus sang nhãn đã nhận với preventScroll. Trình xử lý khóa nút dùng chung bỏ qua submit đã preventDefault. Nếu thiếu JavaScript, hiển thị toàn danh mục và giữ POST/chuyển hướng làm phương án dự phòng.
+
+Kiểm chứng bổ sung: 232/232 JUnit và 71/71 HTTP đạt tại `build/audit/run-cfc8f5bab33848bf8da28ef430d68b41/`. Bộ JavaScript gồm 8 ca nền và 8 ca trình duyệt thành tựu, bao gồm DOM giả lập kiểm tra nhận tại chỗ, giữ bộ lọc/trang/cuộn, chặn nhấn lặp, lỗi phiên/kết nối và thứ tự cập nhật ví. Chưa kiểm tra bố cục bằng trình duyệt hoặc giao dịch MySQL thật.

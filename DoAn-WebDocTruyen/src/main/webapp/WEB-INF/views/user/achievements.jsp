@@ -16,22 +16,36 @@
     <p class="panel panel-warn">Bạn đang xem thử trang thành tích. Hiện chưa thể ghi nhận thành tích hoặc nhận xu.</p>
 </c:if>
 <div class="achievement-summary">
-    <div><span>Đã mở khóa</span><strong>${earnedCount} <small>/ ${achievements.size()}</small></strong></div>
+    <div><span>Đã mở khóa</span><strong>${earnedCount} <small>/ ${achievements.size()}</small></strong><small>Huy hiệu đạt được</small></div>
+    <div><span>Xu thành tựu đã nhận</span><strong><span data-claimed-coins>${claimedCoins}</span> <small>xu</small></strong><small><span data-claimed-count>${claimedCount}</span> mốc đã nhận</small></div>
     <div><span>Thưởng hằng ngày</span><strong>+${badgeBonus}%</strong><small>Huy hiệu · tối đa 20%</small></div>
     <div><span>Hỗ trợ đề xuất truyện</span><strong>+${recommendationBoost}%</strong><small>Điểm xếp hạng · tối đa 10%</small></div>
 </div>
-<section class="achievement-section" aria-labelledby="perks-heading">
-    <div class="achievement-section-head">
-        <div><p class="achievement-eyebrow">01 / TÍCH LŨY ĐẶC QUYỀN</p><h2 id="perks-heading">Huy hiệu của bạn</h2></div>
-        <span class="achievement-note">Tự động áp dụng khi đạt</span>
+<%@ include file="_reward-summary.jsp" %>
+<section class="achievement-section" data-achievement-browser data-tab="all" data-view="grid" aria-labelledby="perks-heading">
+    <h2 id="perks-heading">Huy hiệu &amp; thành tựu</h2>
+    <p class="muted">Huy hiệu tự áp dụng khi đạt, cộng trên thưởng gốc và không nhân chồng lên VIP. Mỗi mốc xu chỉ nhận một lần.
+        Đọc ít nhất 30 giây và đến 80% chương để ghi nhận. Chương sáng tác cần từ 200 ký tự hoặc 3 trang ảnh.</p>
+    <p class="muted">Huy hiệu giúp tăng điểm đề xuất tối đa 10%; mốc sáng tác có trọng số cao hơn. Truyện vẫn cần phù hợp độc giả, không đảm bảo vị trí hay lượt xem.</p>
+    <p><strong data-claimable-count>${claimableCount}</strong> thành tựu đủ điều kiện chưa nhận · <strong data-claimable-coins>${claimableCoins}</strong> xu đang chờ nhận · Đã nhận: <strong data-claimed-coins-sub>${claimedCoins}</strong> xu.</p>
+    <p>Số dư ví: <strong data-wallet-balance>${walletBalance}</strong> xu · <a href="${pageContext.request.contextPath}/wallet">Mở ví →</a></p>
+    <div data-browser-controls hidden>
+        <div class="achievement-tabs" role="tablist" aria-label="Loại thành tích">
+            <button type="button" id="badge-tab" role="tab" aria-selected="true" aria-controls="achievement-results" data-tab="perks">Huy hiệu</button>
+            <button type="button" id="milestones-heading" role="tab" aria-selected="false" tabindex="-1" aria-controls="achievement-results" data-tab="milestones">Nhận xu</button>
+        </div>
+        <div class="achievement-toolbar">
+            <label class="achievement-search">Tìm thành tựu<input type="search" data-search placeholder="Tên hoặc điều kiện, có dấu hay không dấu…" maxlength="150"></label>
+            <label>Nhóm<select data-category><option value="">Tất cả nhóm</option></select></label>
+            <label>Trạng thái<select data-status><option value="">Tất cả trạng thái</option><option value="earned">Đã mở khóa</option><option value="locked">Chưa đạt</option><option value="claimable">Có thể nhận xu</option><option value="claimed">Đã nhận xu</option></select></label>
+            <label>Sắp xếp<select data-sort><option value="catalog">Theo hành trình</option><option value="progress">Gần hoàn thành</option><option value="coins">Xu cao nhất</option><option value="name">Tên A–Z</option></select></label>
+        </div>
+        <div class="achievement-browser-bar"><span data-result-count></span><div role="group" aria-label="Cách hiển thị"><button type="button" data-view="grid" aria-pressed="true">Lưới</button><button type="button" data-view="list" aria-pressed="false">Danh sách</button></div></div>
     </div>
-    <p class="muted">% huy hiệu cộng trên thưởng gốc, không nhân chồng lên VIP/cấp bậc. Xu làm tròn một lần khi nhận.
-        Một chương được ghi nhận khi đã đọc ít nhất 30 giây và đến 80% nội dung.
-        Chương sáng tác đủ nội dung cần từ 200 ký tự hoặc 3 trang ảnh.
-        Uy tín hỗ trợ truyện phù hợp với độc giả; không đảm bảo vị trí hay lượt xem. Huy hiệu sáng tác có trọng số cao hơn.</p>
-    <div class="achievement-grid">
+    <p data-claim-message role="status" aria-live="polite" aria-atomic="true"></p>
+    <div id="achievement-results" class="achievement-grid">
         <c:forEach var="a" items="${achievements}">
-            <article class="achievement-card ${a.unlocked ? 'is-earned' : 'is-locked'}">
+            <article data-achievement="${a.id}" data-category="<c:out value="${a.category}"/>" data-earned="${a.unlocked}" data-claimed="${a.claimed}" data-coins="${a.rewardCoins}" data-progress="${a.progressPercent}" class="achievement-card ${a.unlocked ? 'is-earned' : 'is-locked'}">
                 <div class="achievement-card-top"><span class="achievement-icon" aria-hidden="true"><c:out value="${a.icon}"/></span>
                     <span class="achievement-status">${a.unlocked ? 'Đã mở khóa' : 'Đang tích lũy'}</span></div>
                 <p class="achievement-category"><c:out value="${a.category}"/></p>
@@ -43,27 +57,11 @@
                 </c:choose>
                 <label class="achievement-progress-label" for="badge-progress-${a.id}"><c:out value="${a.progressText}"/></label>
                 <progress id="badge-progress-${a.id}" value="${a.progressPercent}" max="100">${a.progressPercent}%</progress>
-            </article>
-        </c:forEach>
-    </div>
-</section>
-<section class="achievement-section" id="milestones" aria-labelledby="milestones-heading">
-    <div class="achievement-section-head">
-        <div><p class="achievement-eyebrow">02 / NHẬN XU THEO CỘT MỐC</p><h2 id="milestones-heading">Thành tựu nhận thưởng</h2></div>
-        <a href="${pageContext.request.contextPath}/wallet">Ví xu của tôi →</a>
-    </div>
-    <p class="muted">Mỗi thành tựu nhận một lần cho tài khoản. Phần thưởng này không nhân theo huy hiệu hay VIP.</p>
-    <div class="achievement-milestones">
-        <c:forEach var="a" items="${achievements}">
-            <c:if test="${a.rewardCoins gt 0}">
-                <article class="achievement-milestone">
-                    <span class="achievement-icon" aria-hidden="true"><c:out value="${a.icon}"/></span>
-                    <div class="achievement-milestone-copy"><h3><c:out value="${a.title}"/></h3><p class="muted"><c:out value="${a.progressText}"/></p></div>
-                    <strong class="achievement-coins">+${a.rewardCoins} xu</strong>
+                <c:if test="${a.rewardCoins gt 0}"><div class="achievement-reward"><strong class="achievement-coins">+${a.rewardCoins} xu</strong>
                     <c:choose>
                         <c:when test="${a.claimed}"><span class="achievement-claimed">✓ Đã nhận</span></c:when>
                         <c:when test="${a.claimable and rewardsAvailable}">
-                            <form action="${pageContext.request.contextPath}/user" method="post">
+                            <form data-claim-achievement action="${pageContext.request.contextPath}/user" method="post">
                                 <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <input type="hidden" name="action" value="claim-achievement">
                                 <input type="hidden" name="key" value="${a.id}">
@@ -71,9 +69,14 @@
                             </form>
                         </c:when>
                         <c:otherwise><span class="achievement-pending">${a.unlocked ? 'Chưa thể nhận' : 'Chưa đạt'}</span></c:otherwise>
-                    </c:choose>
-                </article>
-            </c:if>
+                    </c:choose>                </div></c:if>
+            </article>
         </c:forEach>
     </div>
+    <p data-empty hidden>Không tìm thấy thành tựu phù hợp. <button type="button" data-reset>Xóa bộ lọc</button></p>
+    <nav class="achievement-pagination" data-pagination hidden aria-label="Trang thành tựu">
+        <button type="button" data-prev>← Trước</button><span data-page aria-live="polite"></span><button type="button" data-next>Tiếp →</button>
+        <label>Mỗi trang <select data-page-size><option value="12">12</option><option value="24">24</option></select></label>
+    </nav>
 </section>
+<script src="${pageContext.request.contextPath}/assets/js/achievements.js" defer></script>
