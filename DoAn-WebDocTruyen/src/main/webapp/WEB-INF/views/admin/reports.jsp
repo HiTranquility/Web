@@ -146,6 +146,22 @@
                     <c:if test="${r.pending}">
                         <div class="report-actions">
                             <c:choose>
+                                <c:when test="${r.story and fn:contains(r.reason, '[KHIẾU NẠI KIỂM DUYỆT]')}">
+                                    <form method="post" style="display:inline"
+                                          action="${pageContext.request.contextPath}/admin/report">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                                        <input type="hidden" name="action" value="resolve_restore">
+                                        <input type="hidden" name="id" value="${r.id}">
+                                        <input type="hidden" name="targetId" value="${r.targetId}">
+                                        <input type="hidden" name="status" value="${status}">
+                                        <button type="submit" class="btn btn-primary btn-sm"
+                                                style="background:#10b981; border-color:#10b981; color:#fff;"
+                                                data-confirm="Chấp nhận đơn khiếu nại này và khôi phục truyện về trạng thái Công khai?"
+                                                data-confirm-title="Chấp nhận khiếu nại &amp; Khôi phục truyện"
+                                                data-confirm-ok="Đồng ý khôi phục">
+                                            ✅ Chấp nhận &amp; Khôi phục truyện</button>
+                                    </form>
+                                </c:when>
                                 <c:when test="${r.story}">
                                     <form method="post" style="display:inline"
                                           action="${pageContext.request.contextPath}/admin/report">
@@ -158,7 +174,7 @@
                                                 data-confirm="Bạn chắc chắn muốn gỡ truyện này và đóng báo cáo?"
                                                 data-confirm-title="Xác nhận gỡ truyện vi phạm"
                                                 data-confirm-ok="Đồng ý gỡ">
-                                            🚫 Gỡ truyện & Đóng báo cáo</button>
+                                            🚫 Gỡ truyện &amp; Đóng báo cáo</button>
                                     </form>
                                 </c:when>
                                 <c:otherwise>
@@ -173,7 +189,7 @@
                                                 data-confirm="Bạn chắc chắn muốn ẩn bình luận này và đóng báo cáo?"
                                                 data-confirm-title="Xác nhận ẩn bình luận vi phạm"
                                                 data-confirm-ok="Đồng ý ẩn">
-                                            🚫 Ẩn bình luận & Đóng báo cáo</button>
+                                            🚫 Ẩn bình luận &amp; Đóng báo cáo</button>
                                     </form>
                                 </c:otherwise>
                             </c:choose>
@@ -234,4 +250,3 @@
     });
 })();
 </script>
-

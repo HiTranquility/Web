@@ -49,7 +49,8 @@ public class AdminReportServlet extends HttpServlet {
         String category = request.getParameter("category");   // ISSUE-025
 
         if ("resolve".equals(action) || "dismiss".equals(action)
-                || "resolve_hide".equals(action) || "resolve_delete".equals(action)) {
+                || "resolve_hide".equals(action) || "resolve_delete".equals(action)
+                || "resolve_restore".equals(action)) {
             if (!"POST".equalsIgnoreCase(request.getMethod())) {
                 response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                 return;
@@ -71,6 +72,27 @@ public class AdminReportServlet extends HttpServlet {
                     User me = currentUser(request);
                     new AuditDAO().log(me != null ? me.getId() : 0, "HIDE_COMMENT", "COMMENT", targetId,
                             "Bình luận #" + targetId, "Ẩn bình luận theo xử lý báo cáo vi phạm #" + reportId);
+                }
+            } else if ("resolve_restore".equals(action)) {
+                reportDAO.updateStatus(reportId, "RESOLVED");
+                if (targetId > 0) {
+                    StoryDAO stDAO = new StoryDAO();
+                    Story story = stDAO.findById(targetId);
+                    String storyTitle = story != null ? story.getTitle() : ("Truyện #" + targetId);
+                    stDAO.updateStatus(targetId, "PUBLISHED");
+                    User me = currentUser(request);
+                    new AuditDAO().log(me != null ? me.getId() : 0, "RESTORE_STORY", "STORY", targetId,
+                            storyTitle, "Chấp nhận khiếu nại và khôi phục truyện theo báo cáo #" + reportId);
+
+                    if (story != null && story.getAuthorId() > 0) {
+                        new truyen.dao.NotificationDAO().sendNotification(
+                            story.getAuthorId(),
+                            targetId,
+                            null,
+                            "MODERATION",
+                            "Tin vui! Đơn khiếu nại cho truyện \"" + storyTitle + "\" đã được Quản trị viên chấp thuận. Tác phẩm của bạn đã được khôi phục trạng thái Công khai."
+                        );
+                    }
                 }
             } else if ("resolve_delete".equals(action)) {
                 reportDAO.updateStatus(reportId, "RESOLVED");

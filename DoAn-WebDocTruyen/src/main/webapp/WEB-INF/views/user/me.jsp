@@ -273,7 +273,12 @@
                 <div class="quest-item-content" style="flex:1; min-width:0;">
                     <div class="quest-item-head" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span class="quest-item-title" style="font-size:0.95rem; font-weight:700; color:var(--text);"><c:out value="${q.title}"/></span>
+                        <c:set var="questBase" value="${q.key eq 'READ_CHAPTER' ? 10 : (q.key eq 'COMMENT_REVIEW' ? 15 : todayBase)}" />
+                        <c:set var="questBonus" value="${q.rewardCoins gt questBase ? (q.rewardCoins - questBase) : 0}" />
                         <span class="badge badge-amber" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.35); padding:2px 8px; border-radius:99px; font-size:0.75rem; font-weight:700;">+${q.rewardCoins} xu</span>
+                        <c:if test="${questBonus gt 0}">
+                            <span class="quest-bonus-note" style="font-size:0.74rem; font-weight:700; color:#d97706;">(Gốc ${questBase} + ${questBonus} bonus)</span>
+                        </c:if>
                     </div>
                     <p class="quest-item-desc" style="font-size:0.84rem; color:var(--text-dim); margin:4px 0 0 0;"><c:out value="${q.description}"/></p>
                 </div>
@@ -327,7 +332,7 @@
 
     <c:if test="${not empty achievements}">
         <div class="achievements-preview-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:10px; margin-bottom:18px;">
-            <c:forEach var="a" items="${achievements}">
+            <c:forEach var="a" items="${achievements}" end="7">
                 <div class="achievement-mini-card" style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; border:1px solid ${a.unlocked ? 'rgba(16, 185, 129, 0.45)' : 'var(--ink-700, #e2e8f0)'}; background:${a.unlocked ? 'rgba(16, 185, 129, 0.08)' : 'var(--ink-900, #f8fafc)'}; transition:all 0.2s ease;"
                      title="<c:out value="${a.title}"/>: <c:out value="${a.description}"/> (<c:out value="${a.progressText}"/>)">
                     <span style="font-size:1.35rem; line-height:1; flex-shrink:0;">${a.icon}</span>
@@ -349,10 +354,10 @@
 
     <div class="achievements-card-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; padding-top:16px; border-top:1px dashed var(--ink-700, #e2e8f0);">
         <div style="font-size:0.88rem; color:var(--text-dim);">
-            Đã hoàn thành <b>${unlockedCount} / ${achievements.size()}</b> danh hiệu · Thưởng hằng ngày đang cộng thêm <strong>+${badgeBonus}%</strong>.
+            Đã hoàn thành <b>${unlockedCount} / ${achievements.size()}</b> danh hiệu · Xu thành tựu đã nhận: <b data-claimed-coins>${not empty claimedCoins ? claimedCoins : 0} xu</b> · Thưởng hằng ngày đang cộng thêm <strong>+${badgeBonus}%</strong>.
         </div>
         <a class="btn btn-primary" href="${pageContext.request.contextPath}/user?action=achievements" style="display:inline-flex; align-items:center; gap:8px; padding:9px 20px; border-radius:8px; font-weight:700; text-decoration:none;">
-            Xem tất cả huy hiệu &amp; nhận xu thưởng →
+            Xem tất cả ${achievements.size()} huy hiệu &amp; nhận xu thưởng<c:if test="${not empty claimableCount and claimableCount gt 0}"> <span style="background:rgba(245, 158, 11, 0.25); color:#fef3c7; border:1px solid rgba(251, 191, 36, 0.5); padding:2px 8px; border-radius:99px; font-size:0.78rem; margin-left:4px;">🎁 +${claimableCoins} xu chờ nhận</span></c:if> →
         </a>
     </div>
 </div>
@@ -377,7 +382,7 @@
     <div class="insights-stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:24px;">
         <div class="insight-stat-card" style="padding:16px; border-radius:12px; background:var(--ink-900, #f8fafc); border:1px solid var(--ink-700, #e2e8f0); text-align:center;">
             <span style="font-size:1.6rem; display:block; margin-bottom:4px;">📖</span>
-            <span class="insight-number" id="insight-total-chaps" style="font-size:1.35rem; font-weight:800; color:var(--text);">28</span>
+            <span class="insight-number" id="insight-total-chaps" data-db-chaps="${me.readChapters}" style="font-size:1.35rem; font-weight:800; color:var(--text);">${me.readChapters gt 0 ? me.readChapters : 28}</span>
             <span style="display:block; font-size:0.78rem; font-weight:600; color:var(--text-mut); margin-top:2px;">Chương đã đọc</span>
         </div>
 
@@ -459,7 +464,8 @@
         var activeStoriesEl = document.getElementById('insight-active-stories');
         var readerLevelEl = document.getElementById('reader-level-name');
 
-        var chapsRead = Math.max(12, history.length * 4 + (bookmarks.length * 2));
+        var dbChaps = parseInt(totalChapsEl && totalChapsEl.getAttribute('data-db-chaps') || '0', 10) || 0;
+        var chapsRead = dbChaps > 0 ? dbChaps : Math.max(12, history.length * 4 + (bookmarks.length * 2));
         if (totalChapsEl) totalChapsEl.textContent = chapsRead;
 
         var hours = (chapsRead * 0.18).toFixed(1);
@@ -573,6 +579,11 @@
                 <span class="shortcut-icon" style="font-size:1.6rem;">🎁</span>
                 <b style="color:var(--text); font-size:0.95rem;">Nhận xu miễn phí</b>
                 <span class="muted" style="font-size:0.82rem;">Điểm danh &amp; nhiệm vụ hàng ngày</span>
+            </a>
+            <a class="shortcut" href="${pageContext.request.contextPath}/appeal" style="text-decoration:none; grid-column: 1 / -1;">
+                <span class="shortcut-icon" style="font-size:1.6rem;">🛡️</span>
+                <b style="color:var(--text); font-size:0.95rem;">Khiếu nại kiểm duyệt</b>
+                <span class="muted" style="font-size:0.82rem;">Gửi giải trình &amp; yêu cầu khôi phục tác phẩm bị gỡ</span>
             </a>
         </div>
     </div>

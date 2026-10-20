@@ -276,6 +276,9 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("rewardSummary", gamificationDAO.getRewardSummary(fresh.getId()));
         int bonus = truyen.util.AchievementPolicy.dailyBonus(badges);
         request.setAttribute("badgeBonus", bonus);
+        request.setAttribute("claimableCount", badges.stream().filter(truyen.model.Achievement::isClaimable).count());
+        request.setAttribute("claimableCoins", badges.stream().filter(truyen.model.Achievement::isClaimable).mapToInt(truyen.model.Achievement::getRewardCoins).sum());
+        request.setAttribute("claimedCoins", badges.stream().filter(truyen.model.Achievement::isClaimed).mapToInt(truyen.model.Achievement::getRewardCoins).sum());
         int[] rewards = new int[7];
         int[] bases = {5, 10, 15, 20, 25, 30, 50};
         int[] bonuses = new int[7];
