@@ -50,7 +50,7 @@ public class AdminReportServlet extends HttpServlet {
 
         if ("resolve".equals(action) || "dismiss".equals(action)
                 || "resolve_hide".equals(action) || "resolve_delete".equals(action)
-                || "resolve_restore".equals(action)) {
+                || "resolve_restore".equals(action) || "dismiss_appeal".equals(action)) {
             if (!"POST".equalsIgnoreCase(request.getMethod())) {
                 response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                 return;
@@ -113,6 +113,29 @@ public class AdminReportServlet extends HttpServlet {
                             null,
                             "MODERATION",
                             "Truyện \"" + storyTitle + "\" của bạn đã bị Quản trị viên gỡ bỏ do vi phạm tiêu chuẩn (Báo cáo #" + reportId + "). Bạn có quyền gửi thư khiếu nại nếu cho rằng đây là sự nhầm lẫn."
+                        );
+                    }
+                }
+            } else if ("dismiss_appeal".equals(action)) {
+                reportDAO.updateStatus(reportId, "DISMISSED");
+                if (targetId > 0) {
+                    StoryDAO stDAO = new StoryDAO();
+                    Story story = stDAO.findById(targetId);
+                    String storyTitle = story != null ? story.getTitle() : ("Truyện #" + targetId);
+                    User me = currentUser(request);
+                    new AuditDAO().log(me != null ? me.getId() : 0, "REJECT_APPEAL", "STORY", targetId,
+                            storyTitle, "Từ chối khiếu nại kiểm duyệt theo báo cáo #" + reportId);
+
+                    int authorId = (story != null && story.getAuthorId() > 0) ? story.getAuthorId() : 0;
+                    int reporterId = parseIntOr(request.getParameter("reporterId"), 0);
+                    int notifyTarget = authorId > 0 ? authorId : reporterId;
+                    if (notifyTarget > 0) {
+                        new truyen.dao.NotificationDAO().sendNotification(
+                            notifyTarget,
+                            targetId,
+                            null,
+                            "MODERATION",
+                            "Đơn khiếu nại cho truyện \"" + storyTitle + "\" đã bị Quản trị viên từ chối sau khi xem xét lại nội dung vi phạm. Quyết định can thiệp kiểm duyệt được giữ nguyên."
                         );
                     }
                 }

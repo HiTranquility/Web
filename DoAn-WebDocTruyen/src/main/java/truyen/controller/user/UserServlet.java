@@ -347,7 +347,7 @@ public class UserServlet extends HttpServlet {
         String key = trimOrEmpty(request.getParameter("key"));
         try {
             boolean claimed = achievementDAO.claim(me.getId(), key);
-            if (ajax) {
+            if (ServletHelper.isAjax(request)) {
                 java.util.List<truyen.model.Achievement> all = achievementDAO.getAchievements(me.getId(), me);
                 truyen.model.Achievement value = all.stream()
                         .filter(a -> key.equals(a.getId())).findFirst().orElse(null);
@@ -408,7 +408,7 @@ public class UserServlet extends HttpServlet {
             request.getSession().setAttribute("flash", "Bạn đã điểm danh hôm nay rồi!");
         }
 
-        if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+        if (ServletHelper.isAjax(request)) {
             boolean success = checkin != null;
             int reward = checkin != null ? checkin.getRewardCoins() : 0;
             String msg = checkin != null
@@ -483,7 +483,7 @@ public class UserServlet extends HttpServlet {
             request.getSession().setAttribute("flashError", "Không thể nhận thưởng hoặc bạn đã nhận trước đó.");
         }
 
-        if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+        if (ServletHelper.isAjax(request)) {
             String msg = ok ? "🎁 Nhận thưởng nhiệm vụ thành công!" : "Không thể nhận thưởng hoặc bạn đã nhận trước đó.";
             JsonUtil.sendJson(response, HttpServletResponse.SC_OK,
                     "{\"success\":" + ok + ",\"message\":\"" + msg + "\",\"newBalance\":" + walletDAO.getBalance(me.getId()) + rewardSummaryJson(me.getId()) + "}");
@@ -699,7 +699,12 @@ public class UserServlet extends HttpServlet {
             throws IOException {
         User me = currentUser(request);
         if (me == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            if (ServletHelper.isAjax(request)) {
+                JsonUtil.sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "{\"success\":false,\"needLogin\":true,\"message\":\"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\"}");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            }
         }
         return me;
     }
@@ -821,7 +826,12 @@ public class UserServlet extends HttpServlet {
 
         User me = currentUser(request);
         if (me == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            if (ServletHelper.isAjax(request)) {
+                JsonUtil.sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "{\"success\":false,\"needLogin\":true,\"message\":\"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\"}");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            }
             return;
         }
 

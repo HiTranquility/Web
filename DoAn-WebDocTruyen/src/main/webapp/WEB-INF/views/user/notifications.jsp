@@ -76,6 +76,16 @@
                                             <c:when test="${fn:contains(n.message, 'tiếp nhận thư khiếu nại')}">
                                                 <span style="color: var(--gold, #fbbf24); font-size: 0.82rem; font-weight: 600;">⏳ Đang chờ Admin xét duyệt</span>
                                             </c:when>
+                                            <c:when test="${fn:contains(n.message, 'từ chối')}">
+                                                <span style="color: var(--danger, #ef4444); font-size: 0.82rem; font-weight: 600;">❌ Khiếu nại bị từ chối</span>
+                                                <c:if test="${not empty n.storyId and n.storyId gt 0}">
+                                                    <a href="${pageContext.request.contextPath}/appeal?storyId=${n.storyId}"
+                                                       class="btn btn-outline btn-sm"
+                                                       style="border-color: var(--ember, #e65100); color: var(--ember, #e65100); padding: 2px 8px; font-size: 0.78rem; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                                        ✉️ Khiếu nại lại
+                                                    </a>
+                                                </c:if>
+                                            </c:when>
                                             <c:when test="${fn:contains(n.message, 'phục hồi') or fn:contains(n.message, 'khôi phục')}">
                                                 <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${n.storyId}"
                                                    class="btn btn-outline btn-sm"

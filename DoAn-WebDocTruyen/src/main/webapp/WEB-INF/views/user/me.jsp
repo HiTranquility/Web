@@ -645,6 +645,21 @@
                             + '✅ ' + (data.message || 'Bạn đã hoàn thành điểm danh hôm nay!')
                             + '</div><p class="muted small" style="margin-top:8px; color:var(--text-mut);">Quay lại vào ngày mai để tiếp tục duy trì chuỗi nhận quà nhé!</p>';
                     }
+                    var todayCard = document.querySelector('.streak-card.is-today');
+                    if (todayCard) {
+                        todayCard.classList.remove('is-today');
+                        todayCard.classList.add('is-claimed');
+                        todayCard.style.borderColor = '#10b981';
+                        todayCard.style.background = 'rgba(16, 185, 129, 0.08)';
+                        var icon = todayCard.querySelector('.streak-day-icon');
+                        if (icon && !todayCard.classList.contains('is-jackpot')) icon.textContent = '✅';
+                        var tag = todayCard.querySelector('.streak-day-tag');
+                        if (tag) {
+                            tag.textContent = 'Đã nhận';
+                            tag.style.color = '#10b981';
+                        }
+                    
+                    }
                     if (window.showToast) {
                         window.showToast('🎉 ' + (data.message || 'Điểm danh thành công!'));
                     }

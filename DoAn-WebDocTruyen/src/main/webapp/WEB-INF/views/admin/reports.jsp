@@ -161,6 +161,20 @@
                                                 data-confirm-ok="Đồng ý khôi phục">
                                             ✅ Chấp nhận &amp; Khôi phục truyện</button>
                                     </form>
+                                    <form method="post" style="display:inline"
+                                          action="${pageContext.request.contextPath}/admin/report">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                                        <input type="hidden" name="action" value="dismiss_appeal">
+                                        <input type="hidden" name="id" value="${r.id}">
+                                        <input type="hidden" name="targetId" value="${r.targetId}">
+                                        <input type="hidden" name="reporterId" value="${r.reporterId}">
+                                        <input type="hidden" name="status" value="${status}">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                data-confirm="Bác bỏ đơn khiếu nại này và giữ nguyên quyết định kiểm duyệt truyện?"
+                                                data-confirm-title="Từ chối khiếu nại kiểm duyệt"
+                                                data-confirm-ok="Bác bỏ khiếu nại">
+                                            ❌ Bác bỏ khiếu nại</button>
+                                    </form>
                                 </c:when>
                                 <c:when test="${r.story}">
                                     <form method="post" style="display:inline"
@@ -194,6 +208,7 @@
                                 </c:otherwise>
                             </c:choose>
 
+                            <c:if test="${not (r.story and fn:contains(r.reason, '[KHIẾU NẠI KIỂM DUYỆT]'))}">
                             <form method="post" style="display:inline"
                                   action="${pageContext.request.contextPath}/admin/report">
                                 <input type="hidden" name="_csrf" value="${csrfToken}">
@@ -212,6 +227,7 @@
                                 <button type="submit" class="btn btn-ghost btn-sm">
                                     Bỏ qua</button>
                             </form>
+                            </c:if>
                         </div>
                     </c:if>
                 </div>

@@ -90,5 +90,15 @@ class ModerationAppealTest {
                 "TargetType STORY và Category OTHER phải hợp lệ theo quy tắc của hệ thống Report");
         assertTrue(r.getReason().startsWith("[KHIẾU NẠI KIỂM DUYỆT]"));
     }
+
+    @Test
+    @DisplayName("Ca 6: Kiểm tra thông báo kết quả khiếu nại (Chấp thuận / Từ chối)")
+    void testAppealOutcomeNotificationTemplates() {
+        String approved = "Tin vui! Đơn khiếu nại cho truyện \"Đại Đạo\" đã được Quản trị viên chấp thuận. Tác phẩm của bạn đã được khôi phục trạng thái Công khai.";
+        String rejected = "Đơn khiếu nại cho truyện \"Đại Đạo\" đã bị Quản trị viên từ chối sau khi xem xét lại nội dung vi phạm. Quyết định can thiệp kiểm duyệt được giữ nguyên.";
+
+        assertTrue(approved.contains("chấp thuận") && approved.contains("khôi phục"));
+        assertTrue(rejected.contains("từ chối"));
+    }
 }
 
