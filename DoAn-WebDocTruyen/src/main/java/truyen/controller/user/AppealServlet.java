@@ -172,7 +172,7 @@ public class AppealServlet extends HttpServlet {
                     me.getId(),
                     storyId,
                     null,
-                    "SYSTEM",
+                    "MODERATION",
                     "Hệ thống đã tiếp nhận thư khiếu nại cho truyện \"" + story.getTitle() + "\". Quản trị viên sẽ xem xét và phản hồi trong thời gian sớm nhất."
             );
 

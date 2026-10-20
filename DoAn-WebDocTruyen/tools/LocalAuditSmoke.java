@@ -273,7 +273,7 @@ public final class LocalAuditSmoke {
             }
             login("USER", "/audit/admin/user");
             Map<String, Integer> routes = new LinkedHashMap<>();
-            for (String path : new String[] { "/history", "/bookmark", "/follow", "/notification", "/user?action=me",
+            for (String path : new String[] { "/history", "/bookmark", "/follow", "/notification", "/appeal", "/user?action=me",
                     "/user?action=edit", "/user?action=achievements", "/story?action=mine", "/story?action=create", "/story?action=edit&id=1",
                     "/chapter?id=101", "/wallet", "/api/stories", "/api/chapter/101" }) routes.put(path, 200);
             routes.put("/admin/dashboard", 403);

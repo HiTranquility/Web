@@ -49,10 +49,10 @@
         <div class="notif-list" id="notif-list-container">
             <c:forEach var="n" items="${notifications}">
                 <c:set var="notifType" value="system"/>
-                <c:if test="${n.type eq 'MODERATION'}"><c:set var="notifType" value="moderation"/></c:if>
+                <c:if test="${n.type eq 'MODERATION' or fn:contains(n.message, 'khiếu nại')}"><c:set var="notifType" value="moderation"/></c:if>
                 <c:if test="${notifType ne 'moderation' and (n.type eq 'TIP' or fn:contains(n.message, 'tặng bạn') or fn:contains(n.message, 'điểm danh'))}"><c:set var="notifType" value="reward"/></c:if>
                 <c:if test="${notifType ne 'moderation' and notifType ne 'reward' and not empty n.chapterId}"><c:set var="notifType" value="chapter"/></c:if>
-                <c:if test="${notifType ne 'moderation' and notifType ne 'reward' and empty n.chapterId and not empty n.storyId}"><c:set var="notifType" value="comment"/></c:if>
+                <c:if test="${n.type ne 'SYSTEM' and notifType ne 'moderation' and notifType ne 'reward' and empty n.chapterId and not empty n.storyId}"><c:set var="notifType" value="comment"/></c:if>
 
                 <c:choose>
                     <c:when test="${notifType eq 'moderation'}">
@@ -72,11 +72,25 @@
                                         </c:if>
                                     </span>
                                     <c:if test="${not empty n.storyId and n.storyId gt 0}">
+                                        <c:choose>
+                                            <c:when test="${fn:contains(n.message, 'tiếp nhận thư khiếu nại')}">
+                                                <span style="color: var(--gold, #fbbf24); font-size: 0.82rem; font-weight: 600;">⏳ Đang chờ Admin xét duyệt</span>
+                                            </c:when>
+                                            <c:when test="${fn:contains(n.message, 'phục hồi') or fn:contains(n.message, 'khôi phục')}">
+                                                <a href="${pageContext.request.contextPath}/story?action=detail&amp;id=${n.storyId}"
+                                                   class="btn btn-outline btn-sm"
+                                                   style="border-color: #2e7d32; color: #4ade80; padding: 4px 12px; font-size: 0.82rem; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
+                                                    📖 Xem tác phẩm đã khôi phục
+                                                </a>
+                                            </c:when>
+                                            <c:otherwise>
                                         <a href="${pageContext.request.contextPath}/appeal?storyId=${n.storyId}"
                                            class="btn btn-outline btn-sm"
                                            style="border-color: var(--ember, #e65100); color: var(--ember, #e65100); padding: 4px 12px; font-size: 0.82rem; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
                                             ✉️ Gửi thư khiếu nại tới Admin
                                         </a>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </c:if>
                                 </span>
                             </span>
