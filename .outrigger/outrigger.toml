@@ -1,0 +1,69 @@
+# Outrigger configuration — edited by the HUMAN only (the guard blocks agent edits).
+# Paths are relative to the project root, use forward slashes, matched case-insensitively.
+# "**" and "*" both match across folders.
+
+[project]
+name = ""                      # empty = folder name; shown in notifications
+
+[zones]
+green = [
+  "sandbox/**", "reports/**", "docs/decisions/**", ".outrigger/local/workflows/drafts/**",
+  "docs/requirements/**", "docs/postmortems/**", "docs/meetings/**", "docs/RISK.md",
+]
+red = [
+  ".env", ".env.*", "**/.env", "**/.env.*",
+  "**/*.pem", "**/*.key", "**/*.pfx", "**/*.p12", "**/id_rsa*", "**/id_ed25519*",
+  "**/credentials.json", "**/token.txt", "**/secretkeys/**",
+  "**/thong tin ca nhan/**", "**/thông tin cá nhân/**",
+]
+red_allow = ["**/.env.example", ".env.example"]
+protected = [
+  ".outrigger/engine/**", ".outrigger/outrigger.toml", ".outrigger/OUTRIGGER.md", ".outrigger/rules/**", ".outrigger/packs/**", ".outrigger/state/**", ".outrigger/local/notify.toml",
+  ".claude/settings.json", ".claude/settings.local.json", ".mcp.json",
+  ".codex/**", ".agents/hooks.json", ".cursor/hooks.json", "stop",
+]
+never_delete = ["docs/decisions/**", "docs/postmortems/**", ".outrigger/state/logs/**"]
+# Writes outside the project that are allowed (agent scratch space, agent memory). Env vars and ~ are expanded.
+outside_allow = ["~/.claude/**", "$TEMP/**", "$TMP/**"]
+# Agent memory: writes are allowed but logged, backed up first, and checked for instructions that weaken the guard.
+memory = ["~/.claude/projects/**/memory/**", "~/.codex/memories/**", "~/.gemini/memory/**"]
+# Files that change how agents behave in EVERY project: writing them needs your approval.
+agent_config = [
+  "~/.claude/CLAUDE.md", "~/.claude/settings.json", "~/.claude/settings.local.json",
+  "~/.claude/skills/**", "~/.claude/agents/**", "~/.claude/commands/**", "~/.claude/rules/**", "~/.claude.json",
+  "~/.codex/**", "~/.gemini/**", "~/.cursor/**", "~/.agents/**",
+]
+
+[limits]
+trash_max_files = 20
+trash_max_mb = 100
+backup_max_mb = 50
+approval_minutes = 30
+scan_max_files = 3000
+
+[sources]
+# T1 hosts the agent may fetch from without asking. Subdomains of a listed host are allowed.
+allow_hosts = [
+  "mathworks.com", "python.org", "pypi.org", "github.com",
+  "owasp.org", "nist.gov", "iso.org", "iec.ch",
+  "learn.microsoft.com", "developer.mozilla.org",
+  "code.claude.com", "docs.anthropic.com",
+]
+
+[notify]
+# Settings with secrets (ntfy topic) live in .outrigger/local/notify.toml, which is git-ignored.
+on = ["high"]
+
+[models]
+# Tiers, not product names: models and prices change, and each vendor (Claude, Codex, Gemini...) has its own line-up.
+# The agent only SUGGESTS a tier with its options (see .outrigger/rules/models.md); you switch models yourself.
+strongest = "hard reasoning, long multi-step work, independent review of high-risk changes"
+balanced = "coordination, planning, coding, design, analysis, writing documents"
+fast = "work whose method is already clear: writing tests, directed bug fixes"
+cheap = "lookup, comparison, classification, summaries, reading logs"
+
+[models.names]
+# Optional: write the model you use for each tier, per vendor, so the hint can name it. Examples only - edit freely.
+# claude = { strongest = "", balanced = "", fast = "", cheap = "" }
+# codex  = { strongest = "", balanced = "", fast = "", cheap = "" }
+# gemini = { strongest = "", balanced = "", fast = "", cheap = "" }

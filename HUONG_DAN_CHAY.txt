@@ -1,0 +1,94 @@
+================================================================================
+          ĐỒ ÁN TỐT NGHIỆP: WEBSITE ĐỌC TRUYỆN TRỰC TUYẾN ĐA NỀN TẢNG
+                   (WEBTOON & NOVEL PLATFORM — HI TRANQUILITY)
+================================================================================
+
+Nhóm thực hiện : Nhóm 6
+Sinh viên      : Phát
+Mã nguồn chính : https://github.com/HiTranquility/Web
+Nhánh Git      : main
+File Báo Cáo   : BaoCao_TongHop_DoAn_WebDocTruyen.docx (Nằm cùng thư mục)
+
+--------------------------------------------------------------------------------
+1. YÊU CẦU MÔI TRƯỜNG (PREREQUISITES)
+--------------------------------------------------------------------------------
+- Hệ điều hành : Windows 10 / 11
+- Java JDK     : Phiên bản 17 (hoặc 11+ trở lên)
+- Cơ sở dữ liệu: MySQL Server 8.0 (cổng 3306 mặc định)
+- Trình điều khiển: Windows PowerShell (mặc định có sẵn trên Windows)
+
+--------------------------------------------------------------------------------
+2. HƯỚNG DẪN CÀI ĐẶT CƠ SỞ DỮ LIỆU (DATABASE SETUP)
+--------------------------------------------------------------------------------
+Cách 1 (Khuyên dùng - Cài đặt tự động 1 lệnh duy nhất):
+  Mở PowerShell tại thư mục dự án và chạy:
+    powershell -ExecutionPolicy Bypass -File scripts\setup-db.ps1
+  (Script sẽ tự khởi tạo database, nạp 25 bảng CSDL, nạp dữ liệu mẫu và sinh file db.properties)
+
+Cách 2 (Thủ công qua MySQL Workbench / phpMyAdmin / CLI):
+  - Tạo database:
+      CREATE DATABASE IF NOT EXISTS doan_webdoctruyen CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  - Import theo thứ tự: database/schema.sql và database/sample_data.sql
+  - Chép file `src/main/resources/db.properties.example` thành `src/main/resources/db.properties`
+    và điền tài khoản/mật khẩu MySQL máy tính của bạn.
+
+--------------------------------------------------------------------------------
+3. HƯỚNG DẪN KHỞI CHẠY ỨNG DỤNG WEB (RUN DEV SERVER)
+--------------------------------------------------------------------------------
+Dự án đã tích hợp sẵn Apache Tomcat 9 nhúng trong thư mục `.libs/`. Không cần cài
+đặt máy chủ Tomcat bên ngoài hay cấu hình phức tạp:
+
+Bước 1: Mở cửa sổ PowerShell tại thư mục dự án.
+Bước 2: Thực thi lệnh:
+          .\scripts\run.ps1
+        (Mặc định chạy tại cổng 8080. Đổi cổng nếu muốn: .\scripts\run.ps1 -Port 9090)
+
+Bước 3: Mở trình duyệt web (Google Chrome, Microsoft Edge) và truy cập:
+          http://localhost:8080/
+
+--------------------------------------------------------------------------------
+4. HƯỚNG DẪN CHẠY KIỂM THỬ TỰ ĐỘNG (UNIT TESTS)
+--------------------------------------------------------------------------------
+Để chạy toàn bộ bộ kiểm thử tự động độc lập:
+  Thực thi lệnh:
+    .\scripts\test.ps1
+
+Kết quả nghiệm thu: 238/238 bài test PASS (100% thành công trên 55 test containers).
+
+--------------------------------------------------------------------------------
+5. DANH SÁCH TÀI KHOẢN MẪU DÙNG ĐỂ CHẤM ĐỒ ÁN (TEST ACCOUNTS)
+--------------------------------------------------------------------------------
+Hệ thống áp dụng mô hình phân quyền động RBAC đa tầng (7 vai trò). Quý Thầy/Cô
+có thể sử dụng các tài khoản kiểm thử đã tạo sẵn:
+
+1. Quản trị viên Cấp cao (Super Admin):
+   - Tên đăng nhập : admin
+   - Mật khẩu      : admin123
+   - Quyền hạn     : Quản trị toàn hệ thống, Dashboard thống kê, duyệt/xóa mềm truyện,
+                     khóa tài khoản, quản lý ví xu (/admin/wallet), xem Nhật ký kiểm toán (/admin/audit).
+
+2. Kiểm duyệt viên (Moderator):
+   - Tên đăng nhập : mod1
+   - Mật khẩu      : 123456
+   - Quyền hạn     : Xử lý khiếu nại & báo cáo vi phạm (/admin/report), ẩn bình luận rác.
+                     (Bị chặn 403 Forbidden nghiêm ngặt tại các mục Tài chính/Ví xu).
+
+3. Tác giả Xác minh (Verified Author):
+   - Tên đăng nhập : mocmien
+   - Mật khẩu      : 123456
+   - Quyền hạn     : Truy cập Author Studio (/story?action=mine), đăng truyện,
+                     soạn thảo chương Zen Mode, định mức giá xu VIP, sao lưu Google Drive API v3.
+
+4. Độc giả Hội viên VIP (VIP Member):
+   - Tên đăng nhập : haiduong
+   - Mật khẩu      : 123456
+   - Quyền hạn     : Đọc truyện, điểm danh nhận xu chuỗi 7 ngày, hưởng chiết khấu VIP (-10%),
+                     đánh giá chuyên sâu kèm thẻ Spoiler, bình chọn hữu ích, nạp xu ví.
+
+5. Biên tập viên (Editor):
+   - Tên đăng nhập : editor1
+   - Mật khẩu      : 123456
+
+================================================================================
+Trân trọng cảm ơn Quý Thầy/Cô đã dành thời gian theo dõi và đánh giá đồ án của Nhóm 6!
+================================================================================

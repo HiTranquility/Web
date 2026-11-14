@@ -1,0 +1,28 @@
+# Outrigger core pack — Python. Ships with the public core because it closes the "write a script, then run it" hole.
+# Only the script named in the command (and inline `-c` code) is scanned — not the modules it imports,
+# and not `python -m <module>` (documented limit R-07 in docs/RISK_REGISTER.md).
+
+[pack]
+id = "python"
+name = "Python"
+version = "0.1.0"
+
+[[tools]]
+commands = ["python", "python3", "py", "pythonw"]
+always_headless = true
+scan_scope = "target"
+scan_extensions = [".py", ".pyw"]
+dangerous = [
+  # deleting
+  'shutil\.rmtree\s*\(', '\bos\.(remove|unlink|rmdir|removedirs)\s*\(', '\.unlink\s*\(', '\.rmdir\s*\(',
+  'send2trash', '\bshutil\.move\s*\(',
+  # running other programs / hidden code
+  '\bsubprocess\.(run|call|check_call|check_output|Popen|getoutput|getstatusoutput)\s*\(',
+  '\bos\.(system|popen|exec\w*|spawn\w*|startfile)\s*\(', '(^|[^.\w])(eval|exec)\s*\(', '__import__\s*\(',
+  'ctypes\.(windll|cdll|WinDLL)', '\bwinreg\b', '\b_winreg\b',
+  # sending data out
+  '\brequests\.(post|put|patch|delete)\s*\(', '\bhttpx\.(post|put|patch|delete)\s*\(', '\bsmtplib\b', '\bftplib\b',
+  '\bparamiko\b', 'socket\.socket\s*\(', 'urlopen\s*\([^)]*data\s*=',
+  # changing the machine
+  '\bsetx?\b.*\bPATH\b', 'os\.environ\[[^]]+\]\s*=', '\bschedule\.every\b', 'crontab',
+]

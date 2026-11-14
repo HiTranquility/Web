@@ -41,3 +41,9 @@ Week 1/
 
 __pycache__/
 *.pyc
+
+STOP
+
+# Outrigger
+.outrigger/state/
+.outrigger/local/notify.toml

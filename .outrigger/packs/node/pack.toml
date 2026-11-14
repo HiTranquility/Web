@@ -1,0 +1,20 @@
+# Outrigger core pack - Node.js / TypeScript runners. Scans only the script file named in the command and inline -e code.
+# Imported modules are not followed (documented limit G-2 in docs/RISK_REGISTER.md).
+
+[pack]
+id = "node"
+name = "Node.js"
+version = "0.1.0"
+
+[[tools]]
+commands = ["node", "nodejs", "bun", "deno", "tsx", "ts-node"]
+always_headless = true
+scan_scope = "target"
+scan_extensions = [".js", ".mjs", ".cjs", ".ts", ".mts"]
+dangerous = [
+  'child_process', '\b(exec|execSync|spawn|spawnSync|execFile|execFileSync|fork)\s*\(',
+  '\b(rm|rmSync|rmdir|rmdirSync|unlink|unlinkSync)\s*\(', '\brimraf\b', 'fs-extra.*\b(remove|emptyDir)',
+  '(^|[^.\w])eval\s*\(', 'new\s+Function\s*\(', '\bvm\.(runIn|Script)',
+  'method\s*:\s*.(POST|PUT|PATCH|DELETE).', '\baxios\.(post|put|patch|delete)\s*\(', '\.(post|put)\s*\(\s*.https?:',
+  '\bnet\.(connect|createConnection)\s*\(', '\bnodemailer\b', 'process\.env\[[^\]]+\]\s*=',
+]
